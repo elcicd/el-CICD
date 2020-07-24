@@ -1,0 +1,167 @@
+hi/*
+ * Defines the bulk of the project onboarding pipeline.  Called inline from the
+ * a realized el-CICD/buildconfigs/production-manifest-pipeline-template
+ *
+ */
+
+def call(Map args) {
+    assert (args.releaseCandidateTag ==~ /[\w][\w.-]*/)
+
+    elCicdCommons.initialize()
+
+    elCicdCommons.cloneElCicdRepo()
+
+    projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    projectInfo.releaseCandidateTag = args.releaseCandidateTag
+
+    stage('Verify image(s) with release candidate tags do NOT exist in pre-prod repository') {
+        pipelineUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN  ${projectInfo.predProdEnv} REPOSITORY AS ${projectInfo.releaseCandidateTag}")
+
+        def imageExists = true
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+
+            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO"]
+            imageExists = projectInfo.microServices.find { microService ->
+                def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
+
+                return sh(returnStdout: true, script: "skopeo inspect --raw --creds ${preProdUserNamePwd} ${preProdImageUrl} 2&>1 || :")
+            }
+        }
+
+        if (imageExists) {
+            pipelineUtils.errorBanner("PRODUCTION MANIFEST FOR RELEASE CANDIDATE FAILED for ${projectInfo.releaseCandidateTag}:",
+                                      "Version tag exists for project ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused")
+        }
+    }
+
+    stage ('Select microservices to tag as release candidate') {
+        pipelineUtils.echoBanner("SELECT MICROSERVICES TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
+
+        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}'
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+        def msNameHashData = sh(returnStdout: true, script: script)
+
+        projectInfo.microServices.each { microService ->
+            def hashData = msNameHashData.find("${microService.name}:[0-9a-z]{7}")
+            if (hashData) {
+                microService.releaseCandidateAvailable = true
+                microService.srcCommitHash = hashData.split(':')[1]
+            }
+        }
+
+        def inputs = projectInfo.microServices.findAll {it.releaseCandidateAvailable }.collect { microService ->
+            booleanParam(name: "${microService.name}",
+                         defaultValue: microService.active,
+                         description: "${microService.active ? '' : el.cicd.INACTIVE}")
+        }
+        def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
+
+        projectInfo.microServices.each { microService ->
+            def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
+            if (answer) {
+                microService.promote = true
+            }
+        }
+    }
+
+    stage('Verify selected images exist in pre-prod for promotion') {
+        pipelineUtils.echoBanner("CONFIRM SELECTED IMAGES EXIST IN PRE-PROD FOR PROMOTION TO PROD")
+
+        def imageExists = true
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+
+            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO"]
+            imageMissing = projectInfo.microServices.find { microService ->
+                if (microService.promote) {
+                    def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
+
+                    return !sh(returnStdout: true, script: "skopeo inspect --raw --creds ${preProdUserNamePwd} ${preProdImageUrl} 2>&1 || :").trim()
+                }
+            }
+        }
+
+        if (imageMissing) {
+            pipelineUtils.errorBanner("IMAGE NOT FOUND: one or more images do not exist in ${projectInfo.preProdEnv} for tagging")
+        }
+    }
+
+    stage('Clone microservice configuration repositories for microservices images') {
+        pipelineUtils.echoBanner("CLONE ALL MICROSERVICE DEPLOYMENT REPOSITORIES, AND VERIFY VERSION TAG DOES NOT EXIST IN SCM:",
+                                 projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
+
+        projectInfo.microServices.each { microService ->
+            dir(microService.workDir) {
+                pipelineUtils.assignDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
+                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
+
+                versionTagExists = sh(returnStdout: true, script: "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'") != '0'
+                if (versionTagExists) {
+                    pipelineUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseCandidateTag} exists, and cannot be reused")
+                }
+            }
+        }
+    }
+
+    stage('Confirm production manifest for release version') {
+        pipelineUtils.echoBanner("CONFIRM CREATION OF PRODUCTION MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}")
+
+        def promotionNames = projectInfo.microServices.findAll{ it.promote }.collect { it.name }.join(' ')
+        def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
+        def msg = """
+            Creating this manifest will result in the following actions:
+
+            -> Release Candidate Tag: ${projectInfo.releaseCandidateTag}
+
+            -> To be tagged with Release Version for promotion to PROD:
+            ${promotionNames}
+
+            -> THE FOLLOWING MICROSERVICES WILL BE MARKED FOR REMOVAL FROM PROD:
+            ${removalNames}
+
+            Should the release manifest ${projectInfo.releaseCandidateTag} be created?
+        """
+        input(msg)
+    }
+
+    stage('Tag all images') {
+        pipelineUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
+
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+
+            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO"]
+            projectInfo.microServices.find { microService ->
+                if (microService.promote) {
+                    def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
+                    def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
+                    sh """
+                        skopeo copy --src-tls-verify=false --dest-tls-verify=false \
+                                    --src-creds ${preProdUserNamePwd} --dest-creds ${preProdUserNamePwd}  ${preProdImageUrl} ${preProdReleaseCandidateImageUrl}
+                        ${shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                    """
+                }
+            }
+        }
+    }
+
+    stage('Tag all images and configuration commits') {
+        pipelineUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON THE ${projectInfo.deploymentBranch} BRANCH FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
+
+        projectInfo.microServices.each { microService ->
+            if (microService.promote) {
+                dir(microService.workDir) {
+                    withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                        def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${microService.srcCommitHash}"
+                        sh """
+                            CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+                            ${shellEcho "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                            ${sshAgentBash GITHUB_PRIVATE_KEY, "git tag ${gitReleaseCandidateTag}", "git push --tags"}
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
