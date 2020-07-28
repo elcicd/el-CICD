@@ -265,10 +265,11 @@ def rolloutLatest(def projectInfo, def microServices) {
             then
                 for DC in \${DCS}
                 do
-                    ERROR_DEPLOYMENTS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep Error | awk '{print \$1}' | tr '\n' ' '`
+                    ERROR_DEPLOYMENTS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | awk '{print \$1}' | tr '\n' ' '`
                     if [[ ! -z \${ERROR_DEPLOYMENTS} ]]
                     then
                         oc delete pods \${ERROR_DEPLOYMENTS} -n ${projectInfo.deployToNamespace}
+                        sleep 10
                     fi
 
                     DC="dc/\${DC}"
@@ -334,7 +335,7 @@ def removeMicroservices(def projectInfo, def microServices) {
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
 
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVE SELECTED MICROSERVICES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
+        ${pipelineUtils.shellEchoBanner("REMOVE SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
