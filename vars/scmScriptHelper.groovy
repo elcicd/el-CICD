@@ -27,7 +27,7 @@ def getDeployKeyName(def projectInfo, def isNonProd) {
 def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN) {
     def curlCommand
 
-    def deployKeyName = getDeployKeyName(projectInfo, idNonProd)
+    def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
@@ -63,7 +63,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
 def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN) {
     def curlCommand
 
-    def deployKeyName = getDeployKeyName(projectInfo, idNonProd)
+    def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
