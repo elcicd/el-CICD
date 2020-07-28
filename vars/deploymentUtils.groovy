@@ -157,7 +157,7 @@ def buildTemplate(def templateDef) {
         if (object.kind == 'DeploymentConfig' || object.kind == 'CronJob') {
             patchContainers(object, patch)
             if (!patchVolumes(object, patch)) {
-                ${shellEcho "No volumes found: ${templateDef.envPatchFile}"}
+                echo "No volumes found: ${templateDef.envPatchFile}"
             }
         }
         else {
