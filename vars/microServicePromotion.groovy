@@ -141,19 +141,20 @@ def call(Map args) {
             projectInfo.microServices.each { microService ->
                 if (microService.promote) {
                     def fromImageRepo = el.cicd["${projectInfo.ENV_FROM}_IMAGE_REPO"]
-                    def fromImageUrl = "${fromImageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
+                    def fromImageUrl = "${fromImageRepo}/${microService.id}"
 
                     def toImageRepo = el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO"]
                     def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
-                    def promotedImageUrl = "${toImageRepo}/${microService.id}:${promoteTag}"
-                    def deployToImgUrl = "${toImageRepo}/${microService.id}:${projectInfo.deployToEnv}"
+                    def deployToImgUrl = "${toImageRepo}/${microService.id}"
 
-                    def skopeoComd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+                    def skopeoPromoteCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+
+                    def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
 
                     sh """
-                        ${skopeoComd} docker://${fromImageUrl} docker://${promotedImageUrl}
+                        ${skopeoPromoteCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
 
-                        ${skopeoComd} docker://${promotedImageUrl} docker://${deployToImgUrl}
+                        ${skopeoTagCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
 
                         ${shellEcho  "--> ${fromImageUrl} promoted to ${promotedImageUrl} and ${deployToImgUrl}"}
                     """
