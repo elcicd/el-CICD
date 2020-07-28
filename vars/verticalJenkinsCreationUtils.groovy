@@ -68,7 +68,8 @@ def setupNonProdVerticalCicdNamespacesAndJenkins(def projectInfo, def nonProdCic
         }
         // verticalBootstrap.pushSonarQubeTokenToNonProdJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl)
 
-        def templates = 'promotion-removal-pipeline-template.yml redeploy-removal-pipeline-template.yml production-manifest-pipeline-template.yml'
+        def templates = 'promotion-removal-pipeline-template.yml redeploy-removal-pipeline-template.yml '
+        templates += 'production-manifest-pipeline-template.yml redeploy-release-candidate-pipeline-template.yml'
         createSharedPipelines(templates, projectInfo.nonProdCicdNamespace)
     }
 }
