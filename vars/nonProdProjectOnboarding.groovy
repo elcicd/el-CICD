@@ -61,7 +61,6 @@ def call(Map args) {
                                -p MICROSERVICE_GIT_REPO=${microService.gitRepoUrl} \
                                -p MICROSERVICE_NAME=${microService.name} \
                                -p GIT_BRANCH=${projectInfo.gitBranch} \
-                               -p DEPLOY_TO_NAMESPACE=undefined \
                                -p CODE_BASE=${microService.codeBase} \
                         | oc create -f - -n ${projectInfo.nonProdCicdNamespace}
 
