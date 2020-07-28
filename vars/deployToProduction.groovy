@@ -39,6 +39,7 @@ def call(Map args) {
                                  projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', '))
 
         def allImagesExist = true
+        def promotionEnvFrom = projectInfo.hasBeenReleased ? projectInfo.prodEnv : projectInfo.preProdEnv
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
         withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
             def imageRepoUserNamePwd = el.cicd["${PROMOTION_ENV_FROM}_IMAGE_REPO_USERNAME"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
