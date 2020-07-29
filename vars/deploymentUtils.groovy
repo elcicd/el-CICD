@@ -265,7 +265,7 @@ def rolloutLatest(def projectInfo, def microServices) {
             then
                 for DC in \${DCS}
                 do
-                    ERROR_DEPLOYMENTS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | awk '{print \$1}' | tr '\n' ' '`
+                    ERROR_DEPLOYMENTS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep -vi ' Completed ' | awk '{print \$1}' | tr '\n' ' '`
                     if [[ ! -z \${ERROR_DEPLOYMENTS} ]]
                     then
                         oc delete pods \${ERROR_DEPLOYMENTS} -n ${projectInfo.deployToNamespace}
