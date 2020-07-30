@@ -260,6 +260,12 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
+            IMAGE_PULL_BACKOFF_PODS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull' | awk '{print \$1}' | tr '\n' ' '`
+            if [[ -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
+            then
+                oc delete pods \${IMAGE_PULL_BACKOFF_PODS} -n ${projectInfo.deployToNamespace}
+            if
+
             DCS=`oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}`
             if [[ ! -z "\${DCS}" ]]
             then
@@ -329,8 +335,8 @@ def cleanupOrphanedResources(def projectInfo, def microServices) {
     }
 }
 
-def removeMicroservices(def projectInfo, boolean allMicroServices) {
-    assert projectInfo; assert (allMicroServices instanceof Boolean)
+def removeAllMicroservices(def projectInfo) {
+    assert projectInfo
 
     if (allMicroServices) {
         sh """
@@ -343,7 +349,7 @@ def removeMicroservices(def projectInfo, boolean allMicroServices) {
     }
 }
 
-def removeMicroservices(def projectInfo, List microServices) {
+def removeMicroservices(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')

@@ -10,7 +10,7 @@ def call(Map args) {
             deploymentUtils.removeMicroservices(args.projectInfo, args.microServices)
         }
         else if (args.recreateAll) {
-            deploymentUtils.removeMicroservices(args.projectInfo, true)
+            deploymentUtils.removeAllMicroservices(args.projectInfo)
         }
         else {
             echo "RECREATION NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED FOR COMPLETE RECREATION"
