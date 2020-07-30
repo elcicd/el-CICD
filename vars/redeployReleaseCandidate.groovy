@@ -105,14 +105,15 @@ def call(Map args) {
 
                     def msg =
                         "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.PRE_PROD_ENV} and ${projectInfo.PRE_PROD_ENV}-${microService.srcCommitHash}"
-                    sh """
-                        ${skopeoCopyComd} docker://${preProdImageUrl} docker://${prodImageUrl}
 
-                        ${skopeoCopyComd} docker://${preProdImageUrl} docker://${prodImageUrl}-${microService.srcCommitHash}
+                    sh """
+                        ${skopeoCopyComd} docker://${releaseCandidateImageUrl} docker://${preProdImageRepo}/${microService.name}:${projectInfo.preProdEnv)-${microService.srcCommitHash}
+
+                        ${skopeoCopyComd} docker://${releaseCandidateImageUrl} docker://${preProdImageRepo}/${microService.name}:${projectInfo.preProdEnv}
 
                         ${shellEcho "******",
                                     msg,
-                                    "******" }
+                                    "******"}
                     """
                 }
             }
