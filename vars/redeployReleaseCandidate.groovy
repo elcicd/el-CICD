@@ -100,16 +100,15 @@ def call(Map args) {
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
-                    def releaseCandidateImageUrl = "${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
-                    def preProdImageUrl = "${preProdImageRepo}/${microService.id}:${projectInfo.PRE_PROD_ENV}"
+                    def preProdImageUrl = "${preProdImageRepo}/${microService.id}"
 
                     def msg =
                         "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${projectInfo.preProdEnv}-${microService.srcCommitHash}"
 
                     sh """
-                        ${skopeoCopyComd} docker://${releaseCandidateImageUrl} docker://${preProdImageRepo}/${microService.name}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
+                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} docker://${preProdImageUrl}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
 
-                        ${skopeoCopyComd} docker://${releaseCandidateImageUrl} docker://${preProdImageRepo}/${microService.name}:${projectInfo.preProdEnv}
+                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} docker://${preProdImageUrl}:${projectInfo.preProdEnv}
 
                         ${shellEcho "******",
                                     msg,
