@@ -228,6 +228,12 @@ def applyResources(def projectInfo, def microServices) {
                     ${shellEcho '',
                                 '******',
                                 "APPLYING OCP RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
+                    IMAGE_PULL_BACKOFF_PODS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull'
+                    if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
+                    then
+                        oc delete cronjob -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
+                    fi
+
                     oc delete --cascade=false --wait dc -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
                     ${shellEcho '******'}
@@ -260,12 +266,6 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            IMAGE_PULL_BACKOFF_PODS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull' | awk '{print \$1}' | tr '\n' ' '`
-            if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
-            then
-                oc delete pods \${IMAGE_PULL_BACKOFF_PODS} -n ${projectInfo.deployToNamespace}
-            fi
-
             DCS=`oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}`
             if [[ ! -z "\${DCS}" ]]
             then
