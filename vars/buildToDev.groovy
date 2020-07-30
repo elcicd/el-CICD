@@ -101,5 +101,8 @@ def call(Map args) {
         }
     }
 
-    deployMicroServices(projectInfo: projectInfo, microServices: [microService], imageTag: projectInfo.deployToEnv, recreate: args.recreate)
+    deployMicroServices(projectInfo: projectInfo,
+                        microServices: [microService],
+                        imageTag: projectInfo.deployToEnv,
+                        recreate: args.recreate)
 }

@@ -121,7 +121,6 @@ def call(Map args) {
 
     deployMicroServices(projectInfo: projectInfo,
                         microServices: projectInfo.microServices.findAll { it.releaseCandidateGitTag },
-                        microServicesToRemove: projectInfo.microServices.findAll { !it.releaseCandidateGitTag },
-                        imageTag: projectInfo.PRE_PROD_ENV,
-                        recreate: true)
+                        imageTag: projectInfo.preProdEnv,
+                        recreateAll: true)
 }
