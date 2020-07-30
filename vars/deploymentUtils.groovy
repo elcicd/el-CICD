@@ -261,7 +261,7 @@ def rolloutLatest(def projectInfo, def microServices) {
         for MICROSERVICE_NAME in ${microServiceNames}
         do
             IMAGE_PULL_BACKOFF_PODS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull' | awk '{print \$1}' | tr '\n' ' '`
-            if [[ -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
+            if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
             then
                 oc delete pods \${IMAGE_PULL_BACKOFF_PODS} -n ${projectInfo.deployToNamespace}
             fi
