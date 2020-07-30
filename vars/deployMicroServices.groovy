@@ -9,7 +9,7 @@ def call(Map args) {
         if (args.recreate) {
             deploymentUtils.removeMicroservices(args.projectInfo, args.microServices)
         }
-        else if (args.recreateAll)
+        else if (args.recreateAll) {
             deploymentUtils.removeMicroservices(args.projectInfo, true)
         }
         else {
