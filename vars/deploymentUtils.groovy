@@ -333,13 +333,14 @@ def removeMicroservices(def projectInfo, boolean allMicroServices) {
     assert projectInfo; assert (allMicroServices instanceof Boolean)
 
     if (allMicroServices) {
-    sh """
-        ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
+        sh """
+            ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
 
-        oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
+            oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
 
-        sleep 20
-    """
+            sleep 20
+        """
+    }
 }
 
 def removeMicroservices(def projectInfo, List microServices) {
