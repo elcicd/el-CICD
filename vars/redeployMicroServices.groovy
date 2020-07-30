@@ -41,24 +41,23 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
             def msToBranch = msNameDepBranch.find { it.startsWith("${microService.name}:${branchPrefix}") }
-            if (msToBranch) {
-                microService.deploymentBranch = msToBranch.split(':')[1]
-                microService.deploymentImageTag = microService.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
-                dir(microService.workDir) {
-                    branchPrefix = "refs/remotes/**/${branchPrefix}*"
-                    def branchesAndTimesScript =
-                        "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate:relative))' --sort='-committerdate' '${branchPrefix}'"
-                    def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
-                    branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
-                    branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
-                        branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", ">>> ${microService.deploymentImageTag} <<<") : branchesAndTimes
+            microService.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
+            microService.deploymentImageTag = microService.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
-                    inputs +=
-                        choice(name: "${microService.name}",
-                               description: "${microService.active ? '' : el.cicd.INACTIVE}",
-                               choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
-                }
+            dir(microService.workDir) {
+                branchPrefix = "refs/remotes/**/${branchPrefix}*"
+                def branchesAndTimesScript =
+                    "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate:relative))' --sort='-committerdate' '${branchPrefix}'"
+                def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
+                branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
+                branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
+                    branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", ">>> ${microService.deploymentImageTag} <<<") : branchesAndTimes
+
+                inputs +=
+                    choice(name: "${microService.name}",
+                           description: "${microService.active ? '' : el.cicd.INACTIVE}",
+                           choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
             }
         }
 
