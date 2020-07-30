@@ -223,12 +223,12 @@ def applyResources(def projectInfo, def microServices) {
                 cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found"}
 
                 cd ${projectInfo.deployToEnv}
-                if [[ `ls *.{yml,yaml,json} 2> /dev/null | wc -l` -gt 0 ]]
+                if [[ \$(ls *.{yml,yaml,json} 2> /dev/null | wc -l) -gt 0 ]]
                 then
                     ${shellEcho '',
                                 '******',
                                 "APPLYING OCP RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
-                    IMAGE_PULL_BACKOFF_PODS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull'
+                    IMAGE_PULL_BACKOFF_PODS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${MICROSERVICE_NAME}-.*" | grep -i 'ImagePull')
                     if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
                     then
                         oc delete cronjob -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
@@ -246,7 +246,7 @@ def applyResources(def projectInfo, def microServices) {
                         microservice=${microService.name} \
                         deployment-commit-hash=${microService.deploymentCommitHash} \
                         release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
-                        deploy-time=`date +%d.%m.%Y-%H.%M.%S%Z` \
+                        deploy-time=\$(date +%d.%m.%Y-%H.%M.%S%Z) \
                         -n ${projectInfo.deployToNamespace}
                     ${shellEcho   '******'}
                 else
@@ -266,12 +266,12 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS=`oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}`
+            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})
             if [[ ! -z "\${DCS}" ]]
             then
                 for DC in \${DCS}
                 do
-                    ERROR_DEPLOYMENTS=`oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep -vi ' Completed ' | awk '{print \$1}' | tr '\n' ' '`
+                    ERROR_DEPLOYMENTS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep -vi ' Completed ' | awk '{print \$1}' | tr '\n' ' ')
                     if [[ ! -z \${ERROR_DEPLOYMENTS} ]]
                     then
                         oc delete pods \${ERROR_DEPLOYMENTS} -n ${projectInfo.deployToNamespace}
