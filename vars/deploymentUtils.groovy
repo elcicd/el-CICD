@@ -264,7 +264,7 @@ def rolloutLatest(def projectInfo, def microServices) {
             if [[ -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
             then
                 oc delete pods \${IMAGE_PULL_BACKOFF_PODS} -n ${projectInfo.deployToNamespace}
-            if
+            fi
 
             DCS=`oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}`
             if [[ ! -z "\${DCS}" ]]
