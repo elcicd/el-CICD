@@ -93,6 +93,7 @@ def call(Map args) {
             }
         
             onboardingUtils.createNamepaces(projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
+        }
     }
 
     stage('Delete old github public keys with curl') {
