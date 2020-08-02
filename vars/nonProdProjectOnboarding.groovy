@@ -73,40 +73,26 @@ def call(Map args) {
     stage('Setup openshift namespace environments') {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
-        }.join(' ')
+        }
+        
+        onboardingUtils.createNamepaces(projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
+    }
 
-        sh """
-            ${pipelineUtils.shellEchoBanner("SETUP OPENSHIFT NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}")}
-
-            NODE_SELECTORS=(${nodeSelectors})
-            ENVS=(${projectInfo.nonProdNamespaces.keySet().join('  ')})
-            NAMESPACES=(${projectInfo.nonProdNamespaces.values().join(' ')})
-            for i in \${!NAMESPACES[@]}
-            do
-                if [[ `oc projects | grep \${NAMESPACES[\$i]} | wc -l` -lt 1 ]]
-                then
-                    if [[ \${NODE_SELECTORS[\$i]} != 'null' ]]
-                    then
-                        oc adm new-project \${NAMESPACES[\$i]} --node-selector="\${NODE_SELECTORS[\$i]}"
-                    else
-                        oc adm new-project \${NAMESPACES[\$i]}
-                    fi
-
-                    oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n \${NAMESPACES[\$i]}
-
-                    oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n \${NAMESPACES[\$i]}
-
-                    oc policy add-role-to-user edit system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
-
-                    oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
-                    oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
-
-                    oc get sealedsecrets -l \${ENVS[\$i]}-env=true -o yaml -n ${el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc create -f - -n \${NAMESPACES[\$i]}
-
-                    ${shellEcho ''}
-                fi
-            done
-        """
+    stage('Setup openshift sandbox environments') {
+        if (projectInfo.sandboxEnvs > 0) {
+            def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}-"
+            
+            namespaces = []
+            envs = []
+            nodeSelectors = []
+            
+            for (int i: projectInfo.sandboxEnvs) {
+                namespaces += "${sandboxNamespacePrefix}-${i}"
+                envs += projectInfo.DEV_ENV
+                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
+            }
+        
+            onboardingUtils.createNamepaces(projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
     }
 
     stage('Delete old github public keys with curl') {

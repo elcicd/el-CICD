@@ -131,7 +131,7 @@ def waitUntilJenkinsIsReady(def cicdNamespace) {
             done
         done
 
-        echo "Jenkins up, sleep for 10 more seconds to make sure servers' REST api are ready"
+        echo "Jenkins up, sleep for 10 more seconds to make sure each servers REST api are ready"
         sleep 10
         set -x
     """

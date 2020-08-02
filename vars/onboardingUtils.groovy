@@ -67,3 +67,40 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
             }
         }
 }
+
+def createNamepaces(def namespaces, def environments, def nodeSelectors) {
+    pipelineUtils.echoBanner("SETUP OPENSHIFT NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces)
+    
+    sh """
+        NODE_SELECTORS=(${nodeSelectors.join(' ')})
+        ENVS=(${environments.join('  ')})
+        NAMESPACES=(${namespaces.join(' ')})
+        for i in \${!NAMESPACES[@]}
+        do
+            if [[ `oc projects | grep \${NAMESPACES[\$i]} | wc -l` -lt 1 ]]
+            then
+                if [[ \${NODE_SELECTORS[\$i]} != 'null' ]]
+                then
+                    oc adm new-project \${NAMESPACES[\$i]} --node-selector="\${NODE_SELECTORS[\$i]}"
+                else
+                    oc adm new-project \${NAMESPACES[\$i]}
+                fi
+
+                oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+                    oc create -f - -n \${NAMESPACES[\$i]}
+
+                oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n \${NAMESPACES[\$i]}
+
+                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
+
+                oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
+                oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
+
+                oc get sealedsecrets -l \${ENVS[\$i]}-env=true -o yaml -n ${el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+                    oc create -f - -n \${NAMESPACES[\$i]}
+
+                ${shellEcho ''}
+            fi
+        done
+    """
+}

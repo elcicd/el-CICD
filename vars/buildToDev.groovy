@@ -4,7 +4,7 @@
  *
  */
 
-def call(Map args) {
+void call(Map args) {
 
     def BUILDER = 0
     def TESTER = 1
@@ -12,12 +12,12 @@ def call(Map args) {
 
     elCicdCommons.initialize()
 
-    elCicdCommons.cloneElCicdRepo()
+    elCicdCommons.cloneElCicdRepo() 
 
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.gitBranch = args.gitBranch
-    projectInfo.deployToEnv = projectInfo.nonProdNamespaces.keySet().first()
-    projectInfo.deployToNamespace = projectInfo.nonProdNamespaces[projectInfo.deployToEnv]
+    projectInfo.deployToEnv = projectInfo.devEnv
+    projectInfo.deployToNamespace = projectInfo.devNamespace
 
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
 
@@ -46,7 +46,7 @@ def call(Map args) {
         }
     }
 
-    stage('build step: build application') {
+    stage('build step: build microservice') {
         pipelineUtils.echoBanner("BUILD APPLICATION")
 
         dir(microService.workDir) {
