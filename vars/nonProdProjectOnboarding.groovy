@@ -86,7 +86,7 @@ def call(Map args) {
             envs = []
             nodeSelectors = []
             
-            for (int i = 1; i < projectInfo.sandboxEnvs; i++) {
+            {1..projectInfo.sandboxEnvs}.each {
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
