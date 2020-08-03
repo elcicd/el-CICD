@@ -51,6 +51,22 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         else {
             echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
         }
+        
+        refreshSharedPipelines(projectInfo, isNonProd)        
+    }
+}
+
+def refreshSharedPipelines(def projectInfo, def isNonProd) {
+    stage('Refreshing shared pipelines') {
+        def templates = isNonProd ? 'promotion-removal-pipeline-template.yml redeploy-removal-pipeline-template.yml ' +
+                'production-manifest-pipeline-template.yml redeploy-release-candidate-pipeline-template.yml ' +
+                'build-and-deploy-microservices-pipeline-template.yml' : 
+                'deploy-to-production-pipeline-template.yml'
+        pipelineUtils.echoBanner('Refreshing Shared Pipelines', templates)
+        
+        def namespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
+        
+        createSharedPipelines(templates, namespace)
     }
 }
 
@@ -67,10 +83,6 @@ def setupNonProdVerticalCicdNamespacesAndJenkins(def projectInfo, def nonProdCic
             }
         }
         // verticalBootstrap.pushSonarQubeTokenToNonProdJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl)
-
-        def templates = 'promotion-removal-pipeline-template.yml redeploy-removal-pipeline-template.yml '
-        templates += 'production-manifest-pipeline-template.yml redeploy-release-candidate-pipeline-template.yml'
-        createSharedPipelines(templates, projectInfo.nonProdCicdNamespace)
     }
 }
 
@@ -81,9 +93,6 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
 
         pushImageRepositoryTokenToJenkins(projectInfo.prodCicdNamespace, el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], prodCicdJenkinsCredsUrl)
         pushImageRepositoryTokenToJenkins(projectInfo.prodCicdNamespace, el.cicd["${projectInfo.PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], prodCicdJenkinsCredsUrl)
-
-        def templates = 'deploy-to-production-pipeline-template.yml'
-        createSharedPipelines(templates, projectInfo.prodCicdNamespace)
     }
 }
 
@@ -193,7 +202,7 @@ def createSharedPipelines(def templates, def cicdJenkinsNamespace) {
                 oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
                                        -p EL_CICD_GIT_REPO=${el.cicd.EL_CICD_GIT_REPO} \
                                        -p EL_CICD_BRANCH_NAME=${el.cicd.EL_CICD_BRANCH_NAME} | \
-                    oc create -f - -n ${cicdJenkinsNamespace}
+                    oc apply -f - -n ${cicdJenkinsNamespace}
             done
         """
     }
