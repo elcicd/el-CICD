@@ -75,7 +75,7 @@ def call(Map args) {
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
         }
         
-        onboardingUtils.createNamepaces(projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
+        onboardingUtils.createNamepaces(projectInfo, projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
     }
 
     stage('Setup openshift sandbox environments') {
@@ -92,7 +92,7 @@ def call(Map args) {
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
             }
         
-            onboardingUtils.createNamepaces(projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
+            onboardingUtils.createNamepaces(projectInfo, namespaces, envs, nodeSelectors)
         }
     }
 
