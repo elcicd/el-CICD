@@ -4,7 +4,6 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-
 def cloneGitRepo(microService, gitReference) {
    assert microService ; assert gitReference
 

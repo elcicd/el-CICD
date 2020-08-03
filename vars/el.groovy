@@ -21,6 +21,10 @@ def init(def metaData) {
     cicd.PROMOTE = 'PROMOTE'
     cicd.REMOVE = 'REMOVE'
 
+    cicd.BUILDER = 'BUILDER'
+    cicd.TESTER = 'TESTER'
+    cicd.SCANNER = 'SCANNER'
+
     cicd.INACTIVE = 'INACTIVE'
 
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"

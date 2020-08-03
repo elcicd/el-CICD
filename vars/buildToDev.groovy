@@ -6,37 +6,23 @@
 
 void call(Map args) {
 
-    def BUILDER = 0
-    def TESTER = 1
-    def SCANNER = 2
-
     elCicdCommons.initialize()
 
     elCicdCommons.cloneElCicdRepo() 
 
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
-    projectInfo.gitBranch = args.gitBranch
+    def microService = projectInfo.microServices.find { it.name == args.microServiceName }
+    
+    microService.gitBranch = args.gitBranch
+    
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = projectInfo.devNamespace
 
-    def microService = projectInfo.microServices.find { it.name == args.microServiceName }
-
-    def builderModules = [:]
-    dir ("${el.cicd.EL_CICD_DIR}/builder-steps/${args.codeBase}") {
-        def module = microService.builder ?: 'builder'
-        builderModules[BUILDER] = load "${module}.groovy"
-
-        module = microService.tester ?: 'tester'
-        builderModules[TESTER] = load "${module}.groovy"
-
-        module = microService.scanner ?: 'scanner'
-        builderModules[SCANNER] = load "${module}.groovy"
-    }
 
     stage('Checkout code from repository') {
-        pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${projectInfo.gitBranch}")
+        pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
 
-        pipelineUtils.cloneGitRepo(microService, projectInfo.gitBranch)
+        pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
 
         dir (microService.workDir) {
             sh """
@@ -45,30 +31,8 @@ void call(Map args) {
             """
         }
     }
-
-    stage('build step: build microservice') {
-        pipelineUtils.echoBanner("BUILD APPLICATION")
-
-        dir(microService.workDir) {
-            builderModules[BUILDER].build(projectInfo.id, microService.name)
-        }
-    }
-
-    stage('build step: run unit tests') {
-        pipelineUtils.echoBanner("RUN UNIT TESTS")
-
-        dir(microService.workDir) {
-            builderModules[TESTER].test(projectInfo.id, microService.name)
-        }
-    }
-
-    stage('build step: source code analysis') {
-        pipelineUtils.echoBanner("SCAN CODE")
-
-        dir(microService.workDir) {
-            builderModules[SCANNER].scan(projectInfo.id, microService.name)
-        }
-    }
+    
+    builderutils.buildTestAndScan(projectInfo)
 
     stage('build image and push to repository') {
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
@@ -92,7 +56,7 @@ void call(Map args) {
 
                 chmod 777 Dockerfile
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
-                echo "\nLABEL SRC_COMMIT_BRANCH='${projectInfo.gitBranch}'" >> Dockerfile
+                echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
