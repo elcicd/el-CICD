@@ -80,13 +80,13 @@ def call(Map args) {
 
     stage('Setup openshift sandbox environments') {
         if (projectInfo.sandboxEnvs > 0) {
-            def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}-"
+            def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
             
             namespaces = []
             envs = []
             nodeSelectors = []
             
-            for (int i: projectInfo.sandboxEnvs) {
+            {1..projectInfo.sandboxEnvs}.each {
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.DEV_ENV
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
