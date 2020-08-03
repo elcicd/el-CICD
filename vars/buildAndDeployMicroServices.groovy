@@ -22,7 +22,7 @@ def call(Map args) {
         String sandboxNamespaces = "${projectInfo.devNamespace}\n" + projectInfo.sandboxEnvs.collect { "${projectInfo.id}-sandbox-${it}" }.join('\n')
 
         List inputs = [choice(name: 'sandBoxNamespaces', description: 'Build Namespace', choices: sandboxNamespaces)]
-        inputs += [boolean(name: 'freshEnvironment', description: 'Clean all from environment before deploying', default: false)]
+        inputs += [booleanParam(name: 'freshEnvironment', description: 'Clean all from environment before deploying', default: false)]
 
         inputs += projectInfo.microServices.collect { microService ->
             string(name: "${microService.name}", description: "${microService.active ? '' : el.cicd.INACTIVE}")
