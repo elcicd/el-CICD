@@ -109,7 +109,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.nonProdNamespaces = [(projectInfo.devEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
         projectInfo.testEnvs.each { env ->
-            projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}"
+            projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}".toString()
         }
 
         projectInfo.devNamespace = projectInfo.nonProdNamespaces[projectInfo.devEnv]
