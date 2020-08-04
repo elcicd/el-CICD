@@ -17,7 +17,7 @@ void call(Map args) {
     
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
-    if (projectInfo.deployToNamespace != projectInfo.devNamespace ||
+    if (projectInfo.deployToNamespace != projectInfo.devNamespace &&
         !projectInfo.sandboxNamespaces.contains(projectInfo.deployToNamespace))
     {
         def sboxNamepaces = projectInfo.sandboxNamespaces.join(' ')
