@@ -18,7 +18,6 @@ void call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = projectInfo.devNamespace
 
-
     stage('Checkout code from repository') {
         pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
 
