@@ -21,9 +21,9 @@ def init(def metaData) {
     cicd.PROMOTE = 'PROMOTE'
     cicd.REMOVE = 'REMOVE'
 
-    cicd.BUILDER = 'BUILDER'
-    cicd.TESTER = 'TESTER'
-    cicd.SCANNER = 'SCANNER'
+    cicd.BUILDER = 'builder'
+    cicd.TESTER = 'tester'
+    cicd.SCANNER = 'scanner'
 
     cicd.INACTIVE = 'INACTIVE'
 
