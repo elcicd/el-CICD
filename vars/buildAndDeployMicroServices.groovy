@@ -53,8 +53,7 @@ def call(Map args) {
     }
     
     stage("build and deploy microservics to ${projectInfo.deployToNamespace}") {
-        def microServices = projectInfo.microServices.findAll { it.build }.collect { it.name }
-        microServices = microServices.collate(2)
+        def microServices = projectInfo.microServices.findAll { it.build }.collate(2)
         
         parallel(
             stage('building first bucket of microservices') {
