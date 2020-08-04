@@ -3,7 +3,7 @@
  * with elCicdNode.
  */
 
-class elCicdSlaveDefs {
-    static def images = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest',
-                         python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest']
-}
+@groovy.transform.Field
+
+elCicdSlaveDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest',
+                   python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest']

@@ -1,9 +1,15 @@
 /*
  * Utility class defining the Jenkins agents.
  */
+
+
+@groovy.transform.Field
+elCicdSlaveDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest',
+                   python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest']
+ 
 def call(Map args = [:], Closure body) {
     assert args.agent
-    def agentImage = elCicdNodeDefs.images.get(args.agent) ?: args.agent
+    def agentImage = elCicdNodeDefs.get(args.agent) ?: args.agent
 
     def podLabel = args.agentName ?: args.agent
 
