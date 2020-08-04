@@ -110,6 +110,6 @@ void call(Map args) {
 
     deployMicroServices(projectInfo: projectInfo,
                         microServices: [microService],
-                        imageTag: projectInfo.deployToEnv,
+                        imageTag: projectInfo.imageTag,
                         recreate: args.recreate)
 }
