@@ -25,12 +25,6 @@ void call(Map args) {
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
                                   "${projectInfo.devNamespace} ${sboxNamepaces}")
     }
-    
-    projectInfo.imageTag = projectInfo.devEnv
-    if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
-        def index = projectInfo.deployToNamespace.split('-').last()
-        projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
-    }
 
     stage('Checkout code from repository') {
         pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
@@ -76,6 +70,12 @@ void call(Map args) {
     }
 
     stage('build image and push to repository') {
+        projectInfo.imageTag = projectInfo.devEnv
+        if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
+            def index = projectInfo.deployToNamespace.split('-').last()
+            projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
+        }
+        
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
         def pullSecret = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO_PULL_SECRET"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
