@@ -8,7 +8,7 @@ def initialize() {
         pipelineUtils.echoBanner("INITIALIZING...")
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
-        el.cicd.EL_CICD_BUILD_STEPS_DIR = "${el.cicd.EL_CICD_DIR}/builder-steps"
+        el.cicd.EL_CICD_BUILDER_STEPS_DIR = "${el.cicd.EL_CICD_DIR}/builder-steps"
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
         sh """
             rm -rf ${WORKSPACE}/*
