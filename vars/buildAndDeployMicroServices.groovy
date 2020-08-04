@@ -67,9 +67,8 @@ def call(Map args) {
             
                     if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
                         def index = projectInfo.deployToNamespace.split('-').last()
-                        def postfix = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
-                        buildConfigName += "-${postfix}"
-                        imageTag = postfix.toUpperCase()
+                        imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
+                        buildConfigName += "-${imageTag}"
                     }
                     
                     dir(microService.workDir) {
