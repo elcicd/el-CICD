@@ -45,7 +45,7 @@ def call(Map args) {
         }
     }
     
-    builderutils.buildTestAndScan(projectInfo)
+    builderUtils.buildTestAndScan(projectInfo)
 
     stage('build image and push to repository') {
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
