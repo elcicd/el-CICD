@@ -8,7 +8,7 @@ def BUILDER = 'BUILDER'
 def TESTER = 'TESTER' 
 def SCANNER = 'SCANNER' 
 
-def loadBuilderModule(def microSerevice, def type) {
+def loadBuilderModule(def microService, def type) {
     def builderModule
     dir ("${el.cicd.EL_CICD_DIR}/builder-steps/${microService.codeBase}") {
         switch (type) {
@@ -36,7 +36,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("BUILD MICROSERVICE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def builderModule = loadBuilderModule(microSerevice, BUILDER)
+                    def builderModule = loadBuilderModule(microService, BUILDER)
                     builderModules[BUILDER].build(projectInfo.id, microService.name)
                 }
             }
@@ -45,7 +45,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("RUN UNIT TESTS: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def builderModule = loadBuilderModule(microSerevice, TESTER)
+                    def builderModule = loadBuilderModule(microService, TESTER)
                     builderModules[TESTER].test(projectInfo.id, microService.name)
                 }
             }
@@ -54,7 +54,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("SCAN CODE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def builderModule = loadBuilderModule(microSerevice, SCANNER)
+                    def builderModule = loadBuilderModule(microService, SCANNER)
                     builderModules[SCANNER].scan(projectInfo.id, microService.name)
                 }
             }
