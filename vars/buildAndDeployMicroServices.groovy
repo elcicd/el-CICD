@@ -12,7 +12,13 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select sandbox, microservice, and branch") {
-        String sandboxNamespaces = "${projectInfo.devNamespace}\n" + projectInfo.sandboxEnvs.collect { "${projectInfo.id}-sandbox-${it}" }.join('\n')
+        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
+        
+        namespaces = []        
+        (1..projectInfo.sandboxEnvs).each { i ->
+            namespaces += "${sandboxNamespacePrefix}-${i}"
+        }
+        String sandboxNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
 
         List inputs = [choice(name: 'sandBoxNamespaces', description: 'Build Namespace', choices: sandboxNamespaces)]
         inputs += [booleanParam(name: 'freshEnvironment', description: 'Clean all from environment before deploying')]
@@ -38,7 +44,7 @@ def call(Map args) {
                 }
                 
                 stage('Checkout code from repository') {
-                    pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepo}")
+                    pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepoUrl}")
             
                     pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
         
@@ -89,7 +95,7 @@ def call(Map args) {
                             echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                             echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
             
-                            oc start-build ${microService.id} --from-dir=. --wait --follow -n ${projectInfo.nonProdCicdNamespace}
+                            oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.nonProdCicdNamespace}
                         """
                     }
                 }
