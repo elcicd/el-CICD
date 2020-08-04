@@ -64,7 +64,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
                 'deploy-to-production-pipeline-template.yml'
                 
         def msgs = ['CREATING SHARED PIPELINES:'].addAll(templates.split(' '))
-        pipelineUtils.echoBanner(*msgs)
+        pipelineUtils.echoBanner(msgs as String[])
         
         def namespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
         
