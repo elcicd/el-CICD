@@ -32,7 +32,7 @@ def call(Map args) {
 
     projectInfo.microServices.each { microService ->
         if (microService.gitBranch) {
-            elCicdNode(agent: "${CODE_BASE}") {
+            elCicdNode(agent: microService.codeBase) {
                 stage('Checkout code from repository') {
                     pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepo}")
             
