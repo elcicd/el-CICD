@@ -62,7 +62,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
                 'production-manifest-pipeline-template.yml redeploy-release-candidate-pipeline-template.yml ' +
                 'build-and-deploy-microservices-pipeline-template.yml' : 
                 'deploy-to-production-pipeline-template.yml'
-        pipelineUtils.echoBanner('Refreshing Shared Pipelines', templates)
+        pipelineUtils.echoBanner('CREATING SHARED PIPELINES:', templates.replaceAll(/\.yml/, "\n"))
         
         def namespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
         
@@ -195,8 +195,6 @@ def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkins
 def createSharedPipelines(def templates, def cicdJenkinsNamespace) {
     dir ("${el.cicd.EL_CICD_DIR}/buildconfigs") {
         sh """
-            ${pipelineUtils.shellEchoBanner("CREATING SHARED PIPELINES:", templates)}
-
             for FILE in ${templates}
             do
                 oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
