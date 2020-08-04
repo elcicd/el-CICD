@@ -35,13 +35,6 @@ def call(Map args) {
         projectInfo.gitBranch = cicdInfo.gitBranch
         projectInfo.recreateAll = cicdInfo.freshEnvironment
         projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
-
-        projectInfo.imageTag = projectInfo.devEnv
-        
-        if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
-            def index = projectInfo.deployToNamespace.split('-').last()
-            projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
-        }
     }
     
     stage('Clean ${} if requested') {
@@ -59,20 +52,20 @@ def call(Map args) {
             stage('building first bucket of microservices') {
                 microServices[0].each { microService ->
                     sh """
-                        oc start-build ${microService.id}-${projectInfo.imageTag} \
+                        oc start-build ${microService.id}-build-to-dev \
                             --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
                             --env GIT_BRANCH=${projectInfo.gitBranch} \
-                            --wait
+                            --wait -n ${projectInfo.nonProdCicdNamespace}
                     """
                 }
             },
             stage('building second bucket of microservices') {
                 microServices[1].each { microService ->
                     sh """
-                        oc start-build ${microService.id}-${projectInfo.imageTag} \
+                        oc start-build ${microService.id}-build-to-dev \
                             --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
                             --env GIT_BRANCH=${projectInfo.gitBranch} \
-                            --wait
+                            --wait -n ${projectInfo.nonProdCicdNamespace}
                     """
                 }
             }
