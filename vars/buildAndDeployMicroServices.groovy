@@ -32,8 +32,14 @@ def call(Map args) {
         projectInfo.deployToNamespace = cicdInfo.sandBoxNamespaces
         projectInfo.recreateAll = cicdInfo.freshEnvironment
         projectInfo.microServices.each { it.gitBranch = cicdInfo[it.name] }
-    }
 
+        projectInfo.imageTag = projectInfo.devEnv
+        
+        if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
+            def index = projectInfo.deployToNamespace.split('-').last()
+            projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
+        }
+    }
     def elcicdCloned = [:]
     projectInfo.microServices.each { microService ->
         if (microService.gitBranch) {
@@ -43,7 +49,7 @@ def call(Map args) {
                     elcicdCloned[microService.codeBase] = true
                 }
                 
-                stage('Checkout code from repository') {
+                stage('Checkout code from repository for building') {
                     pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepoUrl}")
             
                     pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
@@ -62,13 +68,9 @@ def call(Map args) {
                     def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
                     def pullSecret = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO_PULL_SECRET"]
                     
-                    def imageTag = projectInfo.devEnv
                     def buildConfigName = microService.id
-            
                     if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
-                        def index = projectInfo.deployToNamespace.split('-').last()
-                        imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
-                        buildConfigName += "-${imageTag}"
+                        buildConfigName += "-${projectInfo.imageTag}"
                     }
                     
                     dir(microService.workDir) {
@@ -101,9 +103,19 @@ def call(Map args) {
             }
         }
     }
+              
+    stage('Checkout code from repository for deployment') {
+        pipelineUtils.echoBanner("CLONING MICROSERVICE REPOS: ${microService.gitRepoUrl}")
+
+        projectInfo.microServices.each { microService ->
+            if (microService.gitBranch) {  
+                pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
+            }
+        }
+    }
 
     deployMicroServices(projectInfo: projectInfo,
                         microServices: projectInfo.microServices.findAll { it.gitBranch },
-                        imageTag: projectInfo.deployToEnv,
+                        imageTag: projectInfo.imageTag,
                         recreate: args.recreate)
 }

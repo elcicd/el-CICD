@@ -92,6 +92,12 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
 
         projectInfo.preProdEnv = projectInfo.testEnvs.last()
+        
+        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
+        projectInfo.sandboxNamespaces = []        
+        (1..projectInfo.sandboxEnvs).each { i ->
+            projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
+        }
 
         projectInfo.DEV_ENV = el.cicd.DEV_ENV
         projectInfo.PROD_ENV = el.cicd.PROD_ENV

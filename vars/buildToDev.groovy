@@ -16,7 +16,15 @@ void call(Map args) {
     microService.gitBranch = args.gitBranch
     
     projectInfo.deployToEnv = projectInfo.devEnv
-    projectInfo.deployToNamespace = projectInfo.devNamespace
+    projectInfo.deployToNamespace = args.namespace
+    if (projectInfo.deployToNamespace != projectInfo.devNamespace ||
+        !projectInfo.sandboxNamespaces.contains(projectInfo.deployToNamespace))
+    {
+        def sboxNamepaces = projectInfo.sandboxNamespaces.join(' ')
+        pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--", '',
+                                  "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
+                                  "${projectInfo.devNamespace} ${sboxNamepaces}")
+    }
 
     stage('Checkout code from repository') {
         pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
@@ -31,7 +39,35 @@ void call(Map args) {
         }
     }
     
-    builderUtils.buildTestAndScan(projectInfo, microService)
+    stage("build step: build ${microService.name}") {
+        pipelineUtils.echoBanner("BUILD MICROSERVICE: ${microService.name}")
+
+        dir(microService.workDir) {
+            def moduleName = microService[el.cicd.BUILDER] ?: el.cicd.BUILDER
+            def builderModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            builderModule.build(projectInfo.id, microService.name)
+        }
+    }
+
+    stage("build step: run unit tests for ${microService.name}") {
+        pipelineUtils.echoBanner("RUN UNIT TESTS: ${microService.name}")
+
+        dir(microService.workDir) {
+            def moduleName = microService[el.cicd.TESTER] ?: el.cicd.TESTER
+            def testerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            testerModule.test(projectInfo.id, microService.name)
+        }
+    }
+
+    stage("build step: source code analysis for ${microService.name}") {
+        pipelineUtils.echoBanner("SCAN CODE: ${microService.name}")
+
+        dir(microService.workDir) {
+            def moduleName = microService[el.cicd.SCANNER] ?: el.cicd.SCANNER
+            def scannerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            scannerModule.scan(projectInfo.id, microService.name)
+        }
+    }
 
     stage('build image and push to repository') {
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
