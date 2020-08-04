@@ -32,7 +32,7 @@ def call(Map args) {
     projectInfo.microServices.each { microService ->
         if (microService.gitBranch) {
             elCicdNode(agent: microService.codeBase) {
-                if (!elcicdCloned[microService.codeBase])
+                if (!elcicdCloned[microService.codeBase]) {
                     elCicdCommons.cloneElCicdRepo()
                     elcicdCloned[microService.codeBase] = true
                 }
