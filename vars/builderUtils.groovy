@@ -3,9 +3,14 @@
  *
  * @see the build-to-dev pipeline for example on how to use
  */
- 
-def BUILDER = 'BUILDER' 
-def TESTER = 'TESTER' 
+
+@groovy.transform.Field
+def BUILDER = 'BUILDER'
+
+@groovy.transform.Field 
+def TESTER = 'TESTER'
+
+@groovy.transform.Field 
 def SCANNER = 'SCANNER' 
 
 def loadBuilderModule(def microService, def type) {
