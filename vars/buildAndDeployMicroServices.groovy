@@ -30,24 +30,22 @@ def call(Map args) {
         projectInfo.microServices.each { it.gitBranch = cicdInfo[it.name] }
     }
 
-    stage('Checkout code from repository') {
-        pipelineUtils.echoBanner("CLONING MICROSERVICE REPOS:", projectInfo.microServices.findAll { it.gitBranch }.join(', '))
-
-        projectInfo.microServices.findAll { it.gitBranch }.each { microService ->
-            pipelineUtils.cloneGitRepo(microService, projectInfo.gitBranch)
-
-            dir (microService.workDir) {
-                sh """
-                    ${shellEcho 'filesChanged:'}
-                    git diff HEAD^ HEAD --stat || :
-                """
-            }
-        }
-    }
-    
     projectInfo.microServices.each { microService ->
         if (microService.gitBranch) {
             elCicdNode(agent: "${CODE_BASE}") {
+                stage('Checkout code from repository') {
+                    pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepo}")
+            
+                    pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
+        
+                    dir (microService.workDir) {
+                        sh """
+                            ${shellEcho 'filesChanged:'}
+                            git diff HEAD^ HEAD --stat || :
+                        """
+                    }
+                }
+    
                 builderUtils.buildTestAndScan(projectInfo)
 
                 stage('build images and push to repository') {
