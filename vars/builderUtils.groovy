@@ -11,7 +11,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("BUILD MICROSERVICE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def builderModule = load(microService[type] ?: el.cicd.BUILDER)
+                    def builderModule = load(microService[el.cicd.BUILDER] ?: el.cicd.BUILDER)
                     builderModule.build(projectInfo.id, microService.name)
                 }
             }
@@ -20,7 +20,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("RUN UNIT TESTS: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def testerModule = load(microService[type] ?: el.cicd.TESTER)
+                    def testerModule = load(microService[el.cicd.TESTER] ?: el.cicd.TESTER)
                     testerModule.test(projectInfo.id, microService.name)
                 }
             }
@@ -29,7 +29,7 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("SCAN CODE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def scannerModule = load(microService[type] ?: el.cicd.SCANNER)
+                    def scannerModule = load(microService[el.cicd.SCANNER] ?: el.cicd.SCANNER)
                     scannerModule.scan(projectInfo.id, microService.name)
                 }
             }
