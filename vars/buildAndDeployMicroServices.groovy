@@ -50,7 +50,7 @@ def call(Map args) {
                     }
                 }
     
-                builderUtils.buildTestAndScan(projectInfo)
+                builderUtils.buildTestAndScan(projectInfo, microService)
 
                 stage('build images and push to repository') {
                     def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
