@@ -8,8 +8,6 @@ def call(Map args) {
 
     elCicdCommons.initialize()
 
-    elCicdCommons.cloneElCicdRepo()
-
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.deployToEnv = projectInfo.devEnv
 
@@ -30,9 +28,15 @@ def call(Map args) {
         projectInfo.microServices.each { it.gitBranch = cicdInfo[it.name] }
     }
 
+    def elcicdCloned = [:]
     projectInfo.microServices.each { microService ->
         if (microService.gitBranch) {
             elCicdNode(agent: microService.codeBase) {
+                if (!elcicdCloned[microService.codeBase])
+                    elCicdCommons.cloneElCicdRepo()
+                    elcicdCloned[microService.codeBase] = true
+                }
+                
                 stage('Checkout code from repository') {
                     pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepo}")
             
