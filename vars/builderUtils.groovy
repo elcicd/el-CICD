@@ -11,7 +11,8 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("BUILD MICROSERVICE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def builderModule = load(microService[el.cicd.BUILDER] ?: el.cicd.BUILDER)
+                    def moduleName = microService[el.cicd.BUILDER] ?: el.cicd.BUILDER
+                    def builderModule = load "${moduleName}.groovy"
                     builderModule.build(projectInfo.id, microService.name)
                 }
             }
@@ -20,7 +21,8 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("RUN UNIT TESTS: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def testerModule = load(microService[el.cicd.TESTER] ?: el.cicd.TESTER)
+                    def moduleName = microService[el.cicd.TESTER] ?: el.cicd.TESTER
+                    def testerModule = load "${moduleName}.groovy"
                     testerModule.test(projectInfo.id, microService.name)
                 }
             }
@@ -29,7 +31,8 @@ def buildTestAndScan(def projectInfo) {
                 pipelineUtils.echoBanner("SCAN CODE: ${microService.name}")
         
                 dir(microService.workDir) {
-                    def scannerModule = load(microService[el.cicd.SCANNER] ?: el.cicd.SCANNER)
+                    def moduleName = microService[el.cicd.SCANNER] ?: el.cicd.SCANNER
+                    def scannerModule = load "${moduleName}.groovy"
                     scannerModule.scan(projectInfo.id, microService.name)
                 }
             }
