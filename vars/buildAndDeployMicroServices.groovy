@@ -20,18 +20,21 @@ def call(Map args) {
         }
         String sandboxNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
 
-        List inputs = [choice(name: 'sandBoxNamespaces', description: 'Build Namespace', choices: sandboxNamespaces)]
-        inputs += [booleanParam(name: 'freshEnvironment', description: 'Clean all from environment before deploying')]
+        List inputs = [choice(name: 'sandBoxNamespaces', description: 'Build Namespace', choices: sandboxNamespaces),
+                       string(name: 'gitBranch',  defaultValue: projectInfo.gitBranch, description: 'The branch to build', trim: true),
+                       booleanParam(name: 'buildAll', description: 'Build all microservices'),
+                       booleanParam(name: 'recreateAll', description: 'Clean the environment of all resources before deploying')]
 
         inputs += projectInfo.microServices.collect { microService ->
-            string(name: "${microService.name}", description: "${microService.active ? '' : el.cicd.INACTIVE}")
+            booleanParam(name: "${microService.name}", description: "${microService.active ? '' : el.cicd.INACTIVE}")
         }
 
         def cicdInfo = input(message: "Select namepsace and microservices to build to:", parameters: inputs)
 
         projectInfo.deployToNamespace = cicdInfo.sandBoxNamespaces
+        projectInfo.gitBranch = cicdInfo.gitBranch
         projectInfo.recreateAll = cicdInfo.freshEnvironment
-        projectInfo.microServices.each { it.gitBranch = cicdInfo[it.name] }
+        projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
 
         projectInfo.imageTag = projectInfo.devEnv
         
@@ -40,82 +43,40 @@ def call(Map args) {
             projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
         }
     }
-    def elcicdCloned = [:]
-    projectInfo.microServices.each { microService ->
-        if (microService.gitBranch) {
-            elCicdNode(agent: microService.codeBase) {
-                if (!elcicdCloned[microService.codeBase]) {
-                    elCicdCommons.cloneElCicdRepo()
-                    elcicdCloned[microService.codeBase] = true
-                }
-                
-                stage('Checkout code from repository for building') {
-                    pipelineUtils.echoBanner("CLONING MICROSERVICE REPO: ${microService.gitRepoUrl}")
-            
-                    pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
-        
-                    dir (microService.workDir) {
-                        sh """
-                            ${shellEcho 'filesChanged:'}
-                            git diff HEAD^ HEAD --stat || :
-                        """
-                    }
-                }
     
-                builderUtils.buildTestAndScan(projectInfo, microService)
-
-                stage('build images and push to repository') {
-                    def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
-                    def pullSecret = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO_PULL_SECRET"]
-                    
-                    def buildConfigName = microService.id
-                    if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
-                        buildConfigName += "-${projectInfo.imageTag}"
-                    }
-                    
-                    dir(microService.workDir) {
-                        sh """
-                            ${pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")}
+    stage('Clean ${} if requested') {
+        if (projectInfo.recreateAll) {
+            pipelineUtils.echoBanner("REMOVING ALL PROJECT RESOURCES FROM ${projectInfo.deployToNamespace} BEFORE BUILDING AND DEPLOYING")
             
-                            if [[ ! -n `oc get bc ${buildConfigName} -n ${projectInfo.nonProdCicdNamespace} --ignore-not-found` ]]
-                            then
-                                oc new-build --name ${buildConfigName} \
-                                             --binary=true \
-                                             --strategy=docker \
-                                             --to-docker \
-                                             --to=${imageRepo}/${microService.id}:${imageTag} \
-                                             --push-secret=${pullSecret} \
-                                             -n ${projectInfo.nonProdCicdNamespace}
-            
-                                oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.nonProdCicdNamespace}
-                            fi
-            
-                            chmod 777 Dockerfile
-                            echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
-                            echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
-                            echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
-                            echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
-            
-                            oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.nonProdCicdNamespace}
-                        """
-                    }
+            deploymentUtils.removeAllMicroservices(projectInfo)
+        }
+    }
+    
+    stage("build and deploy microservics to ${projectInfo.deployToNamespace}") {
+        def microServices = projectInfo.microServices.findAll { it.build }.collect { it.name }.join(' ')
+        microServices = microServices.collate(2)
+        
+        parallel(
+            stage('building first bucket of microservices') {
+                microServices[0].each { microService ->
+                    sh """
+                        oc start-build ${microService.id}-${projectInfo.imageTag} \
+                            --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
+                            --env GIT_BRANCH=${projectInfo.gitBranch} \
+                            --wait
+                    """
+                }
+            },
+            stage('building second bucket of microservices') {
+                microServices[1].each { microService ->
+                    sh """
+                        oc start-build ${microService.id}-${projectInfo.imageTag} \
+                            --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
+                            --env GIT_BRANCH=${projectInfo.gitBranch} \
+                            --wait
+                    """
                 }
             }
-        }
+        )
     }
-              
-    stage('Checkout code from repository for deployment') {
-        pipelineUtils.echoBanner("CLONING MICROSERVICE REPOS: ${microService.gitRepoUrl}")
-
-        projectInfo.microServices.each { microService ->
-            if (microService.gitBranch) {  
-                pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
-            }
-        }
-    }
-
-    deployMicroServices(projectInfo: projectInfo,
-                        microServices: projectInfo.microServices.findAll { it.gitBranch },
-                        imageTag: projectInfo.imageTag,
-                        recreate: args.recreate)
 }
