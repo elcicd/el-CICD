@@ -16,7 +16,7 @@ void call(Map args) {
     microService.gitBranch = args.gitBranch
     
     projectInfo.deployToEnv = projectInfo.devEnv
-    projectInfo.deployToNamespace = args.namespace
+    projectInfo.deployToNamespace = args.deployToNamespace
     if (projectInfo.deployToNamespace != projectInfo.devNamespace ||
         !projectInfo.sandboxNamespaces.contains(projectInfo.deployToNamespace))
     {
