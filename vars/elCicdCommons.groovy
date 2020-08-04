@@ -29,11 +29,5 @@ def cloneElCicdRepo() {
                 branch: el.cicd.EL_CICD_BRANCH_NAME,
                 credentialsId: el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
-
-        def authBearerCommand = """cat ${el.cicd.EL_CICD_DIR}/resources/AuthBearerHeader-template.txt  | sed "s/%TOKEN%/`oc whoami -t`/g" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
-        sh """
-            ${shellEcho 'Creating header file with auth token'}
-            ${maskCommand(authBearerCommand)}
-        """
     }
 }

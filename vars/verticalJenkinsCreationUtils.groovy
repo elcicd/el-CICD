@@ -36,7 +36,14 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         def cicdProjectsExist = sh(returnStdout: true, script: "oc projects -q | egrep '${cicdNamespace}' | tr '\n' ' '")
 
         if (!cicdProjectsExist.contains(cicdNamespace)) {
+      
             stage('Creating CICD namespaces and rbacGroup Jenkins') {
+                def authBearerCommand = """cat ${el.cicd.EL_CICD_DIR}/resources/AuthBearerHeader-template.txt  | sed "s/%TOKEN%/`oc whoami -t`/g" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
+                sh """
+                    ${shellEcho 'Creating header file with auth token'}
+                    ${maskCommand(authBearerCommand)}
+                """
+                
                 createCicdNamespaceAndJenkins(cicdNamespace, projectInfo.rbacGroup, isNonProd)
                 waitUntilJenkinsIsReady(cicdNamespace)
             }
