@@ -86,7 +86,7 @@ def call(Map args) {
                                              --push-secret=${pullSecret} \
                                              -n ${projectInfo.nonProdCicdNamespace}
             
-                                oc set build-secret --pull bc/${microService.id} ${pullSecret} -n ${projectInfo.nonProdCicdNamespace}
+                                oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.nonProdCicdNamespace}
                             fi
             
                             chmod 777 Dockerfile
