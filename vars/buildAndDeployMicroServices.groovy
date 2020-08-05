@@ -43,7 +43,7 @@ def call(Map args) {
         }
     }
     
-    def microServices = projectInfo.microServices.findAll { it.build }.collate(2)
+    def microServices = projectInfo.microServices.findAll { it.build }.collate(3)
         
     parallel(
         firstBucket: {
