@@ -39,8 +39,6 @@ def call(Map args) {
     
     stage('Clean ${} if requested') {
         if (projectInfo.recreateAll) {
-            pipelineUtils.echoBanner("REMOVING ALL PROJECT RESOURCES FROM ${projectInfo.deployToNamespace} BEFORE BUILDING AND DEPLOYING")
-            
             deploymentUtils.removeAllMicroservices(projectInfo)
         }
     }
