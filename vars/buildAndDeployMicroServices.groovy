@@ -48,24 +48,28 @@ def call(Map args) {
     def microServices = projectInfo.microServices.findAll { it.build }.collate(2)
         
     parallel(
-        stage("building first bucket of microservices to ${projectInfo.deployToNamespace}") {
-            microServices[0].each { microService ->
-                sh """
-                    oc start-build ${microService.id}-build-to-dev \
-                        --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
-                        --env GIT_BRANCH=${projectInfo.gitBranch} \
-                        --wait -n ${projectInfo.nonProdCicdNamespace}
-                """
+        firstBucket: {
+            stage("building first bucket of microservices to ${projectInfo.deployToNamespace}") {
+                microServices[0].each { microService ->
+                    sh """
+                        oc start-build ${microService.id}-build-to-dev \
+                            --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
+                            --env GIT_BRANCH=${projectInfo.gitBranch} \
+                            --wait -n ${projectInfo.nonProdCicdNamespace}
+                    """
+                }
             }
         },
-        stage("building second bucket of microservices to ${projectInfo.deployToNamespace}") {
-            microServices[1].each { microService ->
-                sh """
-                    oc start-build ${microService.id}-build-to-dev \
-                        --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
-                        --env GIT_BRANCH=${projectInfo.gitBranch} \
-                        --wait -n ${projectInfo.nonProdCicdNamespace}
-                """
+        secondBucket: {
+            stage("building second bucket of microservices to ${projectInfo.deployToNamespace}") {
+                microServices[1].each { microService ->
+                    sh """
+                        oc start-build ${microService.id}-build-to-dev \
+                            --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
+                            --env GIT_BRANCH=${projectInfo.gitBranch} \
+                            --wait -n ${projectInfo.nonProdCicdNamespace}
+                    """
+                }
             }
         }
     )
