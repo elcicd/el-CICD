@@ -45,7 +45,7 @@ void call(Map args) {
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.BUILDER] ?: el.cicd.BUILDER
             def builderModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
-            builderModule.build(projectInfo.id, microService.name)
+            builderModule.build(projectInfo.id, microService)
         }
     }
 
@@ -55,7 +55,7 @@ void call(Map args) {
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.TESTER] ?: el.cicd.TESTER
             def testerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
-            testerModule.test(projectInfo.id, microService.name)
+            testerModule.test(projectInfo.id, microService)
         }
     }
 
@@ -65,7 +65,7 @@ void call(Map args) {
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.SCANNER] ?: el.cicd.SCANNER
             def scannerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
-            scannerModule.scan(projectInfo.id, microService.name)
+            scannerModule.scan(projectInfo.id, microService)
         }
     }
 
