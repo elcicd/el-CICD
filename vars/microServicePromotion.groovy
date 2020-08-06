@@ -26,7 +26,10 @@ def call(Map args) {
                 from = key
             }
         }
-        def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}")]
+        def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
+                      choice(name: 'defaultAction',
+                             description: 'Default action to apply to override IGNORE',
+                             choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")]
 
         inputs += projectInfo.microServices.collect { microService ->
             choice(name: "${microService.name}",
@@ -47,8 +50,8 @@ def call(Map args) {
 
         projectInfo.microServices.each { microService ->
             def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
-            microService.promote = answer == el.cicd.PROMOTE
-            microService.remove = answer == el.cicd.REMOVE
+            microService.promote = answer == el.cicd.PROMOTE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.PROMOTE)
+            microService.remove = answer == el.cicd.REMOVE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.REMOVE)
 
             promoteOrRemove = promoteOrRemove || microService.promote != null
         }
@@ -186,8 +189,14 @@ def call(Map args) {
         }
     }
 
-    deployMicroServices(projectInfo: projectInfo,
-                        microServices: projectInfo.microServices.findAll { it.promote },
-                        microServicesToRemove: projectInfo.microServices.findAll { it.remove },
-                        imageTag: projectInfo.deployToEnv)
+    def promotionMicroServices = projectInfo.microServices.findAll { it.promote }
+    if (promotionMicroServices) {
+        deployMicroServices(projectInfo: projectInfo,
+                            microServices: promotionMicroServices,
+                            microServicesToRemove: projectInfo.microServices.findAll { it.remove },
+                            imageTag: projectInfo.deployToEnv)
+    }
+    else {
+        deployMicroServices(projectInfo: projectInfo, recreateAll: true)
+    }
 }

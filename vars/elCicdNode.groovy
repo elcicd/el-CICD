@@ -5,6 +5,7 @@
 
 @groovy.transform.Field
 agentDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest',
+             'java-maven': 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-java-maven:latest',
              python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest']
  
 def call(Map args = [:], Closure body) {
