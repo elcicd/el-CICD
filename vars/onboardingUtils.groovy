@@ -86,9 +86,6 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
                     oc adm new-project \${NAMESPACES[\$i]}
                 fi
 
-                oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                    oc create -f - -n \${NAMESPACES[\$i]}
-
                 oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n \${NAMESPACES[\$i]}
 
                 oc policy add-role-to-user edit system:serviceaccount:${projectInfo.nonProdCicdNamespace}:jenkins -n \${NAMESPACES[\$i]}

@@ -185,7 +185,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsI
 }
 
 def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkinsUrl) {
-    withCredentials([string(credentialsId: 'sonarqube-access-token', variable: 'SONARQUBE_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.SONARQUBE_ACCESS_TOKEN_ID, variable: 'SONARQUBE_ACCESS_TOKEN')]) {
         def curlCommand = """curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${nonProdCicdJenkinsUrl}"""
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH SONARQUBE TOKEN TO ${nonProdCicdNamespace} JENKINS")}
