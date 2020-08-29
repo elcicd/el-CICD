@@ -84,10 +84,9 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.devEnv = el.cicd.devEnv
         projectInfo.prodEnv = el.cicd.prodEnv
 
-        projectInfo.testEnvs = el.cicd.testEnvs.findAll { !projectInfo.disabledTestEnvs.contains(it) }
-        if(!projectInfo.testEnvs) {
-            errorBanner('There must be at least one test environment per project', "Project id: ${projectInfo.id}, DISABLED ENVS: ${projectInfo.disabledTestEnvs.join(', ')}")
-        }
+        projectInfo.testEnvs = el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) }
+        projectInfo.testEnvs = projectInfo.testEnvs ?: [el.cicd.testEnvs[0]]
+
         projectInfo.nonProdEnvs = [projectInfo.devEnv]
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
 
