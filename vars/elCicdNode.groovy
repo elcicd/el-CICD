@@ -29,9 +29,9 @@ def call(Map args = [:], Closure body) {
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: '512Mi',
-                resourceLimitMemory: '4Gi',
+                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceRequestCpu: '1',
-                resourceLimitCpu: '4'
+                resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
         ]
     ]) {

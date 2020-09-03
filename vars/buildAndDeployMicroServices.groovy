@@ -75,7 +75,7 @@ def call(Map args) {
                 }
             },
             thirdBucket: {
-                stage("building second bucket of microservices to ${projectInfo.deployToNamespace}") {
+                stage("building third bucket of microservices to ${projectInfo.deployToNamespace}") {
                     if (microServices[2]) {
                         microServices[2].each { microService ->
                             sh """
