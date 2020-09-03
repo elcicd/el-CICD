@@ -43,7 +43,8 @@ def call(Map args) {
         }
     }
     
-    def bucketSize = Math.ceil(projectInfo.microServices.size()/3)
+    Integer size = projectInfo.microServices.size()
+    def bucketSize = Math.ceil(size/3)
     def microServices = projectInfo.microServices.findAll { it.build }.collate(bucketSize)
 
     if (microServices) {
