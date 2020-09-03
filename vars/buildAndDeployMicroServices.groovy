@@ -43,9 +43,10 @@ def call(Map args) {
         }
     }
     
-    def size = projectInfo.microServices.size()/3
-    def bucketSize = Math.ceil(size)
-    def microServices = projectInfo.microServices.findAll { it.build }.collate(bucketSize)
+    def microservices = [[],[],[]]
+    projectInfo.microServices.findAll { it.build }.eachWithIndex { microService, i ->
+        microservices[i%3].add(microService)
+    }
 
     if (microServices) {
         parallel(
