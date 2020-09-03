@@ -43,9 +43,9 @@ def call(Map args) {
         }
     }
     
-    def microservices = [[],[],[]]
+    def microServices = [[],[],[]]
     projectInfo.microServices.findAll { it.build }.eachWithIndex { microService, i ->
-        microservices[i%3].add(microService)
+        microServices[i%3].add(microService)
     }
 
     if (microServices) {
