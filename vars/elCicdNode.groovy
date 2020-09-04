@@ -21,7 +21,7 @@ def call(Map args = [:], Closure body) {
         workingDir: '/tmp',
         serviceAccount: 'jenkins',
         podRetention: onFailure(),
-        idleMinutes: '30',
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         containers: [
             containerTemplate(
                 name: 'jnlp',
@@ -30,7 +30,7 @@ def call(Map args = [:], Closure body) {
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: '512Mi',
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceRequestCpu: '1',
+                resourceRequestCpu: '100m',
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
         ]
