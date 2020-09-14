@@ -44,7 +44,7 @@ def call(Map args) {
         }
     }
 
-    stage('Deploy image in dev from artifact repository') {
+    stage('Deploy image in namespace from artifact repository') {
         if (args.microServices) {
             deploymentUtils.rolloutLatest(args.projectInfo, args.microServices)
         }
