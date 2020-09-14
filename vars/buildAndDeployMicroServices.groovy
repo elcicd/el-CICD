@@ -18,9 +18,9 @@ def call(Map args) {
         (1..projectInfo.sandboxEnvs).each { i ->
             namespaces += "${sandboxNamespacePrefix}-${i}"
         }
-        String sandboxNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
+        String deployableNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
 
-        List inputs = [choice(name: 'sandBoxNamespaces', description: 'Build Namespace', choices: sandboxNamespaces),
+        List inputs = [choice(name: 'deployableNamespaces', description: 'Build Namespace', choices: deployableNamespaces),
                        string(name: 'gitBranch',  defaultValue: projectInfo.gitBranch, description: 'The branch to build', trim: true),
                        booleanParam(name: 'buildAll', description: 'Build all microservices'),
                        booleanParam(name: 'recreateAll', description: 'Clean the environment of all resources before deploying')]
@@ -31,7 +31,7 @@ def call(Map args) {
 
         def cicdInfo = input(message: "Select namepsace and microservices to build to:", parameters: inputs)
 
-        projectInfo.deployToNamespace = cicdInfo.sandBoxNamespaces
+        projectInfo.deployToNamespace = cicdInfo.deployableNamespaces
         projectInfo.gitBranch = cicdInfo.gitBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
         projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
