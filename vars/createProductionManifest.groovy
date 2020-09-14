@@ -15,7 +15,7 @@ def call(Map args) {
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
 
     stage('Verify image(s) with release candidate tags do NOT exist in pre-prod repository') {
-        pipelineUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN  ${projectInfo.predProdEnv} REPOSITORY AS ${projectInfo.releaseCandidateTag}")
+        pipelineUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN  ${projectInfo.preProdEnv} REPOSITORY AS ${projectInfo.releaseCandidateTag}")
 
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
