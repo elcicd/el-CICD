@@ -192,7 +192,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                                     '******' }
                         mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
-                            ${paramsStr} \
+                            \$(printf %q "${paramsStr}") \
                             -p 'CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN}' \
                             -p 'IMAGE_REPOSITORY=${imageRepository}' \
                             -p 'PULL_SECRET=${pullSecret}' \
@@ -202,7 +202,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
                             -f ${templateDef.patchedFile} \
-                            -o json > ./${projectInfo.deployToEnv}/processed-${index}-${templateDef.file}
+                            -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${templateDef.file}
                     """
                 }
             }
