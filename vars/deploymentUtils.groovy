@@ -180,7 +180,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
             dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
-                    echo paramStr
+                    echo paramsStr
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
                     def imageRepository = el.cicd["${ENV_TO}_IMAGE_REPO"]
