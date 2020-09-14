@@ -192,7 +192,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                                     '******' }
                         mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
-                            \$(printf %q "${paramsStr}") \
+                            ${paramsStr} \
                             -p 'CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN}' \
                             -p 'IMAGE_REPOSITORY=${imageRepository}' \
                             -p 'PULL_SECRET=${pullSecret}' \
