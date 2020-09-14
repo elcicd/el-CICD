@@ -180,7 +180,6 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
             dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
-                    echo paramsStr
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
                     def imageRepository = el.cicd["${ENV_TO}_IMAGE_REPO"]
@@ -203,7 +202,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
                             -f ${templateDef.patchedFile} \
-                            -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${templateDef.file}
+                            -o json > ./${projectInfo.deployToEnv}/processed-${index}-${templateDef.file}
                     """
                 }
             }
