@@ -20,7 +20,7 @@ def call(Map args) {
     stage('Remove stale namespace environments, if necessary') {
         if (args.recreateProd) {
             sh """
-                oc delete project ${projectInfo.prodNamespace}
+                oc delete project ${projectInfo.prodNamespace} || true
                 until
                     !(oc project  ${projectInfo.prodNamespace} > /dev/null 2>&1)
                 do
