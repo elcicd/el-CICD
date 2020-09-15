@@ -286,7 +286,7 @@ def rolloutLatest(def projectInfo, def microServices) {
                 done
             else
                 ${shellEcho   "******"}
-                { echo "No DeplomentConfigs found for \${MICROSERVICE_NAME}"; } 2>1
+                { echo "No DeploymentConfigs found for \${MICROSERVICE_NAME}"; } 2>1
                 ${shellEcho   "******"}
             fi
         done
