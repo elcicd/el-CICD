@@ -17,8 +17,8 @@ def init(def metaData) {
     cicd.devEnv = cicd.DEV_ENV.toLowerCase()
     cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
 
-    cicd.IGNORE = 'IGNORE'
-    cicd.PROMOTE = 'PROMOTE'
+    cicd.IGNORE = ''
+    cicd.DEPLOY = 'DEPLOY'
     cicd.REMOVE = 'REMOVE'
 
     cicd.BUILDER = 'builder'

@@ -13,7 +13,7 @@ def call(Map args) {
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     stage ('Select microservices to promote and remove') {
-        pipelineUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO PROMOTE OR REMOVE")
+        pipelineUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
 
         def ENV_DELIMITER = ' to '
         def from
@@ -85,7 +85,7 @@ def call(Map args) {
     }
 
     stage('Verify images are deployed in previous environment, collect source commit hash') {
-        pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
+        pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
 
         def script = """oc get cm -o jsonpath='{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}' -n ${projectInfo.deployFromNamespace}"""
         def commitHashMap =  sh(returnStdout: true, script: script).trim()
