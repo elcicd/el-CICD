@@ -16,9 +16,9 @@ def initialize() {
             oc version
         """
 
-        el.cicd = el.cicd.asImmutable()
-
         el.cicd.RELEASE_VERSION_PREFIX = 'v'
+
+        el.cicd = el.cicd.asImmutable()
     }
 }
 
