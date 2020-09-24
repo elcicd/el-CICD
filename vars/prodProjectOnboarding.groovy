@@ -39,8 +39,6 @@ def call(Map args) {
             then
                 oc adm new-project ${projectInfo.prodNamespace} --node-selector="${region}"
 
-                oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n ${projectInfo.prodNamespace}
-
                 oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.prodNamespace}
 
                 oc policy add-role-to-user edit system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}

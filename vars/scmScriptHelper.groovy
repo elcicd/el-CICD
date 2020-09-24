@@ -21,7 +21,8 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 def APPLICATION_JSON_HDR = '-H application:json'
 
 def getDeployKeyName(def projectInfo, def isNonProd) {
-    return (isNonProd ? el.cicd.EL_CICD_DEPLOY_NON_PROD_KEY_TITLE : el.cicd.EL_CICD_DEPLOY_PROD_KEY_TITLE) + projectInfo.id
+    def keyPrefix = isNonProd ? el.cicd.EL_CICD_DEPLOY_NON_PROD_KEY_TITLE : el.cicd.EL_CICD_DEPLOY_PROD_KEY_TITLE
+    return "${keyPrefix}-${projectInfo.id}"
 }
 
 def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN) {
