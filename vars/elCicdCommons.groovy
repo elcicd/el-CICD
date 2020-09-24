@@ -17,6 +17,8 @@ def initialize() {
         """
 
         el.cicd = el.cicd.asImmutable()
+
+        el.cicd.RELEASE_VERSION_PREFIX = 'v'
     }
 }
 

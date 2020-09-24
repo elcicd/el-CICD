@@ -17,6 +17,11 @@ def call(Map args) {
     stage('Verify image(s) with release candidate tags do NOT exist in pre-prod repository') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN  ${projectInfo.preProdEnv} REPOSITORY AS ${projectInfo.releaseCandidateTag}")
 
+        if (projectInfo.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX)) {
+            errorBanner("Release Candidate tags cannot start with '${el.cicd.RELEASE_VERSION_PREFIX}'.",
+                        "'${el.cicd.RELEASE_VERSION_PREFIX}' will prefix Release Versions when Release Candidates are promoted.")
+        }
+
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
             def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"

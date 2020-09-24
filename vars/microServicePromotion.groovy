@@ -28,7 +28,7 @@ def call(Map args) {
         }
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
                       choice(name: 'defaultAction',
-                             description: 'Default action to apply to override IGNORE',
+                             description: 'Default action to apply to all microservices',
                              choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")]
 
         inputs += projectInfo.microServices.collect { microService ->

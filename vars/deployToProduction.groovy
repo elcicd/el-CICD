@@ -13,8 +13,9 @@ def call(Map args) {
     elCicdCommons.cloneElCicdRepo()
 
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
-    projectInfo.releaseCandidateTag = args.releaseCandidateTag
-    projectInfo.releaseVersionTag = "v${projectInfo.releaseCandidateTag}"
+    projectInfo.releaseCandidateTag = args.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX) ? 
+        args.releaseCandidateTag.substring(el.cicd.RELEASE_VERSION_PREFIX.length()) : args.releaseCandidateTag
+    projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${projectInfo.releaseCandidateTag}"
     projectInfo.deployToEnv = projectInfo.prodEnv
     projectInfo.deployToNamespace = projectInfo.prodNamespace
 
