@@ -5,7 +5,6 @@
  */
 
 def call(Map args) {
-
     elCicdCommons.initialize()
 
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
