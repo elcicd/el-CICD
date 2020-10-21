@@ -64,10 +64,13 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
 
 def refreshSharedPipelines(def projectInfo, def isNonProd) {
     stage('Refreshing shared pipelines') {
-        def templates = isNonProd ? 'promotion-removal-pipeline-template.yml redeploy-removal-pipeline-template.yml ' +
-                'production-manifest-pipeline-template.yml redeploy-release-candidate-pipeline-template.yml ' +
-                'build-and-deploy-microservices-pipeline-template.yml' : 
-                'deploy-to-production-pipeline-template.yml'
+        def nonProdPipelines =
+            'promotion-removal-pipeline-template.yml' +
+            'redeploy-removal-pipeline-template.yml ' +
+            'create-release-candidate-pipeline-template.yml' +
+            'redeploy-release-candidate-pipeline-template.yml ' +
+            'build-and-deploy-microservices-pipeline-template.yml'
+        def templates = isNonProd ? nonProdPipelines : 'deploy-to-production-pipeline-template.yml'
         pipelineUtils.echoBanner('CREATING SHARED PIPELINES:', templates)
         
         def namespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace

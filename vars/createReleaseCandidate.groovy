@@ -1,6 +1,6 @@
 /*
  * Defines the bulk of the project onboarding pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/production-manifest-pipeline-template
+ * a realized el-CICD/buildconfigs/create-release-candidate-template
  *
  */
 
