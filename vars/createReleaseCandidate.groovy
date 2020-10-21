@@ -60,6 +60,11 @@ def call(Map args) {
                          defaultValue: microService.active,
                          description: "${microService.active ? '' : el.cicd.INACTIVE}")
         }
+
+        if (!inputs) {
+            errorBanner("NO MICROSERVICES AVAILABLE TO TAG!")
+        }
+
         def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
 
         projectInfo.microServices.each { microService ->
