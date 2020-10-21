@@ -56,12 +56,18 @@ def gatherProjectInfoStage(def projectId) {
                 branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
                 credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
 
-            projectFile = findFiles(glob: "**/${projectId}.*")[0].path
-            try {
-                projectInfo = readYaml file: projectFile
+            projectFile = findFiles(glob: "**/${projectId}.*")
+            if (projectFile) {
+                projectFile = projectFile[0].path
+                try {
+                    projectInfo= readYaml file: projectFile
+                }
+                catch (Exception e) {
+                    projectInfo = readJSON file: projectFile
+                }
             }
-            catch (Exception e) {
-                projectInfo = readJSON file: projectFile
+            else {
+                pipelineUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
             }
         }
 
@@ -91,9 +97,9 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
 
         projectInfo.preProdEnv = projectInfo.testEnvs.last()
-        
+
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-        projectInfo.sandboxNamespaces = []        
+        projectInfo.sandboxNamespaces = []
         (1..projectInfo.sandboxEnvs).each { i ->
             projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
         }
