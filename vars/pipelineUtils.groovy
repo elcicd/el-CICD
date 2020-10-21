@@ -67,7 +67,7 @@ def gatherProjectInfoStage(def projectId) {
                 }
             }
             else {
-                pipelineUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
+                errorBanner("PROJECT NOT FOUND: ${projectId}")
             }
         }
 
