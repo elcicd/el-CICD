@@ -62,7 +62,7 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            errorBanner("NO MICROSERVICES AVAILABLE TO TAG!")
+            pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE TO TAG!")
         }
 
         def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
