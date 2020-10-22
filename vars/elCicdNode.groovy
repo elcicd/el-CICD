@@ -4,7 +4,7 @@
 
 
 @groovy.transform.Field
-agentDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest',
+agentDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-el-cicd-base:latest',
              'java-maven': 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-java-maven:latest',
              'r-lang': 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-r-lang:latest',
              python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-python:latest']
