@@ -118,6 +118,7 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
         oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                       -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY}  \
                                       -p DISABLE_ADMINISTRATIVE_MONITORS==${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS}  \
+                                      -e CONTAINER_CORE_LIMIT=${el.cicd.JENKINS_CONTAINER_CORE_LIMIT} \
                                       -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops -n ${cicdJenkinsNamespace}
 
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n ${cicdJenkinsNamespace}
