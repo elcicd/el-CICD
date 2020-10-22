@@ -69,7 +69,7 @@ def call(Map args) {
         input("""
 
             ===========================================
-            CONFIRM REDEPLOYMENT OF ${projectInfo.releaseVersionTag} to ${projectInfo.preProdEnv}
+            CONFIRM REDEPLOYMENT OF ${projectInfo.releaseCandidateTag} to ${projectInfo.preProdEnv}
             ===========================================
 
             *******
