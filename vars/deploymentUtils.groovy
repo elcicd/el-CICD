@@ -136,13 +136,16 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 }
 
 def kustomize(def templateDef) {
-    echo "Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}"
 
     sh """
+        echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
+
         cat ${el.cicd.EL_CICD_DIR}/resources/kustomization-template.yml | \
             sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
 
         kustomize build . > ${templateDef.patchedFile}
+
+        cat ${templateDef.patchedFile}
     """
 }
 
