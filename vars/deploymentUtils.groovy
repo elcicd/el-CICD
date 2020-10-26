@@ -136,7 +136,6 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 }
 
 def kustomize(def templateDef) {
-
     sh """
         echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
 
@@ -166,6 +165,9 @@ def buildTemplate(def templateDef) {
         else {
             pipelineUtils.errorBanner("Only DeploymentConfig and CronJob resources can be patched: ${templateDef.file}")
         }
+    }
+    else {
+        echo "NO PATCH TO APPLY TO TEMPLATE:  ${templateDef.file}"
     }
 
     echo "Writing ${templateDef.file} to ${templateDef.patchedFile}"
