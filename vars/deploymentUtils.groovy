@@ -184,11 +184,15 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
         if (microService.templateDefs) {
             dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
+                    def appName = templateDef.appName ?: microService.name
+                    templateDef.params.ROUTE_HOST = templateDef.params.ROUTE_HOST ?: "${appName}-${projectInfo.deployToEnv}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
                     def imageRepository = el.cicd["${ENV_TO}_IMAGE_REPO"]
                     def pullSecret = el.cicd["${ENV_TO}_IMAGE_REPO_PULL_SECRET"]
+
 
                     sh """
                         ${shellEcho '******',
@@ -198,12 +202,11 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
                             ${paramsStr} \
-                            -p 'CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN}' \
                             -p 'IMAGE_REPOSITORY=${imageRepository}' \
                             -p 'PULL_SECRET=${pullSecret}' \
                             -p 'PROJECT_ID=${projectInfo.id}' \
                             -p 'MICROSERVICE_NAME=${microService.name}' \
-                            -p 'APP_NAME=${templateDef.appName ?: microService.name}' \
+                            -p 'APP_NAME=${appName}' \
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
                             -f ${templateDef.patchedFile} \
