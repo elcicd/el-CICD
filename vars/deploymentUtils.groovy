@@ -185,8 +185,8 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
             dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def appName = templateDef.appName ?: microService.name
-                    if (!templateDef.params.ROUTE_HOST) {
-                        templateDef.params.ROUTE_HOST = "${appName}-${projectInfo.deployToEnv}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+                    if (templateDef.params) {
+                        templateDef.params.ROUTE_HOST = templateDef.params.ROUTE_HOST ?: "${appName}-${projectInfo.deployToEnv}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
                     }
 
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
