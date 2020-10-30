@@ -204,6 +204,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
                             ${paramsStr} \
+                            -p 'CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN}' \
                             -p 'IMAGE_REPOSITORY=${imageRepository}' \
                             -p 'PULL_SECRET=${pullSecret}' \
                             -p 'PROJECT_ID=${projectInfo.id}' \
@@ -313,7 +314,6 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
                 oc process -f microservice-meta-info-template.yml \
-                           -p CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN} \
                            -p PROJECT_ID=${projectInfo.id} \
                            -p MICROSERVICE_NAME=${microService.name} \
                            -p GIT_REPO=${microService.gitRepoName} \
