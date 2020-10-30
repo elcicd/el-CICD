@@ -59,8 +59,8 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             if (microService.releaseCandidateGitTag) {
                 def srcCommitHash = microService.releaseCandidateGitTag.split('-')[1]
-                def refName = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${srcCommitHash}"
-                pipelineUtils.cloneGitRepo(microService, refName)
+                microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${srcCommitHash}"
+                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
             }
         }
     }
