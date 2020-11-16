@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Utility methods for onboarding a project of one or more microservices onto
  * el-CICD managed CICD pipeline.
  */

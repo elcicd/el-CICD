@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Utility methods for creating curl commands needed for onboarding projects into
  * an el-CICD managed CICD pipeline.
  */

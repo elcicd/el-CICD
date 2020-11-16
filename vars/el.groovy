@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Called at the beginning of every pipeline to initilize map of el-CICD
  * meta-info.
  */

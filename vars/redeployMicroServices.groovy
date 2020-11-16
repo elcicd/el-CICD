@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Defines the implementation of the redeploy microservice pipeline.  Called inline from the
  * a realized el-CICD/buildconfigs/redeploy-removal-pipeline-template
  *

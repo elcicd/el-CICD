@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Utility methods for apply OCP resources
  *
  * @see the projectid-onboard pipeline for example on how to use

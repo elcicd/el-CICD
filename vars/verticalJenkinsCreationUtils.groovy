@@ -1,4 +1,6 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Utility methods for bootstrapping CICD non-prod and prod environments
  * Should be called in order as written
  *

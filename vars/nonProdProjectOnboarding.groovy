@@ -1,7 +1,8 @@
-/*
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  * Defines the bulk of the project onboarding pipeline.  Called inline from the
  * a realized el-CICD/buildconfigs/project-onboarding-pipeline-template
- *
  */
 
 def call(Map args) {
@@ -49,7 +50,7 @@ def call(Map args) {
     }
 
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
-        pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH GITHUB REPO ON NON-PROD JENKINS FOR ${projectInfo.id}")
+        pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH GIT_PROVIDER REPO ON NON-PROD JENKINS FOR ${projectInfo.id}")
 
         dir ("${el.cicd.EL_CICD_DIR}/buildconfigs") {
             projectInfo.microServices.each { microService ->
@@ -106,7 +107,7 @@ def call(Map args) {
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
-        pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO GITHUB FOR EACH REPO")
+        pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO GIT_PROVIDER FOR EACH REPO")
 
         withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             projectInfo.microServices.each { microService ->
