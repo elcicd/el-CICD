@@ -20,7 +20,7 @@ def call(Map args) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING PROJECT PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-            if [[ ${args.deleteRbacGroupJenkins} != 'true' ]]
+            if [[ '${args.deleteRbacGroupJenkins}' != 'true' ]]
             then
                 for BCS in `oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace} | grep Jenkins | awk '{print \$1}'`
                 do
