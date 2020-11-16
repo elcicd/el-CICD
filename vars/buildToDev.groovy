@@ -36,7 +36,7 @@ void call(Map args) {
         dir (microService.workDir) {
             sh """
                 ${shellEcho 'filesChanged:'}
-                git diff HEAD^ HEAD --stat || :
+                git diff HEAD^ HEAD --stat 2> /dev/null || :
             """
         }
     }
