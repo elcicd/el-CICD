@@ -14,6 +14,7 @@ def call(Map args) {
 
     stage('Remove stale namespace environments and pipelines if necessary') {
         def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
+        namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
         namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.nonProdCicdNamespace}" : ''
 
         sh """
