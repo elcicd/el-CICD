@@ -28,7 +28,7 @@ def call(Map args) {
                 done
             done
 
-            ${ pipelineUtils.shellEchoBanner("REMOVING PROJECT NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}" }
+            ${pipelineUtils.shellEchoBanner("REMOVING PROJECT NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}")}
 
             oc delete project ${namespacesToDelete} || true"
 
