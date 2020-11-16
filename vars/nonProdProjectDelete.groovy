@@ -30,7 +30,7 @@ def call(Map args) {
 
             ${pipelineUtils.shellEchoBanner("REMOVING PROJECT NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}")}
 
-            oc delete project ${namespacesToDelete} || true"
+            oc delete project ${namespacesToDelete} || true
 
             NAMESPACES_TO_DELETE='${namespacesToDelete}'
             for NAMESPACE in \${NAMESPACES_TO_DELETE}
