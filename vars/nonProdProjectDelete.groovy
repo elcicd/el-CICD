@@ -22,9 +22,9 @@ def call(Map args) {
 
             if [[ '${args.deleteRbacGroupJenkins}' != 'true' ]]
             then
-                for BCS in `oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace} | grep Jenkins | awk '{print \$1}'`
+                for BCS in \$(oc get bc -l projectid=${projectInfo.id} -n devops-cicd-non-prod -o jsonpath='{.items[*].metadata.name}')
                 do
-                    while [ `oc get bc \${BCS} -n ${projectInfo.nonProdCicdNamespace} | grep \${BCS} | wc -l` -gt 0 ] ;
+                    while [ \$(oc get bc \${BCS} -n ${projectInfo.nonProdCicdNamespace} | grep \${BCS} | wc -l) -gt 0 ] ;
                     do
                         oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.nonProdCicdNamespace}
                         sleep 5

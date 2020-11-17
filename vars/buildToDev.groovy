@@ -89,6 +89,7 @@ void call(Map args) {
                 if [[ ! -n `oc get bc ${buildConfigName} -n ${projectInfo.nonProdCicdNamespace} --ignore-not-found` ]]
                 then
                     oc new-build --name ${buildConfigName} \
+                                 --labels projectid=${projectInfo.id} \
                                  --binary=true \
                                  --strategy=docker \
                                  --to-docker \
