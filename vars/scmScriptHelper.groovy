@@ -32,7 +32,7 @@ def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def i
 
     def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
 
         curlCommand = "${CURL_GET} ${url} | ${jqIdFilter}"
@@ -51,7 +51,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
     def curlCommand
 
     if (projectInfo.scmHost.contains('github')) {
-        curlCommand = "curl -ksS -X DELETE https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        curlCommand = "curl -ksS -X DELETE https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
     }
     else if (projectInfo.scmHost.contains('gitlab')) {
         pipelineUtils.errorBanner("GitLab is not supported yet")
@@ -69,7 +69,7 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonPr
     def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         curlCommand = """
             cat ${el.cicd.EL_CICD_DIR}/resources/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${el.cicd.TEMP_DIR}/sshKeyFile.json
             cat ${microService.gitSshPrivateKeyName}.pub >> ${el.cicd.TEMP_DIR}/sshKeyFile.json
@@ -94,7 +94,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
     def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${projectInfo.nonProdCicdNamespace}`"
 
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://${ACCESS_TOKEN}@api.${projectInfo.scmHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
+        def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
 
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
