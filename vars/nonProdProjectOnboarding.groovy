@@ -5,7 +5,21 @@
  * a realized el-CICD/buildconfigs/project-onboarding-pipeline-template
  */
 
+import java.nio.file.Path
+import java.nio.file.Paths
+
+
 def call(Map args) {
+    @groovy.transform.SourceURI def sourceURI
+
+    pipelineUtils.echoBanner("SOURCE-URI ${sourceURI}")
+
+    Path scriptLocation = Paths.get(sourceURI)
+    scriptLocation = scriptLocation.getParent().getParent().resolve('resources').toString()
+    pipelineUtils.echoBanner("SOURCE-URI ${scriptLocation}")
+
+    sh "ls ${scriptLocation}"
+    return
 
     elCicdCommons.initialize()
 
