@@ -47,14 +47,20 @@ def updateProjectMetaInfo(def projectInfo) {
     stage('update project meta-info for production')
     dir("${el.cicd.EL_CICD_DIR}/templates") {
         def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
-        def paramsStr = "-p 'PROJECT_ID=${projectInfo.id}' -p 'RELEASE_VERSION=${projectInfo.releaseVersionTag}' -p 'MICROSERVICE_LIST=${microServiceNames}'"
 
         sh """
             ${shellEcho '******',
                         "UPDATING ${projectInfo.id}-meta-info"
                         ''}
 
-            oc process ${paramsStr} -f project-meta-info-template.yml | oc apply --overwrite -n ${projectInfo.prodNamespace} -f -
+                oc delete --ignore-not-found ${PROJECT_ID}-meta-info \
+                oc create ConfigMap ${PROJECT_ID}-meta-info
+                    --from-literal=projectid=${projectInfo.id} \
+                    --from-literal=release-version=${projectInfo.releaseVersionTag} \
+                    --from-literal=microservices=${microServiceNames}
+                oc label ConfigMap ${PROJECT_ID}-meta-info \
+                    projectid=${projectInfo.id} \
+                    release-version=${projectInfo.releaseVersionTag}
 
             ${shellEcho '',
                         '******'}

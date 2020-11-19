@@ -315,15 +315,23 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
             sh """
                 ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-                oc process -f microservice-meta-info-template.yml \
-                           -p PROJECT_ID=${projectInfo.id} \
-                           -p MICROSERVICE_NAME=${microService.name} \
-                           -p GIT_REPO=${microService.gitRepoName} \
-                           -p SRC_COMMIT_HASH=${microService.srcCommitHash} \
-                           -p DEPLOYMENT_BRANCH=${microService.deploymentBranch} \
-                           -p DEPLOYMENT_COMMIT=${microService.deploymentCommitHash} \
-                           -p RELEASE_VERSION=${projectInfo.releaseVersionTag ?: UNDEFINED} \
-                           | oc apply --overwrite -n ${projectInfo.deployToNamespace} -f -
+                oc delete --ignore-not-found ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
+                oc create ConfigMap ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
+                    --from-literal=projectid=${projectInfo.id} \
+                    --from-literal=microservice=${microService.name} \
+                    --from-literal=git-repo=${microService.gitRepoName} \
+                    --from-literal=src-commit-hash=${microService.srcCommitHash} \
+                    --from-literal=deployment-branch=${microService.deploymentBranch} \
+                    --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
+                    --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
+                oc label ConfigMap ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
+                    projectid=${projectInfo.id} \
+                    microservice=${microService.name} \
+                    git-repo=${microService.gitRepoName} \
+                    src-commit-hash=${microService.srcCommitHash} \
+                    deployment-branch=${microService.deploymentBranch} \
+                    deployment-commit-hash=${microService.deploymentCommitHash} \
+                    release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
 
                 ${shellEcho '******',
                             "UPDATED ${metaInfoCmName}.data:" }
