@@ -37,8 +37,8 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
 
         def cicdProjectsExist = sh(returnStdout: true, script: "oc projects -q | egrep '${cicdNamespace}' | tr '\n' ' '")
 
-        def authBearerHeaderTemplate = libraryResource('AuthBearerHeader-template.txt')
-        def authBearerCommand = """echo '${authBearerHeaderTemplate}' | sed "s/%TOKEN%/\$(oc whoami -t)/" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
+        writeFile file:"${el.cicd.TEMP_DIR}/AuthBearerHeader-template.txt", text: libraryResource('AuthBearerHeader-template.txt')
+        def authBearerCommand = """cat ${el.cicd.TEMP_DIR}/AuthBearerHeader-template.txt | sed "s/%TOKEN%/\$(oc whoami -t)/" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
         sh """
             ${shellEcho 'Creating header file with auth token'}
             ${maskCommand(authBearerCommand)}
