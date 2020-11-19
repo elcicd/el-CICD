@@ -315,8 +315,8 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
             sh """
                 ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-                oc delete --ignore-not-found ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
-                oc create ConfigMap ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
+                oc delete --ignore-not-found ${projectInfo.id}-${microService.name}-meta-info
+                oc create ConfigMap ${projectInfo.id}-${microService.name}-meta-info
                     --from-literal=projectid=${projectInfo.id} \
                     --from-literal=microservice=${microService.name} \
                     --from-literal=git-repo=${microService.gitRepoName} \
@@ -324,7 +324,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                     --from-literal=deployment-branch=${microService.deploymentBranch} \
                     --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                     --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
-                oc label ConfigMap ${PROJECT_ID}-${MICROSERVICE_NAME}-meta-info
+                oc label ConfigMap ${projectInfo.id}-${microService.name}-meta-info
                     projectid=${projectInfo.id} \
                     microservice=${microService.name} \
                     git-repo=${microService.gitRepoName} \
