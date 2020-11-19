@@ -53,7 +53,7 @@ def updateProjectMetaInfo(def projectInfo) {
                         "UPDATING ${projectInfo.id}-meta-info"
                         ''}
 
-                oc delete --ignore-not-found ${projectInfo.id}-meta-info \
+                oc delete --ignore-not-found cm ${projectInfo.id}-meta-info \
                 oc create ConfigMap ${projectInfo.id}-meta-info
                     --from-literal=projectid=${projectInfo.id} \
                     --from-literal=release-version=${projectInfo.releaseVersionTag} \

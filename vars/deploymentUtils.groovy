@@ -315,7 +315,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
             sh """
                 ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-                oc delete --ignore-not-found ${projectInfo.id}-${microService.name}-meta-info
+                oc delete --ignore-not-found cm ${projectInfo.id}-${microService.name}-meta-info
                 oc create ConfigMap ${projectInfo.id}-${microService.name}-meta-info
                     --from-literal=projectid=${projectInfo.id} \
                     --from-literal=microservice=${microService.name} \
