@@ -10,12 +10,6 @@ import java.nio.file.Paths
 
 
 def call(Map args) {
-    @groovy.transform.SourceURI def sourceURI
-
-    pipelineUtils.echoBanner("SOURCE-URI ${sourceURI}")
-
-    return
-
     elCicdCommons.initialize()
 
     elCicdCommons.cloneElCicdRepo()
