@@ -310,13 +310,13 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        def metaInfoCmName = "${microService.id}-meta-info"
+        def metaInfoCmName = "${projectInfo.id}-${microService.name}-meta-info"
         dir("${el.cicd.EL_CICD_DIR}/templates") {
             sh """
                 ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-                oc delete --ignore-not-found cm ${projectInfo.id}-${microService.name}-meta-info
-                oc create cm ${projectInfo.id}-${microService.name}-meta-info \
+                oc delete --ignore-not-found ${metaInfoCmName} \
+                oc create ConfigMap ${metaInfoCmName} \
                     --from-literal=projectid=${projectInfo.id} \
                     --from-literal=microservice=${microService.name} \
                     --from-literal=git-repo=${microService.gitRepoName} \
@@ -324,7 +324,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                     --from-literal=deployment-branch=${microService.deploymentBranch} \
                     --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                     --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
-                oc label cm ${projectInfo.id}-${microService.name}-meta-info \
+                oc label ConfigMap ${metaInfoCmName} \
                     projectid=${projectInfo.id} \
                     microservice=${microService.name} \
                     git-repo=${microService.gitRepoName} \
@@ -332,11 +332,6 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                     deployment-branch=${microService.deploymentBranch} \
                     deployment-commit-hash=${microService.deploymentCommitHash} \
                     release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
-
-                ${shellEcho '******',
-                            "UPDATED ${metaInfoCmName}.data:" }
-                oc get cm ${metaInfoCmName} -o json -n ${projectInfo.deployToNamespace} | jq -S -r '.data | to_entries[] | "    \\(.key): \\(.value)"'
-                ${shellEcho '******'}
             """
         }
     }
