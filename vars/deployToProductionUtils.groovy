@@ -54,11 +54,11 @@ def updateProjectMetaInfo(def projectInfo) {
                         ''}
 
                 oc delete --ignore-not-found cm ${projectInfo.id}-meta-info \
-                oc create ConfigMap ${projectInfo.id}-meta-info
+                oc create cm ${projectInfo.id}-meta-info
                     --from-literal=projectid=${projectInfo.id} \
                     --from-literal=release-version=${projectInfo.releaseVersionTag} \
                     --from-literal=microservices=${microServiceNames}
-                oc label ConfigMap ${projectInfo.id}-meta-info \
+                oc label cm ${projectInfo.id}-meta-info \
                     projectid=${projectInfo.id} \
                     release-version=${projectInfo.releaseVersionTag}
 
