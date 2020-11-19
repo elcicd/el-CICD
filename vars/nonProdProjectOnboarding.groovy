@@ -14,11 +14,6 @@ def call(Map args) {
 
     pipelineUtils.echoBanner("SOURCE-URI ${sourceURI}")
 
-    Path scriptLocation = Paths.get(sourceURI)
-    scriptLocation = scriptLocation.getParent().getParent().resolve('resources').toString()
-    pipelineUtils.echoBanner("SOURCE-URI ${scriptLocation}")
-
-    sh "ls ${scriptLocation}"
     return
 
     elCicdCommons.initialize()
