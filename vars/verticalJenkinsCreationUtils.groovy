@@ -85,9 +85,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
             sh """
                 for FILE in ${templates}
                 do
-                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
-                                        -p EL_CICD_GIT_REPO=${el.cicd.EL_CICD_GIT_REPO} \
-                                        -p EL_CICD_BRANCH_NAME=${el.cicd.EL_CICD_BRANCH_NAME} | \
+                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} | \
                         oc apply -f - -n ${cicdJenkinsNamespace}
                 done
             """
