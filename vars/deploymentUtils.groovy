@@ -321,7 +321,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=microservice=${microService.name} \
                 --from-literal=git-repo=${microService.gitRepoName} \
                 --from-literal=src-commit-hash=${microService.srcCommitHash} \
-                --from-literal=deployment-branch=${microService.deploymentBranch} \
+                --from-literal=deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
                 -n ${projectInfo.deployToNamespace}
@@ -330,7 +330,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 microservice=${microService.name} \
                 git-repo=${microService.gitRepoName} \
                 src-commit-hash=${microService.srcCommitHash} \
-                deployment-branch=${microService.deploymentBranch} \
+                deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
                 deployment-commit-hash=${microService.deploymentCommitHash} \
                 release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} -n
                 -n ${projectInfo.deployToNamespace}
