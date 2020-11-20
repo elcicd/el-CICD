@@ -54,7 +54,7 @@ def call(Map args) {
         pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH GIT_PROVIDER REPO ON NON-PROD JENKINS FOR ${projectInfo.id}")
 
         writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
-                  text: libraryResource("builderconfigs/build-to-dev-pipeline-template.yml")
+                  text: libraryResource("buildconfigs/build-to-dev-pipeline-template.yml")
 
         dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
             projectInfo.microServices.each { microService ->

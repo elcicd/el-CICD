@@ -207,7 +207,7 @@ def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkins
 
 def createSharedPipelines(def templates, def cicdJenkinsNamespace) {
     templates.each {
-        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("builderconfigs/${it}")
+        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
     }
 
     dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
