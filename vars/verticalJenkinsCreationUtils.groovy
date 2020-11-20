@@ -41,7 +41,6 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         sh """
             ${shellEcho 'Creating header file with auth token'}
             ${maskCommand(authBearerCommand)}
-            ${shellEcho "testing: ${authBearerCommand}"}
         """
 
         if (!cicdProjectsExist.contains(cicdNamespace)) {
@@ -61,7 +60,7 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
             echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
         }
         
-        refreshSharedPipelines(projectInfo, isNonProd)        
+        refreshSharedPipelines(projectInfo, isNonProd)
     }
 }
 
@@ -76,9 +75,23 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
         def templates = isNonProd ? nonProdPipelines : 'deploy-to-production-pipeline-template.yml'
         pipelineUtils.echoBanner('CREATING SHARED PIPELINES:', templates)
         
-        def namespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
+        def cicdJenkinsNamespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
         
-        createSharedPipelines(templates, namespace)
+        templates.split(/\s+/).each {
+            writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
+        }
+
+        dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
+            sh """
+                for FILE in ${templates}
+                do
+                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
+                                        -p EL_CICD_GIT_REPO=${el.cicd.EL_CICD_GIT_REPO} \
+                                        -p EL_CICD_BRANCH_NAME=${el.cicd.EL_CICD_BRANCH_NAME} | \
+                        oc apply -f - -n ${cicdJenkinsNamespace}
+                done
+            """
+        }
     }
 }
 
@@ -201,24 +214,6 @@ def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkins
             cat jenkinsTokenCredentials-named.xml | sed "s/%TOKEN%/${SONARQUBE_ACCESS_TOKEN}/g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
-        """
-    }
-}
-
-def createSharedPipelines(def templates, def cicdJenkinsNamespace) {
-    templates.each {
-        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
-    }
-
-    dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
-        sh """
-            for FILE in ${templates}
-            do
-                oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
-                                       -p EL_CICD_GIT_REPO=${el.cicd.EL_CICD_GIT_REPO} \
-                                       -p EL_CICD_BRANCH_NAME=${el.cicd.EL_CICD_BRANCH_NAME} | \
-                    oc apply -f - -n ${cicdJenkinsNamespace}
-            done
         """
     }
 }
