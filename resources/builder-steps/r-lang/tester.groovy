@@ -5,9 +5,9 @@
  */
 
 def test(def projectId, def microService) {
-    writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/Rtest.R",
+    writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/Rtest.R",
                 text: libraryResource("builder-steps/${microService.codeBase}/resources/Rtest.R")
-    writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/Rlint.R",
+    writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/Rlint.R",
                 text: libraryResource("builder-steps/${microService.codeBase}/resources/Rlint.R")
 
     sh """
