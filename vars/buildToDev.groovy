@@ -39,39 +39,29 @@ void call(Map args) {
         }
     }
     
-    stage("build step: build ${microService.name}") {
-        pipelineUtils.echoBanner("BUILD MICROSERVICE: ${microService.name}")
+    def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER]
+    buildSteps.each { buildStep ->
+        stage("build step: run ${buildStep} for ${microService.name}") {
+            pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
 
-        dir(microService.workDir) {
-            def moduleName = microService[el.cicd.BUILDER] ?: el.cicd.BUILDER
-            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
-                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
-            def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
-            builderModule.build(projectInfo.id, microService)
-        }
-    }
+            dir(microService.workDir) {
+                def moduleName = microService[buildStep] ?: buildStep
+                writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
+                        text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
+                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
 
-    stage("build step: run unit tests for ${microService.name}") {
-        pipelineUtils.echoBanner("RUN UNIT TESTS: ${microService.name}")
-
-        dir(microService.workDir) {
-            def moduleName = microService[el.cicd.TESTER] ?: el.cicd.TESTER
-            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
-                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
-            def testerModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
-            testerModule.test(projectInfo.id, microService)
-        }
-    }
-
-    stage("build step: source code analysis for ${microService.name}") {
-        pipelineUtils.echoBanner("SCAN CODE: ${microService.name}")
-
-        dir(microService.workDir) {
-            def moduleName = microService[el.cicd.SCANNER] ?: el.cicd.SCANNER
-            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
-                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
-            def scannerModule = load "${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
-            scannerModule.scan(projectInfo.id, microService)
+                switch(buildStep) {
+                    case el.cicd.BUILDER:
+                        builderModule.build(projectInfo.id, microService)
+                        break;
+                    case el.cicd.TESTER:
+                        builderModule.test(projectInfo.id, microService)
+                        break;
+                    case el.cicd.SCANNER:
+                        builderModule.scan(projectInfo.id, microService)
+                        break;
+                }
+            }
         }
     }
 
