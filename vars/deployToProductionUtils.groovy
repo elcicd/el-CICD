@@ -44,8 +44,7 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
 def updateProjectMetaInfo(def projectInfo) {
     assert projectInfo.id ; assert projectInfo.releaseVersionTag =~ /[\w][\w.-]*/
 
-    stage('update project meta-info for production')
-    dir("${el.cicd.EL_CICD_DIR}/templates") {
+    stage('update project meta-info for production') {
         def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """

@@ -10,8 +10,6 @@ void call(Map args) {
 
     elCicdCommons.initialize()
 
-    elCicdCommons.cloneElCicdRepo() 
-
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
     
@@ -46,7 +44,9 @@ void call(Map args) {
 
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.BUILDER] ?: el.cicd.BUILDER
-            def builderModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
+                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
+            def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
             builderModule.build(projectInfo.id, microService)
         }
     }
@@ -56,7 +56,9 @@ void call(Map args) {
 
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.TESTER] ?: el.cicd.TESTER
-            def testerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
+                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
+            def testerModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
             testerModule.test(projectInfo.id, microService)
         }
     }
@@ -66,7 +68,9 @@ void call(Map args) {
 
         dir(microService.workDir) {
             def moduleName = microService[el.cicd.SCANNER] ?: el.cicd.SCANNER
-            def scannerModule = load "${el.cicd.EL_CICD_BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
+                      text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
+            def scannerModule = load "${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
             scannerModule.scan(projectInfo.id, microService)
         }
     }

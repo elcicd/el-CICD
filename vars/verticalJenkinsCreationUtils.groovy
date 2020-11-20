@@ -168,9 +168,9 @@ def pushSshCredentialstToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, d
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH SSH GIT REPO PRIVATE KEY TO ${cicdJenkinsNamespace} JENKINS")}
 
-            cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
             cat ${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
-            cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 
             ${maskCommand(curlCommand)}
             rm -f ${SECRET_FILE_NAME}
@@ -184,7 +184,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsI
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH IMAGE REPOSITORY TOKEN ${credentialsId} TO ${cicdJenkinsNamespace} JENKINS")}
 
-            cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${credentialsId}/g" > jenkinsTokenCredentials-named.xml
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${credentialsId}/g" > jenkinsTokenCredentials-named.xml
             cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
@@ -198,7 +198,7 @@ def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkins
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH SONARQUBE TOKEN TO ${nonProdCicdNamespace} JENKINS")}
 
-            cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsTokenCredentials-template.xml | sed "s/%ID%/sonarqube-access-token/g" > jenkinsTokenCredentials-named.xml
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/sonarqube-access-token/g" > jenkinsTokenCredentials-named.xml
             cat jenkinsTokenCredentials-named.xml | sed "s/%TOKEN%/${SONARQUBE_ACCESS_TOKEN}/g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
@@ -207,7 +207,11 @@ def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkins
 }
 
 def createSharedPipelines(def templates, def cicdJenkinsNamespace) {
-    dir ("${el.cicd.EL_CICD_DIR}/buildconfigs") {
+    templates.each {
+        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("builderconfigs/${it}")
+    }
+
+    dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
         sh """
             for FILE in ${templates}
             do

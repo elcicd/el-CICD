@@ -141,7 +141,7 @@ def kustomize(def templateDef) {
     sh """
         echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
 
-        cat ${el.cicd.EL_CICD_DIR}/resources/kustomization-template.yml | \
+        cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
             sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
 
         kustomize build . > ${templateDef.patchedFile}
@@ -311,29 +311,28 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
 
     microServices.each { microService ->
         def metaInfoCmName = "${projectInfo.id}-${microService.name}-meta-info"
-        dir("${el.cicd.EL_CICD_DIR}/templates") {
-            sh """
-                ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-                oc delete --ignore-not-found cm ${metaInfoCmName} \
-                oc create cm ${metaInfoCmName} \
-                    --from-literal=projectid=${projectInfo.id} \
-                    --from-literal=microservice=${microService.name} \
-                    --from-literal=git-repo=${microService.gitRepoName} \
-                    --from-literal=src-commit-hash=${microService.srcCommitHash} \
-                    --from-literal=deployment-branch=${microService.deploymentBranch} \
-                    --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
-                    --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
-                oc label cm ${metaInfoCmName} \
-                    projectid=${projectInfo.id} \
-                    microservice=${microService.name} \
-                    git-repo=${microService.gitRepoName} \
-                    src-commit-hash=${microService.srcCommitHash} \
-                    deployment-branch=${microService.deploymentBranch} \
-                    deployment-commit-hash=${microService.deploymentCommitHash} \
-                    release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
-            """
-        }
+        sh """
+            ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
+
+            oc delete --ignore-not-found cm ${metaInfoCmName} \
+            oc create cm ${metaInfoCmName} \
+                --from-literal=projectid=${projectInfo.id} \
+                --from-literal=microservice=${microService.name} \
+                --from-literal=git-repo=${microService.gitRepoName} \
+                --from-literal=src-commit-hash=${microService.srcCommitHash} \
+                --from-literal=deployment-branch=${microService.deploymentBranch} \
+                --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
+                --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
+            oc label cm ${metaInfoCmName} \
+                projectid=${projectInfo.id} \
+                microservice=${microService.name} \
+                git-repo=${microService.gitRepoName} \
+                src-commit-hash=${microService.srcCommitHash} \
+                deployment-branch=${microService.deploymentBranch} \
+                deployment-commit-hash=${microService.deploymentCommitHash} \
+                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
+        """
     }
 }
 

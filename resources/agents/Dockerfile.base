@@ -1,0 +1,15 @@
+FROM openshift/jenkins-slave-maven-centos7:v3.11
+
+USER root
+
+RUN yum-config-manager --disable cbs-paas7-openshift-multiarch-el7-build && \
+    yum install --setopt=tsflags=nodocs deltarpm -y && \
+    yum update -y --setopt=tsflags=nodocs && \
+    yum groupinstall -y --setopt=tsflags=nodocs 'Development Tools' && \
+    yum install -y --setopt=tsflags=nodocs epel-release && \
+    yum install -y --setopt=tsflags=nodocs podman skopeo buildah jq golang-sigs-k8s-kustomize.x86_64 && \
+    yum  clean all && \
+    curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash -s 3.8.5 && \
+    mv ./kustomize /usr/local/bin
+
+USER 1001

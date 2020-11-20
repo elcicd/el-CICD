@@ -1,0 +1,5 @@
+library(jsonlite)
+library(lintr)
+out <- lintr::lint_dir(exclusions = list.files("renv", full.names = T, recursive = T, all.files = T))
+x <- toJSON(as.data.frame(out), pretty=TRUE)
+cat(x, file="lintr_out.json")

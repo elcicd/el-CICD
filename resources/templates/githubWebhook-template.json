@@ -1,0 +1,12 @@
+{
+  "name": "web",
+  "active": true,
+  "events": [
+    "push"
+  ],
+  "config": {
+    "url": "https://%HOSTNAME%/apis/build.openshift.io/v1/namespaces/%GROUP_NAME%-cicd-non-prod/buildconfigs/%BC_NAME%/webhooks/%PROJECT_ID%-%MICROSERVICE_NAME%/github",
+    "content_type": "json",
+    "insecure_ssl": "1"
+  }
+}

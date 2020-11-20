@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+kind: Template
+apiVersion: v1
+metadata:
+  name: build-and-deploy-to-dev-template
+parameters:
+- name: EL_CICD_META_INFO_NAME
+  description: Name oc config map holding el-CICD meta-info.
+  displayName: EL_CICD_META_INFO_NAME
+  required: true
+- name: PROJECT_ID
+  description: Project ID for microservice.
+  displayName: Project ID
+  required: true
+- name: MICROSERVICE_GIT_REPO
+  description: Name of git repository microservice is hosted.
+  displayName: Git Repository
+  required: true
+- name: MICROSERVICE_NAME
+  description: Name of microservice (k8s appropriate name from git repo name)
+  displayName: Microservice Name
+  required: true
+- name: DEPLOY_TO_NAMESPACE
+  description: Namespace to build to
+  displayName: Namespace
+  required: true
+- name: GIT_BRANCH
+  description: Default branch to check out for build
+  displayName: Git Repository
+  required: true
+  value: development
+- name: CODE_BASE
+  description: Code base of build; e.g. maven, gradle, python, etc.
+  displayName: Git Repository
+  required: true
+objects:
+- kind: BuildConfig
+  apiVersion: v1
+  metadata:
+    name: ${PROJECT_ID}-${MICROSERVICE_NAME}-build-to-dev
+    labels:
+      projectid: ${PROJECT_ID}
+      microservice: ${MICROSERVICE_NAME}
+  spec:
+    source:
+      git:
+        uri: ${MICROSERVICE_GIT_REPO}
+        ref: ${GIT_BRANCH}
+      type: Git
+    triggers:
+    - github:
+        secret: ${PROJECT_ID}-${MICROSERVICE_NAME}
+      type: GitHub
+    strategy:
+      jenkinsPipelineStrategy:
+        env:
+          - name: DEPLOY_TO_NAMESPACE
+            description: branch to build
+            value: ${DEPLOY_TO_NAMESPACE}
+          - name: GIT_BRANCH
+            description: branch to build
+            value: ${GIT_BRANCH}
+          - name: RECREATE
+            description: recreate service from scratch
+            value: "false"
+        jenkinsfile: |-
+          properties([
+              parameters(
+                  [
+                      string(name: 'DEPLOY_TO_NAMESPACE',  defaultValue: "${DEPLOY_TO_NAMESPACE}", description: 'The namespace to deploy to', trim: true),
+                      string(name: 'GIT_BRANCH',  defaultValue: "${GIT_BRANCH}", description: 'Git repo branch name', trim: true),
+                      booleanParam(name: 'RECREATE', defaultValue: false, description: "If true, build microservice, remove old build completely from dev, and then deploy new build")
+                  ]
+              )
+          ])
+
+          node('master') {
+              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
+
+              def scmMap = [$class: 'GitSCMSource',
+                            remote: cicdMetaData.data.EL_CICD_UTILS_GIT_REPO,
+                            credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library identifier: "el-CICD-utils@${cicdMetaData.data.EL_CICD_UTILS_BRANCH_NAME}", retriever: modernSCM(scmMap)
+
+              el.init(cicdMetaData.data)
+          }
+
+          elCicdNode(agent: "${CODE_BASE}") {
+              buildToDev(projectId: '${PROJECT_ID}',
+                         microServiceName: '${MICROSERVICE_NAME}',
+                         deployToNamespace: params.DEPLOY_TO_NAMESPACE,
+                         gitBranch: params.GIT_BRANCH,
+                         recreate: (params.RECREATE?.toString() == 'true'))
+          }

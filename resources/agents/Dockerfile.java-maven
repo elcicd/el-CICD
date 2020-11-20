@@ -1,0 +1,11 @@
+FROM openshift/jenkins-agent-el-cicd-base
+
+USER root
+
+RUN yum-config-manager --disable cbs-paas7-openshift-multiarch-el7-build && \
+    yum install -y --setopt=tsflags=nodocs java-11-openjdk-devel && \
+    yum  clean all
+    
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+
+USER 1001

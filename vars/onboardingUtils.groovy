@@ -59,9 +59,9 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
                     ${pushDeployKeyIdCurlCommand}
 
                     ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON NON-PROD JENKINS: ${microService.name}"}
-                    cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
                     cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
-                    cat ${el.cicd.EL_CICD_DIR}/resources/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
 
                     ${maskCommand(createCredsCommand)}
                     ${maskCommand(updateCredsCommand)}

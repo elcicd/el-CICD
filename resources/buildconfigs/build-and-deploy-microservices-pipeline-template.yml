@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+kind: Template
+apiVersion: v1
+metadata:
+  name: build-and-deploy-microservices-template
+parameters:
+- name: EL_CICD_META_INFO_NAME
+  description: Name oc config map holding el-CICD meta-info.
+  displayName: EL_CICD_META_INFO_NAME
+  required: true
+objects:
+- kind: "BuildConfig"
+  apiVersion: "v1"
+  metadata:
+    name: build-and-deploy-microservices
+  spec:
+    strategy:
+      jenkinsPipelineStrategy:
+        env:
+          - name: PROJECT_ID
+            description: Project ID from auto-tracker, representing all microservices for a project
+        jenkinsfile: |-
+          properties([
+              parameters(
+                  [
+                      string(name: 'PROJECT_ID', description: 'Project ID', trim: true)
+                  ]
+              )
+          ])
+
+          node('master') {
+               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
+
+               def scmMap = [$class: 'GitSCMSource',
+                              remote: cicdMetaData.data.EL_CICD_UTILS_GIT_REPO,
+                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+               library identifier: "el-CICD-utils@${cicdMetaData.data.EL_CICD_UTILS_BRANCH_NAME}", retriever: modernSCM(scmMap)
+
+               el.init(cicdMetaData.data)
+          }
+
+          elCicdNode(agent: 'base') {
+              buildAndDeployMicroServices(projectId: params.PROJECT_ID)
+          }

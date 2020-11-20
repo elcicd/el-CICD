@@ -71,9 +71,9 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonPr
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         curlCommand = """
-            cat ${el.cicd.EL_CICD_DIR}/resources/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${el.cicd.TEMP_DIR}/sshKeyFile.json
+            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${el.cicd.TEMP_DIR}/sshKeyFile.json
             cat ${microService.gitSshPrivateKeyName}.pub >> ${el.cicd.TEMP_DIR}/sshKeyFile.json
-            cat ${el.cicd.EL_CICD_DIR}/resources/githubSshCredentials-postfix.json >> ${secretFile}
+            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
 
             ${CURL_POST} ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${secretFile} ${url}
         """
@@ -99,7 +99,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
             ${bcName}
-            cat ${el.cicd.EL_CICD_DIR}/resources/githubWebhook-template.json | \
+            cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
               sed -e "s/%HOSTNAME%/api.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/g"   \
                   -e "s/%GROUP_NAME%/${projectInfo.rbacGroup}/g"   \
                   -e "s/%PROJECT_ID%-%MICROSERVICE_NAME%/${microService.id}/g"  \

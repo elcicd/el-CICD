@@ -11,8 +11,6 @@ def call(Map args) {
 
     elCicdCommons.initialize()
 
-    elCicdCommons.cloneElCicdRepo()
-
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
 

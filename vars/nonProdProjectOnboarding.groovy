@@ -12,8 +12,6 @@ import java.nio.file.Paths
 def call(Map args) {
     elCicdCommons.initialize()
 
-    elCicdCommons.cloneElCicdRepo()
-
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
@@ -55,7 +53,10 @@ def call(Map args) {
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
         pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH GIT_PROVIDER REPO ON NON-PROD JENKINS FOR ${projectInfo.id}")
 
-        dir ("${el.cicd.EL_CICD_DIR}/buildconfigs") {
+        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
+                  text: libraryResource("builderconfigs/build-to-dev-pipeline-template.yml")
+
+        dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
             projectInfo.microServices.each { microService ->
                 sh """
                     oc process --local \

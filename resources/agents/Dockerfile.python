@@ -1,0 +1,11 @@
+FROM openshift/jenkins-agent-el-cicd-base
+
+USER root
+
+RUN yum-config-manager --disable cbs-paas7-openshift-multiarch-el7-build && \
+    yum install -y --setopt=tsflags=nodocs python3-devel python3-setuptools python3-pip && \
+    yum  clean all && \
+    python3 -m pip install --upgrade pip && \
+    python3 -m pip install bzt virtualenv
+
+USER 1001
