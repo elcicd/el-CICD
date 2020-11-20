@@ -10,6 +10,7 @@ def initialize() {
         pipelineUtils.echoBanner("INITIALIZING...")
 
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
+        el.cicd.AGENTS_DIR="${el.cicd.TEMP_DIR}/agents"
         el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
         el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.TEMP_DIR}/builder-steps"

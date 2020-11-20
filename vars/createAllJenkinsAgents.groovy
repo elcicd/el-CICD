@@ -5,13 +5,14 @@
  * a realized el-CICD/buildconfigs/build-and-deploy-microservices-pipeline-template.
  *
  */
-agentDockerfiles = [base: 'Dockerfile.base', 
-                    'java-maven': 'Dockerfile.java-maven',
-                    python: 'Dockerfile.python',
-                    'r-lang': 'Dockerfile.R']
 
 def call(Map args) {
     elCicdCommons.initialize()
+    
+    agentDockerfiles = [base: 'Dockerfile.base', 
+                        'java-maven': 'Dockerfile.java-maven',
+                        python: 'Dockerfile.python',
+                        'r-lang': 'Dockerfile.R']
 
     stage("Write Dockerfiles to Agent") {
         agentDockerfiles.values().each { dockerFile ->
