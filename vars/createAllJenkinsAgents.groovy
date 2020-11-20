@@ -37,7 +37,7 @@ def call(Map args) {
                         fi
                         sleep 10
 
-                        oc logs -f bc/jenkins-agent-el-cicd-${agentName}
+                        oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
                     """
                 }
             }
