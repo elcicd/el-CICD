@@ -332,7 +332,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 src-commit-hash=${microService.srcCommitHash} \
                 deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
                 deployment-commit-hash=${microService.deploymentCommitHash} \
-                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} -n
+                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
                 -n ${projectInfo.deployToNamespace}
         """
     }
