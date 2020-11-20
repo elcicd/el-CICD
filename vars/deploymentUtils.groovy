@@ -315,7 +315,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
         sh """
             ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
-            oc delete --ignore-not-found cm ${metaInfoCmName}
+            oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
             oc create cm ${metaInfoCmName} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=microservice=${microService.name} \
@@ -323,7 +323,8 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=src-commit-hash=${microService.srcCommitHash} \
                 --from-literal=deployment-branch=${microService.deploymentBranch} \
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
-                --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
+                --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                -n ${projectInfo.deployToNamespace}
             oc label cm ${metaInfoCmName} \
                 projectid=${projectInfo.id} \
                 microservice=${microService.name} \
@@ -331,7 +332,8 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 src-commit-hash=${microService.srcCommitHash} \
                 deployment-branch=${microService.deploymentBranch} \
                 deployment-commit-hash=${microService.deploymentCommitHash} \
-                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED}
+                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} -n
+                -n ${projectInfo.deployToNamespace}
         """
     }
 }
