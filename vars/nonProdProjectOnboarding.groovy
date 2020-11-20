@@ -56,7 +56,7 @@ def call(Map args) {
         writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
                   text: libraryResource("buildconfigs/build-to-dev-pipeline-template.yml")
 
-        dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
+        dir (el.cicd.BUILDCONFIGS_DIR) {
             projectInfo.microServices.each { microService ->
                 sh """
                     oc process --local \
