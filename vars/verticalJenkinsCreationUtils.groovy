@@ -81,7 +81,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
             writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
         }
 
-        dir ("${el.cicd.BUILDCONFIGS_DIR}/buildconfigs") {
+        dir (el.cicd.BUILDCONFIGS_DIR) {
             sh """
                 for FILE in ${templates}
                 do
