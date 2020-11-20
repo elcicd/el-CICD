@@ -29,13 +29,15 @@ def call(Map args) {
             agentDockerfiles.each { agentName, dockerFile ->
                 if (!args.ignoreBase || agentName != 'base') {
                     sh """
-                        if [[ -z \$(oc get --ignore-not-found bc/jenkins-agent-el-cicd-${agentName}) ]]
+                        if [[ -z \$(oc get --ignore-not-found bc/jenkins-agent-el-cicd-${agentName} -n openshift) ]]
                         then 
                             cat ./${dockerFile} | oc new-build -D - --name jenkins-agent-el-cicd-${agentName} -n openshift
                         else
                             oc start-build jenkins-agent-el-cicd-${agentName} 
                         fi
                         sleep 10
+
+                        oc logs -f bc/jenkins-agent-el-cicd-${agentName}
                     """
                 }
             }
