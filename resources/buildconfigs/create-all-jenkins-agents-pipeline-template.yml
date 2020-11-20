@@ -25,7 +25,7 @@ objects:
           properties([
               parameters(
                   [
-                      string(name: 'IGNORE_BASE', description: 'Do not build the base Jenkins agent, or refresh Jenkins', trim: true)
+                      string(name: 'IGNORE_BASE', defaultValue: 'false', description: 'Do not build the base Jenkins agent, or refresh Jenkins', trim: true)
                   ]
               )
           ])

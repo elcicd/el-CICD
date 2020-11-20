@@ -1,14 +1,14 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-to-dev pipeline.  Called inline from the
+ * Defines the btrueulk of the build-to-dev pipeline.  Called inline from the
  * a realized el-CICD/buildconfigs/build-and-deploy-microservices-pipeline-template.
  *
  */
 
 def call(Map args) {
     elCicdCommons.initialize()
-    
+
     agentDockerfiles = [base: 'Dockerfile.base', 
                         'java-maven': 'Dockerfile.java-maven',
                         python: 'Dockerfile.python',
@@ -16,7 +16,7 @@ def call(Map args) {
 
     stage("Write Dockerfiles to Agent") {
         agentDockerfiles.values().each { dockerFile ->
-            writeFile file:"${el.cicd.AGENTS_DIR}/dockerFile", text: libraryResource("agents/${dockerFile}")
+            writeFile file:"${el.cicd.AGENTS_DIR}/${dockerFile}", text: libraryResource("agents/${dockerFile}")
         }
     }
 
