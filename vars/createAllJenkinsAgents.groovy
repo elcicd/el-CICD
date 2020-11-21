@@ -9,6 +9,14 @@
 def call(Map args) {
     elCicdCommons.initialize()
 
+    stage('checkout el-CICD-project-repository') {
+        dir (el.cicd.PROJECT_INFO_DIR) {
+            git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
+                branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
+                credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+        }
+    }
+
     dir(el.cicd.AGENTS_DIR) {
         def agentDockerfiles = findFiles(glob: "Dockerfile.*")
     }
