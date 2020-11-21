@@ -1,8 +1,11 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-source ./el-cicd-bootstrap.config
-source ./el-cicd-secrets.config
+PROJECT_REPOSITORY=../el-CICD-project-repository
+PROJECT_REPOSITORY_CONFIG=${PROJECT_REPOSITORY}/config
+PROJECT_REPOSITORY_AGENTS=${PROJECT_REPOSITORY}/agents
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-secrets.config
 
 EL_CICD_GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
 SECRET_FILE='/tmp/sshKeyFile.json'

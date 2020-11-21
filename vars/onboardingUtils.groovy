@@ -6,6 +6,25 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
+def init() {
+    pipelineUtils.echoBanner("COPYING ONBOARDING RESOURCES TO JENKINS AGENT")
+
+    el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
+    el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
+    sh """
+        mkdir -p ${el.cicd.BUILDCONFIGS_DIR}
+        mkdir -p ${el.cicd.TEMPLATES_DIR}
+    """
+
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt", text: libraryResource('templates/AuthBearerHeader-template.txt')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json", text: libraryResource('templates/githubSshCredentials-postfix.json')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json", text: libraryResource('templates/githubSshCredentials-prefix.json')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml", text: libraryResource('templates/jenkinsSshCredentials-postfix.xml')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml", text: libraryResource('templates/jenkinsSshCredentials-prefix.xml')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
+}
+
 def deleteOldGithubKeys(def projectInfo, def isNonProd) {
     pipelineUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM GIT REPOS")
 

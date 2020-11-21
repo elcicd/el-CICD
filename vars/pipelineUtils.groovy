@@ -53,11 +53,15 @@ def gatherProjectInfoStage(def projectId) {
     stage('Gather project information') {
         echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
 
-        dir ("${WORKSPACE}/el-CICD-project-repository") {
+        el.cicd.PROJECT_REPO_DIR = "${WORKSPACE}/el-CICD-project-repository"
+
+        dir (el.cicd.PROJECT_REPO_DIR) {
             git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
                 branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
                 credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+        }
 
+        dir ("${el.cicd.PROJECT_REPO_DIR}/project-defs") {
             projectFile = findFiles(glob: "**/${projectId}.*")
             if (projectFile) {
                 projectFile = projectFile[0].path

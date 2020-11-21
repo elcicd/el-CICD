@@ -17,8 +17,11 @@ echo
 
 echo
 echo 'Loading environment'
-source ./el-cicd-bootstrap.config
-source ./el-cicd-secrets.config
+PROJECT_REPOSITORY=../el-CICD-project-repository
+PROJECT_REPOSITORY_CONFIG=${PROJECT_REPOSITORY}/config
+PROJECT_REPOSITORY_AGENTS=${PROJECT_REPOSITORY}/agents
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-secrets.config
 
 if [[ -z "${EL_CICD_NON_PROD_MASTER_NAMEPACE}" ]]
 then
@@ -82,7 +85,7 @@ EL_CICD_NON_PROD_MASTER_NODE_SELECTORS=$(echo ${EL_CICD_NON_PROD_MASTER_NODE_SEL
 oc adm new-project ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
 oc project ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=./el-cicd-bootstrap.config
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
 
 echo
 echo -n "Update Jenkins to latest image? [Y/n] "
@@ -259,8 +262,8 @@ HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n open
 if [[ -z ${HAS_BASE_AGENT} ]]
 then
     echo
-    echo -n "Create All Jenkins Agents"
-    cat ./Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
+    echo "Creating Jenkins Agents"
+    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
     until
         oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift 2>/dev/null
     do
@@ -273,3 +276,6 @@ else
     echo
     echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
 fi
+
+echo 
+echo 'Non-prod Onboarding Server Bootstrap Script Complete'

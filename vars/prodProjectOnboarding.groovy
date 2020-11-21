@@ -10,6 +10,8 @@ def call(Map args) {
 
     elCicdCommons.initialize()
 
+    onboardingUtils.init()
+
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.rbacGroup = params.RBAC_GROUP ?: projectInfo.rbacGroup
 

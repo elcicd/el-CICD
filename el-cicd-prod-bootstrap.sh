@@ -17,8 +17,11 @@ echo
 
 echo
 echo 'Loading environment'
-source ./el-cicd-bootstrap.config
-source ./el-cicd-secrets.config
+PROJECT_REPOSITORY=../el-CICD-project-repository
+PROJECT_REPOSITORY_CONFIG=${PROJECT_REPOSITORY}/config
+PROJECT_REPOSITORY_AGENTS=${PROJECT_REPOSITORY}/agents
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-secrets.config
 
 if [[ -z "${EL_CICD_PROD_MASTER_NAMEPACE}" ]]
 then
@@ -219,3 +222,20 @@ do
     rm -f ${SECRET_FILE_NAME}
 done
 rm -rf ${SECRET_FILE_DIR}
+
+HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n openshift -o jsonpath='{.metadata.name}')
+if [[ -z ${HAS_BASE_AGENT} ]]
+then
+    echo
+    echo "Creating Jenkins Agents"
+    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
+    until
+        oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift 2>/dev/null
+    do
+        echo -n '.'
+        sleep 1
+    done
+else 
+    echo
+    echo "Base agent found: to manually rebuild Jenkins Agents, rerun the build 'jenkins-agent-el-cicd-base'"
+fi
