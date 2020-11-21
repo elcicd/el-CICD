@@ -11,7 +11,7 @@ def call(Map args) {
 
     def agentDockerfiles = findFiles(glob: "${el.cicd.AGENTS_DIR}/Dockerfile.*")
     agentDockerfiles = agentDockerfiles.collectEntries { file ->
-        [file.name.substring(file.name.lastIndexOf('.')): file.name]
+        [(file.name.substring(file.name.lastIndexOf('.'))): file.name]
     }
 
     stage('Update Jenkins') {
