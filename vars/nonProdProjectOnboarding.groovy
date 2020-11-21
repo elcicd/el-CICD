@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the project onboarding pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/project-onboarding-pipeline-template
+ * a realized el-CICD/resources/buildconfigs/project-onboarding-pipeline-template
  */
 
 import java.nio.file.Path

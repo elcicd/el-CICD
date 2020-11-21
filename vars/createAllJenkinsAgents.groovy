@@ -1,47 +1,48 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the btrueulk of the build-to-dev pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/build-and-deploy-microservices-pipeline-template.
+ * Defines the bulk of the create-all-jenkins-agents pipeline.  Called inline from the
+ * a realized el-CICD/resources/buildconfigs/create-all-jenkins-agents-pipeline-template.
  *
  */
 
 def call(Map args) {
     elCicdCommons.initialize()
 
-    agentDockerfiles = [base: 'Dockerfile.base', 
-                        'java-maven': 'Dockerfile.java-maven',
-                        python: 'Dockerfile.python',
-                        'r-lang': 'Dockerfile.R']
+    def agentDockerfiles = findFiles(glob: "${el.cicd.AGENTS_DIR}/Dockerfile.*")
+    agentDockerfiles = agentDockerfiles.collectEntries { file ->
+        [file.name.substring(file.name.lastIndexOf('.')): file.name]
+    }
 
-    stage("Write Dockerfiles to Agent") {
-        agentDockerfiles.values().each { dockerFile ->
-            writeFile file:"${el.cicd.AGENTS_DIR}/${dockerFile}", text: libraryResource("agents/${dockerFile}")
+    stage('Update Jenkins') {
+        if (!args.ignoreJenkinsImage) {
+            pipelineUtils.echoBanner('UPDATE JENKINS IMAGE')
+
+            sh "oc import-image jenkins -n openshift"
         }
     }
 
-    stage("Create All Agents") {
+    stage('Create All Agents') {
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
+
+        if (args.ignoreBase) {
+            agentDockerfiles.remove('base')
+        }
+
         dir(el.cicd.AGENTS_DIR) {
-            if (!args.ignoreBase) {
-                sh "oc import-image jenkins -n openshift"
-            }
-
             agentDockerfiles.each { agentName, dockerFile ->
-                if (!args.ignoreBase || agentName != 'base') {
-                    sh """
-                        if [[ -z \$(oc get --ignore-not-found bc/jenkins-agent-el-cicd-${agentName} -n openshift) ]]
-                        then 
-                            cat ./${dockerFile} | oc new-build -D - --name jenkins-agent-el-cicd-${agentName} -n openshift
-                        else
-                            oc start-build jenkins-agent-el-cicd-${agentName} 
-                        fi
-                        sleep 10
+                sh """
+                    if [[ -z \$(oc get --ignore-not-found bc/jenkins-agent-el-cicd-${agentName} -n openshift) ]]
+                    then 
+                        cat ./${dockerFile} | oc new-build -D - --name jenkins-agent-el-cicd-${agentName} -n openshift
+                    else
+                        oc start-build jenkins-agent-el-cicd-${agentName} 
+                    fi
+                    sleep 10
 
-                        oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
-                    """
-                }
+                    oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
+                """
             }
         }
     }
-    
 }

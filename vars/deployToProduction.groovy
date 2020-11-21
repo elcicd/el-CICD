@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the deploy-to-production pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/deploy-to-production-pipeline-template.
+ * a realized el-CICD/resources/buildconfigs/deploy-to-production-pipeline-template.
  *
  */
 

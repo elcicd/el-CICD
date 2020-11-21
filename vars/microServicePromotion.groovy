@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the implementation of the microservice promotion pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/promotion-removal-pipeline-template
+ * a realized el-CICD/resources/buildconfigs/promotion-removal-pipeline-template
  *
  */
 

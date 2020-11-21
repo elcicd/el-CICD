@@ -25,7 +25,8 @@ objects:
           properties([
               parameters(
                   [
-                      string(name: 'IGNORE_BASE', defaultValue: 'false', description: 'Do not build the base Jenkins agent, or refresh Jenkins', trim: true)
+                      string(name: 'IGNORE_JENKINS_IMAGE', defaultValue: 'false', description: 'Do not update the Jenkins image', trim: true),
+                      string(name: 'IGNORE_BASE', defaultValue: 'false', description: 'Do not build the base Jenkins agent', trim: true)
                   ]
               )
           ])
@@ -34,13 +35,14 @@ objects:
               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
               def scmMap = [$class: 'GitSCMSource',
-                              remote: cicdMetaData.data.EL_CICD_UTILS_GIT_REPO,
+                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
                               credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library identifier: "el-CICD-utils@${cicdMetaData.data.EL_CICD_UTILS_BRANCH_NAME}", retriever: modernSCM(scmMap)
+              library identifier: "el-CICD-utils@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               el.init(cicdMetaData.data)
           }
 
           elCicdNode(agent: 'base') {
-              createAllJenkinsAgents(ignoreBase: params.IGNORE_BASE == 'true')
+              createAllJenkinsAgents(ignoreBase: params.IGNORE_BASE == 'true', 
+                                     ignoreJenkinsImage: params.IGNORE_JENKINS_IMAGE == 'true')
           }

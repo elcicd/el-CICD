@@ -187,14 +187,6 @@ curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:appl
 rm -f ${SECRET_FILE_NAME}
 
 echo
-echo 'Pushing el-CICD-utils git read only private key to Jenkins'
-cat ./resourcestemplates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_UTILS_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
-cat ${EL_CICD_UTILS_SSH_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}
-cat ./resourcestemplates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
-curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
-rm -f ${SECRET_FILE_NAME}
-
-echo
 echo 'Pushing el-CICD-project-info-repository git read only private key to Jenkins'
 cat ./resourcestemplates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
 cat ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}

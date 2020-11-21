@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the build-to-dev pipeline.  Called inline from the
- * a realized el-CICD/buildconfigs/build-to-dev-pipeline-template.
+ * a realized el-CICD/resources/buildconfigs/build-to-dev-pipeline-template.
  *
  */
 
@@ -46,9 +46,7 @@ void call(Map args) {
 
             dir(microService.workDir) {
                 def moduleName = microService[buildStep] ?: buildStep
-                writeFile file:"${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy",
-                        text: libraryResource("builder-steps/${microService.codeBase}/${moduleName}.groovy")
-                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${moduleName}.groovy"
+                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
 
                 switch(buildStep) {
                     case el.cicd.BUILDER:

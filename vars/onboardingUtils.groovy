@@ -9,13 +9,6 @@
 def init() {
     pipelineUtils.echoBanner("COPYING ONBOARDING RESOURCES TO JENKINS AGENT")
 
-    el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
-    el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
-    sh """
-        mkdir -p ${el.cicd.BUILDCONFIGS_DIR}
-        mkdir -p ${el.cicd.TEMPLATES_DIR}
-    """
-
     writeFile file:"${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt", text: libraryResource('templates/AuthBearerHeader-template.txt')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json", text: libraryResource('templates/githubSshCredentials-postfix.json')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json", text: libraryResource('templates/githubSshCredentials-prefix.json')

@@ -116,6 +116,8 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 
     pipelineUtils.echoBanner("BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS")
 
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
+
     microServices.each { microService ->
         dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
             microService.templateDefs = readTemplateDefs()
@@ -142,7 +144,7 @@ def kustomize(def templateDef) {
         echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
 
         cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-            sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
+            sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; \s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
 
         kustomize build . > ${templateDef.patchedFile}
 
