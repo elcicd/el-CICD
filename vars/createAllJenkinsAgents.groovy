@@ -21,7 +21,7 @@ def call(Map args) {
             agentDockerfiles = findFiles(glob: "Dockerfile.*")
         
             agentDockerfiles = agentDockerfiles.collectEntries { file ->
-                [(file.name.substring(file.name.lastIndexOf('.'))): file.name]
+                [(file.name.substring(file.name.lastIndexOf('.') + 1)): file.name]
             }
         }
     }
