@@ -1,6 +1,6 @@
-# el-CICD-utils
+# el-CICD
 
-Shared Jenkins library for use in el-CICD project.  See `el-CICD-docs` project for full project documentation.
+Main functional library for el-CICD project.  See `el-CICD-docs` project for full project documentation.
 
 This document is part of the el-CICD project, a complete CICD system for the OKD Container Platform.
 
