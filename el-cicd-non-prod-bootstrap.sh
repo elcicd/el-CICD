@@ -263,7 +263,10 @@ then
         sleep 1
     done
 
-    oc start-build create-all-jenkins-agents -e IGNORE_BASE=true -e IGNORE_JENKINS_IMAGE=true --wait --follow -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+    oc start-build create-all-jenkins-agents -e IGNORE_BASE=true -e IGNORE_JENKINS_IMAGE=true -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+    sleep 10
+
+    oc logs -f bc/create-all-jenkins-agents -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 else 
     echo
     echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"

@@ -25,8 +25,8 @@ objects:
           properties([
               parameters(
                   [
-                      string(name: 'IGNORE_JENKINS_IMAGE', defaultValue: 'false', description: 'Do not update the Jenkins image', trim: true),
-                      string(name: 'IGNORE_BASE', defaultValue: 'false', description: 'Do not build the base Jenkins agent', trim: true)
+                      booleanParam(name: 'IGNORE_JENKINS_IMAGE', defaultValue: false, description: 'Do not update the Jenkins image'),
+                      booleanParam(name: 'IGNORE_BASE', defaultValue: false, description: 'Do not build the base Jenkins agent')
                   ]
               )
           ])
