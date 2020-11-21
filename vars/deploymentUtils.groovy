@@ -144,7 +144,7 @@ def kustomize(def templateDef) {
         echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
 
         cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-            sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; \s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
+            sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
 
         kustomize build . > ${templateDef.patchedFile}
 
