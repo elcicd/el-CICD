@@ -9,20 +9,23 @@
 def call(Map args) {
     elCicdCommons.initialize()
 
-    stage('checkout el-CICD-project-repository') {
+    stage('gather dockerfiles') {
         dir (el.cicd.PROJECT_INFO_DIR) {
             git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
                 branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
                 credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
+
+        def agentDockerfiles
+        dir(el.cicd.AGENTS_DIR) {
+            agentDockerfiles = findFiles(glob: "Dockerfile.*")
+        
+            agentDockerfiles = agentDockerfiles.collectEntries { file ->
+                [(file.name.substring(file.name.lastIndexOf('.'))): file.name]
+            }
+        }
     }
 
-    dir(el.cicd.AGENTS_DIR) {
-        def agentDockerfiles = findFiles(glob: "Dockerfile.*")
-    }
-    agentDockerfiles = agentDockerfiles.collectEntries { file ->
-        [(file.name.substring(file.name.lastIndexOf('.'))): file.name]
-    }
 
     stage('Update Jenkins') {
         if (!args.ignoreJenkinsImage) {
@@ -30,14 +33,17 @@ def call(Map args) {
 
             sh "oc import-image jenkins -n openshift"
         }
+        else {
+            pipelineUtils.echoBanner('SKIPPING UPDATE JENKINS IMAGE')
+        }
     }
 
     stage('Create All Agents') {
-        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
-
         if (args.ignoreBase) {
             agentDockerfiles.remove('base')
         }
+
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
 
         dir(el.cicd.AGENTS_DIR) {
             agentDockerfiles.each { agentName, dockerFile ->
