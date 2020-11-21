@@ -9,7 +9,9 @@
 def call(Map args) {
     elCicdCommons.initialize()
 
-    def agentDockerfiles = findFiles(glob: "${el.cicd.AGENTS_DIR}/Dockerfile.*")
+    dir(el.cicd.AGENTS_DIR) {
+        def agentDockerfiles = findFiles(glob: "Dockerfile.*")
+    }
     agentDockerfiles = agentDockerfiles.collectEntries { file ->
         [(file.name.substring(file.name.lastIndexOf('.'))): file.name]
     }
