@@ -7,6 +7,8 @@
  */
 
 def call(Map args) {
+    echo "args: ${args}"
+    
     elCicdCommons.initialize()
 
     def agentDockerfiles
