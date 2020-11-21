@@ -9,6 +9,7 @@
 def call(Map args) {
     elCicdCommons.initialize()
 
+    def agentDockerfiles
     stage('gather dockerfiles') {
         dir (el.cicd.PROJECT_INFO_DIR) {
             git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
@@ -16,7 +17,6 @@ def call(Map args) {
                 credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
 
-        def agentDockerfiles
         dir(el.cicd.AGENTS_DIR) {
             agentDockerfiles = findFiles(glob: "Dockerfile.*")
         
