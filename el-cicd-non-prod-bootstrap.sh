@@ -272,5 +272,7 @@ else
     echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
 fi
 
+el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
+
 echo 
 echo 'Non-prod Onboarding Server Bootstrap Script Complete'
