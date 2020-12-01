@@ -232,7 +232,7 @@ else
     echo "Base agent found: to manually rebuild Jenkins Agents, rerun the build 'jenkins-agent-el-cicd-base'"
 fi
 
-el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} prod
+./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} prod
 
 echo 
 echo 'Prod Onboarding Server Bootstrap Script Complete'
