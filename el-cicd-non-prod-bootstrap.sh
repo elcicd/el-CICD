@@ -64,16 +64,16 @@ then
     done
 fi
 
-# NOTE: you will need a service account access token with read/right capability to all
-# repos for adding basic access to el-CICD and el-CICD-utils
-# add public keys to el-CICD and el-CICD-utils
+# NOTE: you will need a service account access token with read/right capability to
+#       the el-CICD repo for adding basic access rights to the el-CICD repo
+# add public key to el-CICD
 if [[ ! -z $(echo ${EL_CICD_GIT_API_DOMAIN} | grep ${GIT_PROVIDER}) ]]
 then
     echo
-    echo "ADDING READ-ONLY DEPLOY KEYS FOR el-CICD or el-CICD-utils to GitHub"
+    echo "ADDING READ-ONLY DEPLOY KEY FOR el-CICD to GitHub"
     ./el-cicd-post-github-read-only-deploy-keys.sh
 else
-    echo "DEPLOY KEYS NOT FOUND FOR el-CICD or el-CICD-utils"
+    echo "DEPLOY KEY NOT FOUND FOR el-CICD"
     exit 1
 fi
 echo
