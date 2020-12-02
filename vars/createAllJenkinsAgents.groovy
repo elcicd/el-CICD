@@ -28,6 +28,7 @@ def call(Map args) {
 
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
         if (!args.ignoreDefaultAgent) {
+            echo "pushing..."
             agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
         }
 
