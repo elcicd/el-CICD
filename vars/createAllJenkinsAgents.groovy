@@ -19,7 +19,7 @@ def call(Map args) {
 
         dir(el.cicd.AGENTS_DIR) {
             agentDockerfiles = findFiles(glob: "Dockerfile.*")
-        
+
             agentDockerfiles = agentDockerfiles.collectEntries { file ->
                 [(file.name.substring(file.name.lastIndexOf('.') + 1)): file.name]
             }
@@ -47,7 +47,7 @@ def call(Map args) {
                     then 
                         cat ./${dockerFile} | oc new-build -D - --name jenkins-agent-el-cicd-${agentName} -n openshift
                     else
-                        oc start-build jenkins-agent-el-cicd-${agentName} 
+                        oc start-build jenkins-agent-el-cicd-${agentName} -n openshift
                     fi
                     sleep 10
 

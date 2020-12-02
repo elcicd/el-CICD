@@ -186,6 +186,7 @@ do
 
     DRY_RUN=client
     if [[ ${OCP_VERSION} == 3 ]]
+    then
         DRY_RUN=true
     fi
 
