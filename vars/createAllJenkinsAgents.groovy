@@ -23,12 +23,9 @@ def call(Map args) {
     }
 
     stage('Create All Agents') {
-        echo "args: ${args}"
-        echo "args.ignoreDefaultAgent: ${args.ignoreDefaultAgent}"
-
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
         if (!args.ignoreDefaultAgent) {
-            agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
+            agentNames.add(0, el.cicd.JENKINS_AGENT_DEFAULT)
         }
 
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.join(', '))
