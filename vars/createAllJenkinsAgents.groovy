@@ -49,6 +49,7 @@ def call(Map args) {
                     else
                         oc start-build jenkins-agent-el-cicd-${agentName} -n openshift
                     fi
+                    sleep 10
 
                     oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift --request-timeout=5m
                 """
