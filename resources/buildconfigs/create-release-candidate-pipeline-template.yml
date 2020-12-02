@@ -43,6 +43,6 @@ objects:
                el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
               createReleaseCandidate(projectId: params.PROJECT_ID, releaseCandidateTag: params.RELEASE_CANDIDATE_TAG)
           }

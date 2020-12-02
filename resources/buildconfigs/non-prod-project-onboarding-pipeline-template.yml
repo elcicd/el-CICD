@@ -44,7 +44,7 @@ objects:
               el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
               nonProdProjectOnboarding(projectId: params.PROJECT_ID,
                                        rebuildNonProd: params.REBUILD_NON_PROD.toString() == 'true')
           }

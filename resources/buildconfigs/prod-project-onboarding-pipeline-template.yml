@@ -47,7 +47,7 @@ objects:
                el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
               prodProjectOnboarding(projectId: params.PROJECT_ID,
                                     rbacGroup: params.RBAC_GROUP,
                                     recreateProd: params.RECREATE_PROD.toString() == 'true')

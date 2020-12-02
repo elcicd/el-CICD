@@ -45,7 +45,7 @@ objects:
               el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
               createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true',
                                      ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT == 'true')
           }
