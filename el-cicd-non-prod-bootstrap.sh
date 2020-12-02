@@ -184,9 +184,14 @@ do
     TKN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
     DOMAIN=$(eval echo \${${ENV}_IMAGE_REPO_DOMAIN})
 
+    DRY_RUN=client
+    if [[ ${OCP_VERSION} == 3 ]]
+        DRY_RUN=true
+    fi
+
     SECRET_FILE_IN=${SECRET_FILE_DIR}/${SEC_NAME}
     oc create secret docker-registry ${SEC_NAME}  --docker-username=${U_NAME} --docker-password=$(cat ${TKN_FILE})  --docker-server=${DOMAIN} \
-        --dry-run=client -o yaml  > ${SECRET_FILE_IN}
+        --dry-run=${DRY_RUN} -o yaml  > ${SECRET_FILE_IN}
 
     kubeseal --scope cluster-wide <${SECRET_FILE_IN} >${SEALED_SECRET_FILE}
     oc apply -f ${SEALED_SECRET_FILE} -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
@@ -226,13 +231,6 @@ cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${GIT_SI
 curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
 rm -f ${SECRET_FILE_NAME}
 
-# echo
-# echo 'Pushing SonarQube access token to Jenkins'
-# export SECRET_TOKEN=$(cat ${SONARQUBE_ACCESS_TOKEN_FILE})
-# cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${SONARQUBE_ACCESS_TOKEN_ID}/; s/%TOKEN%/${SECRET_TOKEN}/" > ${SECRET_FILE_NAME}
-# curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
-# rm -f ${SECRET_FILE_NAME}
-
 echo
 echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
@@ -250,18 +248,13 @@ do
 done
 rm -rf ${SECRET_FILE_DIR}
 
+./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
+
 HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n openshift -o jsonpath='{.metadata.name}')
 if [[ -z ${HAS_BASE_AGENT} ]]
 then
     echo
     echo "Creating Jenkins Agents"
-    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
-    until
-        oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift 2>/dev/null
-    do
-        echo -n '.'
-        sleep 1
-    done
 
     oc start-build create-all-jenkins-agents -e IGNORE_BASE=true -e IGNORE_JENKINS_IMAGE=true -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
     
@@ -271,8 +264,6 @@ else
     echo
     echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
 fi
-
-./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
 
 echo 
 echo 'Non-prod Onboarding Server Bootstrap Script Complete'

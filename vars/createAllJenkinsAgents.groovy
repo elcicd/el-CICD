@@ -26,7 +26,6 @@ def call(Map args) {
         }
     }
 
-
     stage('Update Jenkins') {
         if (!args.ignoreJenkinsImage) {
             pipelineUtils.echoBanner('UPDATE JENKINS IMAGE')
@@ -39,10 +38,6 @@ def call(Map args) {
     }
 
     stage('Create All Agents') {
-        if (args.ignoreBase) {
-            agentDockerfiles.remove('base')
-        }
-
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
 
         dir(el.cicd.AGENTS_DIR) {

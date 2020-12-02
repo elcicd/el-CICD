@@ -159,9 +159,14 @@ do
     TKN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
     DOMAIN=$(eval echo \${${ENV}_IMAGE_REPO_DOMAIN})
 
+    DRY_RUN=client
+    if [[ ${OCP_VERSION} == 3 ]]
+        DRY_RUN=true
+    fi
+
     SECRET_FILE_IN=${SECRET_FILE_DIR}/${SEC_NAME}
     oc create secret docker-registry ${SEC_NAME}  --docker-username=${U_NAME} --docker-password=$(cat ${TKN_FILE})  --docker-server=${DOMAIN} \
-        --dry-run=client -o yaml  > ${SECRET_FILE_IN}
+        --dry-run=${DRY_RUN} -o yaml  > ${SECRET_FILE_IN}
 
     kubeseal --scope cluster-wide <${SECRET_FILE_IN} >${SEALED_SECRET_FILE}
     oc apply -f ${SEALED_SECRET_FILE} -n ${EL_CICD_PROD_MASTER_NAMEPACE}

@@ -18,15 +18,14 @@ objects:
     strategy:
       jenkinsPipelineStrategy:
         env:
-          - name: IGNORE_BASE
-            description: Do not build the base Jenkins agent, or refresh the Jenkins image
+          - name: IGNORE_JENKINS_IMAGE
+            description: Do not update the Jenkins iamge
             value: "false"
         jenkinsfile: |-
           properties([
               parameters(
                   [
-                      booleanParam(name: 'IGNORE_JENKINS_IMAGE', defaultValue: false, description: 'Do not update the Jenkins image'),
-                      booleanParam(name: 'IGNORE_BASE', defaultValue: false, description: 'Do not build the base Jenkins agent')
+                      booleanParam(name: 'IGNORE_JENKINS_IMAGE', defaultValue: false, description: 'Do not update the Jenkins image')
                   ]
               )
           ])
@@ -40,9 +39,6 @@ objects:
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               el.init(cicdMetaData.data)
-          }
-
-          elCicdNode(agent: 'base') {
-              createAllJenkinsAgents(ignoreBase: params.IGNORE_BASE == 'true', 
-                                     ignoreJenkinsImage: params.IGNORE_JENKINS_IMAGE == 'true')
+              
+              createAllJenkinsAgents(ignoreJenkinsImage: params.IGNORE_JENKINS_IMAGE == 'true')
           }
