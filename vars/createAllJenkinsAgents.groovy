@@ -34,6 +34,7 @@ def call(Map args) {
                     else
                         oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     fi
+                    sleep 5
 
                     oc logs --insecure-skip-tls-verify-backend -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
                 """
