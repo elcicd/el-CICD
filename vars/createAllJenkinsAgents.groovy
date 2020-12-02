@@ -49,7 +49,11 @@ def call(Map args) {
                     else
                         oc start-build jenkins-agent-el-cicd-${agentName} -n openshift
                     fi
-                    sleep 10
+
+                    while [[ -z $(oc get builds -n openshift | grep jenkins-agent-el-cicd-${agentName} | grep Running) ]]
+                    do
+                        sleep 10
+                    done
 
                     oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
                 """
