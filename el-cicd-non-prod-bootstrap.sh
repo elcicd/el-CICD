@@ -257,6 +257,7 @@ then
     echo
     echo "Creating Jenkins Default Agent"
     cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.${JENKINS_AGENT_DEFAULT} | oc new-build -D - --name ${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift
+    sleep 10
 
     oc logs -f bc/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift --pod-running-timeout=1m
 
