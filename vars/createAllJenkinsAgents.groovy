@@ -28,15 +28,15 @@ def call(Map args) {
         dir(el.cicd.AGENTS_DIR) {
             el.cicd.JENKINS_AGENT_NAMES.split(':').each { agentName ->
                 sh """
-                    if [[ -z \$(oc get --ignore-not-found bc/${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift) ]]
+                    if [[ -z \$(oc get --ignore-not-found bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift) ]]
                     then 
-                        cat ./Dockerfile.${agentName} | oc new-build -D - --name ${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
+                        cat ./Dockerfile.${agentName} | oc new-build -D - --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     else
-                        oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
+                        oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     fi
                     sleep 10
 
-                    oc logs -f bc/${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
+                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
                 """
             }
         }
