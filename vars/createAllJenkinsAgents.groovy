@@ -28,11 +28,10 @@ def call(Map args) {
 
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
         if (!args.ignoreDefaultAgent) {
-            echo "pushing..."
             agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
         }
 
-        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', el.cicd.JENKINS_AGENT_NAMES.split(':').join(', '))
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.split(':').join(', '))
 
         return
 
