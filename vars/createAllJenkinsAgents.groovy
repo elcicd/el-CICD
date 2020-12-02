@@ -23,7 +23,7 @@ def call(Map args) {
     }
 
     stage('Create All Agents') {
-        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', el.cicd.JENKINS_AGENT_NAMES.split(':').join(', '))
 
         dir(el.cicd.AGENTS_DIR) {
             el.cicd.JENKINS_AGENT_NAMES.split(':').each { agentName ->
