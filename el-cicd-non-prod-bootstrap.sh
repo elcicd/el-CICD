@@ -255,9 +255,14 @@ HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n open
 if [[ -z ${HAS_BASE_AGENT} ]]
 then
     echo
-    echo "Creating Jenkins Agents"
+    echo "Creating Jenkins Default Agent"
+    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.${JENKINS_AGENT_DEFAULT} | oc new-build -D - --name ${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift
+    sleep 5
+    oc logs -f bc/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift --request-timeout=5m
 
-    oc start-build create-all-jenkins-agents -e IGNORE_BASE=true -e IGNORE_JENKINS_IMAGE=true -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+    echo
+    echo "Creating Jenkins Agents"
+    oc start-build create-all-jenkins-agents -e IGNORE_DEFAULT_AGENT=true -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
     
     echo
     echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"

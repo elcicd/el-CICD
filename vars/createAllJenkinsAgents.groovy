@@ -25,8 +25,13 @@ def call(Map args) {
     stage('Create All Agents') {
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', el.cicd.JENKINS_AGENT_NAMES.split(':').join(', '))
 
+        def agentNames = el.cicd.JENKINS_AGENT_NAMES.split(':')
+        if (!args.ignoreBase) {
+            agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
+        }
+
         dir(el.cicd.AGENTS_DIR) {
-            el.cicd.JENKINS_AGENT_NAMES.split(':').each { agentName ->
+            agentNames.each { agentName ->
                 sh """
                     if [[ -z \$(oc get --ignore-not-found bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift) ]]
                     then 
@@ -36,7 +41,7 @@ def call(Map args) {
                     fi
                     sleep 5
 
-                    oc logs --insecure-skip-tls-verify-backend -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
+                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
                 """
             }
         }

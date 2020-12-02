@@ -19,13 +19,17 @@ objects:
       jenkinsPipelineStrategy:
         env:
           - name: UDPATE_JENKINS_IMAGE
-            description: Do not update the Jenkins iamge
+            description: Do not update the Jenkins image
+            value: "false"
+          - name: IGNORE_DEFAULT_AGENT
+            description: Do not build the default agent
             value: "false"
         jenkinsfile: |-
           properties([
               parameters(
                   [
-                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image')
+                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image'),
+                      booleanParam(name: 'IGNORE_DEFAULT_AGENT', defaultValue: false, description: 'Do not build default agent if true')
                   ]
               )
           ])
@@ -39,6 +43,9 @@ objects:
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               el.init(cicdMetaData.data)
-              
-              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true')
+          }
+
+          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
+              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true',
+                                     ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT == 'true')
           }

@@ -40,6 +40,6 @@ objects:
                el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: 'base') {
+          elCicdNode(agent: el.cicd.JENKINS_DEFAULT_AGENT) {
               redeployMicroServices(projectId: params.PROJECT_ID)
           }
