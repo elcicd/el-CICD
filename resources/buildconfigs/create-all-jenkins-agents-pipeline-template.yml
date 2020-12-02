@@ -18,14 +18,14 @@ objects:
     strategy:
       jenkinsPipelineStrategy:
         env:
-          - name: IGNORE_JENKINS_IMAGE
+          - name: UDPATE_JENKINS_IMAGE
             description: Do not update the Jenkins iamge
             value: "false"
         jenkinsfile: |-
           properties([
               parameters(
                   [
-                      booleanParam(name: 'IGNORE_JENKINS_IMAGE', defaultValue: false, description: 'Do not update the Jenkins image')
+                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image')
                   ]
               )
           ])
@@ -40,5 +40,5 @@ objects:
 
               el.init(cicdMetaData.data)
               
-              createAllJenkinsAgents(ignoreJenkinsImage: params.IGNORE_JENKINS_IMAGE == 'true')
+              createAllJenkinsAgents(ignoreJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true')
           }
