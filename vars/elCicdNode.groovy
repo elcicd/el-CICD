@@ -3,17 +3,9 @@
  *
  * Utility class defining the Jenkins agents.
  */
-
-
-@groovy.transform.Field
-agentDefs = [base: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-el-cicd-base:latest',
-             'java-maven': 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-el-cicd-java-maven:latest',
-             'r-lang': 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-el-cicd-r-lang:latest',
-             python: 'image-registry.openshift-image-registry.svc:5000/openshift/jenkins-agent-el-cicd-python:latest']
  
 def call(Map args = [:], Closure body) {
     assert args.agent
-    def agentImage = agentDefs[args.agent] ?: args.agent
 
     def podLabel = args.agentName ?: args.agent
 
@@ -27,7 +19,7 @@ def call(Map args = [:], Closure body) {
         containers: [
             containerTemplate(
                 name: 'jnlp',
-                image: "${agentImage}",
+                image: "${el.cicd.OCP_IMAGE_REPO}/jenkins-agent-el-cicd-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: '512Mi',
