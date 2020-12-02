@@ -46,6 +46,6 @@ objects:
           }
 
           elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
-              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true',
-                                     ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT == 'true')
+              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true',
+                                     ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT?.toString() == 'true')
           }

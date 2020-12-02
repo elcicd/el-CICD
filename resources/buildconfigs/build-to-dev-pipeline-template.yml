@@ -91,5 +91,5 @@ objects:
                          microServiceName: '${MICROSERVICE_NAME}',
                          deployToNamespace: params.DEPLOY_TO_NAMESPACE,
                          gitBranch: params.GIT_BRANCH,
-                         recreate: (params.RECREATE?.toString() == 'true'))
+                         recreate: (params.RECREATE??.toString() == 'true'))
           }

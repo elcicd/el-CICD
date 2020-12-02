@@ -46,5 +46,5 @@ objects:
 
           elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
               nonProdProjectDelete(projectId: params.PROJECT_ID,
-                                   deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS.toString() == 'true')
+                                   deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS?.toString() == 'true')
           }
