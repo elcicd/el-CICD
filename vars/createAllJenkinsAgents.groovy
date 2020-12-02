@@ -30,8 +30,6 @@ def call(Map args) {
 
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.join(', '))
 
-        return
-
         dir(el.cicd.AGENTS_DIR) {
             agentNames.each { agentName ->
                 sh """
