@@ -31,7 +31,7 @@ def call(Map args) {
             agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
         }
 
-        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.split(':').join(', '))
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.join(', '))
 
         return
 
