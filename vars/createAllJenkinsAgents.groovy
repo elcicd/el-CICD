@@ -26,7 +26,7 @@ def call(Map args) {
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', el.cicd.JENKINS_AGENT_NAMES.split(':').join(', '))
 
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.split(':')
-        if (!args.ignoreBase) {
+        if (!args.ignoreDefaultAgent) {
             agentNames.push(el.cicd.JENKINS_AGENT_DEFAULT)
         }
 
@@ -39,9 +39,9 @@ def call(Map args) {
                     else
                         oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     fi
-                    sleep 5
+                    sleep 10
 
-                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
+                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --pod-running-timeout=1m
                 """
             }
         }
