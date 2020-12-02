@@ -50,19 +50,7 @@ def call(Map args) {
                         oc start-build jenkins-agent-el-cicd-${agentName} -n openshift
                     fi
 
-                    set +x
-                    COUNTER=1
-                    while [[ -z \$(oc get builds -n openshift | grep jenkins-agent-el-cicd-${agentName} | grep Running) ]]
-                    do
-                        printf "%0.s-" \$(seq 1 \${COUNTER})
-                        echo
-                        sleep 5
-                        let COUNTER+=1
-                    done
-                    set -x
-                    sleep 5
-
-                    oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
+                    oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift --request-timeout=5m
                 """
             }
         }
