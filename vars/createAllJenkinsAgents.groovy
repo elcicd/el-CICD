@@ -60,6 +60,7 @@ def call(Map args) {
                         let COUNTER+=1
                     done
                     set -x
+                    sleep 5
 
                     oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift
                 """
