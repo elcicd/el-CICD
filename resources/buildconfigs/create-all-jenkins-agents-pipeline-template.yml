@@ -40,5 +40,5 @@ objects:
 
               el.init(cicdMetaData.data)
               
-              createAllJenkinsAgents(ignoreJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true')
+              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE == 'true')
           }

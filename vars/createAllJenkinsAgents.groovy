@@ -10,24 +10,9 @@ def call(Map args) {
     elCicdCommons.initialize()
 
     def agentDockerfiles
-    stage('gather dockerfiles') {
-        dir (el.cicd.PROJECT_INFO_DIR) {
-            git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
-                branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
-                credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-        }
-
-        dir(el.cicd.AGENTS_DIR) {
-            agentDockerfiles = findFiles(glob: "Dockerfile.*")
-
-            agentDockerfiles = agentDockerfiles.collectEntries { file ->
-                [(file.name.substring(file.name.lastIndexOf('.') + 1)): file.name]
-            }
-        }
-    }
 
     stage('Update Jenkins') {
-        if (!args.ignoreJenkinsImage) {
+        if (args.updateJenkinsImage) {
             pipelineUtils.echoBanner('UPDATE JENKINS IMAGE')
 
             sh "oc import-image jenkins -n openshift"
@@ -41,17 +26,17 @@ def call(Map args) {
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentDockerfiles)
 
         dir(el.cicd.AGENTS_DIR) {
-            agentDockerfiles.each { agentName, dockerFile ->
+            el.cicd.JENKINS_AGENT_NAMES.split(':').each { agentName ->
                 sh """
-                    if [[ -z \$(oc get --ignore-not-found bc/jenkins-agent-el-cicd-${agentName} -n openshift) ]]
+                    if [[ -z \$(oc get --ignore-not-found bc/${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift) ]]
                     then 
-                        cat ./${dockerFile} | oc new-build -D - --name jenkins-agent-el-cicd-${agentName} -n openshift
+                        cat ./Dockerfile.${agentName} | oc new-build -D - --name ${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     else
-                        oc start-build jenkins-agent-el-cicd-${agentName} -n openshift
+                        oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     fi
                     sleep 10
 
-                    oc logs -f bc/jenkins-agent-el-cicd-${agentName} -n openshift --request-timeout=5m
+                    oc logs -f bc/${JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --request-timeout=5m
                 """
             }
         }
