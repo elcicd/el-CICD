@@ -21,20 +21,16 @@ objects:
           - name: UDPATE_JENKINS_IMAGE
             description: Do not update the Jenkins image
             value: "false"
-          - name: IGNORE_DEFAULT_AGENT
-            description: Do not build the default agent
-            value: "false"
         jenkinsfile: |-
           properties([
               parameters(
                   [
-                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image'),
-                      booleanParam(name: 'IGNORE_DEFAULT_AGENT', defaultValue: false, description: 'Do not build default agent if true')
+                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image')
                   ]
               )
           ])
 
-          node('master') {
+          node('maven') {
               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
               def scmMap = [$class: 'GitSCMSource',
@@ -43,7 +39,7 @@ objects:
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               el.init(cicdMetaData.data)
-              
-              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true',
-                                     ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT?.toString() == 'true')
+
+              elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
+                  createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true')
           }

@@ -24,9 +24,7 @@ def call(Map args) {
 
     stage('Create All Agents') {
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
-        if (!args.ignoreDefaultAgent) {
-            agentNames.add(0, el.cicd.JENKINS_AGENT_DEFAULT)
-        }
+        agentNames.add(0, el.cicd.JENKINS_AGENT_DEFAULT)
 
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.join(', '))
 
@@ -44,7 +42,7 @@ def call(Map args) {
                     fi
 
                     cp ./Dockerfile.${agentName} ${el.cicd.TEMP_DIR}/Dockerfile
-                    oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-file=${el.cicd.TEMP_DIR}/Dockerfile --wait -n openshift
+                    oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-file=${el.cicd.TEMP_DIR}/Dockerfile --wait --follow -n openshift
                 """
             }
         }

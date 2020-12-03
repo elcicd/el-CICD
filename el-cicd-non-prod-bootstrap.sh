@@ -251,21 +251,12 @@ rm -rf ${SECRET_FILE_DIR}
 
 ./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
 
-HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n openshift -o jsonpath='{.metadata.name}')
+HAS_BASE_AGENT=$(oc get --ignore-not-found bc jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
 if [[ -z ${HAS_BASE_AGENT} ]]
 then
-    # echo
-    # echo "Creating Jenkins Default Agent"
-    # cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.${JENKINS_AGENT_DEFAULT} | oc new-build -D - --name ${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift
-    # sleep 10
-
-    # oc logs -f bc/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift --pod-running-timeout=1m
-
-    # echo
-    echo "Creating Jenkins Agents"
-    oc start-build create-all-jenkins-agents --wait --follow -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
-    
     echo
+    echo "Creating Jenkins Agents"
+    oc start-build create-all-jenkins-agents -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
     echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
 else 
     echo
