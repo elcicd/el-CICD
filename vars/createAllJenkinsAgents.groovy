@@ -39,7 +39,7 @@ def call(Map args) {
                                      --binary=true \
                                      --strategy=docker \
                                      --to-docker \
-                                     --to=${OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName}:latest \
+                                     --to=${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName}:latest \
                                      -n openshift
                     fi
 

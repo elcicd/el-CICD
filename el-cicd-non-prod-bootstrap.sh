@@ -263,7 +263,7 @@ then
 
     # echo
     echo "Creating Jenkins Agents"
-    oc start-build create-all-jenkins-agents --follow -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+    oc start-build create-all-jenkins-agents --wait --follow -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
     
     echo
     echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
