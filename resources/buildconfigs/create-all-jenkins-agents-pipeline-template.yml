@@ -30,7 +30,7 @@ objects:
               )
           ])
 
-          node('maven') {
+          node('master') {
               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
               def scmMap = [$class: 'GitSCMSource',
@@ -40,6 +40,5 @@ objects:
 
               el.init(cicdMetaData.data)
 
-              elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
-                  createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true')
+              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true')
           }
