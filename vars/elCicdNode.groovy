@@ -4,7 +4,7 @@
  * Utility class defining the Jenkins agents.
  */
  
-def call(Map args = [:], Closure body) {
+def call(Map args, Closure body) {
     assert args.agent
 
     def podLabel = args.agentName ?: args.agent

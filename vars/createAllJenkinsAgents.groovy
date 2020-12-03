@@ -35,13 +35,16 @@ def call(Map args) {
                 sh """
                     if [[ -z \$(oc get --ignore-not-found bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift) ]]
                     then 
-                        cat ./Dockerfile.${agentName} | oc new-build -D - --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
-                    else
-                        oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
+                        oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} \
+                                     --binary=true \
+                                     --strategy=docker \
+                                     --to-docker \
+                                     --to=${OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName}:latest \
+                                     -n openshift
                     fi
-                    sleep 10
 
-                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift --pod-running-timeout=1m
+                    cp ./Dockerfile.${agentName} ${el.cicd.TEMP_DIR}/Dockerfile
+                    oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-file=${el.cicd.TEMP_DIR}/Dockerfile --wait -n openshift
                 """
             }
         }

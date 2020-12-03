@@ -43,9 +43,7 @@ objects:
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               el.init(cicdMetaData.data)
-          }
-
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
+              
               createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true',
                                      ignoreDefaultAgent: params.IGNORE_DEFAULT_AGENT?.toString() == 'true')
           }
