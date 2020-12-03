@@ -22,23 +22,23 @@ objects:
             description: Do not update the Jenkins image
             value: "false"
         jenkinsfile: |-
-properties([
-    parameters(
-        [
-            booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image')
-        ]
-    )
-])
+          properties([
+              parameters(
+                  [
+                      booleanParam(name: 'UDPATE_JENKINS_IMAGE', defaultValue: false, description: 'Update the Jenkins image')
+                  ]
+              )
+          ])
 
-node('master') {
-    def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
+          node('master') {
+              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
-    def scmMap = [$class: 'GitSCMSource',
-                    remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                    credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-    library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
+              def scmMap = [$class: 'GitSCMSource',
+                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-    el.init(cicdMetaData.data)
+              el.init(cicdMetaData.data)
 
-    createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true')
-}
+              createAllJenkinsAgents(updateJenkinsImage: params.UDPATE_JENKINS_IMAGE?.toString() == 'true')
+          }
