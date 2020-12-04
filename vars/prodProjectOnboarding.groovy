@@ -7,9 +7,6 @@
  */
 
 def call(Map args) {
-
-    elCicdCommons.initialize()
-
     onboardingUtils.init()
 
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)

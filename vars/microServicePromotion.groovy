@@ -7,9 +7,6 @@
  */
 
 def call(Map args) {
-
-    elCicdCommons.initialize()
-
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     stage ('Select microservices to promote and remove') {

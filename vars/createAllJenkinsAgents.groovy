@@ -7,8 +7,6 @@
  */
 
 def call(Map args) {
-    elCicdCommons.initialize()
-
     def agentDockerfiles
 
     stage('Update Jenkins') {

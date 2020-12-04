@@ -7,9 +7,6 @@
  */
 
 def call(Map args) {
-
-    elCicdCommons.initialize()
-
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     stage('Checkout all microservice repositories') {

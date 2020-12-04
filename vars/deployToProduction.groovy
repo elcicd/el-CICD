@@ -7,10 +7,7 @@
  */
 
 def call(Map args) {
-
     def deployAll = args.deployAll
-
-    elCicdCommons.initialize()
 
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX) ? 

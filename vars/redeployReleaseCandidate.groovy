@@ -7,9 +7,6 @@
  */
 
 def call(Map args) {
-
-    elCicdCommons.initialize()
-
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
     projectInfo.deployToEnv = projectInfo.preProdEnv

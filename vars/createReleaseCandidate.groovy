@@ -9,8 +9,6 @@
 def call(Map args) {
     assert (args.releaseCandidateTag ==~ /[\w][\w.-]*/)
 
-    elCicdCommons.initialize()
-
     projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
 
