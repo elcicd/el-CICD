@@ -36,7 +36,7 @@ def call(Map args, Closure body) {
             def postScript
             def onFailScript
 
-            pipelineUtils.echoBanner("env.JOB_BASE_NAME: ${env.JOB_BASE_NAME}")
+            pipelineUtils.echoBanner("env: ${env}")
 
             dir(el.cicd.HOOK_SCRIPTS_DIR) {
                 def preScriptFile = findFiles(glob: "**/pre-${env.JOB_BASE_NAME}.groovy")
