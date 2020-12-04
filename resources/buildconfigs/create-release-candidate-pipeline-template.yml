@@ -6,9 +6,14 @@ metadata:
   name: create-release-candidate-template
 parameters:
 - name: EL_CICD_META_INFO_NAME
-  description: Name oc config map holding el-CICD meta-info.
+  description: Name oc config map holding el-CICD meta-info
   displayName: EL_CICD_META_INFO_NAME
   required: true
+- name: PIPELINE_TEMPLATE_NAME
+  description: Pipeline Template Name
+  displayName: PIPELINE_TEMPLATE_NAME
+  required: true
+  value: create-release-candidate
 objects:
 - kind: "BuildConfig"
   apiVersion: "v1"
@@ -33,16 +38,17 @@ objects:
           ])
 
           node('master') {
-               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
+              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
-               def scmMap = [$class: 'GitSCMSource',
-                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
+              def scmMap = [$class: 'GitSCMSource',
+                            remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                            credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-               el.init(cicdMetaData.data)
+              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = ${PIPELINE_TEMPLATE_NAME}
+              el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: 'create-release-candidate') {
               createReleaseCandidate(projectId: params.PROJECT_ID, releaseCandidateTag: params.RELEASE_CANDIDATE_TAG)
           }

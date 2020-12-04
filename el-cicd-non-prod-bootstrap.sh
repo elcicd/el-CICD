@@ -251,7 +251,7 @@ rm -rf ${SECRET_FILE_DIR}
 
 ./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
 
-HAS_BASE_AGENT=$(oc get --ignore-not-found bc jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
+HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
 if [[ -z ${HAS_BASE_AGENT} ]]
 then
     echo

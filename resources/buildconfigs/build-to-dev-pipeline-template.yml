@@ -3,12 +3,17 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: build-and-deploy-to-dev-template
+  name: build-to-dev-template
 parameters:
 - name: EL_CICD_META_INFO_NAME
-  description: Name oc config map holding el-CICD meta-info.
+  description: Name oc config map holding el-CICD meta-info
   displayName: EL_CICD_META_INFO_NAME
   required: true
+- name: PIPELINE_TEMPLATE_NAME
+  description: Pipeline Template Name
+  displayName: PIPELINE_TEMPLATE_NAME
+  required: true
+  value: build-to-dev
 - name: PROJECT_ID
   description: Project ID for microservice.
   displayName: Project ID
@@ -38,7 +43,7 @@ objects:
 - kind: BuildConfig
   apiVersion: v1
   metadata:
-    name: ${PROJECT_ID}-${MICROSERVICE_NAME}-build-to-dev
+    name: ${PROJECT_ID}-${MICROSERVICE_NAME}-${PIPELINE_TEMPLATE_NAME}
     labels:
       projectid: ${PROJECT_ID}
       microservice: ${MICROSERVICE_NAME}
@@ -83,6 +88,7 @@ objects:
                             credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
+              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = ${PIPELINE_TEMPLATE_NAME}
               el.init(cicdMetaData.data)
           }
 

@@ -3,7 +3,7 @@
 kind: Template
 apiVersion: v1
 metadata:
-  name: non-prod-project-onboarding-template
+  name: microservice-promotion-removal-template
 parameters:
 - name: EL_CICD_META_INFO_NAME
   description: Name oc config map holding el-CICD meta-info
@@ -13,27 +13,23 @@ parameters:
   description: Pipeline Template Name
   displayName: PIPELINE_TEMPLATE_NAME
   required: true
-  value: non-prod-project-onboarding
+  value: microservice-promotion-removal
 objects:
 - kind: "BuildConfig"
   apiVersion: "v1"
   metadata:
-    name: non-prod-project-onboarding
+    name: microservice-promotion-removal
   spec:
     strategy:
       jenkinsPipelineStrategy:
         env:
           - name: PROJECT_ID
             description: Project ID from auto-tracker, representing all microservices for a project
-          - name: REBUILD_NON_PROD
-            description: If true, non-prod environment(s) will be destroyed and rebuilt from scratch
-            value: "false"
         jenkinsfile: |-
           properties([
               parameters(
                   [
-                      string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
-                      booleanParam(name: 'REBUILD_NON_PROD', defaultValue: false, description: 'Should the non-prod environment(s) be rebuilt if they exist')
+                      string(name: 'PROJECT_ID', description: 'Project ID', trim: true)
                   ]
               )
           ])
@@ -50,7 +46,6 @@ objects:
               el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: 'non-prod-project-onboarding') {
-              nonProdProjectOnboarding(projectId: params.PROJECT_ID,
-                                       rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true')
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: 'microservice-promotion-removal') {
+              microServicePromotion(projectId: params.PROJECT_ID)
           }

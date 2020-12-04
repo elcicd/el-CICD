@@ -36,21 +36,19 @@ def call(Map args, Closure body) {
             def postScript
             def onFailScript
 
-            pipelineUtils.echoBanner("env.JOB_NAME: ${env.JOB_NAME}")
-
             dir(el.cicd.HOOK_SCRIPTS_DIR) {
-                def preScriptFile = findFiles(glob: "**/pre-${env.JOB_BASE_NAME}.groovy")
+                def preScriptFile = findFiles(glob: "**/pre-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (preScriptFile) {
                     preScript = load "${preScriptFile}"
                     preScript()
                 }
 
-                def postScriptFile = findFiles(glob: "**/post-${env.JOB_BASE_NAME}.groovy")
+                def postScriptFile = findFiles(glob: "**/post-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (preScriptFile) {
                     postScript = load "${preScriptFile}"
                 }
 
-                def onFailScriptFile = findFiles(glob: "**/onFail-${env.JOB_BASE_NAME}.groovy")
+                def onFailScriptFile = findFiles(glob: "**/onFail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (onFailScriptFile) {
                     onFailScript = load "${preScriptFile}"
                 }
