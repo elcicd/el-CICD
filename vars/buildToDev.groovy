@@ -8,8 +8,6 @@
 
 void call(Map args) {
 
-    elCicdCommons.initialize()
-
     def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
     
