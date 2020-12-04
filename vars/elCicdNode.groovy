@@ -58,7 +58,7 @@ def call(Map args, Closure body) {
                 body()
             }
             catch (Exception e) {
-                if (onFailScriptFile) {
+                if (onFailScript) {
                     onFailScript()
                 }
 
