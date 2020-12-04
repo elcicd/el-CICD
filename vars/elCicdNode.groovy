@@ -62,7 +62,9 @@ def call(Map args, Closure body) {
                 body()
             }
             catch (Exception e) {
+                pipelineUtils.echoBanner("WE HAVE AN EXCPETION!!!")
                 if (onFailScript) {
+                    pipelineUtils.echoBanner("WE ATTEMPTING AN EXECUTION!!!")
                     onFailScript(e)
                 }
 
