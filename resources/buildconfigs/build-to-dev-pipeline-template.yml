@@ -88,7 +88,7 @@ objects:
                             credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = ${PIPELINE_TEMPLATE_NAME}
+              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
               el.init(cicdMetaData.data)
           }
 
