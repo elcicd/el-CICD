@@ -7,6 +7,8 @@
  */
 
 def call(Map args) {
+    elCicdNode.inititalize()
+
     def agentDockerfiles
 
     stage('Update Jenkins') {
