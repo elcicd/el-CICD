@@ -37,17 +37,21 @@ def call(Map args, Closure body) {
             def onFailScript
 
             dir(el.cicd.HOOK_SCRIPTS_DIR) {
+
+                pipelineUtils.echoBanner("PRE-_FILE SEARCH...")
                 def preScriptFile = findFiles(glob: "**/pre-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (preScriptFile) {
                     preScript = load "${preScriptFile}"
                     preScript()
                 }
 
+                pipelineUtils.echoBanner("POST-_FILE SEARCH...")
                 def postScriptFile = findFiles(glob: "**/post-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (preScriptFile) {
                     postScript = load "${preScriptFile}"
                 }
 
+                pipelineUtils.echoBanner("ON-FAIL-_FILE SEARCH...")
                 def onFailScriptFile = findFiles(glob: "**/on-fail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (onFailScriptFile) {
                     onFailScript = load "${preScriptFile}"
