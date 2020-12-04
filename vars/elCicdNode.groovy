@@ -55,7 +55,7 @@ def call(Map args, Closure body) {
                 pipelineUtils.echoBanner("ON-FAIL-_FILE SEARCH: ${onFailScriptFile}")
                 if (onFailScriptFile) {
                     pipelineUtils.echoBanner("LOADING SCRIPT: ${onFailScriptFile[0].path} !!!")
-                    onFailScript = load "./${onFailScriptFile[0].path}"
+                    onFailScript = load "${el.cicd.HOOK_SCRIPTS_DIR}/${onFailScriptFile[0].path}"
                     pipelineUtils.echoBanner("SCRIPT LOADED: ${onFailScript}!!!")
                 }
             }
