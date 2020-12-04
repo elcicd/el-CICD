@@ -32,7 +32,41 @@ def call(Map args, Closure body) {
         node(podLabel) {
             initialize()
 
-            body()
+            def preScript
+            def postScript
+            def onFailScript
+            dir(el.cicd.HOOK_SCRIPTS_DIR) {
+                def preScriptFile = findFiles(glob: "**/pre-${env.JOB_BASE_NAME}.groovy")
+                if (preScriptFile) {
+                    preScript = load "${preScriptFile}"
+                    preScript()
+                }
+
+                def postScriptFile = findFiles(glob: "**/post-${env.JOB_BASE_NAME}.groovy")
+                if (preScriptFile) {
+                    postScript = load "${preScriptFile}"
+                }
+
+                def onFailScriptFile = findFiles(glob: "**/onFail-${env.JOB_BASE_NAME}.groovy")
+                if (onFailScriptFile) {
+                    onFailScript = load "${preScriptFile}"
+                }
+            }
+
+            try {
+                body()
+            }
+            catch (Exception e) {
+                if (onFailScriptFile) {
+                    onFailScript()
+                }
+
+                throw e
+            }
+
+            if (postScript) {
+                postScript()
+            }
         }
     }
 }
@@ -43,6 +77,7 @@ def initialize() {
 
         el.cicd.PROJECT_INFO_DIR = "${WORKSPACE}/el-CICD-project-repository"
         el.cicd.AGENTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/agents"
+        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/hookScripts"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.PROJECT_INFO_DIR}/builder-steps"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.PROJECT_INFO_DIR}/project-defs"
 
