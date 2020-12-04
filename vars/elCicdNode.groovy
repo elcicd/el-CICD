@@ -48,7 +48,7 @@ def call(Map args, Closure body) {
                     postScript = load "${preScriptFile}"
                 }
 
-                def onFailScriptFile = findFiles(glob: "**/onFail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
+                def onFailScriptFile = findFiles(glob: "**/on-fail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (onFailScriptFile) {
                     onFailScript = load "${preScriptFile}"
                 }
@@ -59,7 +59,7 @@ def call(Map args, Closure body) {
             }
             catch (Exception e) {
                 if (onFailScript) {
-                    onFailScript()
+                    onFailScript(e)
                 }
 
                 throw e
