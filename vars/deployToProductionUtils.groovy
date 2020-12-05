@@ -50,7 +50,7 @@ def updateProjectMetaInfo(def projectInfo) {
         sh """
             ${pipelineUtils.shellEchoBanner("UPDATE ${projectInfo.id}-meta-info")}
 
-            oc delete --ignore-not-found cm ${projectInfo.id}-meta-info
+            oc delete --ignore-not-found cm ${projectInfo.id}-meta-info -n ${projectInfo.prodNamespace}
             oc create cm ${projectInfo.id}-meta-info \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
