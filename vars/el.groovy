@@ -9,7 +9,40 @@ import groovy.transform.Field
 
 @Field
 static def cicd = [:]
- 
+
+def initMetaData(Map metaData) {
+    cicd.putAll(metaData)
+
+    cicd.TEST_ENVS = cicd.TEST_ENVS.split(':')
+
+    cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
+    cicd.devEnv = cicd.DEV_ENV.toLowerCase()
+    cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
+
+    cicd.IGNORE = ''
+    cicd.PROMOTE = 'PROMOTE'
+    cicd.REMOVE = 'REMOVE'
+
+    cicd.PRE = 'pre'
+    cicd.POST = 'post'
+    cicd.ON_SUCCESS = 'on-success'
+    cicd.ON_FAIL = 'on-fail'
+
+    cicd.BUILDER = 'builder'
+    cicd.TESTER = 'tester'
+    cicd.SCANNER = 'scanner'
+
+    cicd.INACTIVE = 'INACTIVE'
+
+    cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
+
+    cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
+
+    cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
+
+    cicd = cicd.asImmutable()
+}
+
 def node(Map args, Closure body) {
     assert args.agent
 
@@ -42,75 +75,36 @@ def node(Map args, Closure body) {
                  args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
             }
 
-            runBodyWithScripts(args, body)
+            runHookScript(el.cicd.PRE)
+
+            try {
+                body.call(args)
+            }
+            catch (Exception e) {
+                runHookScript(el.cicd.ON_FAIL, args, exception)
+
+                throw e
+            }
+            finally {
+                runHookScript(el.cicd.POST, args)
+            }
+
+            runHookScript(el.cicd.ON_SUCCESS, args)
         }
     }
 }
 
-def initMetaData(Map metaData) {
-    cicd.putAll(metaData)
-
-    cicd.TEST_ENVS = cicd.TEST_ENVS.split(':')
-
-    cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
-    cicd.devEnv = cicd.DEV_ENV.toLowerCase()
-    cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
-
-    cicd.IGNORE = ''
-    cicd.PROMOTE = 'PROMOTE'
-    cicd.REMOVE = 'REMOVE'
-
-    cicd.BUILDER = 'builder'
-    cicd.TESTER = 'tester'
-    cicd.SCANNER = 'scanner'
-
-    cicd.INACTIVE = 'INACTIVE'
-
-    cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
-
-    cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
-
-    cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
-
-    cicd = cicd.asImmutable()
+def runHookScript(def prefix, def args) {
+    runHookScript(prefix, args, null)
 }
 
-def runBodyWithScripts(Map args, Closure body) {
-    def preScript
-    def postScript
-    def onFailScript
-
+def runHookScript(def prefix, def args, def exception) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
-        def preScriptFile = findFiles(glob: "**/pre-${args.pipelineTemplateName}.groovy")
-        if (preScriptFile) {
-            preScript = load preScriptFile[0].path
-            preScript()
+        def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
+        if (hookScriptFile) {
+            hookScript = load preScriptFile[0].path
+            exception ?  hookScript(exception, args) : hookScript(args)
         }
-
-        def postScriptFile = findFiles(glob: "**/post-${args.pipelineTemplateName}.groovy")
-        if (preScriptFile) {
-            postScript = load preScriptFile[0].path
-        }
-
-        def onFailScriptFile = findFiles(glob: "**/on-fail-${args.pipelineTemplateName}.groovy")
-        if (onFailScriptFile) {
-            onFailScript = load onFailScriptFile[0].path
-        }
-    }
-
-    try {
-        body.call(args)
-    }
-    catch (Exception e) {
-        if (onFailScript) {
-            onFailScript(e)
-        }
-
-        throw e
-    }
-
-    if (postScript) {
-        postScript()
     }
 }
 

@@ -10,9 +10,9 @@ void call(Map args) {
 
     def projectInfo = args.projectInfo
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
-    
+
     microService.gitBranch = args.gitBranch
-    
+
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
     if (projectInfo.deployToNamespace != projectInfo.devNamespace &&
@@ -36,7 +36,7 @@ void call(Map args) {
             """
         }
     }
-    
+
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER]
     buildSteps.each { buildStep ->
         stage("build step: run ${buildStep} for ${microService.name}") {
@@ -67,11 +67,11 @@ void call(Map args) {
             def index = projectInfo.deployToNamespace.split('-').last()
             projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
         }
-        
+
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
         def pullSecret = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO_PULL_SECRET"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
-        
+
         dir(microService.workDir) {
             sh """
                 ${pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")}

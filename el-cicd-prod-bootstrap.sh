@@ -72,7 +72,16 @@ oc adm new-project ${EL_CICD_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_PR
 
 oc project ${EL_CICD_PROD_MASTER_NAMEPACE}
 
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=./el-cicd-bootstrap.config
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+
+echo
+echo -n "Update Jenkins to latest image? [Y/n] "
+read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
+echo
+if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' ]]
+then
+    oc import-image jenkins -n openshift
+fi
 
 oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                               -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
@@ -114,25 +123,25 @@ then
     oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/controller.yaml
 
     echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
-    oc apply -f ./resourcestemplates/sealed-secrets-management.yml
+    oc apply -f ./resources/templates/sealed-secrets-management.yml
 
     echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE} installed!"
 fi
 
 echo
 echo 'Creating the prod project onboarding pipeline'
-oc process -f ./resourcesbuildconfigs/prod-project-onboarding-pipeline-template.yml \
+oc process -f ./resources/buildconfigs/prod-project-onboarding-pipeline-template.yml \
     -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
   | oc create -f - -n ${EL_CICD_PROD_MASTER_NAMEPACE}
 
 # wait for jenkins container to start
 echo
 echo -n "Waiting for Jenkins to be ready."
+sleep 3
 until
-    oc get pods -l name=jenkins | grep "1/1"
+    sleep 3 && oc get pods -l name=jenkins | grep "1/1"
 do
     echo -n '.'
-    sleep 3
 done
 
 echo 'Jenkins up, sleep for 10 more seconds to make sure server REST api is ready'
@@ -186,23 +195,23 @@ export BEARER_TOKEN=$(oc whoami -t)
 echo
 echo 'Pushing el-CICD git read only private key to Jenkins'
 export SECRET_FILE_NAME=${SECRET_FILE_DIR}/secret.xml
-cat ./resourcestemplates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
+cat ./resources/templates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
 cat ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}
-cat ./resourcestemplates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
+cat ./resources/templates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
 rm -f ${SECRET_FILE_NAME}
 
 echo
 echo 'Pushing el-CICD-project-info-repository git read only private key to Jenkins'
-cat ./resourcestemplates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
+cat ./resources/templates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
 cat ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}
-cat ./resourcestemplates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
+cat ./resources/templates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
 rm -f ${SECRET_FILE_NAME}
 
 echo 'Pushing git repo access token to Jenkins'
 export SECRET_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
-cat ./resourcestemplates/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${GIT_SITE_WIDE_ACCESS_TOKEN_ID}/; s/%TOKEN%/${SECRET_TOKEN}/" > ${SECRET_FILE_NAME}
+cat ./resources/templates/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${GIT_SITE_WIDE_ACCESS_TOKEN_ID}/; s/%TOKEN%/${SECRET_TOKEN}/" > ${SECRET_FILE_NAME}
 curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
 rm -f ${SECRET_FILE_NAME}
 
@@ -215,27 +224,34 @@ do
     echo "Pushing ${ENV} image repo access tokens per environment to Jenkins"
     export SECRET_TOKEN=$(cat ${SECRET_TOKEN_FILE})
     # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
-    cat ./resourcestemplates/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${ACCESS_TOKEN_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE_NAME}
+    cat ./resources/templates/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${ACCESS_TOKEN_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE_NAME}
     curl -ksS -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
     rm -f ${SECRET_FILE_NAME}
 done
 rm -rf ${SECRET_FILE_DIR}
 
 HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-base -n openshift -o jsonpath='{.metadata.name}')
-if [[ -z ${HAS_BASE_AGENT} ]]
+if [[ ! -z ${HAS_BASE_AGENT} ]]
 then
     echo
-    echo "Creating Jenkins Agents"
-    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
-    until
-        oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift 2>/dev/null
-    do
-        echo -n '.'
-        sleep 1
-    done
-else 
+    echo -n "Update Jenkins Base Agent image? [Y/n] "
+    read -t 10 -n 1 CONFIRM_UPDATE_JENKINS_BASE_AGENT
     echo
-    echo "Base agent found: to manually rebuild Jenkins Agents, rerun the build 'jenkins-agent-el-cicd-base'"
+else
+    echo "Jenkins Base Agent image not found..."
+    CONFIRM_UPDATE_JENKINS_BASE_AGENT='Y'
+fi
+
+if [[ ${CONFIRM_UPDATE_JENKINS_BASE_AGENT} == 'Y' ]]
+then
+    echo
+    echo "Creating Jenkins Base Agent"
+    oc delete --ignore-not-found bc jenkins-agent-el-cicd-base -n openshift
+    sleep 5
+    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
+    sleep 10
+
+    oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift
 fi
 
 ./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} prod
