@@ -38,7 +38,7 @@ objects:
               )
           ])
 
-          node('master') {g
+          node('master') {
               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
               def scmMap = [$class: 'GitSCMSource',
