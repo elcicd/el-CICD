@@ -72,7 +72,7 @@ def initMetaData(Map metaData) {
 
     cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
 
-    cicd = cicd.asUnmodifiable()
+    cicd = cicd.asImmutable()
 }
 
 def runBodyWithScripts(Map args, Closure body) {
