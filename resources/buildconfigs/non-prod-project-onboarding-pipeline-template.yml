@@ -54,6 +54,4 @@ objects:
                      pipelineName: 'non-prod-project-onboarding',
                      projectId: params.PROJECT_ID,
                      rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true')
-          {
-              nonProdProjectOnboarding(args)
-          }
+              { Map args -> nonProdProjectOnboarding(args) }
