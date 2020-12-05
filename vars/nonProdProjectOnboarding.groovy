@@ -14,6 +14,8 @@ def call(Map args) {
 
     // def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
+    def projectInfo = args.projectInfo
+
     def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, cicdRbacGroupJenkinsCredsUrls, true)

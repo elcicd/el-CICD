@@ -34,7 +34,7 @@ def call(Map args, Closure body) {
 
             def projectInfo
             if (args.projectId) {
-                 projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+                 args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
             }
 
             def preScript
