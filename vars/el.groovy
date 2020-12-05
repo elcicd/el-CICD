@@ -80,10 +80,10 @@ def node(Map args, Closure body) {
             try {
                 body.call(args)
             }
-            catch (Exception ex) {
-                runHookScript(el.cicd.ON_FAIL, args, ex)
+            catch (Exception exception) {
+                runHookScript(el.cicd.ON_FAIL, args, exception)
 
-                throw e
+                throw exception
             }
             finally {
                 runHookScript(el.cicd.POST, args)
@@ -98,7 +98,7 @@ def runHookScript(def prefix, def args) {
     runHookScript(prefix, args, null)
 }
 
-def runHookScript(def prefix, def args, def ex) {
+def runHookScript(def prefix, def args, def exception) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
