@@ -48,21 +48,18 @@ def updateProjectMetaInfo(def projectInfo) {
         def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """
-            ${shellEcho '******',
-                        "UPDATING ${projectInfo.id}-meta-info"
-                        ''}
+            ${pipelineUtils.shellEchoBanner("UPDATE ${projectInfo.id}-meta-info")}
 
-                oc delete --ignore-not-found cm ${projectInfo.id}-meta-info
-                oc create cm ${projectInfo.id}-meta-info
-                    --from-literal=projectid=${projectInfo.id} \
-                    --from-literal=release-version=${projectInfo.releaseVersionTag} \
-                    --from-literal=microservices=${microServiceNames}
-                oc label cm ${projectInfo.id}-meta-info \
-                    projectid=${projectInfo.id} \
-                    release-version=${projectInfo.releaseVersionTag}
-
-            ${shellEcho '',
-                        '******'}
+            oc delete --ignore-not-found cm ${projectInfo.id}-meta-info
+            oc create cm ${projectInfo.id}-meta-info \
+                --from-literal=projectid=${projectInfo.id} \
+                --from-literal=release-version=${projectInfo.releaseVersionTag} \
+                --from-literal=microservices=${microServiceNames} \
+                -n ${projectInfo.prodNamespace}
+            oc label cm ${projectInfo.id}-meta-info \
+                projectid=${projectInfo.id} \
+                release-version=${projectInfo.releaseVersionTag} \
+                -n ${projectInfo.prodNamespace}
         """
     }
 }
@@ -71,9 +68,7 @@ def cleanupPreviousRelease(def projectInfo) {
     assert projectInfo.id ; assert projectInfo.releaseVersionTag  =~ /[\w][\w.-]*/
 
     sh """
-        ${shellEcho '******',
-                    "REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}",
-                    '******'}
+        ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
 
         oc delete all,configmaps,sealedsecrets,routes,cronjobs -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
     """
