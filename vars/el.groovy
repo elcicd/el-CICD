@@ -70,18 +70,18 @@ def node(Map args, Closure body) {
         node(podLabel) {
             initializeStage()
 
+            runHookScript(el.cicd.PRE, args)
+
             def projectInfo
             if (args.projectId) {
                  args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
             }
 
-            runHookScript(el.cicd.PRE)
-
             try {
                 body.call(args)
             }
-            catch (Exception e) {
-                runHookScript(el.cicd.ON_FAIL, args, exception)
+            catch (Exception ex) {
+                runHookScript(el.cicd.ON_FAIL, args, ex)
 
                 throw e
             }
@@ -98,7 +98,7 @@ def runHookScript(def prefix, def args) {
     runHookScript(prefix, args, null)
 }
 
-def runHookScript(def prefix, def args, def exception) {
+def runHookScript(def prefix, def args, def ex) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
