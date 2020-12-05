@@ -39,23 +39,19 @@ def call(Map args, Closure body) {
             dir(el.cicd.HOOK_SCRIPTS_DIR) {
 
                 def preScriptFile = findFiles(glob: "**/pre-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
-                pipelineUtils.echoBanner("PRE-_FILE SEARCH: ${preScriptFile}")
                 if (preScriptFile) {
                     preScript = load preScriptFile[0].path
                     preScript()
                 }
 
                 def postScriptFile = findFiles(glob: "**/post-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
-                pipelineUtils.echoBanner("POST-_FILE SEARCH: ${postScriptFile}")
                 if (preScriptFile) {
                     postScript = load preScriptFile[0].path
                 }
 
                 def onFailScriptFile = findFiles(glob: "**/on-fail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
-                pipelineUtils.echoBanner("ON-FAIL-_FILE SEARCH: ${onFailScriptFile}")
                 if (onFailScriptFile) {
-                    pipelineUtils.echoBanner("LOADING SCRIPT: ${onFailScriptFile[0].path} !!!")
-                    onFailScript = load "${el.cicd.HOOK_SCRIPTS_DIR}/${onFailScriptFile[0].path}"
+                    onFailScript = load onFailScriptFile[0].path
                     pipelineUtils.echoBanner("SCRIPT LOADED: ${onFailScript}!!!")
                 }
             }
@@ -64,9 +60,7 @@ def call(Map args, Closure body) {
                 body()
             }
             catch (Exception e) {
-                pipelineUtils.echoBanner("WE HAVE AN EXCPETION!!!")
                 if (onFailScript) {
-                    pipelineUtils.echoBanner("WE ATTEMPTING AN EXECUTION!!!")
                     onFailScript(e)
                 }
 
