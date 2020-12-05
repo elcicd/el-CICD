@@ -18,7 +18,7 @@ objects:
 - kind: "BuildConfig"
   apiVersion: "v1"
   metadata:
-    name: deploy-to-production
+    name: ${PIPELINE_TEMPLATE_NAME}
   spec:
     strategy:
       jenkinsPipelineStrategy:
@@ -49,12 +49,15 @@ objects:
                             credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
-              el.init(cicdMetaData.data)
+              el.initMetaData(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: 'deploy-to-production') {
-              deployToProduction(projectId: params.PROJECT_ID,
-                                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG,
-                                 deployAll: (params.DEPLOY_ALL?.toString() == 'true'))
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
+                      projectId: params.PROJECT_ID,
+                      releaseCandidateTag: params.RELEASE_CANDIDATE_TAG,
+                      deployAll: params.DEPLOY_ALL?.toString() == 'true']
+          el.node(args)
+          { 
+              deployToProduction(args)
           }

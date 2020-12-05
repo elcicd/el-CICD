@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select sandbox, microservice, and branch") {

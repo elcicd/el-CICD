@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
 
     stage('Checkout all microservice repositories') {
         pipelineUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")

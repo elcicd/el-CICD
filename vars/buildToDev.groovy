@@ -8,7 +8,7 @@
 
 void call(Map args) {
 
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
     
     microService.gitBranch = args.gitBranch

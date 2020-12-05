@@ -9,7 +9,7 @@
 def call(Map args) {
     onboardingUtils.init()
 
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
     projectInfo.rbacGroup = params.RBAC_GROUP ?: projectInfo.rbacGroup
 
     def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)

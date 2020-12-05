@@ -88,14 +88,17 @@ objects:
                             credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
-              el.init(cicdMetaData.data)
+              el.initMetaData(cicdMetaData.data)
           }
 
-          elCicdNode(agent: "${CODE_BASE}") {
-              buildToDev(projectId: '${PROJECT_ID}',
-                         microServiceName: '${MICROSERVICE_NAME}',
-                         deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                         gitBranch: params.GIT_BRANCH,
-                         recreate: (params.RECREATE?.toString() == 'true'))
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
+                      projectId: '${PROJECT_ID}',
+                      microServiceName: '${MICROSERVICE_NAME}',
+                      deployToNamespace: params.DEPLOY_TO_NAMESPACE,
+                      gitBranch: params.GIT_BRANCH,
+                      recreate: params.RECREATE?.toString() == 'true']
+          el.node(args)
+          { 
+              buildToDev(args)
           }

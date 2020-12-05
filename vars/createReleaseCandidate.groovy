@@ -9,7 +9,7 @@
 def call(Map args) {
     assert (args.releaseCandidateTag ==~ /[\w][\w.-]*/)
 
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
 
     stage('Verify image(s) with release candidate tags do NOT exist in pre-prod repository') {

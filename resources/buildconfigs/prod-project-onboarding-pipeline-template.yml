@@ -18,7 +18,7 @@ objects:
 - kind: "BuildConfig"
   apiVersion: "v1"
   metadata:
-    name: prod-project-onboarding
+    name: ${PIPELINE_TEMPLATE_NAME}
   spec:
     strategy:
       jenkinsPipelineStrategy:
@@ -49,12 +49,15 @@ objects:
                             credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
-              cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
-              el.init(cicdMetaData.data)
+              el.initMetaData(cicdMetaData.data)
           }
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT) {
-              prodProjectOnboarding(projectId: params.PROJECT_ID,
-                                    rbacGroup: params.RBAC_GROUP,
-                                    recreateProd: params.RECREATE_PROD?.toString() == 'true')
 
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
+                      projectId: params.PROJECT_ID,
+                      rbacGroup: params.RBAC_GROUP,
+                      recreateProd: params.RECREATE_PROD?.toString() == 'true']
+          el.node(args)
+          { 
+              prodProjectOnboarding(args)
           }

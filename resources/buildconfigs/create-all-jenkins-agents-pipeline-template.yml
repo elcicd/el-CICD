@@ -44,7 +44,7 @@ objects:
               library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
 
               cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
-              el.init(cicdMetaData.data)
+              el.initMetaData(cicdMetaData.data)
           }
 
           node('maven') {

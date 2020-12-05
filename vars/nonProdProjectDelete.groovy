@@ -5,7 +5,7 @@
  */
 
 def call(Map args) {
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = args.projectInfo
 
     stage('Remove stale namespace environments and pipelines if necessary') {
         def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
