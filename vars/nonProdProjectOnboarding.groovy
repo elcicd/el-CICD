@@ -12,7 +12,7 @@ import java.nio.file.Paths
 def call(Map args) {
     onboardingUtils.init()
 
-    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    // def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
 

@@ -9,7 +9,7 @@
 def call(Map args) {
     def deployAll = args.deployAll
 
-    projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX) ? 
         args.releaseCandidateTag.substring(el.cicd.RELEASE_VERSION_PREFIX.length()) : args.releaseCandidateTag
     projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${projectInfo.releaseCandidateTag}"

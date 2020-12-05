@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
     projectInfo.deployToEnv = projectInfo.preProdEnv
     projectInfo.deployToNamespace = projectInfo.preProdNamespace

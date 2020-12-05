@@ -32,6 +32,11 @@ def call(Map args, Closure body) {
         node(podLabel) {
             initialize()
 
+            def projectInfo
+            if (args.projectId) {
+                 projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+            }
+
             def preScript
             def postScript
             def onFailScript
@@ -56,7 +61,7 @@ def call(Map args, Closure body) {
             }
 
             try {
-                body()
+                body(args)
             }
             catch (Exception e) {
                 if (onFailScript) {

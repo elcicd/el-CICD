@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+    def projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
 
     stage ('Select microservices to promote and remove') {
         pipelineUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
