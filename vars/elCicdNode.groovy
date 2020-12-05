@@ -61,7 +61,7 @@ def call(Map args, Closure body) {
             }
 
             try {
-                body(args)
+                body.call(args)
             }
             catch (Exception e) {
                 if (onFailScript) {

@@ -50,7 +50,10 @@ objects:
               el.init(cicdMetaData.data)
           }
 
-          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: 'non-prod-project-onboarding',projectId: params.PROJECT_ID,
-                                       rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true') {
+          elCicdNode(agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                     pipelineName: 'non-prod-project-onboarding',
+                     projectId: params.PROJECT_ID,
+                     rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true')
+          {
               nonProdProjectOnboarding(args)
           }
