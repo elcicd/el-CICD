@@ -91,7 +91,7 @@ objects:
               el.initMetaData(cicdMetaData.data)
           }
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+          def args = [agent: '${CODE_BASE}',
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: '${PROJECT_ID}',
                       microServiceName: '${MICROSERVICE_NAME}',
