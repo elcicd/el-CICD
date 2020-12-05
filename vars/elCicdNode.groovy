@@ -52,7 +52,6 @@ def call(Map args, Closure body) {
                 def onFailScriptFile = findFiles(glob: "**/on-fail-${el.cicd.PIPELINE_TEMPLATE_NAME}.groovy")
                 if (onFailScriptFile) {
                     onFailScript = load onFailScriptFile[0].path
-                    pipelineUtils.echoBanner("SCRIPT LOADED: ${onFailScript}!!!")
                 }
             }
 
