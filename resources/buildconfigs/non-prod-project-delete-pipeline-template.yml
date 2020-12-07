@@ -54,6 +54,6 @@ objects:
                       projectId: params.PROJECT_ID,
                       deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS?.toString() == 'true']
           el.node(args)
-          { 
+          {
               deleteRbacGroupJenkins(args)
           }

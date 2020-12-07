@@ -72,7 +72,6 @@ def node(Map args, Closure body) {
 
             runHookScript(el.cicd.PRE, args)
 
-            def projectInfo
             if (args.projectId) {
                  args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
             }

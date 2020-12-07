@@ -55,6 +55,6 @@ objects:
                       projectId: params.PROJECT_ID,
                       rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true']
           el.node(args)
-          { 
+          {
               nonProdProjectOnboarding(args)
           }

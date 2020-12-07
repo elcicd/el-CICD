@@ -53,6 +53,6 @@ objects:
                       projectId: params.PROJECT_ID,
                       releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
           el.node(args)
-          { 
+          {
               redeployReleaseCandidate(args)
           }

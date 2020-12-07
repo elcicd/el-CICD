@@ -99,6 +99,6 @@ objects:
                       gitBranch: params.GIT_BRANCH,
                       recreate: params.RECREATE?.toString() == 'true']
           el.node(args)
-          { 
+          {
               buildToDev(args)
           }

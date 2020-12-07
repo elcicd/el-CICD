@@ -58,6 +58,6 @@ objects:
                       releaseCandidateTag: params.RELEASE_CANDIDATE_TAG,
                       deployAll: params.DEPLOY_ALL?.toString() == 'true']
           el.node(args)
-          { 
+          {
               deployToProduction(args)
           }

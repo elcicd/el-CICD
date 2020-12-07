@@ -50,6 +50,6 @@ objects:
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID]
           el.node(args)
-          { 
+          {
               buildAndDeployMicroServices(args)
           }
