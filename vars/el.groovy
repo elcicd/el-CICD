@@ -113,7 +113,7 @@ def initializeStage() {
 
         el.cicd.PROJECT_INFO_DIR = "${WORKSPACE}/el-CICD-project-repository"
         el.cicd.AGENTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/agents"
-        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/hookScripts"
+        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/hook-scripts"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.PROJECT_INFO_DIR}/builder-steps"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.PROJECT_INFO_DIR}/project-defs"
 
