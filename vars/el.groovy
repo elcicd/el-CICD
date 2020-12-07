@@ -101,7 +101,7 @@ def runHookScript(def prefix, def args, def exception) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
-            hookScript = load preScriptFile[0].path
+            hookScript = load hookScriptFile[0].path
             exception ?  hookScript(exception, args) : hookScript(args)
         }
     }
