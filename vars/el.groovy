@@ -68,15 +68,15 @@ def node(Map args, Closure body) {
         ]
     ]) {
         node(podLabel) {
-            initializeStage()
-
-            runHookScript(el.cicd.PRE, args)
-
-            if (args.projectId) {
-                 args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
-            }
-
             try {
+                initializeStage()
+
+                runHookScript(el.cicd.PRE, args)
+
+                if (args.projectId) {
+                    args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+                }
+
                 body.call(args)
 
                 runHookScript(el.cicd.ON_SUCCESS, args)
@@ -99,10 +99,26 @@ def runHookScript(def prefix, def args) {
 
 def runHookScript(def prefix, def args, def exception) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
+        echo ''
+        echo "Searching for hook-script ${prefix}-${args.pipelineTemplateName}.groovy..."
+        echo ''
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
             hookScript = load hookScriptFile[0].path
+            echo ''
+            echo "hook-script ${prefix}-${args.pipelineTemplateName}.groovy found: RUNNING..."
+            echo ''
+
             exception ?  hookScript(exception, args) : hookScript(args)
+
+            echo ''
+            echo "hook-script ${prefix}-${args.pipelineTemplateName}.groovy EXITED"
+            echo ''
+        }
+        else {
+            echo ''
+            echo "hook-script ${prefix}-${args.pipelineTemplateName}.groovy NOT found..."
+            echo ''
         }
     }
 }
