@@ -204,8 +204,6 @@ do
     oc label -f ${SEALED_SECRET_FILE} -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --overwrite ${LABEL_NAME}=true
 done
 
-rm -f ${SECRET_FILE_TEMP_DIR}/*
-
 JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}')
 export JENKINS_CREATE_CREDS_URL="https://${JENKINS_URL}/credentials/store/system/domain/_/createCredentials"
 export BEARER_TOKEN=$(oc whoami -t)

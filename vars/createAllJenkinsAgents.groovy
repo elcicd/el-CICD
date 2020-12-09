@@ -33,7 +33,7 @@ def call(Map args) {
                 sh """
                     oc delete --ignore-not-found bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     sleep 5
-                    cat ./Dockerfile.${agentName} | oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -D - -n openshift
+                    cat ./Dockerfile.${agentName} | oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -D - -n openshift || :
                     sleep 10
 
                     oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift

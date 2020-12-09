@@ -38,7 +38,7 @@ echo "Adding read only deploy key for el-CICD-project-repository"
 cat ${TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed "s/%DEPLOY_KEY_NAME%/${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_TITLE}/" > ${SECRET_FILE}
 cat ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE}.pub >> ${SECRET_FILE}
 cat ${TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${SECRET_FILE}
-sed -i -e 's/false/true/' ${SECRET_FILE}
+# sed -i -e 's/false/true/' ${SECRET_FILE}
 
 curl -ksS -X POST -H Accept:application/vnd.github.v3+json -d @${SECRET_FILE} ${EL_CICD_PROJECT_REPOSITORY_GITHUB_URL}
 
