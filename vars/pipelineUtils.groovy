@@ -123,6 +123,12 @@ def gatherProjectInfoStage(def projectId) {
     return projectInfo
 }
 
+def spacedEcho(def msg) {
+    echo
+    echo msg
+    echo
+}
+
 def echoBanner(def ... msgs) {
     echo createBanner(msgs)
 }
