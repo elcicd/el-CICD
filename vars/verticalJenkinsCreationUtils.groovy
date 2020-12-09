@@ -59,7 +59,7 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         else {
             echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
         }
-        
+
         refreshSharedPipelines(projectInfo, isNonProd)
     }
 }
@@ -74,9 +74,9 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
             'redeploy-release-candidate-pipeline-template.yml '
         def templates = isNonProd ? nonProdPipelines : 'deploy-to-production-pipeline-template.yml'
         pipelineUtils.echoBanner('CREATING SHARED PIPELINES:', templates)
-        
+
         def cicdJenkinsNamespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
-        
+
         templates.split(/\s+/).each {
             writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
         }

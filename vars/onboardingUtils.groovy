@@ -84,7 +84,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
 
 def createNamepaces(def projectInfo, def namespaces, def environments, def nodeSelectors) {
     pipelineUtils.echoBanner("SETUP OPENSHIFT NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces)
-    
+
     sh """
         NODE_SELECTORS=(${nodeSelectors.join(' ')})
         ENVS=(${environments.join('  ')})

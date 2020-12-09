@@ -80,24 +80,24 @@ def call(Map args) {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
         }
-        
+
         onboardingUtils.createNamepaces(projectInfo, projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
     }
 
     stage('Setup openshift sandbox environments') {
         if (projectInfo.sandboxEnvs > 0) {
             def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-            
+
             namespaces = []
             envs = []
             nodeSelectors = []
-            
+
             (1..projectInfo.sandboxEnvs).each { i ->
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
             }
-        
+
             onboardingUtils.createNamepaces(projectInfo, namespaces, envs, nodeSelectors)
         }
     }

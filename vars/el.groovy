@@ -78,6 +78,8 @@ def node(Map args, Closure body) {
 
             try {
                 body.call(args)
+
+                runHookScript(el.cicd.ON_SUCCESS, args)
             }
             catch (Exception exception) {
                 runHookScript(el.cicd.ON_FAIL, args, exception)
@@ -87,8 +89,6 @@ def node(Map args, Closure body) {
             finally {
                 runHookScript(el.cicd.POST, args)
             }
-
-            runHookScript(el.cicd.ON_SUCCESS, args)
         }
     }
 }

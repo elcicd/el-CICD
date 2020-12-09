@@ -99,7 +99,11 @@ fi
 oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                               -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
                               -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
+                              -p JENKINS_IMAGE_STREAM_TAG=jenkins:latest \
+                              -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                               -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
+                              -e TRY_UPGRADE_IF_NO_MARKER=true \
+                              -e PLUGINS_FORCE_UPGRADE=true \
                               -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 #-- Jenkins needs cluster-admin to run pipeline creation script
@@ -166,15 +170,14 @@ sleep 10
 echo
 
 # create and add sealed secret for read only el-CICD access to project
-export SECRET_FILE_DIR=/tmp/secrets
-rm -rf ${SECRET_FILE_DIR}
-mkdir -p ${SECRET_FILE_DIR}
+rm -rf ${SECRET_FILE_TEMP_DIR}
+mkdir -p ${SECRET_FILE_TEMP_DIR}
 
 echo
 CICD_ENVIRONMENTS="${DEV_ENV} $(echo $TEST_ENVS | sed 's/:/ /g')"
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 
-SEALED_SECRET_FILE=${SECRET_FILE_DIR}/sealed-secret.yml
+SEALED_SECRET_FILE=${SECRET_FILE_TEMP_DIR}/sealed-secret.yml
 for ENV in ${CICD_ENVIRONMENTS}
 do
     echo
@@ -190,7 +193,7 @@ do
         DRY_RUN=true
     fi
 
-    SECRET_FILE_IN=${SECRET_FILE_DIR}/${SEC_NAME}
+    SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SEC_NAME}
     oc create secret docker-registry ${SEC_NAME}  --docker-username=${U_NAME} --docker-password=$(cat ${TKN_FILE})  --docker-server=${DOMAIN} \
         --dry-run=${DRY_RUN} -o yaml  > ${SECRET_FILE_IN}
 
@@ -201,7 +204,7 @@ do
     oc label -f ${SEALED_SECRET_FILE} -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --overwrite ${LABEL_NAME}=true
 done
 
-rm -f ${SECRET_FILE_DIR}/*
+rm -f ${SECRET_FILE_TEMP_DIR}/*
 
 JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}')
 export JENKINS_CREATE_CREDS_URL="https://${JENKINS_URL}/credentials/store/system/domain/_/createCredentials"
@@ -210,7 +213,7 @@ export BEARER_TOKEN=$(oc whoami -t)
 # NOTE: THIS DEFAULT CREDS GIVE READ-ONLY ACCESS TO THE el-cicd REPOSITORY; MODIFY el-cicdGithubJenkinsSshCredentials.xml TO USE YOUR OWN FORK
 echo
 echo 'Pushing el-CICD git read only private key to Jenkins'
-export SECRET_FILE_NAME=${SECRET_FILE_DIR}/secret.xml
+export SECRET_FILE_NAME=${SECRET_FILE_TEMP_DIR}/secret.xml
 cat ${TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
 cat ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}
 cat ${TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
@@ -247,7 +250,7 @@ do
     curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${JENKINS_CREATE_CREDS_URL}
     rm -f ${SECRET_FILE_NAME}
 done
-rm -rf ${SECRET_FILE_DIR}
+rm -rf ${SECRET_FILE_TEMP_DIR}
 
 ./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod
 

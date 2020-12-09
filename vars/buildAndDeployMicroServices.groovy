@@ -12,7 +12,7 @@ def call(Map args) {
 
     stage("Select sandbox, microservice, and branch") {
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-        
+
         namespaces = []        
         (1..projectInfo.sandboxEnvs).each { i ->
             namespaces += "${sandboxNamespacePrefix}-${i}"
@@ -35,13 +35,13 @@ def call(Map args) {
         projectInfo.recreateAll = cicdInfo.recreateAll
         projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
     }
-    
+
     stage('Clean ${} if requested') {
         if (projectInfo.recreateAll) {
             deploymentUtils.removeAllMicroservices(projectInfo)
         }
     }
-    
+
     def microServices = [[],[],[]]
     projectInfo.microServices.findAll { it.build }.eachWithIndex { microService, i ->
         microServices[i%3].add(microService)
