@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    elCicdNode.initialize()
+    el.initializeStage()
 
     def agentDockerfiles
 
