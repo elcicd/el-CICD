@@ -108,7 +108,7 @@ def runHookScript(def prefix, def args, def exception) {
 
             exception ?  hookScript(exception, args) : hookScript(args)
 
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy EXITED")
+            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy COMPLETE")
         }
         else {
             pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy NOT found...")
