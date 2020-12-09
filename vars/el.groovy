@@ -102,7 +102,7 @@ def runHookScript(def prefix, def args, def exception) {
         echo ''
         echo "Searching for hook-script ${prefix}-${args.pipelineTemplateName}.groovy..."
         echo ''
-        
+
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
             hookScript = load hookScriptFile[0].path
