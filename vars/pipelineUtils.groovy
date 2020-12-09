@@ -124,9 +124,7 @@ def gatherProjectInfoStage(def projectId) {
 }
 
 def spacedEcho(def msg) {
-    echo
-    echo msg
-    echo
+    echo "\n${msg}\n"
 }
 
 def echoBanner(def ... msgs) {
