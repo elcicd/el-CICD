@@ -108,7 +108,7 @@ def runHookScript(def prefix, def args, def exception) {
             if (!hookScript) {
                 pipelineUtils.errorBanner("UNABLE TO LOAD HOOK SCRIPT!!!", "Are you missing", '', 'return this', '',  'at the end of your hook-script?")
             }
-            
+
             pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy found: RUNNING...")
 
             exception ?  hookScript(exception, args) : hookScript(args)
