@@ -63,7 +63,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
     return curlCommand
 }
 
-def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN) {
+def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
     def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
@@ -74,6 +74,7 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonPr
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${el.cicd.TEMP_DIR}/sshKeyFile.json
             cat ${microService.gitSshPrivateKeyName}.pub >> ${el.cicd.TEMP_DIR}/sshKeyFile.json
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
+            sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
 
             ${CURL_POST} ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${secretFile} ${url}
         """
