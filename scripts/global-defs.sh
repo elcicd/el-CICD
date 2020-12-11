@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
+BUILD_CONFIGS_DIR=${RESOURCES_DIR}/buildconfigs
+TEMPLATES_DIR=${RESOURCES_DIR}/templates
+
+PROJECT_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-project-repository
+PROJECT_REPOSITORY_CONFIG=${PROJECT_REPOSITORY}/config
+PROJECT_REPOSITORY_AGENTS=${PROJECT_REPOSITORY}/agents
+
+SECRET_FILE_DIR=${BOOTSTRAP_DIR}/../cicd-secrets
+SECRET_FILE_TEMP_DIR=${SECRET_FILE_DIR}/tmp
+
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-secrets.config
