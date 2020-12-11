@@ -96,7 +96,7 @@ void call(Map args) {
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                oc start-build ${buildConfigName} --from-dir=. --wait -n ${projectInfo.nonProdCicdNamespace}
+                oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.nonProdCicdNamespace}
             """
         }
     }
