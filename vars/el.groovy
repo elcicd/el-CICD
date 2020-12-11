@@ -120,7 +120,7 @@ def initializeStage() {
     stage('Initializing') {
         pipelineUtils.echoBanner("INITIALIZING...")
 
-        el.cicd.PROJECT_INFO_DIR = "${WORKSPACE}/el-CICD-project-repository"
+        el.cicd.PROJECT_INFO_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.AGENTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/agents"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/hook-scripts"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.PROJECT_INFO_DIR}/builder-steps"

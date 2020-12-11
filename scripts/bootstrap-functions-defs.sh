@@ -15,8 +15,7 @@ _create_onboarding_automation_server() {
                                   -n ${1}
 
     echo
-    echo "'jenkins' Onboarding Automation OCP Service Account needs"
-    echo "cluster-admin permissions for managing multiple projects and permissions"
+    echo "'jenkins' service sccount needs cluster-admin permissions for managing multiple projects and permissions"
     oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${1}
 
     echo

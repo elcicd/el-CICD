@@ -31,7 +31,7 @@ _install_sealed_secrets() {
 
         echo "kubeseal version ${SEALED_SECRET_RELEASE} installed"
 
-        oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/controller.yaml -n ${1}
+        oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/controller.yaml
 
         echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
         oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${1}

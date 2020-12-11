@@ -7,9 +7,9 @@ rm -rf ${SECRET_FILE_TEMP_DIR}
 mkdir -p ${SECRET_FILE_TEMP_DIR}
 
 echo
-echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config"
+echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-cicd-bootstrap.config"
 oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-bootstrap.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
@@ -18,8 +18,8 @@ echo "Adding read only deploy key for el-CICD"
 _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
 
 echo
-echo "Adding read only deploy key for el-CICD-project-repository"
-_push_github_public_ssh_deploy_key el-CICD-project-repository \
+echo "Adding read only deploy key for el-CICD-config"
+_push_github_public_ssh_deploy_key el-CICD-config \
                                    ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_TITLE} \
                                    ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE}
 
@@ -43,7 +43,7 @@ echo 'Pushing el-CICD git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
-echo 'Pushing el-CICD-project-info-repository git READ ONLY private key to Jenkins'
+echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
@@ -59,8 +59,8 @@ do
 done
 
 echo
-echo "Run all custom credentials scripts 'non-prod-secret-*.sh' FOUND IN ${PROJECT_REPOSITORY_CONFIG}"
-${SCRIPTS_DIR}/el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} non-prod-secrets
+echo "Run custom credentials scripts 'secrets-non-prod.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
+${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh
 
 rm -rf ${SECRET_FILE_TEMP_DIR}
 

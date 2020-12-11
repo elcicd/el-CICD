@@ -17,11 +17,11 @@ echo
 
 echo
 echo 'Loading environment'
-PROJECT_REPOSITORY=../el-CICD-project-repository
-PROJECT_REPOSITORY_CONFIG=${PROJECT_REPOSITORY}/config
-PROJECT_REPOSITORY_AGENTS=${PROJECT_REPOSITORY}/agents
-source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
-source ${PROJECT_REPOSITORY_CONFIG}/el-cicd-secrets.config
+CONFIG_REPOSITORY=../el-CICD-config
+CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/config
+CONFIG_REPOSITORY_AGENTS=${CONFIG_REPOSITORY}/agents
+source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
+source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-secrets.config
 
 if [[ -z "${EL_CICD_PROD_MASTER_NAMEPACE}" ]]
 then
@@ -72,7 +72,7 @@ oc adm new-project ${EL_CICD_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_PR
 
 oc project ${EL_CICD_PROD_MASTER_NAMEPACE}
 
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${PROJECT_REPOSITORY_CONFIG}/el-cicd-bootstrap.config
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
 
 echo
 echo -n "Update Jenkins to latest image? [Y/n] "
@@ -201,7 +201,7 @@ curl -k -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H "content-type:appl
 rm -f ${SECRET_FILE_NAME}
 
 echo
-echo 'Pushing el-CICD-project-info-repository git read only private key to Jenkins'
+echo 'Pushing el-CICD-config git read only private key to Jenkins'
 cat ./resources/templates/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID}/g" > ${SECRET_FILE_NAME}
 cat ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE} >> ${SECRET_FILE_NAME}
 cat ./resources/templates/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
@@ -247,13 +247,13 @@ then
     echo "Creating Jenkins Base Agent"
     oc delete --ignore-not-found bc jenkins-agent-el-cicd-base -n openshift
     sleep 5
-    cat ${PROJECT_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
+    cat ${CONFIG_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
     sleep 10
 
     oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift
 fi
 
-./el-cicd-run-custom-config-scripts.sh ${PROJECT_REPOSITORY_CONFIG} prod
+./el-cicd-run-custom-config-scripts.sh ${CONFIG_REPOSITORY_BOOTSTRAP} prod
 
 echo 
 echo 'Prod Onboarding Server Bootstrap Script Complete'
