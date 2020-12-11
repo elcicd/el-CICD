@@ -23,7 +23,7 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 def APPLICATION_JSON_HDR = '-H application:json'
 
 def getDeployKeyName(def projectInfo, def isNonProd) {
-    def keyPrefix = isNonProd ? el.cicd.EL_CICD_DEPLOY_NON_PROD_KEY_TITLE : el.cicd.EL_CICD_DEPLOY_PROD_KEY_TITLE
+    def keyPrefix = isNonProd ? el.cicd.EL_CICD_DEPLOY_NON_PROD_KEY_TITLE_PREFIX : el.cicd.EL_CICD_DEPLOY_PROD_KEY_TITLE_PREFIX
     return "${keyPrefix}-${projectInfo.id}"
 }
 

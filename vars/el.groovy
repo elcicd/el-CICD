@@ -144,9 +144,9 @@ def initializeStage() {
         el.cicd = el.cicd.asImmutable()
 
         dir (el.cicd.PROJECT_INFO_DIR) {
-            git url: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY,
-                branch: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_BRANCH_NAME,
-                credentialsId: el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+            git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
+                branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
+                credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
     }
 }

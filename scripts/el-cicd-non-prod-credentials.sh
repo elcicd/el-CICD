@@ -20,8 +20,8 @@ _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY
 echo
 echo "Adding read only deploy key for el-CICD-config"
 _push_github_public_ssh_deploy_key el-CICD-config \
-                                   ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_TITLE} \
-                                   ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE}
+                                   ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
+                                   ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 
 echo
@@ -44,7 +44,7 @@ _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY
 
 echo
 echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
-_push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_DEPLOY_KEY_FILE}
+_push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
 echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"

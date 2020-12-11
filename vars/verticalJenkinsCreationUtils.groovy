@@ -96,7 +96,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
 def setupNonProdVerticalCicdNamespacesAndJenkins(def projectInfo, def nonProdCicdJenkinsCredsUrl) {
     stage('Setting up non-prod Jenkins') {
         pushSshCredentialstToJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl, el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-        pushSshCredentialstToJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl, el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
+        pushSshCredentialstToJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl, el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
 
         def ids = []
         projectInfo.NON_PROD_ENVS.each { ENV ->
@@ -112,7 +112,7 @@ def setupNonProdVerticalCicdNamespacesAndJenkins(def projectInfo, def nonProdCic
 def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenkinsCredsUrl) {
     stage('Setting up prod Jenkins') {
         pushSshCredentialstToJenkins(projectInfo.prodCicdNamespace, prodCicdJenkinsCredsUrl, el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-        pushSshCredentialstToJenkins(projectInfo.prodCicdNamespace, prodCicdJenkinsCredsUrl, el.cicd.EL_CICD_PROJECT_INFO_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
+        pushSshCredentialstToJenkins(projectInfo.prodCicdNamespace, prodCicdJenkinsCredsUrl, el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
 
         pushImageRepositoryTokenToJenkins(projectInfo.prodCicdNamespace, el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], prodCicdJenkinsCredsUrl)
         pushImageRepositoryTokenToJenkins(projectInfo.prodCicdNamespace, el.cicd["${projectInfo.PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], prodCicdJenkinsCredsUrl)
