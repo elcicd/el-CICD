@@ -103,7 +103,7 @@ def runHookScript(def prefix, def args, def exception) {
 
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {
-            hookScript = load hookScriptFile[0].path
+            def hookScript = load hookScriptFile[0].path
 
             if (!hookScript) {
                 pipelineUtils.errorBanner("UNABLE TO LOAD HOOK SCRIPT!!!",
