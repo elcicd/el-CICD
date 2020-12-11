@@ -59,7 +59,7 @@ do
 done
 
 echo
-echo "Run custom credentials scripts 'secrets-non-prod.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
+echo "Run custom credentials script 'secrets-non-prod.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
 ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh
 
 rm -rf ${SECRET_FILE_TEMP_DIR}
