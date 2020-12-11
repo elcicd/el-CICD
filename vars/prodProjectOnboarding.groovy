@@ -45,7 +45,7 @@ def call(Map args) {
                 oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}
                 oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}
 
-                oc get sealedsecrets -l ${projectInfo.prodEnv}-env=true -o yaml -n ${el.cicd.EL_CICD_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc create -f - -n ${projectInfo.prodNamespace}
+                oc get secrets -l ${projectInfo.prodEnv}-env=true -o yaml -n ${el.cicd.EL_CICD_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc create -f - -n ${projectInfo.prodNamespace}
             fi
         """
     }

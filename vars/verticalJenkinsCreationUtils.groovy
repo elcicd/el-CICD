@@ -139,7 +139,7 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
 
         for ENV in ${envs.join(' ')}
         do
-            oc get sealedsecrets -l \${ENV}-env -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc apply -f - -n ${cicdJenkinsNamespace}
+            oc get secrets -l \${ENV}-env -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc apply -f - -n ${cicdJenkinsNamespace}
         done
 
         oc policy add-role-to-group admin ${rbacGroup} -n ${cicdJenkinsNamespace}

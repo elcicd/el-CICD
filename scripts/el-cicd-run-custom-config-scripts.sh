@@ -5,11 +5,9 @@ if [[ ! -z ${CUSTOM_CONFIG_SCRIPTS} ]]
 then
     for FILE in ${CUSTOM_CONFIG_SCRIPTS}
     do
-        echo
         echo "Running custom script $(basename ${FILE})" 
         eval "${FILE}"
     done
 else
-    echo
     echo 'No custom config scripts found...'
 fi
