@@ -107,7 +107,7 @@ def runHookScript(def prefix, def args, def exception) {
             try  {
                 hookScript = load hookScriptFile[0].path
 
-                pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy found: RUNNING...")
+                pipelineUtils.spacedEcho("hook-script ${hookScript} ${prefix}-${args.pipelineTemplateName}.groovy found: RUNNING...")
 
                 exception ?  hookScript(exception, args) : hookScript(args)
 
