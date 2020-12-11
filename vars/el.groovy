@@ -120,11 +120,12 @@ def initializeStage() {
     stage('Initializing') {
         pipelineUtils.echoBanner("INITIALIZING...")
 
-        el.cicd.PROJECT_INFO_DIR = "${WORKSPACE}/el-CICD-config"
-        el.cicd.AGENTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/agents"
-        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.PROJECT_INFO_DIR}/hook-scripts"
-        el.cicd.BUILDER_STEPS_DIR = "${el.cicd.PROJECT_INFO_DIR}/builder-steps"
-        el.cicd.PROJECT_DEFS_DIR = "${el.cicd.PROJECT_INFO_DIR}/project-defs"
+        el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
+        el.cicd.AGENTS_DIR = "${el.cicd.CONFIG_DIR}/agents"
+        el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
+        el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/default-okd-templates"
+        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
+        el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
         sh """
@@ -143,7 +144,7 @@ def initializeStage() {
 
         el.cicd = el.cicd.asImmutable()
 
-        dir (el.cicd.PROJECT_INFO_DIR) {
+        dir (el.cicd.CONFIG_DIR) {
             git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
                 branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
                 credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID

@@ -140,15 +140,21 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 }
 
 def kustomize(def templateDef) {
+    def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateDef.templateName}.yml"
+    def tempKustomizeDir = './kustomize-tmp'
     sh """
-        echo 'Kustomizing ${templateDef.file} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
+        echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
+        mkdir -p ${tempKustomizeDir}
+        cp ${templateFile} ${tempKustomizeDir}
+        cp ${templateDef.envPatchFile} ${tempKustomizeDir}
 
         cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-            sed -e 's|%TEMPLATE_FILE%|${templateDef.file}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > kustomization.yml
+            sed -e 's|%TEMPLATE_FILE%|${templateFile}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
 
-        kustomize build . > ${templateDef.patchedFile}
+        kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
         cat ${templateDef.patchedFile}
+        rm -rf ${tempKustomizeDir}
     """
 }
 
@@ -208,12 +214,11 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
                             ${paramsStr} \
-                            -p 'CLUSTER_WILDCARD_DOMAIN=${el.cicd.CLUSTER_WILDCARD_DOMAIN}' \
-                            -p 'IMAGE_REPOSITORY=${imageRepository}' \
-                            -p 'PULL_SECRET=${pullSecret}' \
                             -p 'PROJECT_ID=${projectInfo.id}' \
                             -p 'MICROSERVICE_NAME=${microService.name}' \
                             -p 'APP_NAME=${appName}' \
+                            -p 'IMAGE_REPOSITORY=${imageRepository}' \
+                            -p 'PULL_SECRET=${pullSecret}' \
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
                             -f ${templateDef.patchedFile} \
