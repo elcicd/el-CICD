@@ -140,16 +140,17 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 }
 
 def kustomize(def templateDef) {
-    def templateFile = templateDef.file ?: "${templateDef.templateName}.yml"
+    def templateFileName = templateDef.file ?: "${templateDef.templateName}.yml"
+    def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateFileName}"
     def tempKustomizeDir = './kustomize-tmp'
     sh """
         echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
         mkdir -p ${tempKustomizeDir}
-        cp "${el.cicd.OKD_TEMPLATES_DIR}/${templateFile}" ${tempKustomizeDir}
+        cp "${templateFile}" ${tempKustomizeDir}
         cp --parents ${templateDef.envPatchFile} ${tempKustomizeDir}
 
         cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-            sed -e 's|%TEMPLATE_FILE%|${templateFile}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
+            sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
 
         kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
