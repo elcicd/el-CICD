@@ -125,7 +125,7 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
             if (microService.templateDefs.templates) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
-                    templateDef.patchedFile = 'patched-' + templateDef.file + '-' + index + '.yml'
+                    templateDef.patchedFile = 'patched-' + templateDef.templateName + '-' + index + '.yml'
 
                     (templateDef.templateName && templateDef.envPatchFile)  ? kustomize(templateDef) : buildTemplate(templateDef)
 
