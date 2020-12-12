@@ -140,12 +140,12 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 }
 
 def kustomize(def templateDef) {
-    def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateDef.templateName}.yml"
+    def templateFile = templateDef.file ?: "${templateDef.templateName}.yml"
     def tempKustomizeDir = './kustomize-tmp'
     sh """
         echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
         mkdir -p ${tempKustomizeDir}
-        cp ${templateFile} ${tempKustomizeDir}
+        cp "${el.cicd.OKD_TEMPLATES_DIR}/${templateFile}" ${tempKustomizeDir}
         cp ${templateDef.envPatchFile} ${tempKustomizeDir}
 
         cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
