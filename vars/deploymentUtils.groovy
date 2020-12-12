@@ -125,7 +125,8 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
             if (microService.templateDefs.templates) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
-                    templateDef.patchedFile = 'patched-' + templateDef.templateName + '-' + index + '.yml'
+                    def patchName = templateDef.templateName ?: templateDef.file
+                    templateDef.patchedFile = 'patched-' + patchName + '-' + index + '.yml'
 
                     (templateDef.templateName && templateDef.envPatchFile)  ? kustomize(templateDef) : buildTemplate(templateDef)
 
@@ -206,10 +207,10 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                     def imageRepository = el.cicd["${ENV_TO}_IMAGE_REPO"]
                     def pullSecret = el.cicd["${ENV_TO}_IMAGE_REPO_PULL_SECRET"]
 
-
+                    def fileName = templateDef.file ?: "${templateDef.templateName}.yml"
                     sh """
                         ${shellEcho '******',
-                                    'PROCESSED AND APPLYING OCP TEMPLATE ' + templateDef.file,
+                                    'PROCESSED AND APPLYING OCP TEMPLATE ' + templateDef.patchedFile,
                                     'PARAMS: ' + paramsStr,
                                     '******' }
                         mkdir -p ${projectInfo.deployToEnv}
@@ -223,7 +224,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
                             -f ${templateDef.patchedFile} \
-                            -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${templateDef.file}
+                            -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
                     """
                 }
             }
