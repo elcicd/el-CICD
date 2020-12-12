@@ -67,7 +67,10 @@ echo 'Loading el-CICD environment...'
 set -o allexport
 BOOTSTRAP_DIR=$(pwd)
 SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
+
 source ${SCRIPTS_DIR}/global-defs.sh
+source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
+source ${SCRIPTS_DIR}/credential-functions.sh
 set +o allexport
 
 echo

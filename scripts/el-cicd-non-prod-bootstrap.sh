@@ -1,8 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
-
 if [[ -z "${EL_CICD_NON_PROD_MASTER_NAMEPACE}" ]]
 then
     echo "el-CICD non-prod master project must be defined in el-cicd-bootstrap.config"
@@ -62,7 +60,7 @@ if [[ -z ${HAS_BASE_AGENT} ]]
 then
     echo
     echo "Creating Jenkins Agents"
-    # oc start-build create-all-jenkins-agents -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+    oc start-build create-all-jenkins-agents -e IGNORE_DEFAULT_AGENT=false -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
     echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
 else 
     echo
