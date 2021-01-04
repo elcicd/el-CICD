@@ -56,5 +56,6 @@ _delete_namespace() {
             echo -n '.'
             sleep 1
         done
+        sleep 10
     fi
 }
