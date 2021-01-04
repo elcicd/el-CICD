@@ -50,12 +50,15 @@ _delete_namespace() {
         fi
 
         oc delete project ${1}
+        echo -n "Confirming deletion"
         until
             !(oc project ${1} > /dev/null 2>&1)
         do
             echo -n '.'
             sleep 1
         done
+        echo
+        echo "Old el-CICD master namespace deleted.  Sleep 10s to confirm cleanup."
         sleep 10
     fi
 }

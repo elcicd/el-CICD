@@ -9,6 +9,7 @@ echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-ci
 oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
 oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-bootstrap.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
+# install Sealed Secrets
 _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 echo
@@ -57,8 +58,13 @@ do
 done
 
 echo
-echo "Run custom credentials script 'secrets-non-prod.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
-${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh
+echo "Looking for custom credentials script 'secrets-non-prod.sh' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
+if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh ]]
+then
+    ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh
+else
+    echo "'secrets-non-prod.sh' not found."
+fi
 
 rm -rf ${SECRET_FILE_TEMP_DIR}
 

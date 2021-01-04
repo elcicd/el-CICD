@@ -4,39 +4,37 @@
 # $1 -> Namespace to install
 _install_sealed_secrets() {
     # install latest Sealed Secrets
-    local INSTALL_KUBESEAL='N'
-    local SEALED_SECRET_RELEASE=$(curl --silent "https://api.github.com/repos/bitnami-labs/sealed-secrets/releases/latest" | jq -r .tag_name)
-    local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller -n kube-system)
-
+    local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller --ignore-not-found -n kube-system)
     if [[ -f /usr/local/bin/kubeseal &&  ! -z "${SS_CONTROLLER_EXISTS}" ]]
     then
         local OLD_VERSION=$(kubeseal --version)
         echo
         echo "Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller?"
-        echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE}? [Y/n] "
-        read -t 10 -n 1 INSTALL_KUBESEAL
-        echo
+        echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
     else
-        echo "Sealed Secrets not found..."
-        INSTALL_KUBESEAL='Y'
+        echo -n "Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
     fi
+
+    local INSTALL_KUBESEAL='N'
+    read -t 10 -n 1 INSTALL_KUBESEAL
+    echo
 
     if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
     then
         echo
         sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
-        wget https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/kubeseal-linux-amd64 -O /tmp/kubeseal
+        wget https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/kubeseal-linux-amd64 -O /tmp/kubeseal
         sudo install -m 755 /tmp/kubeseal /usr/local/bin/kubeseal
         sudo rm -f /tmp/kubseal
 
-        echo "kubeseal version ${SEALED_SECRET_RELEASE} installed"
+        echo "kubeseal version ${SEALED_SECRET_RELEASE_VERSION} installed"
 
-        oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/controller.yaml
+        oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/controller.yaml
 
         echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
         oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${1}
 
-        echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE} installed!"
+        echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed!"
     fi
 }
 

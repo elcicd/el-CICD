@@ -92,41 +92,8 @@ oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
 #-- Jenkins needs cluster-admin to run pipeline creation script
 oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${EL_CICD_PROD_MASTER_NAMEPACE}
 
-# install latest Sealed Secrets
-INSTALL_KUBESEAL='N'
-SEALED_SECRET_RELEASE=$(curl --silent "https://api.github.com/repos/bitnami-labs/sealed-secrets/releases/latest" | jq -r .tag_name)
-SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller -n kube-system)
-
-if [[ -f /usr/local/bin/kubeseal &&  ! -z "${SS_CONTROLLER_EXISTS}" ]]
-then
-    OLD_VERSION=$(kubeseal --version)
-    echo
-    echo "Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller?"
-    echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE}? [Y/n] "
-    read -t 10 -n 1 INSTALL_KUBESEAL
-    echo
-else
-    echo "Sealed Secrets not found..."
-    INSTALL_KUBESEAL='Y'
-fi
-
-if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
-then
-    echo
-    sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
-    wget https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/kubeseal-linux-amd64 -O /tmp/kubeseal
-    sudo install -m 755 /tmp/kubeseal /usr/local/bin/kubeseal
-    sudo rm -f /tmp/kubseal
-
-    echo "kubeseal version ${SEALED_SECRET_RELEASE} installed"
-
-    oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE}/controller.yaml
-
-    echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
-    oc apply -f ./resources/templates/sealed-secrets-management.yml
-
-    echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE} installed!"
-fi
+# install Sealed Secrets
+_install_sealed_secrets ${EL_CICD_PROD_MASTER_NAMEPACE}
 
 echo
 echo 'Creating the prod project onboarding pipeline'
