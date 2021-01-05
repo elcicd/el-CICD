@@ -3,8 +3,8 @@
 
 if [[ -z "${EL_CICD_NON_PROD_MASTER_NAMEPACE}" ]]
 then
-    echo "el-CICD non-prod master project must be defined in el-cicd-bootstrap.config"
-    echo "Set the value of EL_CICD_NON_PROD_MASTER_NAMEPACE el-cicd-bootstrap.config to and rerun."
+    echo "el-CICD non-prod master project must be defined in el-cicd-system.config"
+    echo "Set the value of EL_CICD_NON_PROD_MASTER_NAMEPACE el-cicd-system.config to and rerun."
     echo "Exiting."
     exit 1
 fi
@@ -15,7 +15,7 @@ read -n 1 CONFIRM_WILDCARD
 echo
 if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
 then
-    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-bootstrap.config"
+    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config"
     echo
     echo "Exiting"
     exit 1

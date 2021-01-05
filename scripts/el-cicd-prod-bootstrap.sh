@@ -20,13 +20,13 @@ echo 'Loading environment'
 CONFIG_REPOSITORY=../el-CICD-config
 CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/config
 CONFIG_REPOSITORY_AGENTS=${CONFIG_REPOSITORY}/agents
+source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-system.config
 source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
-source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-secrets.config
 
 if [[ -z "${EL_CICD_PROD_MASTER_NAMEPACE}" ]]
 then
-    echo "el-CICD prod master project must be defined in el-cicd-bootstrap.config"
-    echo "Set the value of EL_CICD_PROD_MASTER_NAMEPACE el-cicd-bootstrap.config to and rerun."
+    echo "el-CICD prod master project must be defined in el-cicd-system.config"
+    echo "Set the value of EL_CICD_PROD_MASTER_NAMEPACE el-cicd-system.config to and rerun."
     echo "Exiting."
     exit 1
 fi
@@ -36,7 +36,7 @@ read -n 1 CONFIRM_WILDCARD
 echo
 if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
 then
-    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-bootstrap.config and then rerun this script"
+    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config and then rerun this script"
     echo "Exiting."
     exit 1
 fi
@@ -72,7 +72,7 @@ oc adm new-project ${EL_CICD_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_PR
 
 oc project ${EL_CICD_PROD_MASTER_NAMEPACE}
 
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-system.config
 
 echo
 echo -n "Update Jenkins to latest image? [Y/n] "

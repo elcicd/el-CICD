@@ -5,9 +5,9 @@ rm -rf ${SECRET_FILE_TEMP_DIR}
 mkdir -p ${SECRET_FILE_TEMP_DIR}
 
 echo
-echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-cicd-bootstrap.config"
+echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-cicd-system.config"
 oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-bootstrap.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-system.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 # install Sealed Secrets
 _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}

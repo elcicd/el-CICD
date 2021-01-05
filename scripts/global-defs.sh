@@ -12,5 +12,5 @@ CONFIG_REPOSITORY_AGENTS=${CONFIG_REPOSITORY}/agents
 SECRET_FILE_DIR=${BOOTSTRAP_DIR}/../cicd-secrets
 SECRET_FILE_TEMP_DIR=${SECRET_FILE_DIR}/tmp
 
+source ${CONFIG_REPOSITORY}/el-cicd-system.config
 source ${CONFIG_REPOSITORY}/el-cicd-bootstrap.config
-source ${CONFIG_REPOSITORY}/el-cicd-secrets.config
