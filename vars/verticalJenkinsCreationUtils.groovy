@@ -105,7 +105,6 @@ def setupNonProdVerticalCicdNamespacesAndJenkins(def projectInfo, def nonProdCic
                 ids += ENV
             }
         }
-        // verticalBootstrap.pushSonarQubeTokenToNonProdJenkins(projectInfo.nonProdCicdNamespace, nonProdCicdJenkinsCredsUrl)
     }
 }
 
@@ -196,20 +195,6 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsI
 
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${credentialsId}/g" > jenkinsTokenCredentials-named.xml
             cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
-
-            ${maskCommand(curlCommand)}
-        """
-    }
-}
-
-def pushSonarQubeTokenToNonProdJenkins(def nonProdCicdNamespace, def cicdJenkinsUrl) {
-    withCredentials([string(credentialsId: el.cicd.SONARQUBE_ACCESS_TOKEN_ID, variable: 'SONARQUBE_ACCESS_TOKEN')]) {
-        def curlCommand = """curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${nonProdCicdJenkinsUrl}"""
-        sh """
-            ${pipelineUtils.shellEchoBanner("PUSH SONARQUBE TOKEN TO ${nonProdCicdNamespace} JENKINS")}
-
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/sonarqube-access-token/g" > jenkinsTokenCredentials-named.xml
-            cat jenkinsTokenCredentials-named.xml | sed "s/%TOKEN%/${SONARQUBE_ACCESS_TOKEN}/g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
         """
