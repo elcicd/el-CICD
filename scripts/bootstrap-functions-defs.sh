@@ -1,28 +1,76 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-# $1 -> Namespace
+# $1 -> Jenkins imagestream name
+# $2 -> Jenkins yaml configuration as code file
+# $3 -> Jenkins plugins txt file
+# $4 -> Force Jenkins base image update ('Y' will force update)
+_build_jenkins_image() {
+    local CONFIRM_UPDATE_JENKINS='N'
+    if [[ -z $(oc get is --ignore-not-found ${1} -n openshift) ]]
+    then
+        echo "FROM ${OCP_IMAGE_REPO}/jenkins" | oc new-build -D - --name ${1} -n openshift
+        sleep 10
+        oc logs -f bc/${1} -n openshift
+        oc delete bc ${1} -n openshift
+        CONFIRM_UPDATE_JENKINS='Y'
+    fi
+
+    if [[ ${CONFIRM_UPDATE_JENKINS} == 'N' && ${4} != 'Y' ]]
+    then
+        echo
+        echo -n 'Update non-prod el-CICD Jenkins image? [Y/n] '
+        read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
+        echo
+    fi
+
+    if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' || ${4} == 'Y' ]]
+    then
+        echo
+        echo "Updating el-CICD Jenkins image ${1}"
+        echo
+        oc import-image ${1} -n openshift
+
+        if [[ ! -n $(oc get bc ${1} --ignore-not-found -n openshift) ]]
+        then
+            oc new-build --name ${1} --binary=true --strategy=docker -n openshift
+
+        fi
+
+        cp ${TEMPLATES_DIR}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+        sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
+               -e  "s/%FROM_IMAGE%/${1}/;" \
+               -e  "s/%JENKINS_CONFIGURATION_FILE%/${2}/g;" \
+               -e  "s/%JENKINS_PLUGINS_FILE%/${3}/g" \
+            ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+
+        oc start-build ${1} --from-dir=${CONFIG_REPOSITORY_JENKINS} --wait --follow -n openshift
+    fi
+}
+
+# $1 -> Jenkins imagestream name
+# $2 -> Jenkins yaml configuration as code file
+# $3 -> Namespace
 _create_onboarding_automation_server() {
     echo
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                                   -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
                                   -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                  -p JENKINS_IMAGE_STREAM_TAG=jenkins:latest \
+                                  -p JENKINS_IMAGE_STREAM_TAG=${1}:latest \
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e PLUGINS_FORCE_UPGRADE=true \
-                                  -n ${1}
+                                  -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${2}
+                                  -n ${3}
 
     echo
     echo "'jenkins' service sccount needs cluster-admin permissions for managing multiple projects and permissions"
-    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${1}
+    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${3}
 
     echo
     echo -n "Waiting for Jenkins to be ready."
-    sleep 3
     until
-        sleep 3 && oc get pods -l name=jenkins -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} | grep "1/1"
+        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} | grep "1/1"
     do
         echo -n '.'
     done

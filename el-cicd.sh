@@ -30,11 +30,11 @@ then
 elif [[ $1 == '--np-creds' ]]
 then
     START_MSG="REFRESH NON-PROD CREDENTIALS"
-    EL_CICD_SH_SCRIPT=./scripts/el-cicd-non-prod-credentials.sh
+    EL_CICD_SH_SCRIPT='./scripts/el-cicd-non-prod-credentials.sh -s'
 elif [[ $1 == '--pr-creds' ]]
 then
     START_MSG="REFRESH PROD CREDENTIALS"
-    EL_CICD_SH_SCRIPT=./scripts/el-cicd-prod-credentials.sh
+    EL_CICD_SH_SCRIPT='./scripts/el-cicd-prod-credentials.sh -s'
 elif [[ $1 == '--help' ]]
 then
     echo "${HELP_MSG}"

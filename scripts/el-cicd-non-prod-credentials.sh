@@ -10,7 +10,10 @@ oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
 oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-system.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 # install Sealed Secrets
-_install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+if [[ ${1} == '--sealed-secrets' || ${1} == '-s' ]]
+then
+    _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+fi
 
 echo
 echo "Adding read only deploy key for el-CICD"

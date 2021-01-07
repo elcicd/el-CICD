@@ -9,6 +9,8 @@ then
     exit 1
 fi
 
+_install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+
 echo
 echo -n "Confirm the wildcard domain for the cluster: ${CLUSTER_WILDCARD_DOMAIN}? [Y/n] "
 read -n 1 CONFIRM_WILDCARD
@@ -28,13 +30,9 @@ EL_CICD_NON_PROD_MASTER_NODE_SELECTORS=$(echo ${EL_CICD_NON_PROD_MASTER_NODE_SEL
 echo "Creating ${EL_CICD_NON_PROD_MASTER_NAMEPACE} with node selectors: ${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
 oc adm new-project ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
 
-echo
-echo -n "Update Jenkins to latest image? [Y/n] "
-read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
-if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' ]]
-then
-    oc import-image jenkins -n openshift
-fi
+_build_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt
+
+_create_onboarding_automation_server ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 echo
 echo 'Creating the Non-Prod Onboarding Automation Server pipelines:'
@@ -44,8 +42,6 @@ do
     oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml  -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} | \
         oc apply -f - -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 done
-
-_create_onboarding_automation_server ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 echo
 echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'

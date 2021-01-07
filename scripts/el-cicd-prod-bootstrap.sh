@@ -19,7 +19,7 @@ echo
 echo 'Loading environment'
 CONFIG_REPOSITORY=../el-CICD-config
 CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/config
-CONFIG_REPOSITORY_AGENTS=${CONFIG_REPOSITORY}/agents
+CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/agents
 source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-system.config
 source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
 
@@ -106,7 +106,7 @@ echo
 echo -n "Waiting for Jenkins to be ready."
 sleep 3
 until
-    sleep 3 && oc get pods -l name=jenkins | grep "1/1"
+    sleep 3 && oc get pods --ignore-not-found -l name=jenkins | grep "1/1"
 do
     echo -n '.'
 done
@@ -214,7 +214,7 @@ then
     echo "Creating Jenkins Base Agent"
     oc delete --ignore-not-found bc jenkins-agent-el-cicd-base -n openshift
     sleep 5
-    cat ${CONFIG_REPOSITORY_AGENTS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
+    cat ${CONFIG_REPOSITORY_JENKINS}/Dockerfile.base | oc new-build -D - --name jenkins-agent-el-cicd-base -n openshift
     sleep 10
 
     oc logs -f jenkins-agent-el-cicd-base-1-build  -n openshift

@@ -122,7 +122,7 @@ def initializeStage() {
         pipelineUtils.echoBanner("INITIALIZING...")
 
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
-        el.cicd.AGENTS_DIR = "${el.cicd.CONFIG_DIR}/agents"
+        el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/default-okd-templates"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"

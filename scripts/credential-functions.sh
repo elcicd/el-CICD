@@ -5,7 +5,7 @@
 _install_sealed_secrets() {
     # install latest Sealed Secrets
     local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller --ignore-not-found -n kube-system)
-    if [[ -f /usr/local/bin/kubeseal &&  ! -z "${SS_CONTROLLER_EXISTS}" ]]
+    if [[ -f /usr/local/bin/kubeseal && ! -z "${SS_CONTROLLER_EXISTS}" ]]
     then
         local OLD_VERSION=$(kubeseal --version)
         echo
