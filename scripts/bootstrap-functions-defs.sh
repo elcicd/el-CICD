@@ -60,7 +60,7 @@ _create_onboarding_automation_server() {
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${2}
+                                  -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${2} \
                                   -n ${3}
 
     echo

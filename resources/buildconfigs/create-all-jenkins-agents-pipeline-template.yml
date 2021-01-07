@@ -36,5 +36,5 @@ objects:
           }
 
           node('maven') {
-              createAllJenkinsAgents
+              createAllJenkinsAgents([:])
           }
