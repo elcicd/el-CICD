@@ -61,11 +61,11 @@ then
 elif [[ ${1} == '--np-jenkins' ]]
 then
     echo "UPDATE JENKINS IMAGE"
-    _build_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt Y
+    _build_el_cicd_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt Y
 elif [[ ${1} == '--pr-jenkins' ]]
 then
     echo "UPDATE JENKINS IMAGE"
-    _build_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt Y
+    _build_el_cicd_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt Y
 elif [[ ${1} == '--help' ]]
 then
     echo "${HELP_MSG}"

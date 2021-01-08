@@ -20,6 +20,8 @@ def call(Map args) {
         dir(el.cicd.JENKINS_CONFIG_DIR) {
             agentNames.each { agentName ->
                 sh """
+                    ${pipelineUtils.shellEchoBanner("Starting Agent Build: ${agentName}")}
+
                     oc delete --ignore-not-found bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
                     sleep 5
                     cat ./Dockerfile.${agentName} | oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -D - -n openshift || :

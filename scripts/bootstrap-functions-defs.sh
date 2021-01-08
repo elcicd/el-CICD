@@ -1,11 +1,25 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+# $1 -> Force Jenkins base image update ('Y' will force update)
+_update_base_jenkins() {
+    local CONFIRM_UPDATE_JENKINS='N'
+    echo -n 'Update base cluster Jenkins image? [Y/n] '
+    read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
+
+    if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' || ${1} == 'Y' ]]
+    then
+        oc import-image ${1} -n openshift
+    fi
+}
+
 # $1 -> Jenkins imagestream name
 # $2 -> Jenkins yaml configuration as code file
 # $3 -> Jenkins plugins txt file
 # $4 -> Force Jenkins base image update ('Y' will force update)
-_build_jenkins_image() {
+_build_el_cicd_jenkins_image() {
+    _update_base_jenkins
+
     local CONFIRM_UPDATE_JENKINS='N'
     if [[ -z $(oc get is --ignore-not-found ${1} -n openshift) ]]
     then
@@ -29,8 +43,6 @@ _build_jenkins_image() {
         echo
         echo "Updating el-CICD Jenkins image ${1}"
         echo
-        oc import-image ${1} -n openshift
-
         if [[ ! -n $(oc get bc ${1} --ignore-not-found -n openshift) ]]
         then
             oc new-build --name ${1} --binary=true --strategy=docker -n openshift

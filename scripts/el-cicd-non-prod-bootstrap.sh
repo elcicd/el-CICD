@@ -30,7 +30,7 @@ EL_CICD_NON_PROD_MASTER_NODE_SELECTORS=$(echo ${EL_CICD_NON_PROD_MASTER_NODE_SEL
 echo "Creating ${EL_CICD_NON_PROD_MASTER_NAMEPACE} with node selectors: ${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
 oc adm new-project ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
 
-_build_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt
+_build_el_cicd_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt
 
 _create_onboarding_automation_server ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
