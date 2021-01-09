@@ -46,7 +46,6 @@ _build_el_cicd_jenkins_image() {
         if [[ ! -n $(oc get bc ${1} --ignore-not-found -n openshift) ]]
         then
             oc new-build --name ${1} --binary=true --strategy=docker -n openshift
-
         fi
 
         cp ${TEMPLATES_DIR}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
@@ -57,6 +56,7 @@ _build_el_cicd_jenkins_image() {
             ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
 
         oc start-build ${1} --from-dir=${CONFIG_REPOSITORY_JENKINS} --wait --follow -n openshift
+        rm -f ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
     fi
 }
 

@@ -15,19 +15,20 @@ def call(Map args) {
         def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
         agentNames.add(0, el.cicd.JENKINS_AGENT_DEFAULT)
 
-        pipelineUtils.echoBanner('CREATE JENKINS AGENTS:', agentNames.join(', '))
+        pipelineUtils.echoBanner('CREATE JENKINS AGENTS (in the following order):', agentNames.join(', '))
 
         dir(el.cicd.JENKINS_CONFIG_DIR) {
             agentNames.each { agentName ->
                 sh """
+                    if [[ ! -n $(oc get bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --ignore-not-found -n openshift) ]]
+                    then
+                        oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --binary=true --strategy=docker -n openshift
+                    fi
                     ${pipelineUtils.shellEchoBanner("Starting Agent Build: ${agentName}")}
 
-                    oc delete --ignore-not-found bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
-                    sleep 5
-                    cat ./Dockerfile.${agentName} | oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -D - -n openshift || :
-                    sleep 10
-
-                    oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} -n openshift
+                    cat Dockerfile.${agentName} > Dockerfile
+                    oc start-build${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-dir=./ --wait --follow -n openshift
+                    rm Dockerfile
                 """
             }
         }
