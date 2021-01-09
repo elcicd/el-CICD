@@ -20,7 +20,7 @@ def call(Map args) {
         dir(el.cicd.JENKINS_CONFIG_DIR) {
             agentNames.each { agentName ->
                 sh """
-                    if [[ ! -n $(oc get bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --ignore-not-found -n openshift) ]]
+                    if [[ ! -n \$(oc get bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --ignore-not-found -n openshift) ]]
                     then
                         oc new-build --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --binary=true --strategy=docker -n openshift
                     fi
