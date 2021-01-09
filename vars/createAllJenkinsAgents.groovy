@@ -27,7 +27,7 @@ def call(Map args) {
                     ${pipelineUtils.shellEchoBanner("Starting Agent Build: ${agentName}")}
 
                     cat Dockerfile.${agentName} > Dockerfile
-                    oc start-build${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-dir=./ --wait --follow -n openshift
+                    oc start-build ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${agentName} --from-dir=./ --wait --follow -n openshift
                     rm Dockerfile
                 """
             }
