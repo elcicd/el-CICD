@@ -60,7 +60,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
             def createCredsCommand = "${jenkinsCurlCommand} ${credsUrl}"
             projectInfo.microServices.each { microService ->
                 def pushDeployKeyIdCurlCommand =
-                    scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, isNonProd, GITHUB_ACCESS_TOKEN, true)
+                    scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, isNonProd, GITHUB_ACCESS_TOKEN, false)
 
                 credsUrl = isNonProd ? cicdRbacGroupJenkinsCredsUrls.updateNonProdCicdJenkinsCredsUrl : cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl
                 def updateCredsCommand = "${jenkinsCurlCommand} ${credsUrl}/${microService.gitSshPrivateKeyName}/config.xml"
