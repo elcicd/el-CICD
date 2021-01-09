@@ -84,9 +84,11 @@ def call(Map args) {
     stage('Verify images are deployed in previous environment, collect source commit hash') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
 
-        def script = """oc get cm -o jsonpath='{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}' -n ${projectInfo.deployFromNamespace}"""
+        def msNames = microServices.collect { "${it.id}-meta-info" }.join(' ')
+        def jsonPath = '''jsonpath='{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
+        def script = "oc get cm ${msNames} -o ${jsonpath} -n ${projectInfo.deployFromNamespace}"
         def commitHashMap =  sh(returnStdout: true, script: script).trim()
-        commitHashMap = commitHashMap.split(' ').collectEntries { entry ->
+        commitHashMap = commitHashMap.split(' ').findAll { it.matches(/[\w-]+:[\w]+/) }.collectEntries { entry ->
             def pair = entry.split(':')
             [(pair.first()): pair.last()]
         }
