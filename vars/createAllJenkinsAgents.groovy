@@ -17,18 +17,6 @@ def call(Map args) {
 
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS (in the following order):', agentNames.join(', '))
 
-        sh """
-            if [[ -z \$(oc get is --ignore-not-found ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT} -n openshift) ]]
-            then
-                oc delete bc --ignore-not-found ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT} -n openshift
-                sleep 5
-                echo "FROM ${el.cicd.OCP_IMAGE_REPO}/jenkins-agent-base" | oc new-build -D - --name ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT} -n openshift
-                sleep 10
-                oc logs -f bc/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT} -n openshift
-                oc delete bc ${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT} -n openshift
-            fi
-        """
-
         dir(el.cicd.JENKINS_CONFIG_DIR) {
             agentNames.each { agentName ->
                 sh """
