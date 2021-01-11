@@ -99,7 +99,7 @@ _create_onboarding_automation_server() {
                                   -n ${3}
 
     echo
-    echo "'jenkins' service sccount needs cluster-admin permissions for managing multiple projects and permissions"
+    echo "'jenkins' service account needs cluster-admin permissions for managing multiple projects and permissions"
     oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${3}
 
     echo

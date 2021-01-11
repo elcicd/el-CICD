@@ -26,7 +26,8 @@ echo 'Creating the Non-Prod Onboarding Automation Server pipelines:'
 PIPELINE_TEMPLATES=('non-prod-project-onboarding' 'non-prod-project-delete' 'create-all-jenkins-agents')
 for PIPELINE_TEMPLATE in ${PIPELINE_TEMPLATES[@]}
 do
-    oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml  -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} | \
+    oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
+            -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} | \
         oc apply -f - -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 done
 
