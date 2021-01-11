@@ -1,28 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-cd "$(dirname "$0")"
-
-echo
-echo "==================================================================="
-echo "WARNING:"
-echo "   This script should only be run on the production bastion"
-echo
-echo "   WHEN USING THIS IN YOUR OWN CLUSTER:"
-echo "       FORK THE el-CICD REPOSITORY FIRST AND CREATE YOUR OWN PUBLIC/KEYS AND CREDENTIALS AS NEEDED"
-echo
-echo "   ACCESS TO THE PROD MASTER JENKINS SHOULD BE RESTRICTED TO CLUSTER ADMINS"
-echo "==================================================================="
-echo
-
-echo
-echo 'Loading environment'
-CONFIG_REPOSITORY=../el-CICD-config
-CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/config
-CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/agents
-source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-system.config
-source ${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-bootstrap.config
-
 if [[ -z "${EL_CICD_PROD_MASTER_NAMEPACE}" ]]
 then
     echo "el-CICD prod master project must be defined in el-cicd-system.config"
@@ -31,89 +9,23 @@ then
     exit 1
 fi
 
-echo -n "Confirm the wildcard domain for the cluster: ${CLUSTER_WILDCARD_DOMAIN}? [Y/n] "
-read -n 1 CONFIRM_WILDCARD
-echo
-if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
-then
-    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config and then rerun this script"
-    echo "Exiting."
-    exit 1
-fi
-
-DEL_NAMESPACE=$(oc projects -q | grep ${EL_CICD_PROD_MASTER_NAMEPACE} | tr -d '[:space:]')
-if [[ ! -z "${DEL_NAMESPACE}" ]]
-then
-    echo "Found: ${DEL_NAMESPACE}"
-    echo -n "Confirm deletion of el-CICD master namespace: ${EL_CICD_PROD_MASTER_NAMEPACE}? [Y/n] "
-    read -n 1 CONFIRM_DELETE
-    echo
-    if [[ ${CONFIRM_DELETE} != 'Y' ]]
-    then
-        echo "Deleting el-CICD prod master namespace must be completed to continuing."
-        echo "Exiting."
-        exit 1
-    fi
-
-    oc delete project ${EL_CICD_PROD_MASTER_NAMEPACE}
-    until
-        !(oc project ${EL_CICD_PROD_MASTER_NAMEPACE} > /dev/null 2>&1)
-    do
-        echo -n '.'
-        sleep 1
-    done
-fi
-
-# create Jenkins in new devops-management project
-# It is suggested to set up some nodes in a cicd region or equivalent so as not to affect or compete with deployed applications
-echo
-EL_CICD_PROD_MASTER_NODE_SELECTORS=$(echo ${EL_CICD_PROD_MASTER_NODE_SELECTORS} | tr -d '[:space:]')
-oc adm new-project ${EL_CICD_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_PROD_MASTER_NODE_SELECTORS}"
-
-oc project ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY_BOOTSTRAP}/el-cicd-system.config
-
-echo
-echo -n "Update Jenkins to latest image? [Y/n] "
-read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
-echo
-if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' ]]
-then
-    oc import-image jenkins -n openshift
-fi
-
-oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-                              -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-                              -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                              -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
-                              -n ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-#-- Jenkins needs cluster-admin to run pipeline creation script
-oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-# install Sealed Secrets
 _install_sealed_secrets ${EL_CICD_PROD_MASTER_NAMEPACE}
+
+_confirm_wildcard_domain_for_cluster
+
+_delete_namespace ${EL_CICD_PROD_MASTER_NAMEPACE}
+
+_create_namespace_with_selectors ${EL_CICD_PROD_MASTER_NAMEPACE} ${EL_CICD_PROD_MASTER_NODE_SELECTORS}
+
+_build_el_cicd_jenkins_image ${JENKINS_PROD_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt
+
+_create_onboarding_automation_server ${JENKINS_PROD_IMAGE_STREAM} prod-jenkins-casc.yml ${EL_CICD_PROD_MASTER_NAMEPACE}
 
 echo
 echo 'Creating the prod project onboarding pipeline'
 oc process -f ./resources/buildconfigs/prod-project-onboarding-pipeline-template.yml \
     -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
   | oc create -f - -n ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-# wait for jenkins container to start
-echo
-echo -n "Waiting for Jenkins to be ready."
-sleep 3
-until
-    sleep 3 && oc get pods --ignore-not-found -l name=jenkins | grep "1/1"
-do
-    echo -n '.'
-done
-
-echo 'Jenkins up, sleep for 10 more seconds to make sure server REST api is ready'
-sleep 10
-echo
 
 # create and add sealed secret for read only el-CICD access to project
 echo

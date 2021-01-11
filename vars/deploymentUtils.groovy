@@ -319,7 +319,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        def metaInfoCmName = "${projectInfo.id}-${microService.name}-meta-info"
+        def metaInfoCmName = "${projectInfo.id}-${microService.name}-${el.cicd.CM_META_INFO_POSTFIX}"
 
         sh """
             ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}

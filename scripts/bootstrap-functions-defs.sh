@@ -1,6 +1,29 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+_confirm_wildcard_domain_for_cluster() {
+    echo
+    echo -n "Confirm the wildcard domain for the cluster: ${CLUSTER_WILDCARD_DOMAIN}? [Y/n] "
+    read -n 1 CONFIRM_WILDCARD
+    echo
+    if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
+    then
+        echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config"
+        echo
+        echo "Exiting"
+        exit 1
+    fi
+}
+
+# $1 -> Namespace name
+# $2 -> Namespace selectors
+_create_namespace_with_selectors() {
+    echo
+    local SELECTORS=$(echo ${2} | tr -d '[:space:]')
+    echo "Creating ${1} with node selectors: ${SELECTORS}"
+    oc adm new-project ${1} --node-selector="${SELECTORS}"
+}
+
 # $1 -> Force Jenkins base image update ('Y' will force update)
 _update_base_jenkins() {
     local CONFIRM_UPDATE_JENKINS='N'
@@ -82,7 +105,7 @@ _create_onboarding_automation_server() {
     echo
     echo -n "Waiting for Jenkins to be ready."
     until
-        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE} | grep "1/1"
+        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${3} | grep "1/1"
     do
         echo -n '.'
     done

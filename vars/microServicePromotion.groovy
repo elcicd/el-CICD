@@ -84,7 +84,7 @@ def call(Map args) {
     stage('Verify images are deployed in previous environment, collect source commit hash') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
 
-        def msNames = projectInfo.microServices.collect { "${it.id}-meta-info" }.join(' ')
+        def msNames = projectInfo.microServices.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }.join(' ')
         def jsonPath = '''jsonpath='{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
         def script = "oc get cm ${msNames} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
         def commitHashMap =  sh(returnStdout: true, script: script).trim()

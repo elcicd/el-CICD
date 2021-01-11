@@ -48,15 +48,15 @@ def updateProjectMetaInfo(def projectInfo) {
         def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """
-            ${pipelineUtils.shellEchoBanner("UPDATE ${projectInfo.id}-meta-info")}
+            ${pipelineUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX}")}
 
-            oc delete --ignore-not-found cm ${projectInfo.id}-meta-info -n ${projectInfo.prodNamespace}
-            oc create cm ${projectInfo.id}-meta-info \
+            oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
+            oc create cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
                 --from-literal=microservices=${microServiceNames} \
                 -n ${projectInfo.prodNamespace}
-            oc label cm ${projectInfo.id}-meta-info \
+            oc label cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 projectid=${projectInfo.id} \
                 release-version=${projectInfo.releaseVersionTag} \
                 -n ${projectInfo.prodNamespace}

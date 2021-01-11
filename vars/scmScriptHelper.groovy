@@ -68,11 +68,12 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonPr
 
     def deployKeyName = getDeployKeyName(projectInfo, isNonProd)
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
+    readOnly = readOnly ? 'true' : 'false'
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         curlCommand = """
-            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${el.cicd.TEMP_DIR}/sshKeyFile.json
-            cat ${microService.gitSshPrivateKeyName}.pub >> ${el.cicd.TEMP_DIR}/sshKeyFile.json
+            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
+            cat ${microService.gitSshPrivateKeyName}.pub >> ${secretFile}
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
             sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
 

@@ -11,24 +11,11 @@ fi
 
 _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
-echo
-echo -n "Confirm the wildcard domain for the cluster: ${CLUSTER_WILDCARD_DOMAIN}? [Y/n] "
-read -n 1 CONFIRM_WILDCARD
-echo
-if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
-then
-    echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config"
-    echo
-    echo "Exiting"
-    exit 1
-fi
+_confirm_wildcard_domain_for_cluster
 
 _delete_namespace ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
-echo
-EL_CICD_NON_PROD_MASTER_NODE_SELECTORS=$(echo ${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS} | tr -d '[:space:]')
-echo "Creating ${EL_CICD_NON_PROD_MASTER_NAMEPACE} with node selectors: ${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
-oc adm new-project ${EL_CICD_NON_PROD_MASTER_NAMEPACE} --node-selector="${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}"
+_create_namespace_with_selectors ${EL_CICD_NON_PROD_MASTER_NAMEPACE} ${EL_CICD_NON_PROD_MASTER_NODE_SELECTORS}
 
 _build_el_cicd_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt
 

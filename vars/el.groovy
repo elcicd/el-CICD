@@ -141,6 +141,8 @@ def initializeStage() {
             mkdir -p ${el.cicd.TEMPLATES_DIR}
         """
 
+        el.cicd.CM_META_INFO_POSTFIX = 'meta-info'
+
         el.cicd.RELEASE_VERSION_PREFIX = 'v'
 
         el.cicd = el.cicd.asImmutable()

@@ -76,13 +76,13 @@ def call(Map args) {
     stage('Collect deployment hashes; if incremental release, prune unchanged microservices from deployment') {
         pipelineUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
 
-        def metaInfoRelease = sh(returnStdout: true, script: "oc get cm ${projectInfo.id}-meta-info -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :")
+        def metaInfoRelease = sh(returnStdout: true, script: "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :")
         projectInfo.microServices.each { microService ->
             if (microService.releaseCandidateGitTag) {
                 dir(microService.workDir) {
                     def deploymentCommitHash
                     if (!deployAll && metaInfoRelease == projectInfo.releaseVersionTag) {
-                        def depCommitHashScript = "oc get cm ${microService.id}-meta-info -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
+                        def depCommitHashScript = "oc get cm ${microService.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
                         deploymentCommitHash = sh(returnStdout: true, script: depCommitHashScript)
                     }
 
