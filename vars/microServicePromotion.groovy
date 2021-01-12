@@ -84,11 +84,15 @@ def call(Map args) {
     stage('Verify images are deployed in previous environment, collect source commit hash') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
 
+        def jsonPathSingle = '''jsonpath='{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
+        def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}{end}' '''
+
         def msNames = projectInfo.microServices.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }.join(' ')
-        def jsonPath = '''jsonpath='{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
+        def jsonPath =  (projectInfo.microServices.size() > 1) ? jsonPathMulti : jsonPathSingle
         def script = "oc get cm ${msNames} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
+
         def commitHashMap =  sh(returnStdout: true, script: script).trim()
-        commitHashMap = commitHashMap.split(' ').findAll { it.matches(/[\w-]+:[\w]+/) }.collectEntries { entry ->
+        commitHashMap = commitHashMap.split(' ').collectEntries { entry ->
             def pair = entry.split(':')
             [(pair.first()): pair.last()]
         }
@@ -98,7 +102,7 @@ def call(Map args) {
             if (microService.promote) {
                 microService.srcCommitHash = commitHashMap[microService.name]
                 if (!microService.srcCommitHash) {
-                    microServicesMissingMsg += "    ${microService.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
+                    microServicesMissingMsg += "${microService.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
                 }
             }
         }
