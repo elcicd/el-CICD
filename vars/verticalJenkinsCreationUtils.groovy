@@ -120,7 +120,10 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
 
 def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def isNonProd) {
     def envs = isNonProd ? [el.cicd.devEnv] + el.cicd.testEnvs : [el.cicd.prodEnv]
+    
+    def jenkinsImage = isNonProd ? el.cicd.JENKINS_NON_PROD_IMAGE_STREAM : el.cicd.JENKINS_PROD_IMAGE_STREAM
     def nodeSelectors = isNonProd ? el.cicd.EL_CICD_NON_PROD_MASTER_NODE_SELECTORS : el.cicd.EL_CICD_PROD_MASTER_NODE_SELECTORS
+    def cascFile = isNonProd ? 'non-prod-jenkins-casc.yml' : 'prod-jenkins-casc.yml'
 
     def cicdMasterNamespace = isNonProd ? el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE :  el.cicd.EL_CICD_PROD_MASTER_NAMEPACE
     sh """
@@ -129,10 +132,15 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
         oc adm new-project ${cicdJenkinsNamespace} --node-selector='${nodeSelectors}'
 
         oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                                      -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY}  \
-                                      -p DISABLE_ADMINISTRATIVE_MONITORS==${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS}  \
+                                      -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                                      -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
+                                      -p JENKINS_IMAGE_STREAM_TAG=${jenkinsImage}:latest \
+                                      -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
+                                      -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
+                                      -e TRY_UPGRADE_IF_NO_MARKER=true \
                                       -e CONTAINER_CORE_LIMIT=${el.cicd.JENKINS_CONTAINER_CORE_LIMIT} \
-                                      -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops -n ${cicdJenkinsNamespace}
+                                      -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${cascFile} \
+                                      -n ${cicdJenkinsNamespace}
 
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n ${cicdJenkinsNamespace}
 
