@@ -142,6 +142,8 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
                                       -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${cascFile} \
                                       -n ${cicdJenkinsNamespace}
 
+        oc adm policy add-scc-to-user nonroot -z jenkins -n ${cicdJenkinsNamespace}
+
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n ${cicdJenkinsNamespace}
 
         for ENV in ${envs.join(' ')}

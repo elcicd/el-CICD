@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the create-all-jenkins-agents pipeline.  Called inline from the
@@ -12,8 +12,10 @@ def call(Map args) {
     def agentDockerfiles
 
     stage('Create All Agents') {
-        def agentNames = el.cicd.JENKINS_AGENT_NAMES.tokenize(':')
-        agentNames.add(0, el.cicd.JENKINS_AGENT_DEFAULT)
+        def agentNames = [el.cicd.JENKINS_AGENT_DEFAULT]
+        if (!args.buildBaseOnly) {
+            agentNames.addAll(el.cicd.JENKINS_AGENT_NAMES.tokenize(':'))
+        }
 
         pipelineUtils.echoBanner('CREATE JENKINS AGENTS (in the following order):', agentNames.join(', '))
 

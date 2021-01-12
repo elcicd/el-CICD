@@ -23,6 +23,14 @@ objects:
     strategy:
       jenkinsPipelineStrategy:
         jenkinsfile: |-
+          properties([
+              parameters(
+                  [
+                      booleanParam(name: 'BUILD_BASE_ONLY', defaultValue: false, description: 'Do not build builder images')
+                  ]
+              )
+          ])
+
           node('master') {
               def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
 
@@ -34,7 +42,8 @@ objects:
               cicdMetaData.data.PIPELINE_TEMPLATE_NAME = '${PIPELINE_TEMPLATE_NAME}'
               el.initMetaData(cicdMetaData.data)
           }
-
+          
+          args = [buildBaseOnly: params.BUILD_BASE_ONLY?.toString() == 'true']
           node('maven') {
-              createAllJenkinsAgents([:])
+              createAllJenkinsAgents(args)
           }

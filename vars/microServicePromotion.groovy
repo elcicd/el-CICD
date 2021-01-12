@@ -171,7 +171,8 @@ def call(Map args) {
     }
 
     stage('Create deployment branch if necessary') {
-        pipelineUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:", projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
+        pipelineUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",
+                                 projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
 
         projectInfo.microServices.each { microService ->
             if (microService.promote && !microService.deployBranchExists) {
