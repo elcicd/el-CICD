@@ -157,7 +157,7 @@ def call(Map args) {
 
                     def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
 
-                    def msg = "${fromImageUrl}${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
+                    def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
                     sh """
                         ${skopeoPromoteCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
 
@@ -178,7 +178,7 @@ def call(Map args) {
                 dir(microService.workDir) {
                     withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                         sh """
-                            ${shellEcho  "-> Creating configuration branch: ${microService.deploymentBranch}"}
+                            ${shellEcho  "-> Creating Deployment Branch for the image ${microService.id}: ${microService.deploymentBranch}"}
                             ${sshAgentBash GITHUB_PRIVATE_KEY,
                                            "git branch ${microService.deploymentBranch}",
                                            "git push origin ${microService.deploymentBranch}:${microService.deploymentBranch}"}
@@ -187,7 +187,7 @@ def call(Map args) {
                 }
             }
             else if (microService.promote) {
-                echo "-> Configuration branch already exists: ${microService.deploymentBranch}"
+                echo "-> Deployment Branch already exists for the image ${microService.id}: ${microService.deploymentBranch}"
             }
         }
     }
