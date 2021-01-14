@@ -4,6 +4,8 @@ COPY ["%JENKINS_CONFIGURATION_FILE%", "%JENKINS_PLUGINS_FILE%", "/usr/lib/jenkin
 
 USER root
 
+ENV CASC_JENKINS_CONFIG=/usr/lib/jenkins/%JENKINS_PLUGINS_FILE%
+
 RUN /usr/local/bin/install-plugins.sh /usr/lib/jenkins/%JENKINS_PLUGINS_FILE%
 
 USER 1001

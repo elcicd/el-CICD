@@ -1,17 +1,106 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-_confirm_wildcard_domain_for_cluster() {
+# $1 -> el-CICD Master namespace
+_collect_and_verify_bootstrap_actions_with_user() {
+    _check_sealed_secrets
+    __confirm_update_default_jenkins_image
+    __confirm_build_el_cicd_jenkins_image
+
     echo
-    echo -n "Confirm the wildcard domain for the cluster: ${CLUSTER_WILDCARD_DOMAIN}? [Y/n] "
-    read -n 1 CONFIRM_WILDCARD
-    echo
-    if [[ ${CONFIRM_WILDCARD} != 'Y' ]]
+    echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
+    echo 'Please read CAREFULLY and verify this information is correct before proceeding.'
+    echo 
+    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
-        echo "CLUSTER_WILDCARD_DOMAIN needs to be properly set in el-cicd-system.config"
+        echo "Install/Update Sealed Secrets to version? ${INSTALL_KUBESEAL}"
+    else
+        echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
+    fi
+    echo "Update cluster default Jenkins image? ${UPDATE_JENKINS}"
+    echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
+    echo "Cluster wildcard Domain? ${CLUSTER_WILDCARD_DOMAIN}"
+
+    DEL_NAMESPACE=$(oc projects -q | grep ${1} | tr -d '[:space:]')
+    if [[ ! -z "${DEL_NAMESPACE}" ]]
+    then
         echo
-        echo "Exiting"
-        exit 1
+        echo -n "WARNING: ${1} was found, and will WILL BE DESTROYED AND REBUILT"
+    else 
+        echo "${1} will be created to host the el-CICD master"
+    fi
+    if [[ ! -z ${1} ]]
+    then
+        echo " with the following node selectors:"
+        echo "${1}"
+    else
+        echo
+    fi
+
+    echo
+    echo "Do you wish to continue? [Yes/No]: "
+    CONTINUE='N'
+    read CONTINUE
+    if [[ ${CONTINUE} != 'Yes' ]]
+    then
+        echo "You must enter 'Yes' for bootstrap to continue.  Exiting..."
+        exit 0
+    fi
+}
+
+# $1 -> Namespace
+# $2 -> Namespace Node Selectors
+# $3 -> Jenkins image stream name
+# $4 -> Jenkins CASC file name
+# $5 -> Jenkins plugin list file name
+_run_el_cicd_bootstrap() {
+    if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]
+    then
+        _install_sealed_secrets ${1}
+    fi
+
+    if [[ ${UPDATE_JENKINS} == 'Yes' ]]
+    then
+        oc import-image ${1} -n openshift
+    fi
+
+    if [[ ${UPDATE_EL_CICD_JENKINS} == 'Yes' ]]
+    then
+        _build_el_cicd_jenkins_image ${3} ${4}  ${5}
+    fi
+
+    _delete_namespace ${1}
+
+    _create_namespace_with_selectors ${1} ${2}
+
+    _create_onboarding_automation_server ${3} ${1}
+}
+
+__confirm_update_default_jenkins_image() {
+    UPDATE_JENKINS='N'
+    echo -n 'Update cluster default Jenkins image? [Y/n] '
+    read -n 1 UPDATE_JENKINS
+    echo
+
+    if [[ ${UPDATE_JENKINS} == 'Y' ]]
+    then
+        UPDATE_JENKINS='Yes'
+    else
+        UPDATE_JENKINS='No'
+    fi
+}
+
+__confirm_build_el_cicd_jenkins_image() {
+    UPDATE_EL_CICD_JENKINS='N'
+    echo -n 'Update/build el-CICD Jenkins image? [Y/n] '
+    read -n 1 UPDATE_EL_CICD_JENKINS
+    echo
+
+    if [[ ${UPDATE_EL_CICD_JENKINS} == 'Y' ]]
+    then
+        UPDATE_EL_CICD_JENKINS='Yes'
+    else
+        UPDATE_EL_CICD_JENKINS='No'
     fi
 }
 
@@ -24,25 +113,11 @@ _create_namespace_with_selectors() {
     oc adm new-project ${1} --node-selector="${SELECTORS}"
 }
 
-# $1 -> Force Jenkins base image update ('Y' will force update)
-_update_base_jenkins() {
-    local CONFIRM_UPDATE_JENKINS='N'
-    echo -n 'Update base cluster Jenkins image? [Y/n] '
-    read -t 10 -n 1 CONFIRM_UPDATE_JENKINS
-
-    if [[ ${CONFIRM_UPDATE_JENKINS} == 'Y' || ${1} == 'Y' ]]
-    then
-        oc import-image ${1} -n openshift
-    fi
-}
-
 # $1 -> Jenkins imagestream name
 # $2 -> Jenkins yaml configuration as code file
 # $3 -> Jenkins plugins txt file
 # $4 -> Force Jenkins base image update ('Y' will force update)
-_build_el_cicd_jenkins_image() {
-    _update_base_jenkins
-
+_build_el_cicd_jenkins_image() 
     local CONFIRM_UPDATE_JENKINS='N'
     if [[ -z $(oc get is --ignore-not-found ${1} -n openshift) ]]
     then
@@ -84,7 +159,6 @@ _build_el_cicd_jenkins_image() {
 }
 
 # $1 -> Jenkins imagestream name
-# $2 -> Jenkins yaml configuration as code file
 # $3 -> Namespace
 _create_onboarding_automation_server() {
     echo
@@ -95,7 +169,6 @@ _create_onboarding_automation_server() {
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${2} \
                                   -n ${3}
 
     echo
@@ -117,33 +190,17 @@ _create_onboarding_automation_server() {
 
 # $1 -> Namespace
 _delete_namespace() {
-    DEL_NAMESPACE=$(oc projects -q | grep ${1} | tr -d '[:space:]')
-    if [[ ! -z "${DEL_NAMESPACE}" ]]
-    then
-        echo
-        echo "Found ${DEL_NAMESPACE}"
-        echo -n "Confirm deletion of el-CICD master namespace: ${DEL_NAMESPACE}? [Y/n] "
-        read -n 1 CONFIRM_DELETE
-        echo
-        if [[ ${CONFIRM_DELETE} != 'Y' ]]
-        then
-            echo "Deleting el-CICD non-prod master namespace must be completed to continuing."
-            echo "Exiting."
-            exit 1
-        fi
-
-        oc delete project ${1}
-        echo -n "Confirming deletion"
-        until
-            !(oc project ${1} > /dev/null 2>&1)
-        do
-            echo -n '.'
-            sleep 1
-        done
-        echo
-        echo "Old el-CICD master namespace deleted.  Sleep 10s to confirm cleanup."
-        sleep 10
-    fi
+    oc delete project ${1}
+    echo -n "Confirming deletion"
+    until
+        !(oc project ${1} > /dev/null 2>&1)
+    do
+        echo -n '.'
+        sleep 1
+    done
+    echo
+    echo "Namespace ${1} deleted.  Sleep 10s to confirm cleanup."
+    sleep 10
 }
 
 # $1 -> Namespace

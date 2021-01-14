@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+EL_CICD_SYSTEM_CONFIG_FILE=${1}
+
 echo
 echo "==================================================================="
 echo "WARNING:"
@@ -41,8 +43,7 @@ CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
 CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/bootstrap
 CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
 
-source ${CONFIG_REPOSITORY}/el-cicd-system.config
-source ${CONFIG_REPOSITORY}/el-cicd-bootstrap.config
+source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
 source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
 source ${SCRIPTS_DIR}/credential-functions.sh
@@ -71,11 +72,11 @@ then
     EL_CICD_SH_SCRIPT='./scripts/refresh-credentials.sh --prod'
 elif [[ ${1} == '--np-jenkins' ]]
 then
-    echo "UPDATE JENKINS IMAGE"
+    echo "UPDATE NON_PROD JENKINS IMAGE"
     _build_el_cicd_jenkins_image ${JENKINS_NON_PROD_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt Y
 elif [[ ${1} == '--pr-jenkins' ]]
 then
-    echo "UPDATE JENKINS IMAGE"
+    echo "UPDATE PROD JENKINS IMAGE"
     _build_el_cicd_jenkins_image ${JENKINS_PROD_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt Y
 elif [[ ${1} == '--help' ]]
 then
@@ -88,4 +89,4 @@ else
     exit 1
 fi
 
-eval ${EL_CICD_SH_SCRIPT}
+eval ${EL_CICD_SH_SCRIPT} ${EL_CICD_SYSTEM_CONFIG_FILE}

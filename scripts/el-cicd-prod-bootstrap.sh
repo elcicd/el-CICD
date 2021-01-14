@@ -9,17 +9,13 @@ then
     exit 1
 fi
 
-_install_sealed_secrets ${EL_CICD_PROD_MASTER_NAMEPACE}
+_collect_and_verify_bootstrap_actions_with_user ${EL_CICD_PROD_MASTER_NAMEPACE}
 
-_confirm_wildcard_domain_for_cluster
-
-_delete_namespace ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-_create_namespace_with_selectors ${EL_CICD_PROD_MASTER_NAMEPACE} ${EL_CICD_PROD_MASTER_NODE_SELECTORS}
-
-_build_el_cicd_jenkins_image ${JENKINS_PROD_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt
-
-_create_onboarding_automation_server ${JENKINS_PROD_IMAGE_STREAM} prod-jenkins-casc.yml ${EL_CICD_PROD_MASTER_NAMEPACE}
+_run_el_cicd_bootstrap ${EL_CICD_PROD_MASTER_NAMEPACE} \
+                       ${EL_CICD_PROD_MASTER_NODE_SELECTORS} \
+                       ${JENKINS_PROD_IMAGE_STREAM} \
+                       prod-jenkins-casc.yml  \
+                       prod-plugins.txt
 
 echo
 echo 'Creating the prod project onboarding pipeline'
@@ -35,7 +31,7 @@ echo
 echo "RUN ALL CUSTOM SCRIPTS 'prod-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
 ${SCRIPTS_DIR}/el-cicd-run-custom-config-scripts.sh ${CONFIG_REPOSITORY_BOOTSTRAP} prod
 
-_build_jenkins_agents ${EL_CICD_NON_PROD_MASTER_NAMEPACE} true
+_build_jenkins_agents ${EL_CICD_PROD_MASTER_NAMEPACE} true
 
 echo
 echo 'Prod Onboarding Server Bootstrap Script Complete'

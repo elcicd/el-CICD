@@ -1,25 +1,38 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+_check_sealed_secrets() {
+    INSTALL_KUBESEAL='No'
+    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
+    then
+        # install latest Sealed Secrets
+        local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller --ignore-not-found -n kube-system)
+        if [[ -f /usr/local/bin/kubeseal && ! -z "${SS_CONTROLLER_EXISTS}" ]]
+        then
+            local OLD_VERSION=$(kubeseal --version)
+            echo
+            echo "Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller?"
+            echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
+        else
+            echo -n "Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
+        fi
+
+        INSTALL_KUBESEAL='N'
+        read -n 1 INSTALL_KUBESEAL
+        echo
+
+        if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
+        then
+            INSTALL_KUBESEAL='Yes'
+        else
+            INSTALL_KUBESEAL='No'
+        fi
+    fi
+}
+
 # $1 -> Namespace to install
 _install_sealed_secrets() {
-    # install latest Sealed Secrets
-    local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller --ignore-not-found -n kube-system)
-    if [[ -f /usr/local/bin/kubeseal && ! -z "${SS_CONTROLLER_EXISTS}" ]]
-    then
-        local OLD_VERSION=$(kubeseal --version)
-        echo
-        echo "Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller?"
-        echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
-    else
-        echo -n "Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
-    fi
-
-    local INSTALL_KUBESEAL='N'
-    read -t 10 -n 1 INSTALL_KUBESEAL
-    echo
-
-    if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
+    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
         echo
         sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
@@ -35,6 +48,9 @@ _install_sealed_secrets() {
         oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${1}
 
         echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed!"
+    else 
+        echo 'ERROR: SEALED_SECRET_RELEASE_VERSION undefined.'
+        exit 1
     fi
 }
 
