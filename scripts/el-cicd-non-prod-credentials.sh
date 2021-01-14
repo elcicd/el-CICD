@@ -9,12 +9,6 @@ echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-ci
 oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
 oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-system.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
-# install Sealed Secrets
-if [[ ${1} == '--sealed-secrets' || ${1} == '-s' ]]
-then
-    _install_sealed_secrets ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
-fi
-
 echo
 echo "Adding read only deploy key for el-CICD"
 _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
@@ -24,15 +18,6 @@ echo "Adding read only deploy key for el-CICD-config"
 _push_github_public_ssh_deploy_key el-CICD-config \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
-
-
-echo
-CICD_ENVIRONMENTS="${DEV_ENV} $(echo $TEST_ENVS | sed 's/:/ /g')"
-echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
-for ENV in ${CICD_ENVIRONMENTS}
-do
-    _create_env_docker_registry_secret ${ENV} ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
-done
 
 JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE})
 
@@ -49,6 +34,14 @@ echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
+CICD_ENVIRONMENTS="${DEV_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g')"
+echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
+for ENV in ${CICD_ENVIRONMENTS}
+do
+    _create_env_docker_registry_secret ${ENV} ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+done
+
+echo
 echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
@@ -60,14 +53,7 @@ do
     _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
 done
 
-echo
-echo "Looking for custom credentials script 'secrets-non-prod.sh' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
-if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh ]]
-then
-    ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh
-else
-    echo "'secrets-non-prod.sh' not found."
-fi
+_run_custom_credentials_script non-prod
 
 rm -rf ${SECRET_FILE_TEMP_DIR}
 

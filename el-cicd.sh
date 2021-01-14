@@ -30,9 +30,20 @@ echo 'Loading el-CICD environment...'
 set -o allexport
 
 BOOTSTRAP_DIR=$(pwd)
+
 SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
 
-source ${SCRIPTS_DIR}/global-defs.sh
+RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
+BUILD_CONFIGS_DIR=${RESOURCES_DIR}/buildconfigs
+TEMPLATES_DIR=${RESOURCES_DIR}/templates
+
+CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
+CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/bootstrap
+CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
+
+source ${CONFIG_REPOSITORY}/el-cicd-system.config
+source ${CONFIG_REPOSITORY}/el-cicd-bootstrap.config
+
 source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
 source ${SCRIPTS_DIR}/credential-functions.sh
 

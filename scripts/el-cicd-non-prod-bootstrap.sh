@@ -45,23 +45,7 @@ echo
 echo "RUN ALL CUSTOM SCRIPTS 'non-prod-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
 ${SCRIPTS_DIR}/el-cicd-run-custom-config-scripts.sh ${CONFIG_REPOSITORY_BOOTSTRAP} non-prod
 
-if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
-then
-    HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
-    if [[ -z ${HAS_BASE_AGENT} ]]
-    then
-        echo
-        echo "Creating Jenkins Agents"
-        oc start-build create-all-jenkins-agents -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
-        echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
-    else 
-        echo
-        echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
-    fi
-else
-    echo
-    echo "JENKINS_SKIP_AGENT_BUILDS=true.  Jenkins agent builds skipped."
-fi
+_build_jenkins_agents ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
 
 echo 
 echo 'Non-prod Onboarding Server Bootstrap Script Complete'

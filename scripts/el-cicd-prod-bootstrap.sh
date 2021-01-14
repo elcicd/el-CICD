@@ -35,17 +35,7 @@ echo
 echo "RUN ALL CUSTOM SCRIPTS 'prod-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
 ${SCRIPTS_DIR}/el-cicd-run-custom-config-scripts.sh ${CONFIG_REPOSITORY_BOOTSTRAP} prod
 
-HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
-if [[ -z ${HAS_BASE_AGENT} ]]
-then
-    echo
-    echo "Creating Jenkins Agents"
-    oc start-build create-all-jenkins-agents -e BUILD_BASE_ONLY=true -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
-    echo "Started 'create-all-jenkins-agents' job on Prod Onboarding Automation Server"
-else 
-    echo
-    echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
-fi
+_build_jenkins_agents ${EL_CICD_NON_PROD_MASTER_NAMEPACE} true
 
-echo 
+echo
 echo 'Prod Onboarding Server Bootstrap Script Complete'

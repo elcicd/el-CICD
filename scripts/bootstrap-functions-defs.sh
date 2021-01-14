@@ -145,3 +145,25 @@ _delete_namespace() {
         sleep 10
     fi
 }
+
+# $1 -> Namespace
+# $2 -> If 'true' only build the base agent rather than all
+_build_jenkins_agents() {
+    if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
+    then
+        HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
+        if [[ -z ${HAS_BASE_AGENT} ]]
+        then
+            echo
+            echo "Creating Jenkins Agents"
+            oc start-build create-all-jenkins-agents -e BUILD_BASE_ONLY=${2} -n ${1}
+            echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
+        else 
+            echo
+            echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
+        fi
+    else
+        echo
+        echo "JENKINS_SKIP_AGENT_BUILDS=true.  Jenkins agent builds skipped."
+    fi
+}

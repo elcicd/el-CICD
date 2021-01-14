@@ -78,7 +78,7 @@ _push_github_public_ssh_deploy_key() {
 # $2 -< Namespace
 _create_env_docker_registry_secret() {
     echo
-    echo "Creating ${1} image pull secret"
+    echo "Creating ${1} image pull secret in ${2}"
     U_NAME=$(eval echo \${${1}_IMAGE_REPO_USERNAME})
     SEC_NAME=$(eval echo \${${1}_IMAGE_REPO_PULL_SECRET})
     TKN_FILE=$(eval echo \${${1}_PULL_TOKEN_FILE})
@@ -147,4 +147,17 @@ __push_creds_file_to_jenkins() {
     # Create and update to make sure it takes
     curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${2} "${JENKINS_CREDS_URL}/createCredentials"
     curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${2} "${JENKINS_CREDS_URL}/credential/${3}/config.xml"
+}
+
+# $1 -> should be a value of 'prod' or 'non-prod'
+_run_custom_credentials_script() {
+    local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
+    echo
+    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
+    if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh ]]
+    then
+        ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT}
+    else
+        echo "'${CUSTOM_CREDENTIALS_SCRIPT}' not found."
+    fi
 }
