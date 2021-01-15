@@ -1,11 +1,9 @@
-FROM %OCP_IMAGE_REPO%/%FROM_IMAGE%:latest
+FROM %OCP_IMAGE_REPO%/jenkins:latest
 
-COPY ["%JENKINS_CONFIGURATION_FILE%", "%JENKINS_PLUGINS_FILE%", "/usr/lib/jenkins/"]
+COPY ["%JENKINS_CONFIGURATION_FILE%", "%JENKINS_PLUGINS_FILE%", "%CONFIG_PATH%/"]
 
 USER root
 
-ENV CASC_JENKINS_CONFIG=/usr/lib/jenkins/%JENKINS_PLUGINS_FILE%
-
-RUN /usr/local/bin/install-plugins.sh /usr/lib/jenkins/%JENKINS_PLUGINS_FILE%
+RUN /usr/local/bin/install-plugins.sh %CONFIG_PATH%/%JENKINS_PLUGINS_FILE%
 
 USER 1001

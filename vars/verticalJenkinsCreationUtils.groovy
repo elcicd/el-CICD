@@ -121,11 +121,11 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
 def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def isNonProd) {
     def envs = isNonProd ? [el.cicd.devEnv] + el.cicd.testEnvs : [el.cicd.prodEnv]
     
-    def jenkinsImage = isNonProd ? el.cicd.JENKINS_NON_PROD_IMAGE_STREAM : el.cicd.JENKINS_PROD_IMAGE_STREAM
-    def nodeSelectors = isNonProd ? el.cicd.EL_CICD_NON_PROD_MASTER_NODE_SELECTORS : el.cicd.EL_CICD_PROD_MASTER_NODE_SELECTORS
+    def jenkinsImage = isNonProd ? el.cicd.JENKINS_IMAGE_STREAM : el.cicd.JENKINS_IMAGE_STREAM
+    def nodeSelectors = isNonProd ? el.cicd.EL_CICD_MASTER_NODE_SELECTORS : el.cicd.EL_CICD_PROD_MASTER_NODE_SELECTORS
     def cascFile = isNonProd ? 'non-prod-jenkins-casc.yml' : 'prod-jenkins-casc.yml'
 
-    def cicdMasterNamespace = isNonProd ? el.cicd.EL_CICD_NON_PROD_MASTER_NAMEPACE :  el.cicd.EL_CICD_PROD_MASTER_NAMEPACE
+    def cicdMasterNamespace = isNonProd ? el.cicd.EL_CICD_MASTER_NAMESPACE :  el.cicd.EL_CICD_PROD_MASTER_NAMEPACE
     sh """
         ${pipelineUtils.shellEchoBanner("CREATING ${cicdJenkinsNamespace} PROJECT AND JENKINS FOR THE ${rbacGroup} GROUP")}
 
@@ -138,7 +138,6 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
                                       -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                       -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                       -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                      -e CONTAINER_CORE_LIMIT=${el.cicd.JENKINS_CONTAINER_CORE_LIMIT} \
                                       -e CASC_JENKINS_CONFIG=/usr/lib/jenkins/${cascFile} \
                                       -n ${cicdJenkinsNamespace}
 

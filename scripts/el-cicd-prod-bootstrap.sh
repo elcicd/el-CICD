@@ -9,13 +9,7 @@ then
     exit 1
 fi
 
-_collect_and_verify_bootstrap_actions_with_user ${EL_CICD_PROD_MASTER_NAMEPACE}
-
-_run_el_cicd_bootstrap ${EL_CICD_PROD_MASTER_NAMEPACE} \
-                       ${EL_CICD_PROD_MASTER_NODE_SELECTORS} \
-                       ${JENKINS_PROD_IMAGE_STREAM} \
-                       prod-jenkins-casc.yml  \
-                       prod-plugins.txt
+_bootstrap_el_cicd ${EL_CICD_PROD_MASTER_NAMEPACE}
 
 echo
 echo 'Creating the prod project onboarding pipeline'

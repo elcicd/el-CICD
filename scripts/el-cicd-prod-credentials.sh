@@ -6,7 +6,7 @@ mkdir -p ${SECRET_FILE_TEMP_DIR}
 echo
 echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/el-cicd-system.config"
 oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-system.config -n ${EL_CICD_NON_PROD_MASTER_NAMEPACE}
+oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/el-cicd-system.config -n ${EL_CICD_MASTER_NAMESPACE}
 
 echo
 echo "Adding read only deploy key for el-CICD"
@@ -33,7 +33,7 @@ echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
-CICD_ENVIRONMENTS="$(echo ${TEST_ENVS} | sed 's/.*://') ${PROD_ENV}"
+CICD_ENVIRONMENTS="${PRE_PROD} ${PROD_ENV}"
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do

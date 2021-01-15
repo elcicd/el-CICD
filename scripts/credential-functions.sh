@@ -30,7 +30,6 @@ _check_sealed_secrets() {
     fi
 }
 
-# $1 -> Namespace to install
 _install_sealed_secrets() {
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
@@ -45,7 +44,7 @@ _install_sealed_secrets() {
         oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/controller.yaml
 
         echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
-        oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${1}
+        oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${EL_CICD_MASTER_NAMESPACE}
 
         echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed!"
     else 
@@ -54,11 +53,18 @@ _install_sealed_secrets() {
     fi
 }
 
-# $1 -> Git repository name
-# $2 -> Deploy Key Title
-# $3 -> Deploy Key File
-# $4 -> true/false: true for read only
 _push_github_public_ssh_deploy_key() {
+    local GIT_REPO_NAME=${1}
+    local DEPLOY_KEY_TITLE=${2}
+    local DEPLOY_KEY_FILE=${3}
+
+    # READ_ONLY *MUST* be 'true' or 'false'
+    local READ_ONLY=${4}
+    if [[ ${READ_ONLY} != 'true' || ${READ_ONLY} != 'false' ]]
+    then
+        READ_ONLY=true
+    fi
+
     local GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
     local EL_CICD_GITHUB_URL="https://${GIT_REPO_ACCESS_TOKEN}@${EL_CICD_GIT_API_DOMAIN}/repos/${EL_CICD_ORGANIZATION}/${1}/keys"
 
@@ -72,13 +78,6 @@ _push_github_public_ssh_deploy_key() {
         echo "Adding key  ${2} to GitHub for first time" 
     fi
 
-    # Add deploy key
-    local READ_ONLY=${4}
-    if [[ -z ${READ_ONLY} ]]
-    then
-        READ_ONLY=true
-    fi
-
     local SECRET_FILE="${SECRET_FILE_TEMP_DIR}/sshKeyFile.json"
     cat ${TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed "s/%DEPLOY_KEY_NAME%/${2}/" > ${SECRET_FILE}
     cat ${3}.pub >> ${SECRET_FILE}
@@ -90,84 +89,88 @@ _push_github_public_ssh_deploy_key() {
     rm -f ${SECRET_FILE}
 }
 
-# $1 -> Environment; e.g. DEV or QA
-# $2 -< Namespace
 _create_env_docker_registry_secret() {
-    echo
-    echo "Creating ${1} image pull secret in ${2}"
-    U_NAME=$(eval echo \${${1}_IMAGE_REPO_USERNAME})
-    SEC_NAME=$(eval echo \${${1}_IMAGE_REPO_PULL_SECRET})
-    TKN_FILE=$(eval echo \${${1}_PULL_TOKEN_FILE})
-    DOMAIN=$(eval echo \${${1}_IMAGE_REPO_DOMAIN})
+    local ENV=${1}
+    local NAMESPACE_NAME=${2}
 
-    DRY_RUN=client
+    echo
+    echo "Creating ${ENV} image pull secret in ${NAMESPACE_NAME}"
+    local USER_NAME=$(eval echo \${${ENV}_IMAGE_REPO_USERNAME})
+    local SECRET_NAME=$(eval echo \${${ENV}_IMAGE_REPO_PULL_SECRET})
+    local TKN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
+    local DOMAIN=$(eval echo \${${ENV}_IMAGE_REPO_DOMAIN})
+
+    local DRY_RUN=client
     if [[ ${OCP_VERSION} == 3 ]]
     then
         DRY_RUN=true
     fi
 
-    SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SEC_NAME}
-    oc create secret docker-registry ${SEC_NAME}  \
-        --docker-username=${U_NAME} \
+    local SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SECRET_NAME}
+    oc create secret docker-registry ${SECRET_NAME}  \
+        --docker-username=${USER_NAME} \
         --docker-password=$(cat ${TKN_FILE}) \
         --docker-server=${DOMAIN} \
         --dry-run=${DRY_RUN} \
         -n ${2} \
         -o yaml > ${SECRET_FILE_IN}
 
-    oc apply -f ${SECRET_FILE_IN} --overwrite -n ${2}
+    oc apply -f ${SECRET_FILE_IN} --overwrite -n ${NAMESPACE_NAME}
 
-    LABEL_NAME=$(echo ${1} | tr '[:upper:]' '[:lower:]')-env
-    oc label secret ${SEC_NAME} --overwrite ${LABEL_NAME}=true -n ${2}
+    local LABEL_NAME=$(echo ${ENV} | tr '[:upper:]' '[:lower:]')-env
+    oc label secret ${SECRET_NAME} --overwrite ${LABEL_NAME}=true -n ${NAMESPACE_NAME}
 }
 
-# $1 -> Jenkins Domain
-# $2 -> Credentials ID
-# $3 -> Token file
 _push_access_token_to_jenkins() {
-    local SECRET_TOKEN=$(cat ${3})
+    local JENKINS_DOMAIN=${1}
+    local CREDS_ID=${2}
+    local TKN_FILE=${3}
+
+    local SECRET_TOKEN=$(cat ${TKN_FILE})
 
     # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
     local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${2}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
+    cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
 
-    __push_creds_file_to_jenkins ${1} ${SECRET_FILE} ${2}
+    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${SECRET_FILE} ${CREDS_ID}
 
     rm -f ${SECRET_FILE}
 }
 
-# $1 -> Jenkins Domain
-# $2 -> Credentials ID
-# $3 -> shh private key file
 _push_ssh_creds_to_jenkins() {
+    local JENKINS_URL=${1}
+    local CREDS_ID=${2}
+
     local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
 
-    cat ${TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${2}/g" > ${SECRET_FILE}
+    cat ${TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${CREDS_ID}/g" > ${SECRET_FILE}
     cat ${3} >> ${SECRET_FILE}
     cat ${TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE}
 
-    __push_creds_file_to_jenkins ${1} ${SECRET_FILE} ${2}
+    __push_creds_file_to_jenkins ${JENKINS_URL} ${SECRET_FILE} ${CREDS_ID}
 
     rm -f ${SECRET_FILE}
 }
 
-# $1 -> Jenkins Domain
-# $2 -> Secret file to push
-# $2 -> Credentials ID
 __push_creds_file_to_jenkins() {
-    local JENKINS_CREDS_URL="https://${1}/credentials/store/system/domain/_"
+    local JENKINS_DOMAIN=${1}
+    local SECRET_FILE=${2}
+    local CREDS_ID=${3}
+
+    local JENKINS_CREDS_URL="https://${JENKINS_DOMAIN}/credentials/store/system/domain/_"
 
     local OC_BEARER_TOKEN_HEADER="Authorization: Bearer $(oc whoami -t)"
     local CONTENT_TYPE_XML="content-type:application/xml"
 
     # Create and update to make sure it takes
-    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${2} "${JENKINS_CREDS_URL}/createCredentials"
-    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${2} "${JENKINS_CREDS_URL}/credential/${3}/config.xml"
+    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/createCredentials"
+    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
 }
 
-# $1 -> should be a value of 'prod' or 'non-prod'
 _run_custom_credentials_script() {
+    # $1 -> should be a value of 'prod' or 'non-prod'
     local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
+    
     echo
     echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
     if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh ]]

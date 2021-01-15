@@ -71,8 +71,8 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.id = projectId
 
-        projectInfo.nonProdCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_NON_PROD}"
-        projectInfo.prodCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_PROD}"
+        projectInfo.nonProdCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.EL_CICD_GROUP_NAMESPACE_POSTFIX}"
+        projectInfo.prodCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.EL_CICD_GROUP_NAMESPACE_POSTFIX}"
 
         projectInfo.microServices.each { microService ->
             microService.projectId = projectInfo.id
