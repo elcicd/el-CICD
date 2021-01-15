@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 CLI_OPTION=${1}
-EL_CICD_SYSTEM_CONFIG_FILE=${2}
+export EL_CICD_SYSTEM_CONFIG_FILE=${2}
 
 echo
 echo "==================================================================="
@@ -26,6 +26,7 @@ Options:
     -P,   --prod:       bootstraps Prod el-CICD Onboarding Automation Server
           --np-creds:   push credentials to a  Non-Prod el-CICD Onboarding Automation Server
           --pr-creds:   push credentials to a  Non-Prod el-CICD Onboarding Automation Server
+          --jenkins:    build el-CICD jenkins image
 
 config-file: file name or path relative the root of the sibling directory el-CICD-config
 EOM
@@ -70,11 +71,11 @@ echo
 if [[ ${CLI_OPTION} == '--non-prod' || ${CLI_OPTION} == '-N' ]]
 then
     echo "BOOTSTRAPPING NON-PROD"
-    EL_CICD_SH_SCRIPT=./scripts/el-cicd-non-prod-bootstrap.sh
+    EL_CICD_SH_SCRIPT='./scripts/el-cicd-bootstrap.sh non-prod'
 elif [[ ${CLI_OPTION} == '--prod' || ${CLI_OPTION} == '-P' ]]
 then
     echo "BOOTSTRAPPING PROD"
-    EL_CICD_SH_SCRIPT=./scripts/el-cicd-prod-bootstrap.sh
+    EL_CICD_SH_SCRIPT='./scripts/el-cicd-bootstrap.sh prod'
 elif [[ ${CLI_OPTION} == '--np-creds' ]]
 then
     echo "REFRESH NON-PROD CREDENTIALS"
@@ -83,14 +84,10 @@ elif [[ ${CLI_OPTION} == '--pr-creds' ]]
 then
     echo "REFRESH PROD CREDENTIALS"
     EL_CICD_SH_SCRIPT='./scripts/refresh-credentials.sh --prod'
-elif [[ ${CLI_OPTION} == '--np-jenkins' ]]
+elif [[ ${CLI_OPTION} == '--jenkins' ]]
 then
-    echo "UPDATE NON_PROD JENKINS IMAGE"
-    _build_el_cicd_jenkins_image ${JENKINS_IMAGE_STREAM} non-prod-jenkins-casc.yml  non-prod-plugins.txt
-elif [[ ${CLI_OPTION} == '--pr-jenkins' ]]
-then
-    echo "UPDATE PROD JENKINS IMAGE"
-    _build_el_cicd_jenkins_image ${JENKINS_IMAGE_STREAM} prod-jenkins-casc.yml  prod-plugins.txt
+    echo "UPDATE JENKINS IMAGE"
+    _build_el_cicd_jenkins_image
 elif [[ ${CLI_OPTION} == '--help' ]]
 then
     echo "${HELP_MSG}"

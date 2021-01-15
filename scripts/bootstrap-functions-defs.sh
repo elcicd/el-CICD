@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 _bootstrap_el_cicd() {
+    PIPELINE_TEMPLATES=${1}
+
     _check_sealed_secrets
     __confirm_update_default_jenkins_image
     __confirm_build_el_cicd_jenkins_image
@@ -31,7 +33,7 @@ _bootstrap_el_cicd() {
 
     _create_master_namespace_with_selectors
 
-    __create_onboarding_automation_server
+    __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
 __confirm_update_default_jenkins_image() {
@@ -135,6 +137,8 @@ _build_el_cicd_jenkins_image() {
 }
 
 __create_onboarding_automation_server() {
+    PIPELINE_TEMPLATES=${1}
+
     echo
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                                   -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
@@ -143,8 +147,17 @@ __create_onboarding_automation_server() {
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e CASC_JENKINS_CONFIG=${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE}
+                                  -e CASC_JENKINS_CONFIG=${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
                                   -n ${EL_CICD_MASTER_NAMESPACE}
+
+    echo
+    echo "Creating the Onboarding Automation Server pipelines:"
+    for PIPELINE_TEMPLATE in ${PIPELINE_TEMPLATES[@]}
+    do
+        oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
+                -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} -n ${EL_CICD_MASTER_NAMESPACE} | \
+            oc apply -f - -n ${EL_CICD_MASTER_NAMESPACE}
+    done
 
     echo
     echo "'jenkins' service account needs cluster-admin permissions for managing multiple projects and permissions"
@@ -199,5 +212,21 @@ _build_jenkins_agents() {
     else
         echo
         echo "JENKINS_SKIP_AGENT_BUILDS=true.  Jenkins agent builds skipped."
+    fi
+}
+
+_run_custom_config_scripts() {
+    SERVER_TYPE=${1}
+
+    local SCRIPTS=$(find "${CONFIG_REPOSITORY_BOOTSTRAP}" -type f -executable \( -name "${SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
+    if [[ ! -z ${SCRIPTS} ]]
+    then
+        for FILE in ${SCRIPTS}
+        do
+            echo "Running custom script $(basename ${FILE})" 
+            eval "${FILE}"
+        done
+    else
+        echo 'No custom config scripts found...'
     fi
 }
