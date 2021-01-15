@@ -87,8 +87,8 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.devEnv = el.cicd.devEnv
 
-        projectInfo.testEnvs = el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) }
-        projectInfo.testEnvs = projectInfo.testEnvs ?: [el.cicd.testEnvs[0]]
+        projectInfo.testEnvs = (el.cicd.testEnvs && projectInfo.enabledTestEnvs) ?
+            el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) } : []
 
         projectInfo.preProdEnv = el.cicd.preProdEnv
         projectInfo.prodEnv = el.cicd.prodEnv
@@ -116,6 +116,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.testEnvs.each { env ->
             projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}"
         }
+        projectInfo.nonProdNamespaces = [(projectInfo.preProdEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
 
         projectInfo.devNamespace = projectInfo.nonProdNamespaces[projectInfo.devEnv]
         projectInfo.preProdNamespace = projectInfo.nonProdNamespaces[projectInfo.preProdEnv]

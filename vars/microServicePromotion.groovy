@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the implementation of the microservice promotion pipeline.  Called inline from the
