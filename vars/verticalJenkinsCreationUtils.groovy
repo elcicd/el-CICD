@@ -138,7 +138,7 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
                                       -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                       -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                       -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                      -e CASC_JENKINS_CONFIG=${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${cascFile} \
+                                      -e CASC_JENKINS_CONFIG=${el.cicd.EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${cascFile} \
                                       -n ${cicdJenkinsNamespace}
 
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND}| oc create -f - -n ${cicdJenkinsNamespace}
