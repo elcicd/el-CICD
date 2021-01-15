@@ -120,7 +120,7 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
 
 def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def isNonProd) {
     def envs = isNonProd ? [el.cicd.devEnv] + el.cicd.testEnvs : [el.cicd.prodEnv]
-    
+
     def jenkinsImage = isNonProd ? el.cicd.JENKINS_IMAGE_STREAM : el.cicd.JENKINS_IMAGE_STREAM
     def nodeSelectors = isNonProd ? el.cicd.EL_CICD_MASTER_NODE_SELECTORS : el.cicd.EL_CICD_PROD_MASTER_NODE_SELECTORS
     def cascFile = isNonProd ? 'non-prod-jenkins-casc.yml' : 'prod-jenkins-casc.yml'

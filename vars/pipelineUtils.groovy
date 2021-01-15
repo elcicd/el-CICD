@@ -86,15 +86,16 @@ def gatherProjectInfoStage(def projectId) {
         }
 
         projectInfo.devEnv = el.cicd.devEnv
-        projectInfo.prodEnv = el.cicd.prodEnv
 
         projectInfo.testEnvs = el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) }
         projectInfo.testEnvs = projectInfo.testEnvs ?: [el.cicd.testEnvs[0]]
 
+        projectInfo.preProdEnv = el.cicd.preProdEnv
+        projectInfo.prodEnv = el.cicd.prodEnv
+
         projectInfo.nonProdEnvs = [projectInfo.devEnv]
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
-
-        projectInfo.preProdEnv = projectInfo.testEnvs.last()
+        projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
 
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
         projectInfo.sandboxNamespaces = []
@@ -103,12 +104,13 @@ def gatherProjectInfoStage(def projectId) {
         }
 
         projectInfo.DEV_ENV = el.cicd.DEV_ENV
+        projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
         projectInfo.PROD_ENV = el.cicd.PROD_ENV
 
         projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
         projectInfo.NON_PROD_ENVS = [projectInfo.DEV_ENV]
         projectInfo.NON_PROD_ENVS.addAll(projectInfo.TEST_ENVS)
-        projectInfo.PRE_PROD_ENV = projectInfo.NON_PROD_ENVS.last()
+        projectInfo.NON_PROD_ENVS.add(projectInfo.PRE_PROD_ENV)
 
         projectInfo.nonProdNamespaces = [(projectInfo.devEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
         projectInfo.testEnvs.each { env ->

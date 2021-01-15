@@ -13,10 +13,11 @@ static def cicd = [:]
 def initMetaData(Map metaData) {
     cicd.putAll(metaData)
 
-    cicd.TEST_ENVS = cicd.TEST_ENVS.split(':')
+    cicd.TEST_ENVS = cicd.TEST_ENVS ? cicd.TEST_ENVS.split(':') : []
 
-    cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
     cicd.devEnv = cicd.DEV_ENV.toLowerCase()
+    cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
+    cicd.preProdEnv = cicd.PRE_PROD_ENV.toLowerCase()
     cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
 
     cicd.IGNORE = ''
