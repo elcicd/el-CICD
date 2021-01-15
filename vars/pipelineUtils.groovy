@@ -27,11 +27,6 @@ def cloneGitRepo(microService, gitReference) {
  *       the source.
  */
 def assignDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
-    assert projectInfo: "pipelineUtils.assignDeploymentBranchName: projectInfo cannot be null"
-    assert microService: "pipelineUtils.assignDeploymentBranchName: deploymentEnv cannot be null"
-    assert deploymentEnv: "pipelineUtils.assignDeploymentBranchName: deploymentEnv cannot be null"
-    assert projectInfo.testEnvs.contains(deploymentEnv): "pipelineUtils.assignDeploymentBranchName: deploymentEnv must be a test env ${projectInfo.testEnvs}: ${deploymentEnv}"
-
     microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}"
 
     def previousDeploymentEnv
