@@ -89,7 +89,7 @@ def call(Map args) {
 
         def msNames = projectInfo.microServices.findAll { it.promote }.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }
         def jsonPath =  (msNames.size() > 1) ? jsonPathMulti : jsonPathSingle
-        def script = "oc get cm ${msNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
+        def script = "oc get cm --ignore-not-found ${msNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
 
         def commitHashMap =  sh(returnStdout: true, script: script).trim()
         commitHashMap = commitHashMap.split(' ').collectEntries { entry ->
