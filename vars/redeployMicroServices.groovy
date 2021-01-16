@@ -18,7 +18,7 @@ def call(Map args) {
     }
 
     stage ('Select the environment to redeploy to or remove from') {
-        def inputs = [choice(name: 'redeployEnv', description: '', choices: "${projectInfo.testEnvs.join('\n')}")]
+        def inputs = [choice(name: 'redeployEnv', description: '', choices: "${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}")]
 
         def cicdInfo = input(message: "Select environment to redeploy or remove microservices from/to:", parameters: inputs)
 

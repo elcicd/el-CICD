@@ -91,7 +91,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.NON_PROD_ENVS = [projectInfo.DEV_ENV]
         projectInfo.NON_PROD_ENVS.addAll(projectInfo.TEST_ENVS)
         projectInfo.NON_PROD_ENVS.add(projectInfo.PRE_PROD_ENV)
-
+        
         if (projectInfo.devEnv) {
             projectInfo.nonProdNamespaces = [(projectInfo.devEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
             projectInfo.testEnvs.each { env ->
