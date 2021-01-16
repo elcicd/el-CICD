@@ -45,7 +45,7 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
 
         if (!cicdProjectsExist.contains(cicdNamespace)) {
             stage('Creating CICD namespaces and rbacGroup Jenkins') {
-                createCicdNamespaceAndJenkins(cicdNamespace, projectInfo.rbacGroup, isNonProd)
+                createCicdNamespaceAndJenkins(projectInfo, cicdNamespace, isNonProd)
                 waitUntilJenkinsIsReady(cicdNamespace)
             }
 
@@ -118,7 +118,7 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
     }
 }
 
-def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def isNonProd) {
+def createCicdNamespaceAndJenkins(def projectInfo, def cicdJenkinsNamespace, def isNonProd) {
     def env = isNonProd ? [projectInfo.devEnv] : [projectInfo.prodEnv]
     if (isNonProd) {
         envs.addAll(projectInfo.testEnvs)
@@ -131,7 +131,7 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
 
     def cicdMasterNamespace = isNonProd ? el.cicd.EL_CICD_MASTER_NAMESPACE :  el.cicd.EL_CICD_PROD_MASTER_NAMEPACE
     sh """
-        ${pipelineUtils.shellEchoBanner("CREATING ${cicdJenkinsNamespace} PROJECT AND JENKINS FOR THE ${rbacGroup} GROUP")}
+        ${pipelineUtils.shellEchoBanner("CREATING ${cicdJenkinsNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
         oc adm new-project ${cicdJenkinsNamespace} --node-selector='${nodeSelectors}'
 
@@ -152,7 +152,7 @@ def createCicdNamespaceAndJenkins(def cicdJenkinsNamespace, def rbacGroup, def i
             oc get secrets -l \${ENV}-env -o yaml -n ${cicdMasterNamespace} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc apply -f - -n ${cicdJenkinsNamespace}
         done
 
-        oc policy add-role-to-group admin ${rbacGroup} -n ${cicdJenkinsNamespace}
+        oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${cicdJenkinsNamespace}
     """
 }
 
