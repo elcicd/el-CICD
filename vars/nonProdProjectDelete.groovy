@@ -14,7 +14,7 @@ def call(Map args) {
 
         def msg = args.deleteRbacGroupJenkins ?
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} NON-PROD ENVIRONMENT(S)" :
-            "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENTS" :
+            "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENTS"
 
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING PROJECT NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}")}
