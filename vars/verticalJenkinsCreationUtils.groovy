@@ -73,7 +73,9 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
             'microservice-redeploy-removal-pipeline-template.yml ' +
             'redeploy-release-candidate-pipeline-template.yml '
         def templates = isNonProd ? nonProdPipelines : 'deploy-to-production-pipeline-template.yml'
-        pipelineUtils.echoBanner('CREATING SHARED PIPELINES:', templates)
+        def msg = ['CREATING SHARED PIPELINES:']
+        msg.addAll(templates.split(' '))
+        pipelineUtils.echoBanner(msg)
 
         def cicdJenkinsNamespace = isNonProd ? projectInfo.nonProdCicdNamespace : projectInfo.prodCicdNamespace
 
@@ -85,7 +87,7 @@ def refreshSharedPipelines(def projectInfo, def isNonProd) {
             sh """
                 for FILE in ${templates}
                 do
-                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} | \
+                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} -n ${cicdJenkinsNamespace} | \
                         oc apply -f - -n ${cicdJenkinsNamespace}
                 done
             """
