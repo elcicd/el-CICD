@@ -119,7 +119,7 @@ def setupProdVerticalCicdNamespacesAndJenkins(def projectInfo, def prodCicdJenki
 }
 
 def createCicdNamespaceAndJenkins(def projectInfo, def cicdJenkinsNamespace, def isNonProd) {
-    def env = isNonProd ? [projectInfo.devEnv] : [projectInfo.prodEnv]
+    def envs = isNonProd ? [projectInfo.devEnv] : [projectInfo.prodEnv]
     if (isNonProd) {
         envs.addAll(projectInfo.testEnvs)
         envs.add(projectInfo.preProdEnv)
