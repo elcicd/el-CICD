@@ -207,6 +207,6 @@ def call(Map args) {
                             imageTag: projectInfo.deployToEnv)
     }
     else {
-        deployMicroServices(projectInfo: projectInfo, args.microServicesToRemove: projectInfo.microServicesToRemove)
+        deployMicroServices(projectInfo: projectInfo, microServicesToRemove: projectInfo.microServicesToRemove)
     }
 }
