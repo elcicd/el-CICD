@@ -70,6 +70,8 @@ def call(Map args) {
                                -p CODE_BASE=${microService.codeBase} \
                         | oc create -f - -n ${projectInfo.nonProdCicdNamespace}
 
+                    oc label bc ${projectInfo.id}-${microService.name}-build-to-dev projectid=${projectInfo.id} microservice=${microService.name}
+
                     ${shellEcho ''}
                 """
             }

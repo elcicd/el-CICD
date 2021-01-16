@@ -44,9 +44,6 @@ objects:
   apiVersion: v1
   metadata:
     name: ${PROJECT_ID}-${MICROSERVICE_NAME}-${PIPELINE_TEMPLATE_NAME}
-    labels:
-      projectid: ${PROJECT_ID}
-      microservice: ${MICROSERVICE_NAME}
   spec:
     source:
       git:
