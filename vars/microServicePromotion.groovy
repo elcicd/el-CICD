@@ -108,7 +108,7 @@ def call(Map args) {
         }
 
         if (microServicesMissingMsg.size() > 1) {
-            pipelineUtils.errorBanner(microServicesMissingMsg)
+            pipelineUtils.errorBanner(*microServicesMissingMsg)
         }
     }
 
