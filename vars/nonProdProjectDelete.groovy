@@ -49,7 +49,7 @@ def call(Map args) {
     }
 
     stage('Delete GitHub deploy keys from Jenkins') {
-        def cicdRbacGroupJenkinsCredsUrls = onboardingUtils.init()
+        onboardingUtils.init()
         def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
 
         projectInfo.microservices.each { microService ->
