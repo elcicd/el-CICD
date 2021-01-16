@@ -46,13 +46,15 @@ def call(Map args) {
             sh """
                 ${pipelineUtils.shellEchoBanner("REMOVING PROJECT BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}")}
 
-                while [ ! -z \$(oc get bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace}) ] ;
+                for BCS in \$(oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace} -o jsonpath='{.items[*].metadata.name}')
                 do
-                    oc delete bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace}
-                    sleep 5
-                    ${shellEcho ''}
+                    while [ \$(oc get bc \${BCS} -n ${projectInfo.nonProdCicdNamespace} | grep \${BCS} | wc -l) -gt 0 ] ;
+                    do
+                        oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.nonProdCicdNamespace}
+                        sleep 5
+                        ${shellEcho ''}
+                    done
                 done
-
             """
         }
 
