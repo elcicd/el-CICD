@@ -68,6 +68,7 @@ def call(Map args) {
                                -p DEPLOY_TO_NAMESPACE=${projectInfo.devNamespace} \
                                -p GIT_BRANCH=${projectInfo.gitBranch} \
                                -p CODE_BASE=${microService.codeBase} \
+                               -n ${projectInfo.nonProdCicdNamespace} \
                         | oc create -f - -n ${projectInfo.nonProdCicdNamespace}
 
                     ${shellEcho ''}
