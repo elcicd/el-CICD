@@ -21,24 +21,9 @@ def cloneGitRepo(microService, gitReference) {
     }
 }
 
-/*
- * NOTE: Deployment branches don't exist for the dev (build) environment, because it's deployment is matched with
- *       matched to HEAD of the development (build) branch; that is, it's deployment is always in sync with
- *       the source.
- */
-def assignDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
-    microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}"
-
-    def previousDeploymentEnv
-    projectInfo.testEnvs.find {
-        def found = (it == deploymentEnv)
-        previousDeploymentEnv = !found ? it : previousDeploymentEnv
-        return found
-    }
-
-    if (previousDeploymentEnv != null && previousDeploymentEnv != projectInfo.devEnv) {
-        microService.previousDeploymentBranchName = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${previousDeploymentEnv}-${microService.srcCommitHash}"
-    }
+def getNonProdDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
+    return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
+        "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}" : null
 }
 
 def gatherProjectInfoStage(def projectId) {

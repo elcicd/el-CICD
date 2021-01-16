@@ -120,7 +120,9 @@ def call(Map args) {
                 dir(microService.workDir) {
                     pipelineUtils.cloneGitRepo(microService, microService.srcCommitHash)
 
-                    pipelineUtils.assignDeploymentBranchName(projectInfo, microService, projectInfo.deployToEnv)
+                    microService.previousDeploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployFromEnv)
+                    microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployToEnv)
+
                     microService.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${microService.deploymentBranch} || : | tr -d '[:space:]'")
                     microService.deployBranchExists = !microService.deployBranchExists.isEmpty()
 

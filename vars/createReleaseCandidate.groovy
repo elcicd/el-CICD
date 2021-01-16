@@ -101,7 +101,7 @@ def call(Map args) {
 
         projectInfo.microServices.each { microService ->
             dir(microService.workDir) {
-                pipelineUtils.assignDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
+                microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
                 pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
 
                 versionTagExists = sh(returnStdout: true, script: "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'") != '0'
