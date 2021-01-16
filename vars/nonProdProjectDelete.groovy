@@ -46,7 +46,7 @@ def call(Map args) {
             sh """
                 ${pipelineUtils.shellEchoBanner("REMOVING PROJECT BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}")}
 
-                while [ ! -z \$(oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace}) ] ;
+                while [ ! -z \$(oc get bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace}) ] ;
                 do
                     oc delete bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace}
                     sleep 5
