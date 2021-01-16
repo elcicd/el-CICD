@@ -52,7 +52,7 @@ def call(Map args) {
         onboardingUtils.init()
         def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
 
-        projectInfo.microservices.each { microService ->
+        projectInfo.microServices.each { microService ->
             sh """
                 curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" \
                     "${cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete"
