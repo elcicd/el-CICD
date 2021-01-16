@@ -55,5 +55,5 @@ objects:
                       deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS?.toString() == 'true']
           el.node(args)
           {
-              deleteRbacGroupJenkins(args)
+              nonProdProjectDelete(args)
           }
