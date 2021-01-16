@@ -44,7 +44,19 @@ def call(Map args) {
         """
     }
 
-    stage('Delete old github public keys with curl') {
+    stage('Delete GitHub deploy keys from GitHub') {
         onboardingUtils.deleteOldGithubKeys(projectInfo, true)
+    }
+
+    stage('Delete GitHub deploy keys from Jenkins') {
+        def cicdRbacGroupJenkinsCredsUrls = onboardingUtils.init()
+        def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
+
+        projectInfo.microservices.each { microService ->
+            sh """
+                curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" \
+                    "${cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete"
+            """
+        }
     }
 }
