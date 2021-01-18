@@ -117,7 +117,7 @@ def call(Map args) {
         withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             projectInfo.microServices.each { microService ->
                 scriptToPushWebhookToScm =
-                    scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, microService, GITHUB_ACCESS_TOKEN)
+                    scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN')
                 sh """
                     ${shellEcho  "GIT REPO NAME: ${microService.gitRepoName}"}
 
