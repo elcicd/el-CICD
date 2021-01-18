@@ -40,7 +40,7 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         def authBearerCommand = """cat ${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt | sed "s/%TOKEN%/\$(oc whoami -t)/" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
         sh """
             ${shellEcho 'Creating header file with auth token'}
-            ${maskCommand(authBearerCommand)}
+            ${authBearerCommand}
         """
 
         if (!cicdProjectsExist.contains(cicdNamespace)) {
@@ -191,10 +191,10 @@ def pushSshCredentialstToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, d
             ${pipelineUtils.shellEchoBanner("PUSH SSH GIT REPO PRIVATE KEY TO ${cicdJenkinsNamespace} JENKINS")}
 
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
-            cat ${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
+            cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 
-            ${maskCommand(curlCommand)}
+            ${curlCommand}
             rm -f ${SECRET_FILE_NAME}
         """
     }
@@ -207,9 +207,9 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsI
             ${pipelineUtils.shellEchoBanner("PUSH IMAGE REPOSITORY TOKEN ${credentialsId} TO ${cicdJenkinsNamespace} JENKINS")}
 
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${credentialsId}/g" > jenkinsTokenCredentials-named.xml
-            cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
+            cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
-            ${maskCommand(curlCommand)}
+            ${curlCommand}
         """
     }
 }
