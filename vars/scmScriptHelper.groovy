@@ -42,11 +42,11 @@ def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def i
     return curlCommand
 }
 
-def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
+def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService) {
     def curlCommand
 
     if (projectInfo.scmHost.contains('github')) {
-        curlCommand = "curl -ksS -X DELETE https://\${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        curlCommand = "curl -ksS -X DELETE https://\${GITHUB_ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
     }
     else if (projectInfo.scmHost.contains('gitlab')) {
         pipelineUtils.errorBanner("GitLab is not supported yet")
