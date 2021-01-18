@@ -1,14 +1,38 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+_build_el_cicd_jenkins_image() {
+    echo
+    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
+    echo
+    if [[ ! -n $(oc get bc ${JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
+    then
+        oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
+    fi
+
+    cp ${TEMPLATES_DIR}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+    sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
+           -e  "s|%CONFIG_PATH%|${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}|g;" \
+           -e  "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
+           -e  "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
+        ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+
+    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${CONFIG_REPOSITORY_JENKINS} --wait --follow -n openshift
+    rm -f ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+}
+
 _bootstrap_el_cicd() {
-    PIPELINE_TEMPLATES=${1}
+    EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
-    _check_sealed_secrets
-    __confirm_update_default_jenkins_image
-    __confirm_build_el_cicd_jenkins_image
+    if [[ -z "${EL_CICD_MASTER_NAMESPACE}" ]]
+    then
+        echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${EL_CICD_SYSTEM_CONFIG_FILE}"
+        echo "Set the value of EL_CICD_MASTER_NAMESPACE ${EL_CICD_SYSTEM_CONFIG_FILE} to and rerun."
+        echo "Exiting."
+        exit 1
+    fi
 
-    _summarize_and_confirm_bootstrap_run_with_user
+    __gather_and_confirm_bootstrap_info_with_user
 
     if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]
     then
@@ -25,46 +49,81 @@ _bootstrap_el_cicd() {
         _build_el_cicd_jenkins_image
     fi
 
+    __bootstrap_el_cicd_onboarding_server "${PIPELINE_TEMPLATES}"
+
+    echo
+    echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
+    ${SCRIPTS_DIR}/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentials.sh
+
+    echo
+    echo "RUN ALL CUSTOM SCRIPTS '${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
+    __run_custom_config_scripts
+
+    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'prod' ]]
+    then
+        BUILD_BASE_ONLY='true'
+    fi
+    __build_jenkins_agents ${BUILD_BASE_ONLY}
+
+    echo
+    echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete"
+}
+
+_create_el_cicd_meta_info_config_map() {
+    echo
+    echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
+    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
+    sleep 5
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} -n ${EL_CICD_MASTER_NAMESPACE}
+}
+
+__gather_and_confirm_bootstrap_info_with_user() {
+    _check_sealed_secrets
+
+    echo
+    UPDATE_JENKINS=$(__get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
+    echo
+    UPDATE_EL_CICD_JENKINS=$(__get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
+
+    echo
+    __summarize_and_confirm_bootstrap_run_with_user
+}
+
+__bootstrap_el_cicd_onboarding_server() {
     local DEL_NAMESPACE=$(oc projects -q | grep ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
     if [[ ! -z "${DEL_NAMESPACE}" ]]
     then
-        _delete_master_namespace
+        __delete_master_namespace
     fi
 
-    _create_master_namespace_with_selectors
+    __create_master_namespace_with_selectors
 
+    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
+    then
+        PIPELINE_TEMPLATES='non-prod-project-onboarding non-prod-project-delete'
+    else
+        PIPELINE_TEMPLATES='prod-project-onboarding'
+    fi
+
+    if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
+    then
+        PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} create-all-jenkins-agents"
+    fi
     __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
-__confirm_update_default_jenkins_image() {
-    UPDATE_JENKINS='N'
-    echo -n 'Update cluster default Jenkins image? [Y/n] '
-    read -n 1 UPDATE_JENKINS
-    echo
+__get_yes_no_answer() {
+    read -p "${1}" -n 1 USER_ANSWER
 
-    if [[ ${UPDATE_JENKINS} == 'Y' ]]
+    if [[ ${USER_ANSWER} == 'Y' ]]
     then
-        UPDATE_JENKINS='Yes'
+        echo 'Yes'
     else
-        UPDATE_JENKINS='No'
+        echo 'No'
     fi
 }
 
-__confirm_build_el_cicd_jenkins_image() {
-    UPDATE_EL_CICD_JENKINS='N'
-    echo -n 'Update/build el-CICD Jenkins image? [Y/n] '
-    read -n 1 UPDATE_EL_CICD_JENKINS
-    echo
-
-    if [[ ${UPDATE_EL_CICD_JENKINS} == 'Y' ]]
-    then
-        UPDATE_EL_CICD_JENKINS='Yes'
-    else
-        UPDATE_EL_CICD_JENKINS='No'
-    fi
-}
-
-_summarize_and_confirm_bootstrap_run_with_user() {
+__summarize_and_confirm_bootstrap_run_with_user() {
     echo
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo 'Please read CAREFULLY and verify this information is correct before proceeding.'
@@ -109,31 +168,11 @@ _summarize_and_confirm_bootstrap_run_with_user() {
     fi
 }
 
-_create_master_namespace_with_selectors() {
+__create_master_namespace_with_selectors() {
     echo
     NODE_SELECTORS=$(echo ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
     echo "Creating ${EL_CICD_MASTER_NAMESPACE} with node selectors: ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
     oc adm new-project ${EL_CICD_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
-}
-
-_build_el_cicd_jenkins_image() {
-    echo
-    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
-    echo
-    if [[ ! -n $(oc get bc ${JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
-    then
-        oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
-    fi
-
-    cp ${TEMPLATES_DIR}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
-    sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
-           -e  "s|%CONFIG_PATH%|${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}|g;" \
-           -e  "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
-           -e  "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
-        ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
-
-    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${CONFIG_REPOSITORY_JENKINS} --wait --follow -n openshift
-    rm -f ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
 }
 
 __create_onboarding_automation_server() {
@@ -176,7 +215,7 @@ __create_onboarding_automation_server() {
     sleep 10
 }
 
-_delete_master_namespace() {
+__delete_master_namespace() {
     echo
     oc delete project ${EL_CICD_MASTER_NAMESPACE}
     echo -n "Deleting ${EL_CICD_MASTER_NAMESPACE} namespace"
@@ -191,10 +230,9 @@ _delete_master_namespace() {
     sleep 10
 }
 
-_build_jenkins_agents() {
-    local NAMESPACE_NAME=${1}
+__build_jenkins_agents() {
     # BUILD_BASE_ONLY must be 'true' if the base agent is not to be built
-    local BUILD_BASE_ONLY=${2}
+    local BUILD_BASE_ONLY=${1}
 
     if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
     then
@@ -203,7 +241,7 @@ _build_jenkins_agents() {
         then
             echo
             echo "Creating Jenkins Agents"
-            oc start-build create-all-jenkins-agents -e BUILD_BASE_ONLY=${BUILD_BASE_ONLY} -n ${NAMESPACE_NAME}
+            oc start-build create-all-jenkins-agents -e BUILD_BASE_ONLY=${BUILD_BASE_ONLY} -n ${EL_CICD_MASTER_NAMESPACE}
             echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
         else 
             echo
@@ -215,10 +253,8 @@ _build_jenkins_agents() {
     fi
 }
 
-_run_custom_config_scripts() {
-    SERVER_TYPE=${1}
-
-    local SCRIPTS=$(find "${CONFIG_REPOSITORY_BOOTSTRAP}" -type f -executable \( -name "${SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
+__run_custom_config_scripts() {
+    local SCRIPTS=$(find "${CONFIG_REPOSITORY_BOOTSTRAP}" -type f -executable \( -name "${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
     if [[ ! -z ${SCRIPTS} ]]
     then
         for FILE in ${SCRIPTS}

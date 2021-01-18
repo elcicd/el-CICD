@@ -4,10 +4,7 @@
 rm -rf ${SECRET_FILE_TEMP_DIR}
 mkdir -p ${SECRET_FILE_TEMP_DIR}
 
-echo
-echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
-oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
-oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} -n ${EL_CICD_MASTER_NAMESPACE}
+_create_el_cicd_meta_info_config_map
 
 echo
 echo "Adding read only deploy key for el-CICD"

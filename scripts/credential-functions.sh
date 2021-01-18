@@ -1,8 +1,18 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+_refresh_credentials() {
+    _check_sealed_secrets
+
+    if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]
+    then
+        _install_sealed_secrets
+    fi
+
+    eval ./scripts/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentails.sh
+}
+
 _check_sealed_secrets() {
-    INSTALL_KUBESEAL='No'
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
         # install latest Sealed Secrets
@@ -17,7 +27,6 @@ _check_sealed_secrets() {
             echo -n "Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
         fi
 
-        INSTALL_KUBESEAL='N'
         read -n 1 INSTALL_KUBESEAL
         echo
 

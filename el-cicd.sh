@@ -2,7 +2,36 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 CLI_OPTION=${1}
-export EL_CICD_SYSTEM_CONFIG_FILE=${2}
+
+cd "$(dirname "${0}")"
+
+echo 'Loading el-CICD environment...'
+
+set -o allexport
+
+EL_CICD_SYSTEM_CONFIG_FILE=${2}
+
+BOOTSTRAP_DIR=$(pwd)
+
+SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
+
+RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
+BUILD_CONFIGS_DIR=${RESOURCES_DIR}/buildconfigs
+TEMPLATES_DIR=${RESOURCES_DIR}/templates
+
+CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
+CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/bootstrap
+CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
+
+source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
+
+source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
+source ${SCRIPTS_DIR}/credential-functions.sh
+
+set +o allexport
+
+echo
+echo 'el-CICD environment loaded'
 
 echo
 echo "==================================================================="
@@ -39,51 +68,23 @@ then
     exit 1
 fi
 
-cd "$(dirname "${0}")"
-
-echo 'Loading el-CICD environment...'
-
-set -o allexport
-
-BOOTSTRAP_DIR=$(pwd)
-
-SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
-
-RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
-BUILD_CONFIGS_DIR=${RESOURCES_DIR}/buildconfigs
-TEMPLATES_DIR=${RESOURCES_DIR}/templates
-
-CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
-CONFIG_REPOSITORY_BOOTSTRAP=${CONFIG_REPOSITORY}/bootstrap
-CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
-
-source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
-
-source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
-source ${SCRIPTS_DIR}/credential-functions.sh
-
-set +o allexport
-
-echo
-echo 'el-CICD environment loaded'
-
 echo
 if [[ ${CLI_OPTION} == '--non-prod' || ${CLI_OPTION} == '-N' ]]
 then
     echo "BOOTSTRAPPING NON-PROD"
-    EL_CICD_SH_SCRIPT='./scripts/el-cicd-bootstrap.sh non-prod'
+    _bootstrap_el_cicd non-prod
 elif [[ ${CLI_OPTION} == '--prod' || ${CLI_OPTION} == '-P' ]]
 then
     echo "BOOTSTRAPPING PROD"
-    EL_CICD_SH_SCRIPT='./scripts/el-cicd-bootstrap.sh prod'
+    _bootstrap_el_cicd prod
 elif [[ ${CLI_OPTION} == '--np-creds' ]]
 then
     echo "REFRESH NON-PROD CREDENTIALS"
-    EL_CICD_SH_SCRIPT='./scripts/refresh-credentials.sh --non-prod'
+    _refresh_credentials non-prod
 elif [[ ${CLI_OPTION} == '--pr-creds' ]]
 then
     echo "REFRESH PROD CREDENTIALS"
-    EL_CICD_SH_SCRIPT='./scripts/refresh-credentials.sh --prod'
+    _refresh_credentials prod
 elif [[ ${CLI_OPTION} == '--jenkins' ]]
 then
     echo "UPDATE JENKINS IMAGE"
@@ -98,5 +99,3 @@ else
     echo "${HELP_MSG}"
     exit 1
 fi
-
-eval ${EL_CICD_SH_SCRIPT}

@@ -83,6 +83,8 @@ def node(Map args, Closure body) {
                 runHookScript(el.cicd.ON_SUCCESS, args)
             }
             catch (Exception exception) {
+                pipelineUtils.echoBanner("THE JOB FAILED WITH THE EXCEPTION: ${exception}")
+
                 runHookScript(el.cicd.ON_FAIL, args, exception)
 
                 throw exception
