@@ -27,7 +27,7 @@ def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def i
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://\${GITHUB_ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
 
         curlCommand = "${CURL_GET} ${url} | ${jqIdFilter}"
@@ -65,7 +65,7 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonPr
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     readOnly = readOnly ? 'true' : 'false'
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://\${GITHUB_ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         curlCommand = """
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
             cat ${microService.gitSshPrivateKeyName}.pub >> ${secretFile}
@@ -91,7 +91,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
     def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${projectInfo.nonProdCicdNamespace}`"
 
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
+        def url = "https://\${GITHUB_ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
 
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
