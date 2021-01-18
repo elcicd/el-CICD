@@ -40,7 +40,7 @@ def verifyCicdJenkinsExists(def projectInfo, def cicdRbacGroupJenkinsCredsUrls, 
         def authBearerCommand = """cat ${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt | sed "s/%TOKEN%/\$(oc whoami -t)/" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
         sh """
             ${shellEcho 'Creating header file with auth token'}
-            ${authBearerCommand}
+            ${maskCommand(authBearerCommand)}
         """
 
         if (!cicdProjectsExist.contains(cicdNamespace)) {
