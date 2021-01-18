@@ -25,7 +25,7 @@ def deleteOldGithubKeys(def projectInfo, def isNonProd) {
         projectInfo.microServices.each { microService ->
             def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, microService, isNonProd, GITHUB_ACCESS_TOKEN)
             def curlCommandToDeleteDeployKeyByIdFromScm =
-                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, microService, GITHUB_ACCESS_TOKEN)
+                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, microService)
             try {
                 sh """
                     KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
