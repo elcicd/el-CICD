@@ -23,10 +23,9 @@ def deleteOldGithubKeys(def projectInfo, def isNonProd) {
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         projectInfo.microServices.each { microService ->
-            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, microService, isNonProd, GITHUB_ACCESS_TOKEN)
+            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, microService, isNonProd, 'GITHUB_ACCESS_TOKEN')
             def curlCommandToDeleteDeployKeyByIdFromScm =
-                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, microService, GITHUB_ACCESS_TOKEN)
-            pipelineUtils.echoBanner(curlCommandToDeleteDeployKeyByIdFromScm)
+                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN')
             try {
                 sh """
                     KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
@@ -61,7 +60,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
             def createCredsCommand = "${jenkinsCurlCommand} ${credsUrl}"
             projectInfo.microServices.each { microService ->
                 def pushDeployKeyIdCurlCommand =
-                    scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, isNonProd, GITHUB_ACCESS_TOKEN, false)
+                    scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, isNonProd, 'GITHUB_ACCESS_TOKEN', false)
 
                 credsUrl = isNonProd ? cicdRbacGroupJenkinsCredsUrls.updateNonProdCicdJenkinsCredsUrl : cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl
                 def updateCredsCommand = "${jenkinsCurlCommand} ${credsUrl}/${microService.gitSshPrivateKeyName}/config.xml"
