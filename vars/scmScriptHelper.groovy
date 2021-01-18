@@ -91,7 +91,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
     def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${projectInfo.nonProdCicdNamespace}`"
 
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
+        def url = "https://\${ACCESS_TOKEN}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
 
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
