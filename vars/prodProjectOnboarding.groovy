@@ -28,7 +28,8 @@ def call(Map args) {
     }
 
     stage('Setup prod openshift namespace environment') {
-        def region = el.cicd["${projectInfo.PROD_ENV}_NODE_SELECTORS"]
+        def region = el.cicd["${projectInfo.PROD_ENV}${NODE_SELECTORS_POSTFIX}"]
+
         sh """
             ${pipelineUtils.shellEchoBanner("SETUP OPENSHIFT PROD NAMESPACE ENVIRONMENT AND JENKINS RBAC FOR ${projectInfo.id}")}
 
@@ -49,7 +50,7 @@ def call(Map args) {
     }
 
     stage('Delete old github public keys with curl') {
-        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, false)
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
     }
 
     stage('Create and push public key for each github repo to github with curl') {

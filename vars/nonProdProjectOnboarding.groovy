@@ -77,7 +77,7 @@ def call(Map args) {
 
     stage('Setup openshift namespace environments') {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
-            return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
+            return el.cicd["${ENV}${NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
         }
 
         onboardingUtils.createNamepaces(projectInfo,
@@ -97,7 +97,7 @@ def call(Map args) {
             (1..projectInfo.sandboxEnvs).each { i ->
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
-                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
+                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
             }
 
             onboardingUtils.createNamepaces(projectInfo,
@@ -108,7 +108,7 @@ def call(Map args) {
     }
 
     stage('Delete old github public keys with curl') {
-        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, true)
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
