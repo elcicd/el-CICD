@@ -79,8 +79,8 @@ def deleteDeployKeysFromJenkins(def projectInfo, def namespace) {
 
 def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
     pipelineUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",
-                                "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
-                                "PUSH EACH PRIVATE KEY TO ${isNonProd ? 'NON-' : '' }PROD JENKINS")
+                             "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
+                             "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
     def credsUrls = getJenkinsCredsUrl()
 
