@@ -189,6 +189,7 @@ def pushSshCredentialstToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, d
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 
             ${maskCommand(curlCommand)}
+            
             rm -f ${SECRET_FILE_NAME}
         """
     }
@@ -204,6 +205,8 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsI
             cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
+
+            rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
         """
     }
 }

@@ -9,7 +9,6 @@
 def init() {
     pipelineUtils.echoBanner("COPYING ONBOARDING RESOURCES TO JENKINS AGENT")
 
-    writeFile file:"${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt", text: libraryResource('templates/AuthBearerHeader-template.txt')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json", text: libraryResource('templates/githubSshCredentials-postfix.json')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json", text: libraryResource('templates/githubSshCredentials-prefix.json')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
@@ -77,6 +76,8 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
 
                     ${maskCommand(createCredsCommand)}
                     ${maskCommand(updateCredsCommand)}
+
+                    rm -f ${credsFileName}
                 """
             }
         }
