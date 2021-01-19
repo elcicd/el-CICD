@@ -16,6 +16,8 @@ def getJenkinsCredsUrl(def namespace) {
         "${protocol}://${app}-${namespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${createRelativePath}"
     cicdRbacGroupJenkinsCredsUrls.cicdJenkinsUpdateCredsUrl =
         "${protocol}://${app}-${namespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${updateRelativePath}"
+
+    return cicdRbacGroupJenkinsCredsUrls
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
