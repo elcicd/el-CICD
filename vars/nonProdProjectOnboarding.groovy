@@ -79,8 +79,8 @@ def call(Map args) {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
         }
-        onboardingUtils.createNamepaces(projectInfo.cicdMasterNamespace,
-                                        projectInfo.rbacGroup,
+        
+        onboardingUtils.createNamepaces(projectInfo,
                                         projectInfo.nonProdNamespaces.values(),
                                         projectInfo.nonProdNamespaces.keySet(),
                                         nodeSelectors)
