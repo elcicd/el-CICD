@@ -76,7 +76,7 @@ void call(Map args) {
             sh """
                 ${pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")}
 
-                if [[ ! -n `oc get bc ${buildConfigName} -n ${projectInfo.nonProdCicdNamespace} --ignore-not-found` ]]
+                if [[ ! -n `oc get bc ${buildConfigName} -n ${pprojectInfo.cicdMasterNamespace} --ignore-not-found` ]]
                 then
                     oc new-build --name ${buildConfigName} \
                                  --labels projectid=${projectInfo.id} \
@@ -85,9 +85,9 @@ void call(Map args) {
                                  --to-docker \
                                  --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
                                  --push-secret=${pullSecret} \
-                                 -n ${projectInfo.nonProdCicdNamespace}
+                                 -n ${pprojectInfo.cicdMasterNamespace}
 
-                    oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.nonProdCicdNamespace}
+                    oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${pprojectInfo.cicdMasterNamespace}
                 fi
 
                 chmod 777 Dockerfile
@@ -96,7 +96,7 @@ void call(Map args) {
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.nonProdCicdNamespace}
+                oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${pprojectInfo.cicdMasterNamespace}
             """
         }
     }

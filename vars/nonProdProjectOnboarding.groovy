@@ -22,11 +22,11 @@ def call(Map args) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-            for BCS in `oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace} | grep Jenkins | awk '{print \$1}'`
+            for BCS in `oc get bc -l projectid=${projectInfo.id} -n ${pprojectInfo.cicdMasterNamespace} | grep Jenkins | awk '{print \$1}'`
             do
-                while [ `oc get bc \${BCS} -n ${projectInfo.nonProdCicdNamespace} | grep \${BCS} | wc -l` -gt 0 ] ;
+                while [ `oc get bc \${BCS} -n ${pprojectInfo.cicdMasterNamespace} | grep \${BCS} | wc -l` -gt 0 ] ;
                 do
-                    oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.nonProdCicdNamespace}
+                    oc delete bc \${BCS} --ignore-not-found -n ${pprojectInfo.cicdMasterNamespace}
                     sleep 5
                     ${shellEcho ''}
                 done
@@ -66,8 +66,8 @@ def call(Map args) {
                                -p DEPLOY_TO_NAMESPACE=${projectInfo.devNamespace} \
                                -p GIT_BRANCH=${projectInfo.gitBranch} \
                                -p CODE_BASE=${microService.codeBase} \
-                               -n ${projectInfo.nonProdCicdNamespace} \
-                        | oc create -f - -n ${projectInfo.nonProdCicdNamespace}
+                               -n ${pprojectInfo.cicdMasterNamespace} \
+                        | oc create -f - -n ${pprojectInfo.cicdMasterNamespace}
 
                     ${shellEcho ''}
                 """
@@ -79,7 +79,7 @@ def call(Map args) {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
         }
-        onboardingUtils.createNamepaces(projectInfo.nonProdCicdNamespace,
+        onboardingUtils.createNamepaces(pprojectInfo.cicdMasterNamespace,
                                         projectInfo.rbacGroup,
                                         projectInfo.nonProdNamespaces.values(),
                                         projectInfo.nonProdNamespaces.keySet(),
@@ -100,7 +100,7 @@ def call(Map args) {
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
             }
 
-            onboardingUtils.createNamepaces(projectInfo.nonProdCicdNamespace,
+            onboardingUtils.createNamepaces(pprojectInfo.cicdMasterNamespace,
                                             projectInfo.rbacGroup,
                                             namespaces,
                                             envs,
@@ -113,7 +113,7 @@ def call(Map args) {
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, projectInfo.nonProdCicdNamespace, true)
+        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, pprojectInfo.cicdMasterNamespace, true)
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {

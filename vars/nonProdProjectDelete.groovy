@@ -10,7 +10,7 @@ def call(Map args) {
     stage('Remove project namespace environments') {
         def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
         namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
-        namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.nonProdCicdNamespace}" : ''
+        namespacesToDelete += args.deleteRbacGroupJenkins ? " ${pprojectInfo.cicdMasterNamespace}" : ''
 
         def msg = args.deleteRbacGroupJenkins ?
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} NON-PROD ENVIRONMENT(S)" :
@@ -37,7 +37,7 @@ def call(Map args) {
         credentialsUtils.deleteDeployKeysFromGithub(projectInfo, true)
 
         if (!args.deleteRbacGroupJenkins) {
-            deleteDeployKeysFromJenkins(projectInfo, projectInfo.nonProdCicdNamespace)
+            deleteDeployKeysFromJenkins(projectInfo, pprojectInfo.cicdMasterNamespace)
         }
     }
 
@@ -45,16 +45,16 @@ def call(Map args) {
         stage('Remove project build-to-dev pipelines from Jenkins') {
             def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
             namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
-            namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.nonProdCicdNamespace}" : ''
+            namespacesToDelete += args.deleteRbacGroupJenkins ? " ${pprojectInfo.cicdMasterNamespace}" : ''
 
             sh """
                 ${pipelineUtils.shellEchoBanner("REMOVING PROJECT BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}")}
 
-                for BCS in \$(oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.nonProdCicdNamespace} -o jsonpath='{.items[*].metadata.name}')
+                for BCS in \$(oc get bc -l projectid=${projectInfo.id} -n ${pprojectInfo.cicdMasterNamespace} -o jsonpath='{.items[*].metadata.name}')
                 do
-                    while [ \$(oc get bc \${BCS} -n ${projectInfo.nonProdCicdNamespace} | grep \${BCS} | wc -l) -gt 0 ] ;
+                    while [ \$(oc get bc \${BCS} -n ${pprojectInfo.cicdMasterNamespace} | grep \${BCS} | wc -l) -gt 0 ] ;
                     do
-                        oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.nonProdCicdNamespace}
+                        oc delete bc \${BCS} --ignore-not-found -n ${pprojectInfo.cicdMasterNamespace}
                         sleep 5
                         ${shellEcho ''}
                     done

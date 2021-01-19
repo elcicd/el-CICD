@@ -38,7 +38,7 @@ def call(Map args) {
 
                 oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.prodNamespace}
 
-                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
+                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.}:jenkins -n ${projectInfo.prodNamespace}
 
                 oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
                 oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
