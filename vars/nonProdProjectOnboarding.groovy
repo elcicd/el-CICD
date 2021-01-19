@@ -14,7 +14,7 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, cicdRbacGroupJenkinsCredsUrls, true)
+    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
     stage('Remove stale namespace environments and pipelines if necessary') {
         def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : ''
