@@ -14,7 +14,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 
         def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${cicdNamespace}")
 
-        if (!cicdProjectsExist.contains(cicdNamespace)) {
+        if (!cicdProjectsExist) {
             stage('Creating CICD namespaces and rbacGroup Jenkins') {
                 def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
 
