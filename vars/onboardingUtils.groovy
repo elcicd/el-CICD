@@ -54,7 +54,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdRbacGroupJ
         withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             def credsFileName = 'scmSshCredentials.xml'
             def jenkinsCurlCommand = """
-                curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" -H "content-type:application/xml" --data-binary @${credsFileName}"""
+                curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
             def credsUrl = isNonProd ? cicdRbacGroupJenkinsCredsUrls.nonProdCicdJenkinsCredsUrl : cicdRbacGroupJenkinsCredsUrls.prodCicdJenkinsCredsUrl
             def createCredsCommand = "${jenkinsCurlCommand} ${credsUrl}"

@@ -90,6 +90,8 @@ def node(Map args, Closure body) {
                 throw exception
             }
             finally {
+                sh "rm -rf ${el.cicd.TEMP_DIR}"
+
                 runHookScript(el.cicd.POST, args)
             }
         }

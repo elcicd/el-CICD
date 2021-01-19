@@ -61,17 +61,11 @@ def call(Map args) {
         stage('Delete GitHub deploy keys from Jenkins') {
             def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
 
-            onboardingUtils.init()
-            def authBearerCommand = """cat ${el.cicd.TEMPLATES_DIR}/AuthBearerHeader-template.txt | sed "s/%TOKEN%/\$(oc whoami -t)/" > ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt"""
-            sh """
-                ${shellEcho 'Creating header file with auth token'}
-                ${maskCommand(authBearerCommand)}
-            """
-
             projectInfo.microServices.each { microService ->
+                def doDelete = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" \
+                        "${cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete" """
                 sh """
-                    curl -ksS -X POST -H "`cat ${el.cicd.TEMP_DIR}/AuthBearerHeader.txt`" \
-                        "${cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete"
+                    ${maskCommand(doDelete)}
                 """
             }
         }
