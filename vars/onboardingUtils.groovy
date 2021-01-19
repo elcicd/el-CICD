@@ -17,7 +17,7 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
-def createNamepaces(def cicdNamespace, def rbacGroup, def namespaces, def environments, def nodeSelectors) {
+def createNamepaces(def projectInfo, def namespaces, def environments, def nodeSelectors) {
     pipelineUtils.echoBanner("SETUP OPENSHIFT NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces)
 
     sh """
@@ -35,12 +35,14 @@ def createNamepaces(def cicdNamespace, def rbacGroup, def namespaces, def enviro
                     oc adm new-project \${NAMESPACES[\$i]}
                 fi
 
-                oc policy add-role-to-group admin ${rbacGroup} -n \${NAMESPACES[\$i]}
+                oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n \${NAMESPACES[\$i]}
 
-                oc policy add-role-to-user edit system:serviceaccount:${cicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
+                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\$i]}
 
-                oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${cicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
-                oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${cicdNamespace}:jenkins -n \${NAMESPACES[\$i]}
+                oc adm policy add-cluster-role-to-user sealed-secrets-management \
+                    system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\$i]}
+                oc adm policy add-cluster-role-to-user secrets-unsealer \
+                    system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\$i]}
 
                 oc get secrets -l \${ENVS[\$i]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
                     oc create -f - -n \${NAMESPACES[\$i]}
