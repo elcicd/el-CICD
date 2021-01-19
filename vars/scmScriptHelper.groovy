@@ -88,7 +88,7 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_
 def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TOKEN) {
     def curlCommand
 
-    def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${pprojectInfo.cicdMasterNamespace}`"
+    def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${projectInfo.cicdMasterNamespace}`"
 
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"

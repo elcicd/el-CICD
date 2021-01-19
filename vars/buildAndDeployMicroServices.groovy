@@ -56,7 +56,7 @@ def call(Map args) {
                             oc start-build ${microService.id}-build-to-dev \
                                 --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
                                 --env GIT_BRANCH=${projectInfo.gitBranch} \
-                                --wait -n ${pprojectInfo.cicdMasterNamespace}
+                                --wait -n ${projectInfo.cicdMasterNamespace}
                         """
                     }
                 }
@@ -69,7 +69,7 @@ def call(Map args) {
                                 oc start-build ${microService.id}-build-to-dev \
                                     --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
                                     --env GIT_BRANCH=${projectInfo.gitBranch} \
-                                    --wait -n ${pprojectInfo.cicdMasterNamespace}
+                                    --wait -n ${projectInfo.cicdMasterNamespace}
                             """
                         }
                     }
@@ -83,7 +83,7 @@ def call(Map args) {
                                 oc start-build ${microService.id}-build-to-dev \
                                     --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
                                     --env GIT_BRANCH=${projectInfo.gitBranch} \
-                                    --wait -n ${pprojectInfo.cicdMasterNamespace}
+                                    --wait -n ${projectInfo.cicdMasterNamespace}
                             """
                         }
                     }
