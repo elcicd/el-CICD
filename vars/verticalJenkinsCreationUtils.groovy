@@ -178,8 +178,7 @@ def waitUntilJenkinsIsReady(def cicdNamespace) {
 
 def pushSshCredentialstToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
-    def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE"),
-                      file(credentialsId: 'PRIVATE_KEY', variable: 'my-private-key')]
+    def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE")]
     def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${cicdJenkinsUrl}"""
     withCredentials(credsArray) {
         sh """

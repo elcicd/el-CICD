@@ -179,7 +179,7 @@ __push_creds_file_to_jenkins() {
 _run_custom_credentials_script() {
     # $1 -> should be a value of 'prod' or 'non-prod'
     local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
-    
+
     echo
     echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
     if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/secrets-non-prod.sh ]]
