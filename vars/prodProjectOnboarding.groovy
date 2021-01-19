@@ -54,6 +54,6 @@ def call(Map args) {
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, projectInfo.cicdMasterNamespace, false)
+        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
     }
 }

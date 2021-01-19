@@ -4,7 +4,7 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
-def getJenkinsCredsUrl(def namespace) {
+def getJenkinsCredsUrl() {
     def protocol = "https"
     def app = "jenkins"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
@@ -13,15 +13,15 @@ def getJenkinsCredsUrl(def namespace) {
     def cicdRbacGroupJenkinsCredsUrls = [:]
 
     cicdRbacGroupJenkinsCredsUrls.cicdJenkinsCreateCredsUrl =
-        "${protocol}://${app}-${namespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${createRelativePath}"
+        "${protocol}://${app}-${el.cicd.EL_CICD_MASTER_NAMESPACE}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${createRelativePath}"
     cicdRbacGroupJenkinsCredsUrls.cicdJenkinsUpdateCredsUrl =
-        "${protocol}://${app}-${namespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${updateRelativePath}"
+        "${protocol}://${app}-${el.cicd.EL_CICD_MASTER_NAMESPACE}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${updateRelativePath}"
 
     return cicdRbacGroupJenkinsCredsUrls
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
-    def credsUrls = getJenkinsCredsUrl(projectInfo.cicdMasterNamespace)
+    def credsUrls = getJenkinsCredsUrl()
 
     def key = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsCreateCredsUrl, key)
@@ -66,7 +66,7 @@ def deleteDeployKeysFromGithub(def projectInfo) {
 }
 
 def deleteDeployKeysFromJenkins(def projectInfo, def namespace) {
-    def credsUrls = getJenkinsCredsUrl(cicdNamespace)
+    def credsUrls = getJenkinsCredsUrl()
 
     def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)'
     projectInfo.microServices.each { microService ->
@@ -77,12 +77,12 @@ def deleteDeployKeysFromJenkins(def projectInfo, def namespace) {
     }
 }
 
-def createAndPushPublicPrivateGithubRepoKeys(def projectInfo, def cicdNamespace) {
+def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
     pipelineUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",
                                 "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
                                 "PUSH EACH PRIVATE KEY TO ${isNonProd ? 'NON-' : '' }PROD JENKINS")
 
-    def credsUrls = getJenkinsCredsUrl(cicdNamespace)
+    def credsUrls = getJenkinsCredsUrl()
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def credsFileName = 'scmSshCredentials.xml'

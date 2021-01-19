@@ -34,7 +34,7 @@ def call(Map args) {
     }
 
     stage('Delete GitHub deploy keys') {
-        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, true)
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
 
         if (!args.deleteRbacGroupJenkins) {
             deleteDeployKeysFromJenkins(projectInfo, projectInfo.cicdMasterNamespace)
