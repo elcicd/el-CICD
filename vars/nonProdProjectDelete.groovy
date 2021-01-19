@@ -33,8 +33,12 @@ def call(Map args) {
         """
     }
 
-    stage('Delete GitHub deploy keys from GitHub') {
-        onboardingUtils.deleteOldGithubKeys(projectInfo, true)
+    stage('Delete GitHub deploy keys') {
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, true)
+
+        if (!args.deleteRbacGroupJenkins) {
+            deleteDeployKeysFromJenkins(projectInfo, projectInfo.nonProdCicdNamespace)
+        }
     }
 
     if (!args.deleteRbacGroupJenkins) {
@@ -56,18 +60,6 @@ def call(Map args) {
                     done
                 done
             """
-        }
-
-        stage('Delete GitHub deploy keys from Jenkins') {
-            def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
-
-            projectInfo.microServices.each { microService ->
-                def doDelete = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" \
-                        "${cicdRbacGroupJenkinsCredsUrls.updateProdCicdJenkinsCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete" """
-                sh """
-                    ${maskCommand(doDelete)}
-                """
-            }
         }
     }
 }

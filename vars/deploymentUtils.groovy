@@ -204,8 +204,8 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
-                    def imageRepository = el.cicd["${ENV_TO}_IMAGE_REPO"]
-                    def pullSecret = el.cicd["${ENV_TO}_IMAGE_REPO_PULL_SECRET"]
+                    def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
+                    def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
 
                     def fileName = templateDef.file ?: "${templateDef.templateName}.yml"
                     sh """

@@ -27,9 +27,9 @@ def call(Map args) {
                                  projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', '))
 
         def allImagesExist = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
-            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO"]
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
+            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
@@ -89,11 +89,11 @@ def call(Map args) {
     stage('Tag images') {
         pipelineUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:", "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def userNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO_USERNAME"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def userNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
             def skopeoCopyComd = "skopeo copy --src-creds ${userNamePwd} --dest-creds ${userNamePwd} --src-tls-verify=false --dest-tls-verify=false"
 
-            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}_IMAGE_REPO"]
+            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {

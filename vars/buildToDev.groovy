@@ -68,8 +68,8 @@ void call(Map args) {
             projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
         }
 
-        def imageRepo = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO"]
-        def pullSecret = el.cicd["${projectInfo.DEV_ENV}_IMAGE_REPO_PULL_SECRET"]
+        def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
+        def pullSecret = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
         dir(microService.workDir) {

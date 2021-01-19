@@ -12,9 +12,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.rbacGroup = params.RBAC_GROUP ?: projectInfo.rbacGroup
 
-    def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
-
-    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, cicdRbacGroupJenkinsCredsUrls, false)
+    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
     stage('Remove stale namespace environments, if necessary') {
         if (args.recreateProd) {
@@ -40,10 +38,10 @@ def call(Map args) {
 
                 oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.prodNamespace}
 
-                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}
+                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
 
-                oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}
-                oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.prodCicdNamespace}:jenkins -n ${projectInfo.prodNamespace}
+                oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
+                oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
 
                 oc get secrets -l ${projectInfo.prodEnv}-env=true -o yaml -n ${el.cicd.EL_CICD_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc create -f - -n ${projectInfo.prodNamespace}
             fi
@@ -51,10 +49,10 @@ def call(Map args) {
     }
 
     stage('Delete old github public keys with curl') {
-        onboardingUtils.deleteOldGithubKeys(projectInfo, false)
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, false)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        onboardingUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, cicdRbacGroupJenkinsCredsUrls, false)
+        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, projectInfo.cicdMasterNamespace, false)
     }
 }

@@ -58,7 +58,7 @@ def node(Map args, Closure body) {
         containers: [
             containerTemplate(
                 name: 'jnlp',
-                image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                image: "${el.cicd.OCP${el.cicd.IMAGE_REPO_POSTFIX}}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: '512Mi',
@@ -90,8 +90,6 @@ def node(Map args, Closure body) {
                 throw exception
             }
             finally {
-                sh "rm -rf ${el.cicd.TEMP_DIR}"
-
                 runHookScript(el.cicd.POST, args)
             }
         }
@@ -158,4 +156,25 @@ def initializeStage() {
                 credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
     }
+}
+
+def getDevPipelines() {
+    return ['build-and-deploy-microservices-pipeline-template.yml']
+}
+
+def getTestPipelines() {
+    return ['create-release-candidate-pipeline-template.yml',
+            'microservice-promotion-removal-pipeline-template.yml',
+            'microservice-redeploy-removal-pipeline-template.yml',
+            'redeploy-release-candidate-pipeline-template.yml']
+}
+
+def getNonProdPipelines() {
+    def pipelines = getDevPipelines()
+    pipelines.addAll(getTestPipelines())
+    return pipelines
+}
+
+def getProdPipelines() {
+    return ['deploy-to-production-pipeline-template.yml']
 }

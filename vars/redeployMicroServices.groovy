@@ -87,11 +87,11 @@ def call(Map args) {
 
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO_USERNAME"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
             projectInfo.microServices.each { microService ->
                 if (microService.redeploy) {
-                    def imageRepo = el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO"]
+                    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
                     if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2>&1 || :").trim()) {
                         errorMsgs += "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
@@ -122,11 +122,11 @@ def call(Map args) {
         pipelineUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.microServices.findAll{ it.redeploy }.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO_ACCESS_TOKEN_ID"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO_USERNAME"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
             projectInfo.microServices.each { microService ->
                 if (microService.redeploy) {
-                    def imageRepo = el.cicd["${projectInfo.ENV_TO}_IMAGE_REPO"]
+                    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def fromImageUrl = "${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
                     def toImageUrl = "${imageRepo}/${microService.id}:${projectInfo.deployToEnv}"
                     def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"

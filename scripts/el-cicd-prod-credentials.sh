@@ -41,8 +41,8 @@ echo
 echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
-    ACCESS_TOKEN_ID=$(eval echo \${${ENV}_IMAGE_REPO_ACCESS_TOKEN_ID})
-    SECRET_TOKEN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
+    ACCESS_TOKEN_ID=$(eval echo \${${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}})
+    SECRET_TOKEN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
 
     echo
     echo "Pushing ${ENV} image repo access tokens per environment to Jenkins"

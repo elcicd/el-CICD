@@ -104,10 +104,10 @@ _create_env_docker_registry_secret() {
 
     echo
     echo "Creating ${ENV} image pull secret in ${NAMESPACE_NAME}"
-    local USER_NAME=$(eval echo \${${ENV}_IMAGE_REPO_USERNAME})
-    local SECRET_NAME=$(eval echo \${${ENV}_IMAGE_REPO_PULL_SECRET})
-    local TKN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
-    local DOMAIN=$(eval echo \${${ENV}_IMAGE_REPO_DOMAIN})
+    local USER_NAME=$(eval echo \${${ENV}${IMAGE_REPO_USERNAME_POSTFIX}})
+    local SECRET_NAME=$(eval echo \${${ENV}${IMAGE_REPO_PULL_SECRET_POSTFIX}})
+    local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+    local DOMAIN=$(eval echo \${${ENV}${IMAGE_REPO_POSTFIX}})
 
     local DRY_RUN=client
     if [[ ${OCP_VERSION} == 3 ]]
@@ -121,7 +121,7 @@ _create_env_docker_registry_secret() {
         --docker-password=$(cat ${TKN_FILE}) \
         --docker-server=${DOMAIN} \
         --dry-run=${DRY_RUN} \
-        -n ${2} \
+        -n ${NAMESPACE_NAME} \
         -o yaml > ${SECRET_FILE_IN}
 
     oc apply -f ${SECRET_FILE_IN} --overwrite -n ${NAMESPACE_NAME}

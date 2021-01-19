@@ -14,8 +14,6 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    def cicdRbacGroupJenkinsCredsUrls = verticalJenkinsCreationUtils.buildCicdJenkinsUrls(projectInfo)
-
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, cicdRbacGroupJenkinsCredsUrls, true)
 
     stage('Remove stale namespace environments and pipelines if necessary') {
@@ -81,8 +79,11 @@ def call(Map args) {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
             return el.cicd["${ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
         }
-
-        onboardingUtils.createNamepaces(projectInfo, projectInfo.nonProdNamespaces.values(), projectInfo.nonProdNamespaces.keySet(), nodeSelectors)
+        onboardingUtils.createNamepaces(projectInfo.nonProdCicdNamespace,
+                                        projectInfo.rbacGroup,
+                                        projectInfo.nonProdNamespaces.values(),
+                                        projectInfo.nonProdNamespaces.keySet(),
+                                        nodeSelectors)
     }
 
     stage('Setup openshift sandbox environments') {
@@ -99,16 +100,20 @@ def call(Map args) {
                 nodeSelectors += el.cicd["${projectInfo.DEV_ENV}_NODE_SELECTORS"]?.replaceAll(/\s/, '') ?: 'null'
             }
 
-            onboardingUtils.createNamepaces(projectInfo, namespaces, envs, nodeSelectors)
+            onboardingUtils.createNamepaces(projectInfo.nonProdCicdNamespace,
+                                            projectInfo.rbacGroup,
+                                            namespaces,
+                                            envs,
+                                            nodeSelectors)
         }
     }
 
     stage('Delete old github public keys with curl') {
-        onboardingUtils.deleteOldGithubKeys(projectInfo, true)
+        credentialsUtils.deleteDeployKeysFromGithub(projectInfo, true)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        onboardingUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, cicdRbacGroupJenkinsCredsUrls, true)
+        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo, projectInfo.nonProdCicdNamespace, true)
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {

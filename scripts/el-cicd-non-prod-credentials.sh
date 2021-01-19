@@ -31,7 +31,7 @@ echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
-CICD_ENVIRONMENTS="${DEV_ENV}  $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
+CICD_ENVIRONMENTS="${DEV_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
@@ -42,11 +42,11 @@ echo
 echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
-    ACCESS_TOKEN_ID=$(eval echo \${${ENV}_IMAGE_REPO_ACCESS_TOKEN_ID})
-    SECRET_TOKEN_FILE=$(eval echo \${${ENV}_PULL_TOKEN_FILE})
+    ACCESS_TOKEN_ID=$(eval echo \${${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}})
+    SECRET_TOKEN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
 
     echo
-    echo "Pushing ${ENV} image repo access tokens per environment to Jenkins"
+    echo "Pushing ${ENV} image repo access token to Jenkins"
     _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
 done
 

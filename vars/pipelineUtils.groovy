@@ -51,8 +51,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.id = projectId
 
-        projectInfo.nonProdCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.EL_CICD_GROUP_NAMESPACE_POSTFIX}"
-        projectInfo.prodCicdNamespace = "${projectInfo.rbacGroup}-${el.cicd.EL_CICD_GROUP_NAMESPACE_POSTFIX}"
+        projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.EL_CICD_GROUP_NAMESPACE_POSTFIX}"
 
         projectInfo.microServices.each { microService ->
             microService.projectId = projectInfo.id
@@ -77,21 +76,16 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
         projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
 
+        projectInfo.DEV_ENV = el.cicd.DEV_ENV
+        projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
+        projectInfo.PROD_ENV = el.cicd.PROD_ENV
+
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
         projectInfo.sandboxNamespaces = []
         (1..projectInfo.sandboxEnvs).each { i ->
             projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
         }
 
-        projectInfo.DEV_ENV = el.cicd.DEV_ENV
-        projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
-        projectInfo.PROD_ENV = el.cicd.PROD_ENV
-
-        projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
-        projectInfo.NON_PROD_ENVS = [projectInfo.DEV_ENV]
-        projectInfo.NON_PROD_ENVS.addAll(projectInfo.TEST_ENVS)
-        projectInfo.NON_PROD_ENVS.add(projectInfo.PRE_PROD_ENV)
-        
         if (projectInfo.devEnv) {
             projectInfo.nonProdNamespaces = [(projectInfo.devEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
             projectInfo.testEnvs.each { env ->

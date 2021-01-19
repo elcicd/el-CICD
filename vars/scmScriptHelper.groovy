@@ -22,7 +22,7 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 @Field
 def APPLICATION_JSON_HDR = '-H application:json'
 
-def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN) {
+def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
@@ -58,7 +58,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
     return curlCommand
 }
 
-def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def isNonProd, def ACCESS_TOKEN, def readOnly) {
+def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
