@@ -77,7 +77,7 @@ def call(Map args) {
 
     stage('Setup openshift namespace environments') {
         def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
-            return el.cicd["${ENV}${NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
+            return el.cicd["${ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
         }
 
         onboardingUtils.createNamepaces(projectInfo,
@@ -97,7 +97,7 @@ def call(Map args) {
             (1..projectInfo.sandboxEnvs).each { i ->
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
-                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
+                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
             }
 
             onboardingUtils.createNamepaces(projectInfo,
