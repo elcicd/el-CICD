@@ -33,6 +33,8 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 }
 
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
+    def secretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
+
     sh """
         ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
@@ -52,9 +54,9 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc create -f - -n ${projectInfo.cicdMasterNamespace}
 
-        for ENV in ${envs.join(' ')}
+        for ENV in ${secretNames.join(' ')}
         do
-            oc get secrets \${ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+            oc get secrets \${ENV} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
                 ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
                 oc apply -f - -n ${projectInfo.cicdMasterNamespace}
         done
