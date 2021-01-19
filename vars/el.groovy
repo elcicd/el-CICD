@@ -58,7 +58,7 @@ def node(Map args, Closure body) {
         containers: [
             containerTemplate(
                 name: 'jnlp',
-                image: "${el.cicd.OCP${el.cicd.IMAGE_REPO_POSTFIX}}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: '512Mi',
