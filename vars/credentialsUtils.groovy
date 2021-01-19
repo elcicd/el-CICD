@@ -18,18 +18,21 @@ def getJenkinsCredsUrl(def namespace) {
         "${protocol}://${app}-${namespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${updateRelativePath}"
 }
 
-def pushElCicdCredentialsToCicdServer(def cicdNamespace, def envs) {
-    def credsUrls = getJenkinsCredsUrl(cicdNamespace)
+def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
+    def credsUrls = getJenkinsCredsUrl(projectInfo.cicdMasterNamespace)
 
-    pushSshCredentialsToJenkins(namespace, credsUrls.cicdJenkinsCreateCredsUrl, el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-    pushSshCredentialsToJenkins(namespace, credsUrls.cicdJenkinsUpdateCredsUrl, el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
+    def key = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsCreateCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsUpdateCredsUrl, key)
 
-    pushSshCredentialsToJenkins(namespace, credsUrls.cicdJenkinsCreateCredsUrl, el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-    pushSshCredentialsToJenkins(namespace, credsUrls.cicdJenkinsUpdateCredsUrl, el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
+    key = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsCreateCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsUpdateCredsUrl, key)
 
+    key = "${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"
     projectInfo.envs.each { ENV ->
-        pushImageRepositoryTokenToJenkins(cicdNamespace, el.cicd["${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], credsUrls.cicdJenkinsCreateCredsUrl)
-        pushImageRepositoryTokenToJenkins(cicdNamespace, el.cicd["${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], credsUrls.cicdJenkinsUpdateCredsUrl)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[key], credsUrls.cicdJenkinsCreateCredsUrl)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[key], credsUrls.cicdJenkinsUpdateCredsUrl)
     }
 }
 
