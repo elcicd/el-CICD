@@ -11,27 +11,27 @@ def getJenkinsCredsUrl(def projectInfo) {
 
     def cicdRbacGroupJenkinsCredsUrls = [:]
 
-    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsCreateCredsUrl = "${jenkinsUrl}/${createRelativePath}"
-    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsUpdateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
+    cicdRbacGroupJenkinsCredsUrls.createCredsUrl = "${jenkinsUrl}/${createRelativePath}"
+    cicdRbacGroupJenkinsCredsUrls.updateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
 
     return cicdRbacGroupJenkinsCredsUrls
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
-    def credsUrls = getJenkinsCredsUrl(projectInfo)
+    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
 
     def key = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsCreateCredsUrl, key)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsUpdateCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, key)
 
     key = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsCreateCredsUrl, key)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsUpdateCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, key)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, key)
 
-    projectInfo.envs.each { ENV ->
+    envs.each { ENV ->
         def tokenIdKey = "${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], credsUrls.cicdJenkinsCreateCredsUrl)
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], credsUrls.cicdJenkinsUpdateCredsUrl)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], jenkinsUrls.createCredsUrl)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], jenkinsUrls.updateCredsUrl)
     }
 }
 
@@ -63,11 +63,11 @@ def deleteDeployKeysFromGithub(def projectInfo) {
 }
 
 def deleteDeployKeysFromJenkins(def projectInfo) {
-    def credsUrls = getJenkinsCredsUrl(projectInfo)
+    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
 
     def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)'
     projectInfo.microServices.each { microService ->
-        def doDelete = """${curlCommand} ${credsUrls.cicdJenkinsUpdateCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete """
+        def doDelete = """${curlCommand} ${jenkinsUrls.updateCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete """
         sh """
             ${maskCommand(doDelete)}
         """
@@ -79,18 +79,18 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
-    def credsUrls = getJenkinsCredsUrl(projectInfo)
+    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand = """
             curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-        def createCredsCommand = "${jenkinsCurlCommand} ${credsUrls.cicdJenkinsCreateCredsUrl}"
+        def createCredsCommand = "${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}"
         projectInfo.microServices.each { microService ->
             def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
 
-            def updateCredsCommand = "${jenkinsCurlCommand} ${credsUrls.cicdJenkinsUpdateCredsUrl}/${microService.gitSshPrivateKeyName}/config.xml"
+            def updateCredsCommand = "${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}/${microService.gitSshPrivateKeyName}/config.xml"
             sh """
                 ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
                 ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
@@ -111,10 +111,10 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
     }
 }
 
-def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, def keyId) {
+def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
     def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE")]
-    def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${cicdJenkinsUrl}"""
+    def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH SSH GIT REPO PRIVATE KEY TO ${cicdJenkinsNamespace} JENKINS")}
@@ -130,9 +130,9 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def cicdJenkinsUrl, de
     }
 }
 
-def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsId, def cicdJenkinsUrl) {
+def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsId, def url) {
     withCredentials([string(credentialsId: credentialsId, variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-        def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${cicdJenkinsUrl}"""
+        def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         sh """
             ${pipelineUtils.shellEchoBanner("PUSH IMAGE REPOSITORY TOKEN ${credentialsId} TO ${cicdJenkinsNamespace} JENKINS")}
 
