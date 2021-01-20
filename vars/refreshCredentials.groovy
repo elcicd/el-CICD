@@ -9,7 +9,7 @@
 def call(Map args) {
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def allProjectFiles =
-            sh(returnStdout: true, script: 'find ./ -type f \( -iname \*.json -o -iname \*.js -o -iname \*.yml -o -iname \*.yml \)')
+            sh(returnStdout: true, script: 'find ./ -type f ( -iname *.json -o -iname *.js -o -iname *.yml -o -iname *.yml )')
         allProjectFiles = allProjectFiles.split(' ')
 
         def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
