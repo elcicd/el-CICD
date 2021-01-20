@@ -19,12 +19,12 @@ def getJenkinsCredsUrl(def projectInfo, def tokenId) {
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    def jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenIdKey)
+    def jenkinsUrls = getJenkinsCredsUrl(projectInfo, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenIdKey)
+    jenkinsUrls = getJenkinsCredsUrl(projectInfo, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
