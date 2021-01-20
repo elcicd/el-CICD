@@ -105,12 +105,12 @@ def node(Map args, Closure body) {
 }
 
 def runHookScript(def prefix, def args) {
-    pipelineUtils.spacedEcho("Searching for hook-script ${prefix}-${args.pipelineTemplateName}.groovy...")
-
     runHookScript(prefix, args, null)
 }
 
 def runHookScript(def prefix, def args, def exception) {
+    pipelineUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineTemplateName}.groovy...")
+
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
         if (hookScriptFile) {

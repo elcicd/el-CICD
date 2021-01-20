@@ -9,9 +9,9 @@
 def call(Map args) {
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def allProjectFiles = findFiles(glob: "**/*.json")
-        allProjectFiles.addAll(findFiles(glob: "**/*.js")
-        allProjectFiles.addAll(findFiles(glob: "**/*.yml")
-        allProjectFiles.addAll(findFiles(glob: "**/*.yaml")
+        allProjectFiles.addAll(findFiles(glob: "**/*.js"))
+        allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
+        allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
         def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
         allProjectFiles.each { projectFile ->
