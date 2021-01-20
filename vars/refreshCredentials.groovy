@@ -17,14 +17,10 @@ def call(Map args) {
         echo "allProjectFiles: ${allProjectFiles}"
 
         allProjectFiles.each { projectFile ->
-            stage('testing') {
-                echo "projectFile ${projectFile.name}"
-                def projectId = projectFile.name.split('[.]')[0]
-                echo 'howdy1'
-                def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
-                echo 'howdy2'
-                def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
-            }
+            def projectId = projectFile.name.split('[.]')[0]
+            def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
+
+            def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
             stage('Push el-CICD credentials') {
                 credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
