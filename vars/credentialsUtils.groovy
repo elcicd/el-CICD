@@ -29,7 +29,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, credsUrls.cicdJenkinsUpdateCredsUrl, key)
 
     projectInfo.envs.each { ENV ->
-        def tokenIdKey = "${ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"
+        def tokenIdKey = "${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"
         pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], credsUrls.cicdJenkinsCreateCredsUrl)
         pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], credsUrls.cicdJenkinsUpdateCredsUrl)
     }

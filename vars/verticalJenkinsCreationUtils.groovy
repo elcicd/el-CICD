@@ -20,8 +20,10 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
                 waitUntilJenkinsIsReady(projectInfo)
             }
 
-            def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
-            credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+            stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
+                def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
+                credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+            }
         }
         else {
             echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
