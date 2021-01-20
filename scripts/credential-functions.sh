@@ -67,9 +67,9 @@ _push_github_public_ssh_deploy_key() {
     local DEPLOY_KEY_TITLE=${2}
     local DEPLOY_KEY_FILE=${3}
 
-    # READ_ONLY *MUST* be 'true' or 'false'
+    # READ_ONLY *MUST* be 'false' to push a read/write key
     local READ_ONLY=${4}
-    if [[ ${READ_ONLY} != 'true' || ${READ_ONLY} != 'false' ]]
+    if [[ ${READ_ONLY} != 'false' ]]
     then
         READ_ONLY=true
     fi
