@@ -19,7 +19,7 @@ def call(Map args) {
         allProjectFiles.each { projectFile ->
             stage('testing') {
                 echo "projectFile ${projectFile.name}"
-                def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
+                def projectId = projectFile.name.split('[.]')[0]
                 echo 'howdy1'
                 def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
                 echo 'howdy2'
