@@ -17,6 +17,7 @@ def call(Map args) {
         echo "allProjectFiles: ${allProjectFiles}"
 
         allProjectFiles.each { projectFile ->
+            echo "projectFile ${projectFile.getClass{}}"
             echo 'howdy'
             def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
             echo 'howdy1'
