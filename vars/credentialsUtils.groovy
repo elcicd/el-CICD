@@ -4,10 +4,10 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
-def getJenkinsCredsUrl(def projectInfo) {
+def getJenkinsCredsUrl(def projectInfo, def tokenId) {
     def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
-    def updateRelativePath = 'credentials/store/system/domain/_/credential'
+    def updateRelativePath = "credentials/store/system/domain/_/credential/${tokenId}/config.xml"
 
     def cicdRbacGroupJenkinsCredsUrls = [:]
 
@@ -18,20 +18,21 @@ def getJenkinsCredsUrl(def projectInfo) {
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
-    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
+    def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    def jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenIdKey)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
-    def key = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, key)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, key)
-
-    key = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, key)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, key)
+    keyId = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenIdKey)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     envs.each { ENV ->
-        def tokenIdKey = "${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], jenkinsUrls.createCredsUrl)
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, el.cicd[tokenIdKey], jenkinsUrls.updateCredsUrl)
+        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
+        jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenId)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, url, tokenId)
     }
 }
 
@@ -130,13 +131,13 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     }
 }
 
-def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def credentialsId, def url) {
-    withCredentials([string(credentialsId: credentialsId, variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tokenId) {
+    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
         def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         sh """
-            ${pipelineUtils.shellEchoBanner("PUSH IMAGE REPOSITORY TOKEN ${credentialsId} TO ${cicdJenkinsNamespace} JENKINS")}
+            ${pipelineUtils.shellEchoBanner("PUSH IMAGE REPOSITORY TOKEN ${tokenId} TO ${cicdJenkinsNamespace} JENKINS")}
 
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${credentialsId}/g" > jenkinsTokenCredentials-named.xml
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
             cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
             ${maskCommand(curlCommand)}
