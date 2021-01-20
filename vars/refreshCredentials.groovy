@@ -15,7 +15,7 @@ def call(Map args) {
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
         allProjectFiles.each { projectFile ->
-            def projectId = projectFile.name.split('.')[0]
+            def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
             def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
