@@ -14,9 +14,14 @@ def call(Map args) {
         allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
+        echo "allProjectFiles: ${allProjectFiles}"
+
         allProjectFiles.each { projectFile ->
+            echo 'howdy'
             def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
+            echo 'howdy1'
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
+            echo 'howdy2'
             def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
             stage('Push el-CICD credentials') {
