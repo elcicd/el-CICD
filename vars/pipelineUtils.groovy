@@ -38,7 +38,8 @@ def gatherProjectInfoStage(def projectId) {
             projectFile.addAll(findFiles(glob: "**/${projectId}.js")
             projectFile.addAll(findFiles(glob: "**/${projectId}.yml")
             projectFile.addAll(findFiles(glob: "**/${projectId}.yaml")
-
+            
+            // projectFile = findFiles(glob: "**/${projectId}.*")
             if (projectFile) {
                 projectFile = projectFile[0].path
                 try {
