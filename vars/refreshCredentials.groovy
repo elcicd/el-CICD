@@ -17,6 +17,7 @@ def call(Map args) {
             def projectId = findFiles(glob: "**/${projectFile}")[0].name
 
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
+            def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
             stage('Push el-CICD credentials') {
                 credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
