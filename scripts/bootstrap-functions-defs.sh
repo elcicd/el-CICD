@@ -105,10 +105,12 @@ __bootstrap_el_cicd_onboarding_server() {
         PIPELINE_TEMPLATES='prod-project-onboarding'
     fi
 
+    PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} refresh-credentials"
     if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
     then
         PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} create-all-jenkins-agents"
     fi
+
     __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
@@ -171,7 +173,13 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 __create_master_namespace_with_selectors() {
     echo
     NODE_SELECTORS=$(echo ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
-    echo "Creating ${EL_CICD_MASTER_NAMESPACE} with node selectors: ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+    local CREATE_MSG="Creating ${EL_CICD_MASTER_NAMESPACE}"
+    if [[ ! -z  ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
+    then
+        CREATE_MSG=" with node selectors: ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+    fi
+    echo ${CREATE_MSG}
+
     oc adm new-project ${EL_CICD_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
 }
 

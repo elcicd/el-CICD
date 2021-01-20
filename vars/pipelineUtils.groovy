@@ -34,7 +34,7 @@ def gatherProjectInfoStage(def projectId) {
         echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
 
         dir (el.cicd.PROJECT_DEFS_DIR) {
-            projectFile = findFiles(glob: "**/${projectId}.*")
+            projectFile = findFiles(glob: "**/${projectId}.{json,js,yml,yaml}")
             if (projectFile) {
                 projectFile = projectFile[0].path
                 try {

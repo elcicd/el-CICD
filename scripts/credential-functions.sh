@@ -102,8 +102,6 @@ _create_env_docker_registry_secret() {
     local ENV=${1}
     local NAMESPACE_NAME=${2}
 
-    echo
-    echo "Creating ${ENV} image pull secret in ${NAMESPACE_NAME}"
     local USER_NAME=$(eval echo \${${ENV}${IMAGE_REPO_USERNAME_POSTFIX}})
     local SECRET_NAME=$(eval echo \${${ENV}${IMAGE_REPO_PULL_SECRET_POSTFIX}})
     local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
@@ -115,6 +113,8 @@ _create_env_docker_registry_secret() {
         DRY_RUN=true
     fi
 
+    echo
+    echo "Creating secret ${SECRET_NAME} for SDLC environment ${ENV}"
     local SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SECRET_NAME}
     oc create secret docker-registry ${SECRET_NAME}  \
         --docker-username=${USER_NAME} \
@@ -127,6 +127,7 @@ _create_env_docker_registry_secret() {
     oc apply -f ${SECRET_FILE_IN} --overwrite -n ${NAMESPACE_NAME}
 
     local LABEL_NAME=$(echo ${ENV} | tr '[:upper:]' '[:lower:]')-env
+    echo "Applying label ${LABEL_NAME} to secret ${SECRET_NAME}"
     oc label secret ${SECRET_NAME} --overwrite ${LABEL_NAME}=true -n ${NAMESPACE_NAME}
 }
 
