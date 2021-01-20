@@ -32,7 +32,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
         def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
         jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenId)
         pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, url, tokenId)
+        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
     }
 }
 
