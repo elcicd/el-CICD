@@ -8,7 +8,8 @@
 
 def call(Map args) {
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def allProjectFiles = findFiles(glob: "**/*.json")
+        def allProjectFiles = []
+        allProjectFiles = allProjectFiles.addAll(findFiles(glob: "**/*.json"))
         allProjectFiles.addAll(findFiles(glob: "**/*.js"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
