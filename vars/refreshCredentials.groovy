@@ -17,8 +17,7 @@ def call(Map args) {
         echo "allProjectFiles: ${allProjectFiles}"
 
         allProjectFiles.each { projectFile ->
-            echo "projectFile ${projectFile.getClass{}}"
-            echo 'howdy'
+            echo "projectFile ${projectFile.name}"
             def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
             echo 'howdy1'
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
