@@ -8,11 +8,9 @@
 
 def call(Map args) {
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def allProjectFiles = []
-        allProjectFiles.addAll(findFiles(glob: "**/*.json"))
-        allProjectFiles.addAll(findFiles(glob: "**/*.js"))
-        allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
-        allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
+        def allProjectFiles =
+            sh(returnStdout: true, script: /find .\/ -type f -iname *.json -o -iname *.js -o -iname *.yml -o -iname *.yml/)
+        allProjectFiles = allProjectFiles.split('\n')
 
         allProjectFiles.each { projectFile ->
             def projectId = projectFile.name.replaceAll('[.](yml||yaml|json|js)', '')​
