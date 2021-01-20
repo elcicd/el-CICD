@@ -38,7 +38,7 @@ def call(Map args) {
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
-        withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
             def imageRepoUserNamePwd = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
             def imageRepo = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
@@ -136,8 +136,8 @@ def call(Map args) {
         pipelineUtils.echoBanner("PROMOTE IMAGES TO PROD:", "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN'),
-                             string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
+            withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN'),
+                             string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
             {
                 def fromUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
                 def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PROD_IMAGE_REPO_ACCESS_TOKEN}"
