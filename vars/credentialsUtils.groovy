@@ -5,17 +5,14 @@
  */
 
 def getJenkinsCredsUrl(def projectInfo) {
-    def protocol = "https"
-    def app = "jenkins"
+    def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
     def updateRelativePath = 'credentials/store/system/domain/_/credential'
 
     def cicdRbacGroupJenkinsCredsUrls = [:]
 
-    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsCreateCredsUrl =
-        "${protocol}://${app}-${el.cicd.EL_CICD_MASTER_NAMESPACE}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${createRelativePath}"
-    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsUpdateCredsUrl =
-        "${protocol}://${app}-${el.cicd.EL_CICD_MASTER_NAMESPACE}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/${updateRelativePath}"
+    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsCreateCredsUrl = "${jenkinsUrl}/${createRelativePath}"
+    cicdRbacGroupJenkinsCredsUrls.cicdJenkinsUpdateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
 
     return cicdRbacGroupJenkinsCredsUrls
 }
