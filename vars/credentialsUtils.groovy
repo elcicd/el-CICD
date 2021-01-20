@@ -64,11 +64,12 @@ def deleteDeployKeysFromGithub(def projectInfo) {
 }
 
 def deleteDeployKeysFromJenkins(def projectInfo) {
-    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
+    def jenkinsUrl =
+        "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
     def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)'
     projectInfo.microServices.each { microService ->
-        def doDelete = """${curlCommand} ${jenkinsUrls.updateCredsUrl}/${microService.gitSshPrivateKeyName}/doDelete """
+        def doDelete = "${curlCommand} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
         sh """
             ${maskCommand(doDelete)}
         """
@@ -80,18 +81,15 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
-    def jenkinsUrls = getJenkinsCredsUrl(projectInfo)
-
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def credsFileName = 'scmSshCredentials.xml'
-        def jenkinsCurlCommand = """
-            curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
+        def jenkinsCurlCommand =
+            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-        def createCredsCommand = "${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}"
         projectInfo.microServices.each { microService ->
             def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
 
-            def updateCredsCommand = "${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}/${microService.gitSshPrivateKeyName}/config.xml"
+            def jenkinsUrls = getJenkinsCredsUrl(projectInfo, microService.gitSshPrivateKeyName)
             sh """
                 ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
                 ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
@@ -103,8 +101,8 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                 cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
 
-                ${maskCommand(createCredsCommand)}
-                ${maskCommand(updateCredsCommand)}
+                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
+                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
 
                 rm -f ${credsFileName}
             """
