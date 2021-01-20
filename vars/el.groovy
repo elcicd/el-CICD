@@ -13,6 +13,14 @@ static def cicd = [:]
 def initMetaData(Map metaData) {
     cicd.putAll(metaData)
 
+    cicd.PULL_TOKEN_FILE_POSTFIX = '_PULL_TOKEN_FILE'
+    cicd.IMAGE_REPO_DOMAIN_POSTFIX = '_IMAGE_REPO_DOMAIN'
+    cicd.IMAGE_REPO_USERNAME_POSTFIX = '_IMAGE_REPO_USERNAME'
+    cicd.IMAGE_REPO_POSTFIX = '_IMAGE_REPO'
+    cicd.IMAGE_REPO_PULL_SECRET_POSTFIX = '_IMAGE_REPO_PULL_SECRET'
+    cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX = '_IMAGE_REPO_ACCESS_TOKEN_ID'
+    cicd.NODE_SELECTORS_POSTFIX = '_NODE_SELECTORS'
+
     cicd.TEST_ENVS = cicd.TEST_ENVS ? cicd.TEST_ENVS.split(':') : []
 
     cicd.devEnv = cicd.DEV_ENV ? cicd.DEV_ENV.toLowerCase() : null
