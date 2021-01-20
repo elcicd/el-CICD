@@ -8,16 +8,15 @@
 
 def call(Map args) {
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def allProjectFiles =
-            sh(returnStdout: true, script: /find .\/ -type f -iname \*.json -o -iname \*.js -o -iname \*.yml -o -iname \*.yml/)
-        echo "allProjectFiles: ${allProjectFiles}"
-        allProjectFiles = allProjectFiles.split(' ')
-        echo ""
-        echo "allProjectFiles: ${allProjectFiles}"
+        def allProjectFiles = []
+        allProjectFiles = allProjectFiles.addAll(findFiles(glob: "**/*.json"))
+        allProjectFiles.addAll(findFiles(glob: "**/*.js"))
+        allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
+        allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
         allProjectFiles.each { projectFile ->
-            def projectId = findFiles(glob: "**/${projectFile}")[0].name
-
+            def projectId = projectFile.name
+            
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
             def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
