@@ -68,7 +68,7 @@ def call(Map args) {
             def allImagesExist = true
             def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
-                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${FROM_IMAGE_REPO_ACCESS_TOKEN}"
+                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${FROM_IMAGE_REPO_ACCESS_TOKEN}"
                 projectInfo.microServices.each { microService ->
                     if (microService.promote) {
                         def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -148,8 +148,8 @@ def call(Map args) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
                             string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${FROM_IMAGE_REPO_ACCESS_TOKEN}"
-                def toUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
+                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${FROM_IMAGE_REPO_ACCESS_TOKEN}"
+                def toUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
                 projectInfo.microServices.each { microService ->
                     if (microService.promote) {
                         def fromImageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
