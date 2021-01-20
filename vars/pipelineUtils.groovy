@@ -35,11 +35,10 @@ def gatherProjectInfoStage(def projectId) {
 
         dir (el.cicd.PROJECT_DEFS_DIR) {
             def projectFile = findFiles(glob: "**/${projectId}.json")
-            projectFile.addAll(findFiles(glob: "**/${projectId}.js")
-            projectFile.addAll(findFiles(glob: "**/${projectId}.yml")
-            projectFile.addAll(findFiles(glob: "**/${projectId}.yaml")
+            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.js")
+            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
+            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yaml")
 
-            // projectFile = findFiles(glob: "**/${projectId}.*")
             if (projectFile) {
                 projectFile = projectFile[0].path
                 try {
