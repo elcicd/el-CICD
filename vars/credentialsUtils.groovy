@@ -82,8 +82,9 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+        def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand =
-            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @scmSshCredentials.xml"""
+            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
         projectInfo.microServices.each { microService ->
             def bcExistsCommand = "oc get bc --ignore-not-found ${microService.id}-build-to-dev -n ${projectInfo.cicdMasterNamespace}"
