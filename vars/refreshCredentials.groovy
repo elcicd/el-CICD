@@ -16,7 +16,7 @@ def call(Map args) {
         allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
-        def rbacGroups = []
+        def rbacGroups = [:]
         allProjectFiles.each { projectFile ->
             def projectId = projectFile.name.split('[.]')[0]
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
@@ -25,8 +25,8 @@ def call(Map args) {
             if (cicdProjectsExist) {
                 def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
-                if (!rbacGroups.contains(projectInfo.rbacGroup)) {
-                    rbacGroups.add(projectInfo.rbacGroup)
+                if (!rbacGroups[(projectInfo.rbacGroup)]) {
+                    rbacGroups[(projectInfo.rbacGroup)] = true
                     stage('Push el-CICD credentials') {
                         credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
                     }

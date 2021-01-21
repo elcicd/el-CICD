@@ -37,7 +37,7 @@ def call(Map args) {
         credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
 
         if (!args.deleteRbacGroupJenkins) {
-            deleteDeployKeysFromJenkins(projectInfo)
+            credentialsUtils.deleteDeployKeysFromJenkins(projectInfo)
         }
     }
 
