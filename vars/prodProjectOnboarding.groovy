@@ -28,16 +28,17 @@ def call(Map args) {
     }
 
     stage('Setup prod openshift namespace environment') {
-        def region = el.cicd["${projectInfo.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
+        def nodeSelectors = el.cicd["${projectInfo.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
 
         sh """
             ${pipelineUtils.shellEchoBanner("SETUP OPENSHIFT PROD NAMESPACE ENVIRONMENT AND JENKINS RBAC FOR ${projectInfo.id}")}
 
             if [[ `oc projects | grep ${projectInfo.prodNamespace} | wc -l` -lt 1 ]]
             then
-                if [[ ! -z ${region ?: ''} ]]
+                __NODE_SELS=${nodeSelectors ?: ''}
+                if [[ ! -z \${__NODE_SELS} ]]
                 then
-                    oc adm new-project ${projectInfo.prodNamespace} --node-selector="${region}"
+                    oc adm new-project ${projectInfo.prodNamespace} --node-selector="${nodeSelectors}"
                 else
                     oc adm new-project ${projectInfo.prodNamespace}
                 fi

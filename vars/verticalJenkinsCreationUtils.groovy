@@ -42,7 +42,8 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     sh """
         ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
-        if [[ ! -z ${nodeSelectors} ]]
+        __NODE_SELS=${nodeSelectors}
+        if [[ ! -z \${__NODE_SELS} ]]
         then
             oc adm new-project ${projectInfo.cicdMasterNamespace} --node-selector='${nodeSelectors}'
         else
