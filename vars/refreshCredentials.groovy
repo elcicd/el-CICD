@@ -17,34 +17,38 @@ def call(Map args) {
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
         def rbacGroups = [:]
+        def rbacGroupServerNotFound = [:]
         allProjectFiles.each { projectFile ->
             def projectId = projectFile.name.split('[.]')[0]
             def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
 
-            def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
-            if (cicdProjectsExist) {
-                def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
+            if (!rbacGroupServerNotFound[(projectInfo.rbacGroup)]) {
+                def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
+                if (cicdProjectsExist) {
+                    def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
-                if (!rbacGroups[(projectInfo.rbacGroup)]) {
-                    rbacGroups[(projectInfo.rbacGroup)] = true
-                    stage('Push el-CICD credentials') {
-                        credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+                    if (!rbacGroups[(projectInfo.rbacGroup)]) {
+                        rbacGroups[(projectInfo.rbacGroup)] = true
+                        stage('Push el-CICD credentials') {
+                            credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+                        }
+                    }
+                    else {
+                        pipelineUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
+                    }
+
+                    stage('Delete old github public keys with curl') {
+                        credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
+                    }
+
+                    stage('Create and push public key for each github repo to github with curl') {
+                        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
                     }
                 }
                 else {
-                    pipelineUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
+                    rbacGroupServerNotFound[(projectInfo.rbacGroup)] = true
+                    pipelineUtils.echoBanner("${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
                 }
-
-                stage('Delete old github public keys with curl') {
-                    credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
-                }
-
-                stage('Create and push public key for each github repo to github with curl') {
-                    credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
-                }
-            }
-            else {
-                pipelineUtils.echoBanner("${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
             }
         }
     }
