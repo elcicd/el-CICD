@@ -80,7 +80,7 @@ def waitUntilJenkinsIsReady(def projectInfo) {
             do
                 printf "%0.s-" \$(seq 1 \${COUNTER})
                 echo
-                sleep 5
+                sleep 3
                 let COUNTER+=1
             done
         done

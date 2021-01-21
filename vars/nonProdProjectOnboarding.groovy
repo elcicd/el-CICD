@@ -27,7 +27,7 @@ def call(Map args) {
                 while [ `oc get bc \${BCS} -n ${projectInfo.cicdMasterNamespace} | grep \${BCS} | wc -l` -gt 0 ] ;
                 do
                     oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}
-                    sleep 5
+                    sleep 3
                     ${shellEcho ''}
                 done
             done
