@@ -26,7 +26,7 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
         NAMESPACES=(${namespaces.join(' ')})
         for i in \${!NAMESPACES[@]}
         do
-            if [[ -z \$(oc get projects -- ignore-not-found \${NAMESPACES[\${i}]}) ]]
+            if [[ -z \$(oc get projects --ignore-not-found \${NAMESPACES[\${i}]}) ]]
             then
                 if [[ ! -z \${NODE_SELECTORS[\${i}]} ]]
                 then
