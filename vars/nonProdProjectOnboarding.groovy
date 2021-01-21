@@ -97,7 +97,7 @@ def call(Map args) {
             (1..projectInfo.sandboxEnvs).each { i ->
                 namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
-                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: 'null'
+                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             }
 
             onboardingUtils.createNamepaces(projectInfo,
