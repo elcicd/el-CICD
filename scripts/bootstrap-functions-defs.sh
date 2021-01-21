@@ -180,7 +180,12 @@ __create_master_namespace_with_selectors() {
     fi
     echo ${CREATE_MSG}
 
-    oc adm new-project ${EL_CICD_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+    if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
+    then
+        oc adm new-project ${EL_CICD_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+    else
+        oc new-project ${EL_CICD_MASTER_NAMESPACE}
+    fi
 }
 
 __create_onboarding_automation_server() {

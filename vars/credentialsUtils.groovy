@@ -82,30 +82,33 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand =
-            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
+            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @scmSshCredentials.xml"""
 
         projectInfo.microServices.each { microService ->
-            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
+            def bcExistsCommand = "oc get bc --ignore-not-found ${microService.id}-build-to-dev -n ${projectInfo.cicdMasterNamespace}"
+            def bcExists = sh(returnStdout: true, script: bcExistsCommand)
+            if (bcExists) {
+                def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
 
-            def jenkinsUrls = getJenkinsCredsUrl(projectInfo, microService.gitSshPrivateKeyName)
-            sh """
-                ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
-                ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+                def jenkinsUrls = getJenkinsCredsUrl(projectInfo, microService.gitSshPrivateKeyName)
+                sh """
+                    ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
+                    ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
 
-                ${pushDeployKeyIdCurlCommand}
+                    ${pushDeployKeyIdCurlCommand}
 
-                ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON NON-PROD JENKINS: ${microService.name}"}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
-                cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
+                    ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON NON-PROD JENKINS: ${microService.name}"}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
+                    cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
 
-                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
-                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
+                    ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
+                    ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
 
-                rm -f ${credsFileName}
-            """
+                    rm -f ${credsFileName}
+                """
+            }
         }
     }
 }

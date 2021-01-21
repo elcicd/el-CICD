@@ -35,7 +35,12 @@ def call(Map args) {
 
             if [[ `oc projects | grep ${projectInfo.prodNamespace} | wc -l` -lt 1 ]]
             then
-                oc adm new-project ${projectInfo.prodNamespace} --node-selector="${region}"
+                if [[ ! -z ${region ?: ''} ]]
+                then
+                    oc adm new-project ${projectInfo.prodNamespace} --node-selector="${region}"
+                else
+                    oc adm new-project ${projectInfo.prodNamespace}
+                fi
 
                 oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.prodNamespace}
 

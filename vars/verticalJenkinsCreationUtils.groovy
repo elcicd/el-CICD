@@ -37,10 +37,17 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     def secretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
 
+    def nodeSelectors = el.cicd.EL_CICD_RBAC_GROUP_MASTER_NODE_SELECTORS ?: ''
+
     sh """
         ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
-        oc adm new-project ${projectInfo.cicdMasterNamespace} --node-selector='${el.cicd.EL_CICD_RBAC_GROUP_MASTER_NODE_SELECTORS}'
+        if [[ ! -z ${nodeSelectors} ]]
+        then
+            oc adm new-project ${projectInfo.cicdMasterNamespace} --node-selector='${nodeSelectors}'
+        else
+            oc adm new-project ${projectInfo.cicdMasterNamespace}
+        fi
 
         oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                       -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
