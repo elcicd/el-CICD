@@ -22,7 +22,7 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
 
     sh """
         NODE_SELECTORS=(${nodeSelectors.join(' ') ?: ''})
-        ENVS=(${environments.join('  ')})
+        ENVS=(${environments.join(' ')})
         NAMESPACES=(${namespaces.join(' ')})
         for i in \${!NAMESPACES[@]}
         do
