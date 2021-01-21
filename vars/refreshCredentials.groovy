@@ -7,6 +7,8 @@
  */
 
 def call(Map args) {
+    onboardingUtils.init()
+
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def allProjectFiles = []
         allProjectFiles.addAll(findFiles(glob: "**/*.json"))
