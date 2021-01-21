@@ -67,7 +67,7 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
-    def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)'
+    def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)"'
     projectInfo.microServices.each { microService ->
         def doDelete = "${curlCommand} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
         sh """

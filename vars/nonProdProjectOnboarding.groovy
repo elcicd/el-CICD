@@ -42,7 +42,7 @@ def call(Map args) {
                 until
                     !(oc project \${NAMESPACE} > /dev/null 2>&1)
                 do
-                    sleep 1
+                    sleep 3
                 done
             done
         """
