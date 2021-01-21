@@ -32,7 +32,7 @@ def call(Map args) {
                     }
                 }
                 else {
-                    echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
+                    pipelinUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
                 }
 
                 stage('Delete old github public keys with curl') {
@@ -44,7 +44,7 @@ def call(Map args) {
                 }
             }
             else {
-                echoBanner("${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
+                pipelinUtils.echoBanner("${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
             }
         }
     }
