@@ -56,7 +56,7 @@ def call(Map args) {
                     do
                         oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}
                         sleep 3
-                        ${shellEcho ''}
+                        ${shellEcho '-'}
                     done
                 done
             """
