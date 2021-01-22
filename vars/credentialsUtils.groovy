@@ -4,33 +4,33 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
-def getJenkinsCredsUrl(def projectInfo, def tokenId) {
+def getJenkinsCredsUrls(def projectInfo, def tokenId) {
     def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
     def updateRelativePath = "credentials/store/system/domain/_/credential/${tokenId}/config.xml"
 
-    def cicdRbacGroupJenkinsCredsUrls = [:]
+    def jenkinsCredsUrls = [:]
 
-    cicdRbacGroupJenkinsCredsUrls.createCredsUrl = "${jenkinsUrl}/${createRelativePath}"
-    cicdRbacGroupJenkinsCredsUrls.updateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
+    jenkinsCredsUrls.createCredsUrl = "${jenkinsUrl}/${createRelativePath}"
+    jenkinsCredsUrls.updateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
 
-    return cicdRbacGroupJenkinsCredsUrls
+    return jenkinsCredsUrls
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    def jenkinsUrls = getJenkinsCredsUrl(projectInfo, keyId)
+    def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    jenkinsUrls = getJenkinsCredsUrl(projectInfo, keyId)
+    jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     envs.each { ENV ->
         def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
-        jenkinsUrls = getJenkinsCredsUrl(projectInfo, tokenId)
+        jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
         pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
         pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
     }
@@ -92,7 +92,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
             if (bcExists) {
                 def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
 
-                def jenkinsUrls = getJenkinsCredsUrl(projectInfo, microService.gitSshPrivateKeyName)
+                def jenkinsUrls = getJenkinsCredsUrls(projectInfo, microService.gitSshPrivateKeyName)
                 sh """
                     ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
                     ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
