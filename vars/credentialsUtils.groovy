@@ -5,7 +5,7 @@
  */
 
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
-   getJenkinsCredsUrls(projectInfo.cicdMasterNamespace, tokenId) {
+   getJenkinsCredsUrls(projectInfo.cicdMasterNamespace, tokenId)
 }
 
 def getJenkinsCredsUrls(def cicdMasterNamespace, def tokenId) {
