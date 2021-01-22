@@ -5,6 +5,8 @@
  */
 
 def getJenkinsCredsUrls(def projectInfoOrNamespace, def tokenId) {
+    def cicdMasterNamespace = (projectInfoOrNamespace instanceof String || projectInfoOrNamespace instanceof GString) ?
+        projectInfoOrNamespace : projectInfoOrNamespace.cicdMasterNamespace
     def cicdMasterNamespace = projectInfoOrNamespace?.cicdMasterNamespace ?: projectInfoOrNamespace
 
     def jenkinsUrl = "https://jenkins-${cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
