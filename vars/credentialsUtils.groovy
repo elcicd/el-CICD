@@ -19,19 +19,6 @@ def getJenkinsCredsUrls(def projectInfoOrNamespace, def tokenId) {
     return jenkinsCredsUrls
 }
 
-def getJenkinsCredsUrls(def projectInfo, def tokenId) {
-    def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
-    def updateRelativePath = "credentials/store/system/domain/_/credential/${tokenId}/config.xml"
-
-    def jenkinsCredsUrls = [:]
-
-    jenkinsCredsUrls.createCredsUrl = "${jenkinsUrl}/${createRelativePath}"
-    jenkinsCredsUrls.updateCredsUrl = "${jenkinsUrl}/${updateRelativePath}"
-
-    return jenkinsCredsUrls
-}
-
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
