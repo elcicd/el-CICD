@@ -5,7 +5,11 @@
  */
 
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
-    def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+   getJenkinsCredsUrls(projectInfo.cicdMasterNamespace, tokenId) {
+}
+
+def getJenkinsCredsUrls(def cicdMasterNamespace, def tokenId) {
+    def jenkinsUrl = "https://jenkins-${cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
     def updateRelativePath = "credentials/store/system/domain/_/credential/${tokenId}/config.xml"
 
