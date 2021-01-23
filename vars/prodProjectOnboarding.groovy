@@ -14,6 +14,8 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
+    onboardingUtils.createProdNfsPersistentVolumes(projectInfo)
+
     stage('Remove stale namespace environments, if necessary') {
         if (args.recreateProd) {
             sh """

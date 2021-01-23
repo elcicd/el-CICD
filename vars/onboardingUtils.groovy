@@ -52,3 +52,68 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
         done
     """
 }
+
+def createNonProdNfsPersistentVolumes(def projectInfo) {
+    def pvNames = [:]
+    dir(el.cicd.OKD_TEMPLATES_DIR) {
+        projectInfo?.nfsShares.each { nfsShare ->
+            nfsShare.envs.each { env ->
+                pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
+                pvNames[(pvName)] = true
+
+                createNfsShare(projectInfo, nfsShare, pvName, env)
+            }
+        }
+    }
+
+    def releasedPvs = sh(returnStdout: true, sh """
+        oc get pvs -l projectid=${projectInfo.id} | grep 'Released' | awk { print $1 }
+    """).splt('\n')
+
+    releasedPvs.each { pvName ->
+        if ( !pvNames[(pvName)] && pvName.indexOf("-${projectInfo.prodEnv}-" < 0)) {
+            sh "oc delete pv ${pvName}"
+        }
+    }
+}
+
+def createProdNfsPersistentVolumes(def projectInfo) {
+    def pvNames = [:]
+    dir(el.cicd.OKD_TEMPLATES_DIR) {
+        projectInfo?.nfsShares.each { nfsShare ->
+            pvName = "nfs-${projectInfo.id}-${projectInfo.prodEnv}-${nfsShare.claimName}"
+            pvNames[(pvName)] = true
+
+            createNfsShare(projectInfo, nfsShare, pvName, projectInfo.prodEnv)
+        }
+    }
+
+    def releasedPvs = sh(returnStdout: true, sh """
+        oc get pvs -l projectid=${projectInfo.id} | grep 'Released' | awk { print $1 }
+    """).splt('\n')
+
+    releasedPvs.each { pvName ->
+        if ( !pvNames[(pvName)] && pvName.indexOf("-${projectInfo.prodEnv}-" >= 0)) {
+            sh "oc delete pv ${pvName}"
+        }
+    }
+}
+
+def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
+    sh """
+        oc process --local \
+                -f nfs-pv-template.yml \
+                -p PROJECT_ID=${projectInfo.id} \
+                -p PV_NAME=nfs-${nfsShareName} \
+                -p CAPACITY=${nfsShare.capacity} \
+                -p ACCESS_MODE=${nfsShare.accessMode} \
+                -p RECLAIM_POLICY=${nfsShare.reclaimPolicy} \
+                -p NFS_EXPORT=${nfsShare.nfsExportPath} \
+                -p NFS_SERVER=${nfsShare.nfsServer} \
+                -p CLAIM_NAME=${nfsShare.claimName} \
+                -p NAMESPACE=${projectInfo.id}-${env} \
+            | oc create -f -
+
+        ${shellEcho ''}
+    """
+}

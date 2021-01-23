@@ -198,7 +198,12 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def appName = templateDef.appName ?: microService.name
                     if (templateDef.params) {
-                        templateDef.params.ROUTE_HOST = templateDef.params.ROUTE_HOST ?: "${appName}-${projectInfo.deployToEnv}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+                        templateDef.params.ROUTE_NAME = templateDef.params.ROUTE_NAME ?: appName
+
+                        if (!templateDef.params.ROUTE_HOST) {
+                            def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
+                            templateDef.params.ROUTE_HOST = "${appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+                        }
                     }
 
                     def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')

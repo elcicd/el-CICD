@@ -111,6 +111,52 @@ def gatherProjectInfoStage(def projectId) {
     return projectInfo
 }
 
+def validateProjectInfo(def projectInfo) {
+    assert projectInfo.rbacGroup
+    assert projectInfo.scmHost ==~ /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
+    assert projectInfo.scmRestApiHost ==~ /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
+    assert projectInfo.scmOrganization
+    assert projectInfo.gitBranch
+    assert (!projectInfo.sandboxEnvs || projectInfo.sandboxEnvs instanceof Number)
+    assert projectInfo.microServices.size() > 0
+
+    projectInfo.microServices.each { microService ->
+        assert microService.gitRepoName ==~ [a-z]+
+        assert microService.codeBase ==~ [a-z]+
+    }
+
+    projectInfo.enabledTestEnvs.each { env ->
+        assert el.cicd.testEnvs.contains(env)
+    }
+
+    if (projectInfo.nfsShares) {
+        assert projectInfo.nfsShares.envs
+        projectInfo.nfsShares.each { nfsShare ->
+            validateNfsShare(nfsShare)
+        }
+    }
+
+    if (projectInfo.prodNfsShares) {
+        assert projectInfo.prodNfsShares.envs
+        projectInfo.nfsShares.each { nfsShare ->
+            validateNfsShare(nfsShare)
+        }
+    }
+}
+
+def validateNfsShare(def nfsShare) {
+    nfsShare?.envs { env ->
+        assert projectInfo.nonProdEnvs.contains(env)
+    }
+    
+    assert nfsShare.capacity
+    assert nfsShare.accessMode
+    assert nfsShare.reclaimPolicy
+    assert nfsShare.nfsExportPath
+    assert nfsShare.nfsServer
+    assert nfsShare.claimName
+}
+
 def spacedEcho(def msg) {
     echo "\n${msg}\n"
 }

@@ -10,7 +10,7 @@ _build_el_cicd_jenkins_image() {
         oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
     fi
 
-    cp ${TEMPLATES_DIR}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
+    cp ${CONFIG_REPOSITORY_JENKINS}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
     sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
            -e  "s|%CONFIG_PATH%|${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}|g;" \
            -e  "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \

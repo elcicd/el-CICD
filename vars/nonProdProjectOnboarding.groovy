@@ -16,6 +16,8 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
+    onboardingUtils.createNonProdNfsPersistentVolumes(projectInfo)
+
     stage('Remove stale namespace environments and pipelines if necessary') {
         def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : ''
 
