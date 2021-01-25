@@ -121,8 +121,8 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.microServices.size() > 0
 
     projectInfo.microServices.each { microService ->
-        assert microService.gitRepoName ==~ [a-z]+
-        assert microService.codeBase ==~ [a-z]+
+        assert microService.gitRepoName ==~ /[a-z]+/
+        assert microService.codeBase ==~ /[a-z]+/
     }
 
     projectInfo.enabledTestEnvs.each { env ->
@@ -148,7 +148,7 @@ def validateNfsShare(def nfsShare) {
     nfsShare?.envs { env ->
         assert projectInfo.nonProdEnvs.contains(env)
     }
-    
+
     assert nfsShare.capacity
     assert nfsShare.accessMode
     assert nfsShare.reclaimPolicy

@@ -53,47 +53,51 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
     """
 }
 
-def createNonProdNfsPersistentVolumes(def projectInfo) {
+def createResourceQuotas(def projectInfo, def isNonProd) {
+    def resQuotaNames = [:]
+    def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
+    envs.each {
+        sh "oc delete quota -l=projectid=${it}"
+    }
+
+    dir(el.cicd.OKD_TEMPLATES_DIR) {
+        projectInfo?.resourceQuotas.each { resourceQuota ->
+            envs.each { env ->
+                if (resourceQuota[(env)]) {
+                    sh """
+                        oc delete quota -l=projectid=${projectInfo.id}
+                        oc create --l=projectid=${projectInfo.id} -f ${resourceQuota[(env)]} -n ${projectInfo.id}-${env}
+                        ${shellEcho ''}
+                    """
+                }
+            }
+        }
+    }
+}
+
+def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     def pvNames = [:]
     dir(el.cicd.OKD_TEMPLATES_DIR) {
         projectInfo?.nfsShares.each { nfsShare ->
-            nfsShare.envs.each { env ->
+            def envs = isNonProd ?
+                nfsShare.envs.collect { it != projectInfo.prodEnv } :
+                nfsShare.envs.collect { it == projectInfo.prodEnv }
+            envs.each { env ->
                 pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
                 pvNames[(pvName)] = true
-
-                createNfsShare(projectInfo, nfsShare, pvName, env)
+                if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env = projectInfo.prodEnv))
+                    createNfsShare(projectInfo, nfsShare, pvName, env)
+                }
             }
         }
     }
 
     def releasedPvs = sh(returnStdout: true, sh """
-        oc get pvs -l projectid=${projectInfo.id} | grep 'Released' | awk { print $1 }
+        oc get pv -l projectid=${projectInfo.id} | grep 'Released' | awk '{ print $1 }'
     """).splt('\n')
 
     releasedPvs.each { pvName ->
-        if ( !pvNames[(pvName)] && pvName.indexOf("-${projectInfo.prodEnv}-" < 0)) {
-            sh "oc delete pv ${pvName}"
-        }
-    }
-}
-
-def createProdNfsPersistentVolumes(def projectInfo) {
-    def pvNames = [:]
-    dir(el.cicd.OKD_TEMPLATES_DIR) {
-        projectInfo?.nfsShares.each { nfsShare ->
-            pvName = "nfs-${projectInfo.id}-${projectInfo.prodEnv}-${nfsShare.claimName}"
-            pvNames[(pvName)] = true
-
-            createNfsShare(projectInfo, nfsShare, pvName, projectInfo.prodEnv)
-        }
-    }
-
-    def releasedPvs = sh(returnStdout: true, sh """
-        oc get pvs -l projectid=${projectInfo.id} | grep 'Released' | awk { print $1 }
-    """).splt('\n')
-
-    releasedPvs.each { pvName ->
-        if ( !pvNames[(pvName)] && pvName.indexOf("-${projectInfo.prodEnv}-" >= 0)) {
+        if (!pvNames[(pvName)]) {
             sh "oc delete pv ${pvName}"
         }
     }
@@ -103,7 +107,6 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
     sh """
         oc process --local \
                 -f nfs-pv-template.yml \
-                -p PROJECT_ID=${projectInfo.id} \
                 -p PV_NAME=nfs-${nfsShareName} \
                 -p CAPACITY=${nfsShare.capacity} \
                 -p ACCESS_MODE=${nfsShare.accessMode} \
@@ -112,7 +115,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p NFS_SERVER=${nfsShare.nfsServer} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
                 -p NAMESPACE=${projectInfo.id}-${env} \
-            | oc create -f -
+            | oc create --label=projectid=${projectInfo.id} -f -
 
         ${shellEcho ''}
     """
