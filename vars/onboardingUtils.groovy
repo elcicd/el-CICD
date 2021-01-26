@@ -85,7 +85,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
             envs.each { env ->
                 pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
                 pvNames[(pvName)] = true
-                if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env = projectInfo.prodEnv))
+                if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env = projectInfo.prodEnv)) {
                     createNfsShare(projectInfo, nfsShare, pvName, env)
                 }
             }
