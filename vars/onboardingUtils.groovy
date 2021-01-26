@@ -110,7 +110,6 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p PV_NAME=nfs-${nfsShareName} \
                 -p CAPACITY=${nfsShare.capacity} \
                 -p ACCESS_MODE=${nfsShare.accessMode} \
-                -p RECLAIM_POLICY=${nfsShare.reclaimPolicy} \
                 -p NFS_EXPORT=${nfsShare.nfsExportPath} \
                 -p NFS_SERVER=${nfsShare.nfsServer} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
