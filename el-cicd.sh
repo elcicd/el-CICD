@@ -26,6 +26,7 @@ CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
 source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
+source ${SCRIPTS_DIR}/jenkins-builder-functions.sh
 source ${SCRIPTS_DIR}/credential-functions.sh
 
 set +o allexport
@@ -51,11 +52,12 @@ Usage: el-cicd.sh [OPTION] [config-file]
 Bootstraps and/or pushes credentials to an el-CICD Onboarding Automation Server
 
 Options:
-    -N,   --non-prod:   bootstraps Non-Prod el-CICD Onboarding Automation Server
-    -P,   --prod:       bootstraps Prod el-CICD Onboarding Automation Server
-          --np-creds:   push credentials to a  Non-Prod el-CICD Onboarding Automation Server
-          --pr-creds:   push credentials to a  Non-Prod el-CICD Onboarding Automation Server
-          --jenkins:    build el-CICD jenkins image
+    -N,   --non-prod:        bootstraps Non-Prod el-CICD Onboarding Automation Server
+    -P,   --prod:            bootstraps Prod el-CICD Onboarding Automation Server
+          --np-creds:        push credentials to a  Non-Prod el-CICD Onboarding Automation Server
+          --pr-creds:        push credentials to a  Non-Prod el-CICD Onboarding Automation Server
+          --jenkins:         build el-CICD Jenkins image
+          --jenkins-agents:  build el-CICD Jenkins agent images
 
 config-file: file name or path relative the root of the sibling directory el-CICD-config
 EOM

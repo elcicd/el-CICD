@@ -1,28 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-_build_el_cicd_jenkins_image() {
-    echo
-    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
-    echo
-    if [[ ! -n $(oc get bc ${JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
-    then
-        oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
-    fi
-
-    cp ${CONFIG_REPOSITORY_JENKINS}/Dockerfile.jenkins-template ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
-    sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
-           -e  "s|%CONFIG_PATH%|${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}|g;" \
-           -e  "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
-           -e  "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
-        ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
-
-    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${CONFIG_REPOSITORY_JENKINS} --wait --follow -n openshift
-    rm -f ${CONFIG_REPOSITORY_JENKINS}/Dockerfile
-}
-
 _bootstrap_el_cicd() {
-    EL_CICD_ONBOARDING_SERVER_TYPE=${1}
+    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
     if [[ -z "${EL_CICD_MASTER_NAMESPACE}" ]]
     then
@@ -49,7 +29,7 @@ _bootstrap_el_cicd() {
         _build_el_cicd_jenkins_image
     fi
 
-    __bootstrap_el_cicd_onboarding_server "${PIPELINE_TEMPLATES}"
+    __bootstrap_el_cicd_onboarding_server ${EL_CICD_ONBOARDING_SERVER_TYPE}
 
     echo
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
@@ -90,6 +70,8 @@ __gather_and_confirm_bootstrap_info_with_user() {
 }
 
 __bootstrap_el_cicd_onboarding_server() {
+    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
+
     local DEL_NAMESPACE=$(oc projects -q | grep ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
     if [[ ! -z "${DEL_NAMESPACE}" ]]
     then
@@ -106,10 +88,6 @@ __bootstrap_el_cicd_onboarding_server() {
     fi
 
     PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} refresh-credentials"
-    if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
-    then
-        PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} create-all-jenkins-agents"
-    fi
 
     __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
@@ -189,7 +167,7 @@ __create_master_namespace_with_selectors() {
 }
 
 __create_onboarding_automation_server() {
-    PIPELINE_TEMPLATES=${1}
+    local PIPELINE_TEMPLATES=${1}
 
     echo
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
@@ -254,15 +232,14 @@ __build_jenkins_agents() {
         then
             echo
             echo "Creating Jenkins Agents"
-            oc start-build create-all-jenkins-agents -e BUILD_BASE_ONLY=${BUILD_BASE_ONLY} -n ${EL_CICD_MASTER_NAMESPACE}
-            echo "Started 'create-all-jenkins-agents' job on Non-prod Onboarding Automation Server"
+            _build_el_cicd_jenkins_agent_images_image ${BUILD_BASE_ONLY}
         else 
             echo
-            echo "Base agent found: to manually rebuild Jenkins Agents, run the 'create-all-jenkins-agents' job"
+            echo "Base agent found: to manually rebuild Jenkins Agents, run the 'el-cicd.sh --jenkins-agents'"
         fi
     else
         echo
-        echo "JENKINS_SKIP_AGENT_BUILDS=true.  Jenkins agent builds skipped."
+        echo "JENKINS_SKIP_AGENT_BUILDS=${JENKINS_SKIP_AGENT_BUILDS}.  Jenkins agent builds skipped."
     fi
 }
 

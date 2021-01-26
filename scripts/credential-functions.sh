@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 _refresh_credentials() {
+    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
+    
     _check_sealed_secrets
 
     if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]

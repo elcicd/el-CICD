@@ -92,7 +92,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
         }
     }
 
-    def releasedPvs = sh(returnStdout: true, sh """
+    def releasedPvs = sh(returnStdout: true, script: """
         oc get pv -l projectid=${projectInfo.id} | grep 'Released' | awk '{ print $1 }'
     """).splt('\n')
 
