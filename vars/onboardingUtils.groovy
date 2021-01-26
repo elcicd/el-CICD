@@ -94,7 +94,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 
     def releasedPvs = sh(returnStdout: true, script: """
         oc get pv -l projectid=${projectInfo.id} --ignore-not-found | grep 'Released' | awk '{ print \$1 }'
-    """).split('\n')
+    """).split('\n').findAll { it.trim() }
 
     releasedPvs.each { pvName ->
         if (!pvNames[(pvName)]) {
