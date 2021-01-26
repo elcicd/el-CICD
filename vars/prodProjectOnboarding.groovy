@@ -33,7 +33,7 @@ def call(Map args) {
         def nodeSelectors = el.cicd["${projectInfo.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
 
         sh """
-            ${pipelineUtils.shellEchoBanner("SETUP OPENSHIFT PROD NAMESPACE ENVIRONMENT AND JENKINS RBAC FOR ${projectInfo.id}")}
+            ${pipelineUtils.shellEchoBanner("SETUP OKD PROD NAMESPACE ENVIRONMENT AND JENKINS RBAC FOR ${projectInfo.id}")}
 
             if [[ `oc projects | grep ${projectInfo.prodNamespace} | wc -l` -lt 1 ]]
             then

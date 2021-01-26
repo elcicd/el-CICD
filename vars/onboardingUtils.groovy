@@ -18,7 +18,7 @@ def init() {
 }
 
 def createNamepaces(def projectInfo, def namespaces, def environments, def nodeSelectors) {
-    pipelineUtils.echoBanner("SETUP OPENSHIFT NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces.join(', '))
+    pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces.join(', '))
 
     sh """
         NODE_SELECTORS=(${nodeSelectors.join(' ') ?: ''})
@@ -76,22 +76,27 @@ def createResourceQuotas(def projectInfo, def isNonProd) {
 }
 
 def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
-    def pvNames = [:]
-    dir(el.cicd.OKD_TEMPLATES_DIR) {
-        projectInfo?.nfsShares.each { nfsShare ->
-            def envs = isNonProd ?
-                nfsShare.envs.collect { it != projectInfo.prodEnv } :
-                nfsShare.envs.collect { it == projectInfo.prodEnv }
-            envs.each { env ->
-                pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
-                pvNames[(pvName)] = true
-                if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env == projectInfo.prodEnv)) {
-                    createNfsShare(projectInfo, nfsShare, pvName, env)
+    if (projectInfo.nfsShares) {
+        pipelineUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
+
+        def pvNames = [:]
+        dir(el.cicd.OKD_TEMPLATES_DIR) {
+            .each { nfsShare ->
+                def envs = isNonProd ?
+                    nfsShare.envs.collect { it != projectInfo.prodEnv } :
+                    nfsShare.envs.collect { it == projectInfo.prodEnv }
+                envs.each { env ->
+                    pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
+                    pvNames[(pvName)] = true
+                    if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env == projectInfo.prodEnv)) {
+                        createNfsShare(projectInfo, nfsShare, pvName, env)
+                    }
                 }
             }
         }
     }
 
+    pipelineUtils.echoBanner("REMOVE UNUSED, RELEASED NFS PERSISTENT VOLUMES, IF ANY")
     def releasedPvs = sh(returnStdout: true, script: """
         oc get pv -l projectid=${projectInfo.id} --ignore-not-found | grep 'Released' | awk '{ print \$1 }'
     """).split('\n').findAll { it.trim() }
@@ -114,7 +119,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p NFS_SERVER=${nfsShare.nfsServer} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
                 -p NAMESPACE=${projectInfo.id}-${env} \
-            | oc create --label=projectid=${projectInfo.id} -f -
+            | oc apply --label=projectid=${projectInfo.id} -f -
 
         ${shellEcho ''}
     """

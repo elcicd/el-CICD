@@ -33,7 +33,7 @@ def call(Map args) {
             deploymentUtils.processTemplates(args.projectInfo, args.microServices, args.imageTag)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING PROCESS ALL OPENSHIFT TEMPLATES"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING PROCESS ALL OKD TEMPLATES"
         }
     }
 
@@ -42,7 +42,7 @@ def call(Map args) {
             deploymentUtils.applyResources(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING APPLY ALL OPENSHIFT RESOURCES"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING APPLY ALL OKD RESOURCES"
         }
     }
 
@@ -69,7 +69,7 @@ def call(Map args) {
             deploymentUtils.cleanupOrphanedResources(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OPENSHIFT RESOURCES"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
         }
     }
 

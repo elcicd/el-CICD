@@ -12,7 +12,7 @@ import groovy.transform.Field
 def UNDEFINED = 'undefined'
 
 @Field
-def OPENSHIFT_CONFIG_DIR = '.openshift'
+def OKD_CONFIG_DIR = '.openshift'
 
 def mergeMaps(def toMap, def fromMap) {
     if (toMap && fromMap) {
@@ -119,7 +119,7 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
+        dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
             microService.templateDefs = readTemplateDefs()
 
             if (microService.templateDefs.templates) {
@@ -190,11 +190,11 @@ def buildTemplate(def templateDef) {
 def processTemplates(def projectInfo, def microServices, def imageTag) {
     assert projectInfo; assert microServices; assert imageTag
 
-    pipelineUtils.echoBanner("APPLY OPENSHIFT TEMPLATES AND RESOURCES")
+    pipelineUtils.echoBanner("APPLY OKD TEMPLATES AND RESOURCES")
 
     microServices.each { microService ->
         if (microService.templateDefs) {
-            dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
+            dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def appName = templateDef.appName ?: microService.name
                     if (templateDef.params) {
@@ -244,7 +244,7 @@ def applyResources(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${OPENSHIFT_CONFIG_DIR}") {
+        dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
             sh """
                 mkdir -p default
                 cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found"}
