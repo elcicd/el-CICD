@@ -112,6 +112,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
     sh """
         oc process --local \
                 -f nfs-pv-template.yml \
+                -l projectid=${projectInfo.id}\
                 -p PV_NAME=${nfsShareName} \
                 -p CAPACITY=${nfsShare.capacity} \
                 -p ACCESS_MODE=${nfsShare.accessMode} \
@@ -119,7 +120,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p NFS_SERVER=${nfsShare.nfsServer} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
                 -p NAMESPACE=${projectInfo.id}-${env} \
-            | oc apply -l=projectid=${projectInfo.id} -f -
+            | oc apply -f -
 
         ${shellEcho ''}
     """
