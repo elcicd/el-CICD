@@ -112,7 +112,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
     sh """
         oc process --local \
                 -f nfs-pv-template.yml \
-                -p PV_NAME=nfs-${nfsShareName} \
+                -p PV_NAME=${nfsShareName} \
                 -p CAPACITY=${nfsShare.capacity} \
                 -p ACCESS_MODE=${nfsShare.accessMode} \
                 -p NFS_EXPORT=${nfsShare.nfsExportPath} \
