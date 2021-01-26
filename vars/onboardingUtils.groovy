@@ -81,7 +81,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 
         def pvNames = [:]
         dir(el.cicd.OKD_TEMPLATES_DIR) {
-            .each { nfsShare ->
+            projectInfo.nfsShares.each { nfsShare ->
                 def envs = isNonProd ?
                     nfsShare.envs.collect { it != projectInfo.prodEnv } :
                     nfsShare.envs.collect { it == projectInfo.prodEnv }
