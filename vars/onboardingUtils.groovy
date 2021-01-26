@@ -119,7 +119,7 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p NFS_SERVER=${nfsShare.nfsServer} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
                 -p NAMESPACE=${projectInfo.id}-${env} \
-            | oc apply --label=projectid=${projectInfo.id} -f -
+            | oc apply -l=projectid=${projectInfo.id} -f -
 
         ${shellEcho ''}
     """
