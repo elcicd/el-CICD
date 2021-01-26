@@ -12,7 +12,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 
         sh """
             echo 'Verify ${projectInfo.rbacGroup} exists'
-            confirm  oc get groups ${projectInfo.rbacGroup}
+            oc get groups ${projectInfo.rbacGroup}
         """
 
         def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
