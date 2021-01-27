@@ -53,8 +53,8 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
 def createResourceQuotas(def projectInfo, def isNonProd) {
     def resQuotaNames = [:]
     def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
-    envs.each {
-        sh "oc delete quota -l=projectid=${it} -n ${projectInfo.id}-${env}"
+    envs.each { env ->
+        sh "oc delete quota -l=projectid=${projectInfo.id} -n ${projectInfo.id}-${env}"
     }
 
     if (projectInfo.resourceQuotas) {
