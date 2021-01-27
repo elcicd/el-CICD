@@ -63,7 +63,7 @@ def createResourceQuotas(def projectInfo, def isNonProd) {
                 if (resourceQuota[(env)]) {
                     sh """
                         oc delete quota -l=projectid=${projectInfo.id}
-                        oc create --l=projectid=${projectInfo.id} -f ${resourceQuota[(env)]} -n ${projectInfo.id}-${env}
+                        oc apply -l=projectid=${projectInfo.id} -f ${resourceQuota[(env)]} -n ${projectInfo.id}-${env}
                         ${shellEcho ''}
                     """
                 }

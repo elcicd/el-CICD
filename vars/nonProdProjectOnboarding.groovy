@@ -87,6 +87,8 @@ def call(Map args) {
                                         projectInfo.nonProdNamespaces.keySet(),
                                         nodeSelectors)
 
+        createResourceQuotas(projectInfo, true)
+
         credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
                                                                      projectInfo.nonProdNamespaces.values(),
                                                                      projectInfo.nonProdNamespaces.keySet())
