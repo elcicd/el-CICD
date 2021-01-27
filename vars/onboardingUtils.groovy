@@ -64,7 +64,7 @@ def createResourceQuotas(def projectInfo, def isNonProd) {
                     sh """
                         oc delete quota -l=projectid=${projectInfo.id}
                         oc apply -f ${projectInfo.resourceQuotas[(env)]} -n ${projectInfo.id}-${env}
-                        oc label -f ${projectInfo.resourceQuotas[(env)]} -n ${projectInfo.id}-${env}
+                        oc label projectid=${projectInfo.id} -f ${projectInfo.resourceQuotas[(env)]} -n ${projectInfo.id}-${env}
                         ${shellEcho ''}
                     """
                 }
