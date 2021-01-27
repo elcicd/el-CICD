@@ -100,7 +100,7 @@ void call(Map args) {
                 fi
 
                 chmod 777 Dockerfile
-                sed -i 's|^FROM.*|a ARG EL_CICD_BUILD_SECRETS=./${el.cicd.EL_CICD_BUILD_SECRETS}|'
+                sed -i 's|^FROM.*|a ARG EL_CICD_BUILD_SECRETS=./${el.cicd.EL_CICD_BUILD_SECRETS}|' Dockerfile
 
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
