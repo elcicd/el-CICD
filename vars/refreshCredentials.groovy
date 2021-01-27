@@ -29,7 +29,7 @@ def call(Map args) {
                     rbacGroups[(projectInfo.rbacGroup)] = true
 
                     stage('Copy el-CICD meta-info pull secrets to rbacGroup Jenkins') {
-                        credentialUtils.copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(projectInfo, envs)
+                        credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
                     }
 
                     stage('Push el-CICD credentials') {

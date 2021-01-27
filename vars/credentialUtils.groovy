@@ -20,12 +20,16 @@ def getJenkinsCredsUrls(def projectInfoOrNamespace, def tokenId) {
     return jenkinsCredsUrls
 }
 
-def copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
+def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
     pipelineUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
 
     def pullSecretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     sh """
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+            ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+            oc apply -f - -n ${projectInfo.cicdMasterNamespace}
+
+        oc get secret ${el.cicd.EL_CICD_BUILD_SECRETS} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
