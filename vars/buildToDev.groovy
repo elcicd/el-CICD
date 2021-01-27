@@ -37,7 +37,7 @@ void call(Map args) {
         }
     }
 
-    def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.PACKAGE]
+    def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.PACKAGER]
     buildSteps.each { buildStep ->
         stage("build step: run ${buildStep} for ${microService.name}") {
             pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
@@ -56,7 +56,7 @@ void call(Map args) {
                     case el.cicd.SCANNER:
                         builderModule.scan(projectInfo, microService)
                         break;
-                    case el.cicd.PACKAGE:
+                    case el.cicd.PACKAGER:
                         builderModule.package(projectInfo, microService)
                         break;
                 }
