@@ -26,7 +26,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
                 def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
                 refreshSharedPipelines(projectInfo, pipelines)
 
-                copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(projectInfo, envs)
+                credentialUtils.copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(projectInfo, envs)
 
                 waitUntilJenkinsIsReady(projectInfo)
             }
