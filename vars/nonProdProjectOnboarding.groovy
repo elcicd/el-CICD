@@ -114,11 +114,11 @@ def call(Map args) {
     }
 
     stage('Delete old github public keys with curl') {
-        credentialsUtils.deleteDeployKeysFromGithub(projectInfo)
+        credentialUtils.deleteDeployKeysFromGithub(projectInfo)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+        credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
