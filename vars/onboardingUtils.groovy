@@ -57,10 +57,10 @@ def createResourceQuotas(def projectInfo, def isNonProd) {
         sh "oc delete quota -l=projectid=${it} -n ${projectInfo.id}-${env}"
     }
 
-    dir(el.cicd.OKD_RESOURCE_QUOTA_DIR) {
-        projectInfo?.resourceQuotas.each { resourceQuota ->
+    if (projectInfo.resourceQuotas)) {
+        dir(el.cicd.OKD_RESOURCE_QUOTA_DIR) {
             envs.each { env ->
-                if (resourceQuota.get(env)) {
+                if (resourceQuota[(env)]) {
                     sh """
                         oc delete quota -l=projectid=${projectInfo.id}
                         oc apply -l=projectid=${projectInfo.id} -f ${resourceQuota[(env)]} -n ${projectInfo.id}-${env}
