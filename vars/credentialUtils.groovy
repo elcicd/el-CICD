@@ -27,7 +27,7 @@ def copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(def projectInfo, def envs)
     sh """
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-            oc create -f - -n ${projectInfo.cicdMasterNamespace}
+            oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
         for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
         do
@@ -47,7 +47,7 @@ def copySecretsFromElCicdMasterToGroupCicdServer(def projectInfo, def namespaces
         for i in \${!NAMESPACES[@]}
         do
             oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                oc create -f - -n \${NAMESPACES[\${i}]}
+                oc apply -f - -n \${NAMESPACES[\${i}]}
 
             ${shellEcho ''}
         done
