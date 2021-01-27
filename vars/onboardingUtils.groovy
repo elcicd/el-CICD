@@ -113,8 +113,8 @@ def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
                 -p PV_NAME=${nfsShareName} \
                 -p CAPACITY=${nfsShare.capacity} \
                 -p ACCESS_MODE=${nfsShare.accessMode} \
-                -p NFS_EXPORT=${nfsShare.nfsExportPath} \
-                -p NFS_SERVER=${nfsShare.nfsServer} \
+                -p NFS_EXPORT=${nfsShare.exportPath} \
+                -p NFS_SERVER=${nfsShare.server} \
                 -p CLAIM_NAME=${nfsShare.claimName} \
                 -p NAMESPACE=${projectInfo.id}-${env} \
             | oc apply -f -
