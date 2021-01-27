@@ -44,9 +44,6 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
                 oc adm policy add-cluster-role-to-user secrets-unsealer \
                     system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\${i}]}
 
-                oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                    oc create -f - -n \${NAMESPACES[\${i}]}
-
                 ${shellEcho ''}
             fi
         done
@@ -83,8 +80,8 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
         dir(el.cicd.OKD_TEMPLATES_DIR) {
             projectInfo.nfsShares.each { nfsShare ->
                 def envs = isNonProd ?
-                    nfsShare.envs.collect { it != projectInfo.prodEnv } :
-                    nfsShare.envs.collect { it == projectInfo.prodEnv }
+                    nfsShare.envs.findAll { it != projectInfo.prodEnv } :
+                    nfsShare.envs.findFirst { it == projectInfo.prodEnv }
                 envs.each { env ->
                     pvName = "nfs-${projectInfo.id}-${env}-${nfsShare.claimName}"
                     pvNames[(pvName)] = true

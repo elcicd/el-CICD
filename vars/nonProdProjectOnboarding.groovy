@@ -86,6 +86,10 @@ def call(Map args) {
                                         projectInfo.nonProdNamespaces.values(),
                                         projectInfo.nonProdNamespaces.keySet(),
                                         nodeSelectors)
+
+        credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
+                                                                     projectInfo.nonProdNamespaces.values(),
+                                                                     projectInfo.nonProdNamespaces.keySet())
     }
 
     stage('Setup openshift sandbox environments') {

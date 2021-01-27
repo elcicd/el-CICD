@@ -22,6 +22,12 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
                 def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PROD_ENV]
 
                 createCicdNamespaceAndJenkins(projectInfo, envs)
+
+                def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
+                refreshSharedPipelines(projectInfo, pipelines)
+
+                copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(projectInfo, envs)
+
                 waitUntilJenkinsIsReady(projectInfo)
             }
 
@@ -33,20 +39,14 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         else {
             echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
         }
-
-        def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
-        refreshSharedPipelines(projectInfo, pipelines)
     }
 }
 
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
-    def secretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
-
     def nodeSelectors = el.cicd.EL_CICD_RBAC_GROUP_MASTER_NODE_SELECTORS ?: ''
 
     sh """
         ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
-        
 
         __NODE_SELS='${nodeSelectors}'
         if [[ ! -z \${__NODE_SELS} ]]
@@ -65,17 +65,6 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                                       -e TRY_UPGRADE_IF_NO_MARKER=true \
                                       -e CASC_JENKINS_CONFIG=${el.cicd.EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${el.cicd.JENKINS_CASC_FILE} \
                                       -n ${projectInfo.cicdMasterNamespace}
-
-        oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
-            ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-            oc create -f - -n ${projectInfo.cicdMasterNamespace}
-
-        for ENV in ${secretNames.join(' ')}
-        do
-            oc get secrets \${ENV} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
-                ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                oc apply -f - -n ${projectInfo.cicdMasterNamespace}
-        done
 
         oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
     """

@@ -37,7 +37,7 @@ void call(Map args) {
         }
     }
 
-    def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER]
+    def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.PACKAGE]
     buildSteps.each { buildStep ->
         stage("build step: run ${buildStep} for ${microService.name}") {
             pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
@@ -48,13 +48,16 @@ void call(Map args) {
 
                 switch(buildStep) {
                     case el.cicd.BUILDER:
-                        builderModule.build(projectInfo.id, microService)
+                        builderModule.build(projectInfo, microService)
                         break;
                     case el.cicd.TESTER:
-                        builderModule.test(projectInfo.id, microService)
+                        builderModule.test(projectInfo, microService)
                         break;
                     case el.cicd.SCANNER:
-                        builderModule.scan(projectInfo.id, microService)
+                        builderModule.scan(projectInfo, microService)
+                        break;
+                    case el.cicd.PACKAGE:
+                        builderModule.package(projectInfo, microService)
                         break;
                 }
             }
@@ -72,6 +75,11 @@ void call(Map args) {
         def pullSecret = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
+        def buildSecretName = "${projectInfo.codeBase}${el.cicd.BUILD_SECRET_POSTFIX}"
+        def buildSecret = sh(returnStdout: true, script: """
+            oc get secret --ignore-not-found  ${buildSecretName} -o jsonpath='{.metadata.name}' -n ${projectInfo.cicdMasterNamespace}
+        """)
+
         dir(microService.workDir) {
             sh """
                 ${pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")}
@@ -85,12 +93,15 @@ void call(Map args) {
                                  --to-docker \
                                  --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
                                  --push-secret=${pullSecret} \
+                                 --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS}:${el.cicd.EL_CICD_BUILD_SECRETS} \
                                  -n ${projectInfo.cicdMasterNamespace}
 
                     oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.cicdMasterNamespace}
                 fi
 
                 chmod 777 Dockerfile
+                sed -i 's|^FROM.*|a ARG EL_CICD_BUILD_SECRETS=./${el.cicd.EL_CICD_BUILD_SECRETS}|'
+
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile

@@ -20,6 +20,40 @@ def getJenkinsCredsUrls(def projectInfoOrNamespace, def tokenId) {
     return jenkinsCredsUrls
 }
 
+def copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
+    pipelineUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
+
+    def pullSecretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
+    sh """
+        oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+            ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+            oc create -f - -n ${projectInfo.cicdMasterNamespace}
+
+        for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
+        do
+            oc get secrets \${PULL_SECRET_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+                ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+                oc apply -f - -n ${projectInfo.cicdMasterNamespace}
+        done
+    """
+}
+
+def copySecretsFromElCicdMasterToGroupCicdServer(def projectInfo, def namespaces, def environments) {
+    pipelineUtils.echoBanner("COPY PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}:", namespaces.join(', '))
+
+    sh """
+        ENVS=(${environments.join(' ')})
+        NAMESPACES=(${namespaces.join(' ')})
+        for i in \${!NAMESPACES[@]}
+        do
+            oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+                oc create -f - -n \${NAMESPACES[\${i}]}
+
+            ${shellEcho ''}
+        done
+    """
+}
+
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)

@@ -66,6 +66,7 @@ def node(Map args, Closure body) {
                 resourceRequestCpu: '100m',
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
+            volumes: [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")]
         ]
     ]) {
         node(podLabel) {

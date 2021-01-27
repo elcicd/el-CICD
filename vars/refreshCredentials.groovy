@@ -27,6 +27,11 @@ def call(Map args) {
 
                 if (!rbacGroups[(projectInfo.rbacGroup)]) {
                     rbacGroups[(projectInfo.rbacGroup)] = true
+
+                    stage('Copy el-CICD meta-info pull secrets to rbacGroup Jenkins') {
+                        credentialsUtils.copyElCicdMetaInfoAndPullSecretsToGroupCicdServer(projectInfo, envs)
+                    }
+
                     stage('Push el-CICD credentials') {
                         credentialsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
                     }
@@ -41,6 +46,12 @@ def call(Map args) {
 
                 stage('Create and push public key for each github repo to github with curl') {
                     credentialsUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+                }
+
+                stage('Refresh pull secrets per build environment') {
+                    credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
+                                                                                 projectInfo.nonProdNamespaces.values(),
+                                                                                 projectInfo.nonProdNamespaces.keySet())
                 }
             }
             else {

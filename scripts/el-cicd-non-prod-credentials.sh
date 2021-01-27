@@ -50,6 +50,10 @@ do
     _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
 done
 
+echo
+echo "Creating ${EL_CICD_BUILD_SECRETS} secret containing el-CICD build secret(s) in ${EL_CICD_MASTER_NAMESPACE}"
+oc create secret generic ${EL_CICD_BUILD_SECRETS} --from-file=${BUILD_SECRETS_DIR} -n ${EL_CICD_MASTER_NAMESPACE}
+
 _run_custom_credentials_script non-prod
 
 rm -rf ${SECRET_FILE_TEMP_DIR}
