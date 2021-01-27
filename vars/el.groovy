@@ -32,7 +32,7 @@ def initMetaData(Map metaData) {
     cicd.BUILDER = 'builder'
     cicd.TESTER = 'tester'
     cicd.SCANNER = 'scanner'
-    cicd.PACKAGER = 'packager'
+    cicd.ASSEMBLER = 'assembler'
 
     cicd.INACTIVE = 'INACTIVE'
 
