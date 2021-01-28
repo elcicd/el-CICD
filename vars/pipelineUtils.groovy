@@ -150,6 +150,7 @@ def validateProjectInfo(def projectInfo) {
 }
 
 def validateResourceQuota(def projectInfo, def resourceQuota) {
+    echo "resourceQuota: ${resourceQuota.getClass()})"
     resourceQuota.each { envKey, resourceQuotaFile ->
         assert projectInfo.nonProdEnvs.contains(envKey) || envKey == projectInfo.prodEnv ||  envKey == 'default' :
             "resourceQuotas keys must be either an environment or 'default': '${envKey}'"
