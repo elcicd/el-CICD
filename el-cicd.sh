@@ -44,7 +44,11 @@ Options:
 config-file: file name or path relative the root of the sibling directory el-CICD-config
 EOM
 
-if [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
+if [[ ${CLI_OPTION} == '--help' ]]
+then
+    echo "${HELP_MSG}"
+    exit 0
+elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
 then
     echo "ERROR: Uknown or missing config-file: ${EL_CICD_SYSTEM_CONFIG_FILE}"
     echo
@@ -139,11 +143,6 @@ case ${CLI_OPTION} in
         _build_el_cicd_jenkins_image
 
         _build_el_cicd_jenkins_agent_images_image
-    ;;
-
-    '--help')
-        echo "${HELP_MSG}"
-        exit 0
     ;;
 
     *)
