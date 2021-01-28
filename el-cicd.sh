@@ -9,6 +9,8 @@ EL_CICD_SYSTEM_CONFIG_FILE=${2}
 
 _TRUE='true'
 _FALSE='false'
+_YES='Yes'
+_NO='No'
 
 BOOTSTRAP_DIR=$(pwd)
 
@@ -122,7 +124,7 @@ case ${CLI_OPTION} in
         echo "INSTALL SEALED SECRETS"
         _check_sealed_secrets
 
-        if [[ $(is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
+        if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
         then
             _install_sealed_secrets
         fi

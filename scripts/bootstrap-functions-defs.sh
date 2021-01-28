@@ -14,18 +14,18 @@ _bootstrap_el_cicd() {
 
     __gather_and_confirm_bootstrap_info_with_user
 
-    if [[ $(is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
+    if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
     then
         _install_sealed_secrets
     fi
 
-    if [[ ${UPDATE_JENKINS} == 'Yes' ]]
+    if [[ ${UPDATE_JENKINS} == ${_YES} ]]
     then
         echo
         oc import-image jenkins -n openshift
     fi
 
-    if [[ ${UPDATE_EL_CICD_JENKINS} == 'Yes' ]]
+    if [[ -z ${UPDATE_EL_CICD_JENKINS} || ${UPDATE_EL_CICD_JENKINS} == ${_YES} ]]
     then
         _build_el_cicd_jenkins_image
     fi
@@ -63,8 +63,12 @@ __gather_and_confirm_bootstrap_info_with_user() {
 
     echo
     UPDATE_JENKINS=$(__get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
+
     echo
-    UPDATE_EL_CICD_JENKINS=$(__get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
+    if [[ ! -z $(oc get is --ignore-not-found ${EL_CICD_JENKINS_IMAGE_STREAM} -n openshift) ]]
+    then
+        UPDATE_EL_CICD_JENKINS=$(__get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
+    fi
 
     echo
     __summarize_and_confirm_bootstrap_run_with_user
@@ -103,16 +107,25 @@ __summarize_and_confirm_bootstrap_run_with_user() {
          echo -n "Install Sealed Secrets version ${SEALED_SECRET_RELEASE_VERSION}? "
         if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
         then
-            echo 'Yes'
+            echo ${_YES}
         else
-            echo 'No'
+            echo ${_NO}
         fi
     else
         echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
     fi
     echo
     echo "Update cluster default Jenkins image? ${UPDATE_JENKINS}"
-    echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
+
+    if [[ ! -z ${UPDATE_EL_CICD_JENKINS} ]]
+    then
+        echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
+    else
+        echo
+        echo "WARNING: '${EL_CICD_JENKINS_IMAGE_STREAM}' ImageStream was not found."
+        echo 'el-CICD Jenkins WILL BE BUILT.'
+    fi
+
     echo
     echo "Cluster wildcard Domain? '*.${CLUSTER_WILDCARD_DOMAIN}'"
 
@@ -137,18 +150,18 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
     then
         echo
-        echo "WARNING: JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}, and no el-CICD Jenkins agent ImageStreams were found"
+        echo "WARNING: JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}, and the base el-CICD Jenkins agent ImageStream was NOT found"
         echo
         echo "JENKINS AGENTS WILL BE BUILT"
     fi
 
     echo
-    echo "Do you wish to continue? [Yes/No]: "
+    echo "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
     read CONTINUE
-    if [[ ${CONTINUE} != 'Yes' ]]
+    if [[ ${CONTINUE} != ${_YES} ]]
     then
-        echo "You must enter 'Yes' for bootstrap to continue.  Exiting..."
+        echo "You must enter ${_YES} for bootstrap to continue.  Exiting..."
         exit 0
     fi
 }
@@ -178,7 +191,7 @@ __create_onboarding_automation_server() {
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                                   -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
                                   -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                  -p JENKINS_IMAGE_STREAM_TAG=${JENKINS_IMAGE_STREAM}:latest \
+                                  -p JENKINS_IMAGE_STREAM_TAG=${EL_CICD_JENKINS_IMAGE_STREAM}:latest \
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
@@ -266,9 +279,9 @@ __get_yes_no_answer() {
 
     if [[ ${USER_ANSWER} == 'Y' ]]
     then
-        echo 'Yes'
+        echo ${_YES}
     else
-        echo 'No'
+        echo ${_NO}
     fi
 }
 

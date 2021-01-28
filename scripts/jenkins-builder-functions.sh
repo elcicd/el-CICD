@@ -20,14 +20,14 @@ __init_jenkins_build() {
 
 _build_el_cicd_jenkins_image() {
     echo
-    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
+    echo "Updating el-CICD Jenkins image ${EL_CICD_JENKINS_IMAGE_STREAM}"
     echo
 
     __init_jenkins_build ${JENKINS_BUILD_DIRS}
 
-    if [[ ! -n $(oc get bc ${JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
+    if [[ ! -n $(oc get bc ${EL_CICD_JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
     then
-        oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
+        oc new-build --name ${EL_CICD_JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
     fi
 
     cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins-template > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
@@ -37,7 +37,7 @@ _build_el_cicd_jenkins_image() {
            -e  "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
         ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
 
-    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
+    oc start-build ${EL_CICD_JENKINS_IMAGE_STREAM} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
 }
