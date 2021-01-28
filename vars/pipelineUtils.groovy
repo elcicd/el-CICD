@@ -137,8 +137,11 @@ def validateProjectInfo(def projectInfo) {
     }
 
     if (projectInfo.resourceQuotas) {
-        projectInfo.resourceQuotas.each { resourceQuota ->
-            validateResourceQuota(projectInfo, resourceQuota)
+        resourceQuota.each { env, resourceQuotaFile ->
+            assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
+                "resourceQuotas keys must be either an environment or 'default': '${env}'"
+
+            assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
         }
     }
 
@@ -147,24 +150,6 @@ def validateProjectInfo(def projectInfo) {
             validateNfsShare(projectInfo, nfsShare)
         }
     }
-}
-
-def validateResourceQuota(def projectInfo, def resourceQuota) {
-    echo "resourceQuota: ${resourceQuota.getClass()})"
-    resourceQuota.each { envKey, resourceQuotaFile ->
-        assert projectInfo.nonProdEnvs.contains(envKey) || envKey == projectInfo.prodEnv ||  envKey == 'default' :
-            "resourceQuotas keys must be either an environment or 'default': '${envKey}'"
-
-        assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
-    }
-
-    assert resourceQuota.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
-    assert nfsShare.accessMode ==~
-        /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
-        "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
-    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\\/?)+: '${nfsShare.nfsExportPath}'"
-    assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
-    assert nfsShare.claimName: "missing nfsShare.claimName"
 }
 
 def validateNfsShare(def projectInfo, def nfsShare) {
