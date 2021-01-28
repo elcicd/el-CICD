@@ -128,7 +128,7 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.microServices.size() > 0 : "No microservices defined"
 
     projectInfo.microServices.each { microService ->
-        assert microService.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\w-.]+: ${microService.gitRepoName}"
+        assert (microService.gitRepoName ==~ /[\w-.]+/) : "bad git repo name for microservice, [\\w-.]+: ${microService.gitRepoName}"
         assert microService.codeBase ==~ /[a-z]+/ : "bad git repo name for microservice, [a-z]+: ${microService.gitRepoName}"
     }
 
@@ -157,11 +157,11 @@ def validateResourceQuota(def resourceQuota) {
         assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
     }
 
-    assert resourceQuota.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
+    assert resourceQuota.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
     assert nfsShare.accessMode ==~
         /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
         "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
-    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
+    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\\/?)+: '${nfsShare.nfsExportPath}'"
     assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
     assert nfsShare.claimName: "missing nfsShare.claimName"
 }
@@ -172,11 +172,11 @@ def validateNfsShare(def projectInfo, def nfsShare) {
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
     }
 
-    assert nfsShare.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
+    assert nfsShare.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
     assert nfsShare.accessMode ==~
         /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
         "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
-    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
+    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
     assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
     assert nfsShare.claimName: "missing nfsShare.claimName"
 }
