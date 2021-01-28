@@ -13,7 +13,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdProjectsExist) {
-            def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PROD_ENV]
+            def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
 
             def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
@@ -24,7 +24,6 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             waitUntilJenkinsIsReady(projectInfo)
 
             stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
-                def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
                 credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
             }
         }
@@ -36,28 +35,22 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     stage('Creating CICD namespaces and rbacGroup Jenkins') {
-        def nodeSelectors = el.cicd.EL_CICD_RBAC_GROUP_MASTER_NODE_SELECTORS ?: ''
+        def nodeSelectors = el.cicd.EL_CICD_RBAC_GROUP_MASTER_NODE_SELECTORS ? "--node-selector='${nodeSelectors}'" : ''
 
         sh """
             ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
-            __NODE_SELS='${nodeSelectors}'
-            if [[ ! -z \${__NODE_SELS} ]]
-            then
-                oc adm new-project ${projectInfo.cicdMasterNamespace} --node-selector="\${__NODE_SELS}"
-            else
-                oc adm new-project ${projectInfo.cicdMasterNamespace}
-            fi
+            oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
 
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                                        -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                                        -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                        -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.EL_CICD_JENKINS_IMAGE_STREAM}:latest \
-                                        -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
-                                        -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
-                                        -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                        -e CASC_JENKINS_CONFIG=${el.cicd.EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${el.cicd.JENKINS_CASC_FILE} \
-                                        -n ${projectInfo.cicdMasterNamespace}
+                                          -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                                          -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
+                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.EL_CICD_JENKINS_IMAGE_STREAM}:latest \
+                                          -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
+                                          -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
+                                          -e TRY_UPGRADE_IF_NO_MARKER=true \
+                                          -e CASC_JENKINS_CONFIG=${el.cicd.EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${el.cicd.JENKINS_CASC_FILE} \
+                                          -n ${projectInfo.cicdMasterNamespace}
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
         """
