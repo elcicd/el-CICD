@@ -150,9 +150,9 @@ def validateProjectInfo(def projectInfo) {
 }
 
 def validateResourceQuota(def projectInfo, def resourceQuota) {
-    resourceQuota.each { env, resourceQuotaFile ->
-        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
-            "resourceQuotas keys must be either an environment or 'default': '${env}'"
+    resourceQuota.each { envKey, resourceQuotaFile ->
+        assert projectInfo.nonProdEnvs.contains(envKey) || envKey == projectInfo.prodEnv ||  envKey == 'default' :
+            "resourceQuotas keys must be either an environment or 'default': '${envKey}'"
 
         assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
     }
