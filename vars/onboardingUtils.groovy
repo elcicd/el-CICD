@@ -58,7 +58,7 @@ def createResourceQuotas(def projectInfo, def isNonProd) {
     }
 
     if (projectInfo.resourceQuotas) {
-        dir(el.cicd.OKD_RESOURCE_QUOTA_DIR) {
+        dir(el.cicd.RESOURCE_QUOTA_DIR) {
             envs.each { env ->
                 if (projectInfo.resourceQuotas[(env)]) {
                     sh """

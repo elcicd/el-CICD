@@ -132,7 +132,7 @@ def initializeStage() {
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/default-okd-templates"
-        el.cicd.OKD_RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
+        el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
@@ -142,6 +142,7 @@ def initializeStage() {
             mkdir -p ${el.cicd.TEMP_DIR}
             oc version
         """
+        
         el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
         el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
         sh """

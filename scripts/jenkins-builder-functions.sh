@@ -49,7 +49,7 @@ _build_el_cicd_jenkins_agent_images_image() {
         echo "Creating Jenkins Agents"
         __init_jenkins_build ${JENKINS_AGENTS_BUILD_DIRS}
 
-        local AGENT_NAMES="${JENKINS_AGENT_DEFAULT} $(echo ${JENKINS_AGENT_NAMES} | tr ':' ' ')"
+        local AGENT_NAMES="${JENKINS_AGENT_DEFAULT} $(echo ${JENKINS_BUILD_AGENT_NAMES} | tr ':' ' ')"
 
         for AGENT_NAME in ${AGENT_NAMES}
         do

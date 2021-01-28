@@ -133,27 +133,43 @@ def validateProjectInfo(def projectInfo) {
     }
 
     projectInfo.enabledTestEnvs.each { env ->
-        assert el.cicd.testEnvs.contains(env) : "test environment '${env} must be in ${el.cicd.testEnvs}"
+        assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    if (projectInfo.nfsShares) {
-        assert projectInfo.nfsShares.envs : "missing nfsshare environments"
-        projectInfo.nfsShares.each { nfsShare ->
-            validateNfsShare(nfsShare)
+    if (projectInfo.resourceQuotas) {
+        projectInfo.resourceQuotas.each { resourceQuota ->
+            validateResourceQuota(projectInfo, resourceQuota)
         }
     }
 
-    if (projectInfo.prodNfsShares) {
-        assert projectInfo.prodNfsShares.envs : "missing nfsshare environments"
+    if (projectInfo.nfsShares) {
         projectInfo.nfsShares.each { nfsShare ->
-            validateNfsShare(nfsShare)
+            validateNfsShare(projectInfo, nfsShare)
         }
     }
 }
 
-def validateNfsShare(def nfsShare) {
-    nfsShare?.envs { env ->
-        assert projectInfo.nonProdEnvs.contains(env)
+def validateResourceQuota(def resourceQuota) {
+    resourceQuota.each { env, resourceQuotaFile ->
+        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
+            "resourceQuotas keys must be either an environment or 'default': '${env}'"
+
+        assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
+    }
+
+    assert resourceQuota.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
+    assert nfsShare.accessMode ==~
+        /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
+        "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
+    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
+    assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
+    assert nfsShare.claimName: "missing nfsShare.claimName"
+}
+
+def validateNfsShare(def projectInfo, def nfsShare) {
+    assert nfsShares.envs : "missing nfsshare environments"
+    nfsShare.envs { env ->
+        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
     }
 
     assert nfsShare.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
