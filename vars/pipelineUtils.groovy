@@ -108,36 +108,43 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.prodNamespace = projectInfo.prodEnv ? "${projectInfo.id}-${projectInfo.prodEnv}" : null
     }
 
+    validateProjectInfo(projectInfo)
+
     return projectInfo
 }
 
 def validateProjectInfo(def projectInfo) {
-    assert projectInfo.rbacGroup
-    assert projectInfo.scmHost ==~ /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
-    assert projectInfo.scmRestApiHost ==~ /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
-    assert projectInfo.scmOrganization
-    assert projectInfo.gitBranch
-    assert (!projectInfo.sandboxEnvs || projectInfo.sandboxEnvs instanceof Number)
-    assert projectInfo.microServices.size() > 0
+    assert (projectInfo.rbacGroup && sh(returnStdout: true, script "oc get groups ${projectInfo.rbacGroup}")) : 'missing rbacGroup'
+
+    assert projectInfo.scmHost ==~
+        /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
+        "bad or missing scmHost '${projectInfo.scmHost}"
+    assert projectInfo.scmRestApiHost ==~
+        /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
+        "bad or missing scmRestApiHost '${projectInfo.scmHost}"
+    assert projectInfo.scmOrganization : "missing scmOrganization"
+    assert projectInfo.gitBranch : "missing git branch"
+    assert projectInfo.sandboxEnvs ==~ /\d{,2}/ : "sandboxEnvs must be an integer >= 0"
+    assert projectInfo.microServices.size() > 0 : "No microservices defined"
 
     projectInfo.microServices.each { microService ->
-        assert microService.gitRepoName ==~ /[a-z]+/
-        assert microService.codeBase ==~ /[a-z]+/
+        assert microService.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\w-.]+: ${microService.gitRepoName}"
+        assert microService.codeBase ==~ /[a-z]+/ : "bad git repo name for microservice, [a-z]+: ${microService.gitRepoName}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->
-        assert el.cicd.testEnvs.contains(env)
+        assert el.cicd.testEnvs.contains(env) : "test environment '${env} must be in ${el.cicd.testEnvs}"
     }
 
     if (projectInfo.nfsShares) {
-        assert projectInfo.nfsShares.envs
+        assert projectInfo.nfsShares.envs : "missing nfsshare environments"
         projectInfo.nfsShares.each { nfsShare ->
             validateNfsShare(nfsShare)
         }
     }
 
     if (projectInfo.prodNfsShares) {
-        assert projectInfo.prodNfsShares.envs
+        assert projectInfo.prodNfsShares.envs : "missing nfsshare environments"
         projectInfo.nfsShares.each { nfsShare ->
             validateNfsShare(nfsShare)
         }
@@ -149,12 +156,13 @@ def validateNfsShare(def nfsShare) {
         assert projectInfo.nonProdEnvs.contains(env)
     }
 
-    assert nfsShare.capacity
-    assert nfsShare.accessMode
-    assert nfsShare.reclaimPolicy
-    assert nfsShare.nfsExportPath
-    assert nfsShare.nfsServer
-    assert nfsShare.claimName
+    assert nfsShare.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
+    assert nfsShare.accessMode ==~
+        /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
+        "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
+    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
+    assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
+    assert nfsShare.claimName: "missing nfsShare.claimName"
 }
 
 def spacedEcho(def msg) {

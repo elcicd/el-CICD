@@ -11,7 +11,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         pipelineUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
 
         sh """
-            echo 'Verify ${projectInfo.rbacGroup} exists'
+            echo 'Verify Group ${projectInfo.rbacGroup} exists'
             oc get groups ${projectInfo.rbacGroup}
         """
 
