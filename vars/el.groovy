@@ -50,7 +50,6 @@ def node(Map args, Closure body) {
 
     def podLabel = args.agentName ?: args.agent
 
-    def secretVolume =  sh(re, scr: /*check secret*/)
     def secretVolume = ags.isBuild ? [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")] : []
 
     podTemplate([
