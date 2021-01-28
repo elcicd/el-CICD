@@ -176,7 +176,7 @@ def validateNfsShare(def projectInfo, def nfsShare) {
     assert nfsShare.accessMode ==~
         /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
         "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
-    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\/?)+: '${nfsShare.nfsExportPath}'"
+    assert nfsShare.nfsExportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\\/?)+: '${nfsShare.nfsExportPath}'"
     assert nfsShare.nfsServer : "missing nfsShare.nfsServer"
     assert nfsShare.claimName: "missing nfsShare.claimName"
 }
