@@ -12,8 +12,6 @@ import java.nio.file.Paths
 def call(Map args) {
     onboardingUtils.init()
 
-    return
-
     def projectInfo = args.projectInfo
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
@@ -89,8 +87,6 @@ def call(Map args) {
                                         projectInfo.nonProdNamespaces.keySet(),
                                         nodeSelectors)
 
-        onboardingUtils.createResourceQuotas(projectInfo, true)
-
         credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
                                                                      projectInfo.nonProdNamespaces.values(),
                                                                      projectInfo.nonProdNamespaces.keySet())
@@ -98,23 +94,25 @@ def call(Map args) {
 
     stage('Setup openshift sandbox environments') {
         if (projectInfo.sandboxEnvs > 0) {
-            def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-
-            namespaces = []
             envs = []
             nodeSelectors = []
-
+            def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             (1..projectInfo.sandboxEnvs).each { i ->
-                namespaces += "${sandboxNamespacePrefix}-${i}"
                 envs += projectInfo.devEnv
-                nodeSelectors += el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
+                nodeSelectors += devNodeSelector
             }
 
-            onboardingUtils.createNamepaces(projectInfo,
+            onboardingUtils.createNamepaces(projectInfo.sandboxNamespaces,
                                             namespaces,
                                             envs,
                                             nodeSelectors)
         }
+    }
+
+    stage('Apply ResourceQuotas on all project namespaces') {
+        onboardingUtils.applyNonProdResourceQuotas(projectInfo)
+
+        onboardingUtils.createSandboxResourceQuotas(projectInfo)
     }
 
     stage('Delete old github public keys with curl') {

@@ -50,26 +50,46 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
     """
 }
 
-def createResourceQuotas(def projectInfo, def isNonProd) {
-    def resQuotaNames = [:]
-    def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
-    envs.each { env ->
-        sh "oc delete quota -l=projectid=${projectInfo.id} -n ${projectInfo.id}-${env}"
-    }
+def applyNonProdResourceQuotas(def projectInfo) {
+    projectInfo.nonProdNamespaces.each { env, namespace ->
+        def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
 
-    if (projectInfo.resourceQuotas) {
+        applyResoureQuota(projectInfo, env, resourceQuotaFile)
+    }
+}
+
+def applyProdResourceQuotas(def projectInfo) {
+    def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.prodEnv] ?: projectInfo.resourceQuotas.default
+
+    applyResoureQuota(projectInfo, projectInfo.prodEnv, resourceQuotaFile)
+}
+
+def applySandboxResourceQuotas(def projectInfo) {
+    if (projectInfo.resourceQuotas && projectInfo.sandboxNamespaces) {
         dir(el.cicd.RESOURCE_QUOTA_DIR) {
-            envs.each { env ->
-                if (projectInfo.resourceQuotas[(env)]) {
-                    sh """
-                        oc delete quota -l=projectid=${projectInfo.id}
-                        oc apply -f ${projectInfo.resourceQuotas[(env)]} -n ${projectInfo.id}-${env}
-                        oc label projectid=${projectInfo.id} -f ${projectInfo.resourceQuotas[(env)]} -n ${projectInfo.id}-${env}
-                        ${shellEcho ''}
-                    """
+            projectInfo.sandboxNamespaces.each { sandboxNamespace ->
+                sh "oc delete quota -l=projectid=${projectInfo.id} -n ${projectInfo.id}-${env}"
+
+                if (projectInfo.resourceQuotas.default) {
+                    applyResoureQuota(projectInfo, sandboxNamespace, projectInfo.resourceQuotas.default)
                 }
             }
         }
+    }
+}
+
+def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
+    sh "oc delete quota -l=projectid=${projectInfo.id} -n ${namespace}"
+
+    if (resourceQuotaFile) {
+        sh """
+            sleep 3
+
+            oc apply -f ${resourceQuotaFile} -n ${namespace}
+            oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
+
+            ${shellEcho ''}
+        """
     }
 }
 
