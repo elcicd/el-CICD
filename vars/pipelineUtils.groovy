@@ -129,7 +129,7 @@ def validateProjectInfo(def projectInfo) {
 
     projectInfo.microServices.each { microService ->
         assert microService.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${microService.gitRepoName}"
-        assert microService.codeBase ==~ /[a-z]+/ : "bad git repo name for codeBase, [a-z]+: ${microService.codeBase}"
+        assert microService.codeBase ==~ /[a-z-]+/ : "bad git repo name for codeBase, [a-z]+: ${microService.codeBase}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->
