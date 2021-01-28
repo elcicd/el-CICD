@@ -136,7 +136,7 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    resourceQuotas?.each { env, resourceQuotaFile ->
+    projectInfo?.resourceQuotas.each { env, resourceQuotaFile ->
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
             "resourceQuotas keys must be either an environment or 'default': '${env}'"
 
