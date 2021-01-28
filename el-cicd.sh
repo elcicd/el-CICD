@@ -44,23 +44,15 @@ Options:
 config-file: file name or path relative the root of the sibling directory el-CICD-config
 EOM
 
-if [[ -z ${CLI_OPTION} || -z $(echo ${CLI_OPTION} | egrep "^-\w$|--\w{4,}$") ]]
-then
-    echo "ERROR: Missing command option"
-    echo
-    echo "${HELP_MSG}"
-    exit 1
-elif [[ ${CLI_OPTION} == '--help' ]]
-then
-    echo "${HELP_MSG}"
-    exit 0
-elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
+if [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
 then
     echo "ERROR: Uknown or missing config-file: ${EL_CICD_SYSTEM_CONFIG_FILE}"
     echo
     echo "${HELP_MSG}"
     exit 1
 fi
+
+getopts
 
 cd "$(dirname "${0}")"
 
@@ -147,6 +139,11 @@ case ${CLI_OPTION} in
         _build_el_cicd_jenkins_image
 
         _build_el_cicd_jenkins_agent_images_image
+    ;;
+
+    '--help')
+        echo "${HELP_MSG}"
+        exit 0
     ;;
 
     *)
