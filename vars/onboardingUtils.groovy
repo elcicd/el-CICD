@@ -18,15 +18,11 @@ def init() {
 }
 
 def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
+    nodeSelectors = nodeSelectors ? "--node-selector='${nodeSelectors}'" : ''
     sh """
         if [[ -z \$(oc get projects --ignore-not-found ${namespace}) ]]
         then
-            if [[ ! -z ${nodeSelectors} ]]
-            then
-                oc adm new-project ${namespace} --node-selector='${nodeSelectors}'
-            else
-                oc new-project ${namespace}
-            fi
+            oc adm new-project ${namespace} ${nodeSelectors}
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${namespace}
 
