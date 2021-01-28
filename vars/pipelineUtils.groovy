@@ -128,8 +128,8 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.microServices.size() > 0 : "No microservices defined"
 
     projectInfo.microServices.each { microService ->
-        assert (microService.gitRepoName ==~ /[\w-.]+/) : "bad git repo name for microservice, [\\w-.]+: ${microService.gitRepoName}"
-        assert microService.codeBase ==~ /[a-z]+/ : "bad git repo name for microservice, [a-z]+: ${microService.gitRepoName}"
+        assert microService.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${microService.gitRepoName}"
+        assert microService.codeBase ==~ /[a-z]+/ : "bad git repo name for codeBase, [a-z]+: ${microService.codeBase}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->
