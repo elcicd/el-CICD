@@ -152,7 +152,7 @@ def validateProjectInfo(def projectInfo) {
 
 def validateNfsShare(def projectInfo, def nfsShare) {
     assert nfsShare.envs : "missing nfsshare environments"
-    nfsShare.envs { env ->
+    nfsShare.envs.each { env ->
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
     }
 
