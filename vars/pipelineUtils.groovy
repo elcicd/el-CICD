@@ -140,7 +140,7 @@ def validateProjectInfo(def projectInfo) {
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
             "resourceQuotas keys must be either an environment or 'default': '${env}'"
 
-        assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
+        assert resourceQuotaFile && fileExists("${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}")
     }
 
     if (projectInfo.nfsShares) {
