@@ -10,11 +10,6 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         def prodOrNonProd  = "${isNonProd ? 'NON-' : ''}PROD"
         pipelineUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
 
-        sh """
-            echo 'Verify Group ${projectInfo.rbacGroup} exists'
-            oc get groups ${projectInfo.rbacGroup}
-        """
-
         def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdProjectsExist) {
@@ -22,14 +17,14 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
                 def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PROD_ENV]
 
                 createCicdNamespaceAndJenkins(projectInfo, envs)
-
-                def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
-                refreshSharedPipelines(projectInfo, pipelines)
-
-                credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
-
-                waitUntilJenkinsIsReady(projectInfo)
             }
+
+            def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
+            refreshSharedPipelines(projectInfo, pipelines)
+
+            credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
+
+            waitUntilJenkinsIsReady(projectInfo)
 
             stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
                 def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
@@ -71,27 +66,29 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 }
 
 def waitUntilJenkinsIsReady(def projectInfo) {
-    sh """
-        ${pipelineUtils.shellEchoBanner("ENSURE ${projectInfo.cicdMasterNamespace} JENKINS IS READY (CAN TAKE A FEW MINUTES)")}
+    stage ('Wait until Jenkin is ready') {
+        sh """
+            ${pipelineUtils.shellEchoBanner("ENSURE ${projectInfo.cicdMasterNamespace} JENKINS IS READY (CAN TAKE A FEW MINUTES)")}
 
-        set +x
-        COUNTER=1
-        for PROJECT in ${projectInfo.cicdMasterNamespace}
-        do
-            until
-                oc get pods -l name=jenkins -n \${PROJECT} | grep "1/1"
+            set +x
+            COUNTER=1
+            for PROJECT in ${projectInfo.cicdMasterNamespace}
             do
-                printf "%0.s-" \$(seq 1 \${COUNTER})
-                echo
-                sleep 3
-                let COUNTER+=1
+                until
+                    oc get pods -l name=jenkins -n \${PROJECT} | grep "1/1"
+                do
+                    printf "%0.s-" \$(seq 1 \${COUNTER})
+                    echo
+                    sleep 3
+                    let COUNTER+=1
+                done
             done
-        done
 
-        echo "Jenkins up, sleep for 10 more seconds to make sure each servers REST api are ready"
-        sleep 10
-        set -x
-    """
+            echo "Jenkins up, sleep for 10 more seconds to make sure each servers REST api are ready"
+            sleep 10
+            set -x
+        """
+    }
 }
 
 def refreshSharedPipelines(def projectInfo, def pipelines) {
