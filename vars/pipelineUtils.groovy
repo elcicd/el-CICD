@@ -124,7 +124,7 @@ def validateProjectInfo(def projectInfo) {
         "bad or missing scmRestApiHost '${projectInfo.scmHost}"
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
-    assert projectInfo.sandboxEnvs ==~ /\d{,2}/ : "sandboxEnvs must be an integer >= 0"
+    assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
     assert projectInfo.microServices.size() > 0 : "No microservices defined"
 
     projectInfo.microServices.each { microService ->
