@@ -50,7 +50,7 @@ def node(Map args, Closure body) {
 
     def podLabel = args.agentName ?: args.agent
 
-    def secretVolume = ags.isBuild ? [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")] : []
+    def secretVolume = args.isBuild ? [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")] : []
 
     podTemplate([
         label: "${podLabel}",
@@ -98,9 +98,6 @@ def node(Map args, Closure body) {
             }
         }
     }
-}
-
-def getBuildSecret(def isBuild) {
 }
 
 def runHookScript(def prefix, def args) {
