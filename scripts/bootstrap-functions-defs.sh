@@ -14,13 +14,14 @@ _bootstrap_el_cicd() {
 
     __gather_and_confirm_bootstrap_info_with_user
 
-    if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]
+    if [[ $(is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
     then
         _install_sealed_secrets
     fi
 
     if [[ ${UPDATE_JENKINS} == 'Yes' ]]
     then
+        echo
         oc import-image jenkins -n openshift
     fi
 
@@ -39,11 +40,7 @@ _bootstrap_el_cicd() {
     echo "RUN ALL CUSTOM SCRIPTS '${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
     __run_custom_config_scripts
 
-    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'prod' ]]
-    then
-        BUILD_BASE_ONLY='true'
-    fi
-    __build_jenkins_agents ${BUILD_BASE_ONLY}
+    __build_jenkins_agents_if_necessary
 
     echo
     echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete"
@@ -54,7 +51,11 @@ _create_el_cicd_meta_info_config_map() {
     echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
     sleep 5
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} -n ${EL_CICD_MASTER_NAMESPACE}
+    sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
+
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_SYSTEM_CONFIG_FILE} -n ${EL_CICD_MASTER_NAMESPACE}
+
+    rm /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
@@ -92,17 +93,6 @@ __bootstrap_el_cicd_onboarding_server() {
     __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
-__get_yes_no_answer() {
-    read -p "${1}" -n 1 USER_ANSWER
-
-    if [[ ${USER_ANSWER} == 'Y' ]]
-    then
-        echo 'Yes'
-    else
-        echo 'No'
-    fi
-}
-
 __summarize_and_confirm_bootstrap_run_with_user() {
     echo
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
@@ -110,7 +100,13 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo 
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
-        echo "Install/Update Sealed Secrets to version? ${INSTALL_KUBESEAL}"
+         echo -n "Install Sealed Secrets version ${SEALED_SECRET_RELEASE_VERSION}? "
+        if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
+        then
+            echo 'Yes'
+        else
+            echo 'No'
+        fi
     else
         echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
     fi
@@ -127,14 +123,23 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo -n "WARNING: '${EL_CICD_MASTER_NAMESPACE}' was found, and will WILL BE DESTROYED AND REBUILT"
     else 
         echo
-        echo -n "el-CICD Master namespace to be create: '${EL_CICD_MASTER_NAMESPACE}'"
+        echo -n "'${EL_CICD_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
     fi
+
     if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
     then
-        echo " with the following node selectors:"
+        echo -n " with the following node selectors:"
         echo "${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
     else
         echo
+    fi
+
+    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
+    then
+        echo
+        echo "WARNING: JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}, and no el-CICD Jenkins agent ImageStreams were found"
+        echo
+        echo "JENKINS AGENTS WILL BE BUILT"
     fi
 
     echo
@@ -221,25 +226,14 @@ __delete_master_namespace() {
     sleep 10
 }
 
-__build_jenkins_agents() {
-    # BUILD_BASE_ONLY must be 'true' if the base agent is not to be built
-    local BUILD_BASE_ONLY=${1}
-
-    if [[ ${JENKINS_SKIP_AGENT_BUILDS} != 'true' ]]
+__build_jenkins_agents_if_necessary() {
+    local HAS_BASE_AGENT=$(oc get --ignore-not-found is ${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
+    if [[ -z ${HAS_BASE_AGENT} ]]
     then
-        HAS_BASE_AGENT=$(oc get --ignore-not-found is jenkins-agent-el-cicd-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
-        if [[ -z ${HAS_BASE_AGENT} ]]
-        then
-            echo
-            echo "Creating Jenkins Agents"
-            _build_el_cicd_jenkins_agent_images_image ${BUILD_BASE_ONLY}
-        else 
-            echo
-            echo "Base agent found: to manually rebuild Jenkins Agents, run the 'el-cicd.sh --jenkins-agents'"
-        fi
+        _build_el_cicd_jenkins_agent_images_image
     else
         echo
-        echo "JENKINS_SKIP_AGENT_BUILDS=${JENKINS_SKIP_AGENT_BUILDS}.  Jenkins agent builds skipped."
+        echo "Base agent found: to manually rebuild Jenkins Agents, run the 'el-cicd.sh --jenkins-agents'"
     fi
 }
 
@@ -255,4 +249,40 @@ __run_custom_config_scripts() {
     else
         echo 'No custom config scripts found...'
     fi
+}
+
+__base_jenkins_agent_exists() {
+    local HAS_BASE_AGENT=$(oc get --ignore-not-found is ${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} -n openshift -o jsonpath='{.metadata.name}')
+    if [[ -z ${HAS_BASE_AGENT} ]]
+    then
+        echo ${_FALSE}
+    else
+        echo ${_TRUE}
+    fi
+}
+
+__get_yes_no_answer() {
+    read -p "${1}" -n 1 USER_ANSWER
+
+    if [[ ${USER_ANSWER} == 'Y' ]]
+    then
+        echo 'Yes'
+    else
+        echo 'No'
+    fi
+}
+
+_compare_ignore_case_and_extra_whitespace() {
+    local FIRST=$(echo "${1}" | xargs)
+    local SECOND=$(echo "${2}" | xargs)
+    if [[ -z $(echo "${FIRST}" | grep --ignore-case "^${SECOND}$") ]]
+    then
+        echo ${_FALSE}
+    else
+        echo ${_TRUE}
+    fi
+}
+
+_is_true() {
+    _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
 }

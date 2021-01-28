@@ -7,7 +7,7 @@ __init_jenkins_build() {
     local BUILD_DIRS=${1}
     mkdir -p ${TARGET_JENKINS_BUILD_DIR}
 
-    cp ${CONFIG_REPOSITORY_JENKINS}/* ${TARGET_JENKINS_BUILD_DIR}
+    find ${CONFIG_REPOSITORY_JENKINS} -type f -exec cp {} ${TARGET_JENKINS_BUILD_DIR} \;
 
     if [[ ! -z ${BUILD_DIRS} ]]
     then
@@ -43,29 +43,31 @@ _build_el_cicd_jenkins_image() {
 }
 
 _build_el_cicd_jenkins_agent_images_image() {
-    BUILD_BASE_ONLY=${1}
-
-    __init_jenkins_build ${JENKINS_AGENTS_BUILD_DIRS}
-
-    local AGENT_NAMES=${JENKINS_AGENT_DEFAULT}
-    if [[ BUILD_BASE_ONLY != 'true' ]]
+    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} ]]
     then
-        AGENT_NAMES="${AGENT_NAMES} $(echo ${JENKINS_AGENT_NAMES} | tr ':' ' ')"
-    fi
-
-    for AGENT_NAME in ${AGENT_NAMES}
-    do
-        if [[ ! -n $(oc get bc ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --ignore-not-found -n openshift) ]]
-        then
-            oc new-build --name ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --binary=true --strategy=docker -n openshift
-        fi
         echo
-        echo "Starting Agent Build: ${AGENT_NAME}"
+        echo "Creating Jenkins Agents"
+        __init_jenkins_build ${JENKINS_AGENTS_BUILD_DIRS}
 
-        cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-        oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
-    done
+        local AGENT_NAMES="${JENKINS_AGENT_DEFAULT} $(echo ${JENKINS_AGENT_NAMES} | tr ':' ' ')"
 
-    rm -rf ${TARGET_JENKINS_BUILD_DIR}
+        for AGENT_NAME in ${AGENT_NAMES}
+        do
+            if [[ ! -n $(oc get bc ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --ignore-not-found -n openshift) ]]
+            then
+                oc new-build --name ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --binary=true --strategy=docker -n openshift
+            fi
+            echo
+            echo "Starting Agent Build: ${AGENT_NAME}"
+
+            cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
+            oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
+        done
+
+        rm -rf ${TARGET_JENKINS_BUILD_DIR}
+    else
+        echo
+        echo "JENKINS_SKIP_AGENT_BUILDS is set to 'true'.  Jenkins agent builds skipped."
+    fi
 }
 

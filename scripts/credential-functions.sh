@@ -4,14 +4,7 @@
 _refresh_credentials() {
     local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
-    _check_sealed_secrets
-
-    if [[ ${INSTALL_KUBESEAL} == 'Yes' ]]
-    then
-        _install_sealed_secrets
-    fi
-
-    eval ./scripts/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentails.sh
+    eval ./scripts/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentials.sh
 }
 
 _check_sealed_secrets() {
@@ -34,9 +27,9 @@ _check_sealed_secrets() {
 
         if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
         then
-            INSTALL_KUBESEAL='Yes'
+            INSTALL_KUBESEAL=${_TRUE}
         else
-            INSTALL_KUBESEAL='No'
+            INSTALL_KUBESEAL=${_FALSE}
         fi
     fi
 }
@@ -69,9 +62,9 @@ _push_github_public_ssh_deploy_key() {
     local DEPLOY_KEY_TITLE=${2}
     local DEPLOY_KEY_FILE=${3}
 
-    # READ_ONLY *MUST* be 'false' to push a read/write key
+    # READ_ONLY *MUST* be ${_FALSE} to push a read/write key
     local READ_ONLY=${4}
-    if [[ ${READ_ONLY} != 'false' ]]
+    if [[ ${READ_ONLY} != ${_FALSE} ]]
     then
         READ_ONLY=true
     fi
