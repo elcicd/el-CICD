@@ -85,7 +85,7 @@ def call(Map args) {
         }
 
         projectInfo.nonProdNamespaces.each { env, namespace ->
-            onboardingUtils.createNamepaces(projectInfo, namespace, env, nodeSelectors[env])
+            onboardingUtils.createNamepace(projectInfo, namespace, env, nodeSelectors[env])
 
             credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
 
