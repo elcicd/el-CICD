@@ -49,9 +49,11 @@ def call(Map args) {
                 }
 
                 stage('Refresh pull secrets per build environment') {
-                    credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
-                                                                                 projectInfo.nonProdNamespaces.values(),
-                                                                                 projectInfo.nonProdNamespaces.keySet())
+                    pipelineUtils.echoBanner("COPY PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}:", namespaces.join(', '))
+
+                    projectInfo.nonProdNamespaces.each { env, namespace -> 
+                        credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                    }
                 }
             }
             else {

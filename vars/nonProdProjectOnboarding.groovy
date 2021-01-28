@@ -78,41 +78,42 @@ def call(Map args) {
     }
 
     stage('Setup openshift namespace environments') {
-        def nodeSelectors = projectInfo.NON_PROD_ENVS.collect { ENV ->
-            return el.cicd["${ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
+        pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.nonProdNamespaces.join(', '))
+
+        def nodeSelectors = projectInfo.NON_PROD_ENVS.collectEntries { ENV ->
+            [ENV.toLowerCase(), el.cicd["${ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: '']
         }
 
-        onboardingUtils.createNamepaces(projectInfo,
-                                        projectInfo.nonProdNamespaces.values(),
-                                        projectInfo.nonProdNamespaces.keySet(),
-                                        nodeSelectors)
+        projectInfo.nonProdNamespaces.each { env, namespace ->
+            onboardingUtils.createNamepaces(projectInfo, namespace, env, nodeSelectors[env])
 
-        credentialUtils.copySecretsFromElCicdMasterToGroupCicdServer(projectInfo,
-                                                                     projectInfo.nonProdNamespaces.values(),
-                                                                     projectInfo.nonProdNamespaces.keySet())
+            credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+
+            def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
+
+            applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
+        }
     }
 
     stage('Setup openshift sandbox environments') {
         if (projectInfo.sandboxEnvs > 0) {
-            envs = []
-            nodeSelectors = []
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
-            (1..projectInfo.sandboxEnvs).each { i ->
-                envs += projectInfo.devEnv
-                nodeSelectors += devNodeSelector
-            }
+            def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.devEnv] ?: projectInfo.resourceQuotas.default
 
-            onboardingUtils.createNamepaces(projectInfo.sandboxNamespaces,
-                                            namespaces,
-                                            envs,
-                                            nodeSelectors)
+            projectInfo.sandboxNamespaces.each { namespace ->
+                onboardingUtils.createNamepaces(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
+
+                credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+
+                applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
+            }
         }
     }
 
     stage('Apply ResourceQuotas on all project namespaces') {
         onboardingUtils.applyNonProdResourceQuotas(projectInfo)
 
-        onboardingUtils.createSandboxResourceQuotas(projectInfo)
+        onboardingUtils.applySandboxResourceQuotas(projectInfo)
     }
 
     stage('Delete old github public keys with curl') {

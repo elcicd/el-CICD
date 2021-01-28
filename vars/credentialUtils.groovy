@@ -42,21 +42,30 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
     """
 }
 
-def copySecretsFromElCicdMasterToGroupCicdServer(def projectInfo, def namespaces, def environments) {
-    pipelineUtils.echoBanner("COPY PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}:", namespaces.join(', '))
-
+def copyPullSecretsToEnvNamespace(def namespace, def env) {
     sh """
-        ENVS=(${environments.join(' ')})
-        NAMESPACES=(${namespaces.join(' ')})
-        for i in \${!NAMESPACES[@]}
-        do
-            oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                oc apply -f - -n \${NAMESPACES[\${i}]}
+        oc get secrets ${el.cicd["${env}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+            oc apply -f - -n ${namespace}
 
-            ${shellEcho ''}
-        done
+        ${shellEcho ''}
     """
 }
+
+// def copySecretsFromElCicdMasterToGroupCicdServer(def projectInfo, def namespaces, def environments) {
+//     pipelineUtils.echoBanner("COPY PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}:", namespaces.join(', '))
+
+//     sh """
+//         ENVS=(${environments.join(' ')})
+//         NAMESPACES=(${namespaces.join(' ')})
+//         for i in \${!NAMESPACES[@]}
+//         do
+//             oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+//                 oc apply -f - -n \${NAMESPACES[\${i}]}
+
+//             ${shellEcho ''}
+//         done
+//     """
+// }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID

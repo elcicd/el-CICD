@@ -17,6 +17,31 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
+def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
+    sh """
+        if [[ -z \$(oc get projects --ignore-not-found ${namespace} ]]
+        then
+            if [[ ! -z ${nodeSelectors} ]]
+            then
+                oc adm new-project ${namespace} --node-selector='${nodeSelectors}'
+            else
+                oc new-project ${namespace}
+            fi
+
+            oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${namespace}
+
+            oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
+
+            oc adm policy add-cluster-role-to-user sealed-secrets-management \
+                system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
+            oc adm policy add-cluster-role-to-user secrets-unsealer \
+                system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
+
+            ${shellEcho ''}
+        fi
+    """
+}
+
 def createNamepaces(def projectInfo, def namespaces, def environments, def nodeSelectors) {
     pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces.join(', '))
 
@@ -48,34 +73,6 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
             fi
         done
     """
-}
-
-def applyNonProdResourceQuotas(def projectInfo) {
-    projectInfo.nonProdNamespaces.each { env, namespace ->
-        def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
-
-        applyResoureQuota(projectInfo, env, resourceQuotaFile)
-    }
-}
-
-def applyProdResourceQuotas(def projectInfo) {
-    def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.prodEnv] ?: projectInfo.resourceQuotas.default
-
-    applyResoureQuota(projectInfo, projectInfo.prodEnv, resourceQuotaFile)
-}
-
-def applySandboxResourceQuotas(def projectInfo) {
-    if (projectInfo.resourceQuotas && projectInfo.sandboxNamespaces) {
-        dir(el.cicd.RESOURCE_QUOTA_DIR) {
-            projectInfo.sandboxNamespaces.each { sandboxNamespace ->
-                sh "oc delete quota -l=projectid=${projectInfo.id} -n ${projectInfo.id}-${env}"
-
-                if (projectInfo.resourceQuotas.default) {
-                    applyResoureQuota(projectInfo, sandboxNamespace, projectInfo.resourceQuotas.default)
-                }
-            }
-        }
-    }
 }
 
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
