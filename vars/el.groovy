@@ -87,7 +87,9 @@ def node(Map args, Closure body) {
                 runHookScript(el.cicd.ON_SUCCESS, args)
             }
             catch (Exception | AssertionError exception) {
-                pipelineUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
+                exception instanceof Exception) ?
+                    pipelineUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
+                    pipelineUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
 
                 runHookScript(el.cicd.ON_FAIL, args, exception)
 
