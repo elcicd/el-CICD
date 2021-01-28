@@ -12,6 +12,8 @@ import java.nio.file.Paths
 def call(Map args) {
     onboardingUtils.init()
 
+    return
+
     def projectInfo = args.projectInfo
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
