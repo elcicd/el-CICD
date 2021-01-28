@@ -136,13 +136,11 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    if (projectInfo.resourceQuotas) {
-        resourceQuota.each { env, resourceQuotaFile ->
-            assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
-                "resourceQuotas keys must be either an environment or 'default': '${env}'"
+    resourceQuotas?.each { env, resourceQuotaFile ->
+        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
+            "resourceQuotas keys must be either an environment or 'default': '${env}'"
 
-            assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
-        }
+        assert resourceQuotaFile && fileExists: "${RESOURCE_QUOTA_DIR}/${resourceQuotaFile}"
     }
 
     if (projectInfo.nfsShares) {
