@@ -50,6 +50,9 @@ def node(Map args, Closure body) {
 
     def podLabel = args.agentName ?: args.agent
 
+    def secretVolume =  sh(re, scr: /*check secret*/)
+    def secretVolume = ags.isBuild ? [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")] : []
+
     podTemplate([
         label: "${podLabel}",
         cloud: 'openshift',
@@ -68,7 +71,7 @@ def node(Map args, Closure body) {
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
         ],
-        volumes: [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")]
+        volumes: secretVolume
     ]) {
         node(podLabel) {
             try {
@@ -96,6 +99,9 @@ def node(Map args, Closure body) {
             }
         }
     }
+}
+
+def getBuildSecret(def isBuild) {
 }
 
 def runHookScript(def prefix, def args) {

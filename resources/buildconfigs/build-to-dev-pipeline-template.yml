@@ -92,6 +92,7 @@ objects:
           }
 
           def args = [agent: '${CODE_BASE}',
+                      isBuild: true,
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: '${PROJECT_ID}',
                       microServiceName: '${MICROSERVICE_NAME}',
