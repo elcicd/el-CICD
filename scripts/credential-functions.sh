@@ -1,12 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-_refresh_credentials() {
-    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
-
-    eval ./scripts/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentials.sh
-}
-
 _check_sealed_secrets() {
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
