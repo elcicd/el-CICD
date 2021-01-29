@@ -10,6 +10,11 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         def prodOrNonProd  = "${isNonProd ? 'NON-' : ''}PROD"
         pipelineUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
 
+        sh """
+            echo 'Verify group '${projectInfo.rbacGroup}' exists'
+            oc get groups ${projectInfo.rbacGroup}
+        """
+
         def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdProjectsExist) {

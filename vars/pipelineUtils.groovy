@@ -114,7 +114,7 @@ def gatherProjectInfoStage(def projectId) {
 }
 
 def validateProjectInfo(def projectInfo) {
-    assert (projectInfo.rbacGroup && sh(returnStdout: true, script: "oc get groups ${projectInfo.rbacGroup}")) : 'missing rbacGroup'
+    assert projectInfo.rbacGroup : 'missing rbacGroup'
 
     assert projectInfo.scmHost ==~
         /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
