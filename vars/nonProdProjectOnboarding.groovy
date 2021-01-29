@@ -21,14 +21,14 @@ def call(Map args) {
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
             BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
-            until [[ -z \${BCS} || -z \$(oc delete --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
+            until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
             do
                 sleep 3
             done
 
             ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
 
-            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete} -n ${projectInfo.cicdMasterNamespace}) ]]
+            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
             do
                 sleep 3
             done
