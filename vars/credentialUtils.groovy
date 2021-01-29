@@ -43,8 +43,9 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 }
 
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
+    def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     sh """
-        oc get secrets ${el.cicd["${env}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+        oc get secrets ${secretName} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${namespace}
 
         ${shellEcho ''}
