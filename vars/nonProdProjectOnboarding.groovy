@@ -21,7 +21,10 @@ def call(Map args) {
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
             BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}')
-            oc delete bc --ignore-not-found --wait \${BCS} -n ${projectInfo.cicdMasterNamespace}
+            if [[ ! -z \${BCS} ]]
+            then
+                oc delete bc --ignore-not-found --wait \${BCS} -n ${projectInfo.cicdMasterNamespace}
+            fi
 
             ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
 
