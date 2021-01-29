@@ -5,10 +5,6 @@
  * a realized el-CICD/resources/buildconfigs/project-onboarding-pipeline-template
  */
 
-import java.nio.file.Path
-import java.nio.file.Paths
-
-
 def call(Map args) {
     onboardingUtils.init()
 
@@ -24,29 +20,26 @@ def call(Map args) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-            for BCS in `oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | grep Jenkins | awk '{print \$1}'`
-            do
-                while [ `oc get bc \${BCS} -n ${projectInfo.cicdMasterNamespace} | grep \${BCS} | wc -l` -gt 0 ] ;
+            BCS=\$(oc get bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}')
+            if [[ ! -z \${BCS} ]]
+            then
+                while [[ ! -z \$(oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}) ]]
                 do
-                    oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}
                     sleep 3
-                    ${shellEcho ''}
                 done
-            done
+            fi
 
-            ${ args.rebuildNonProd ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}") : ''}
+            ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
 
-            ${args.rebuildNonProd ? "oc delete project ${namespacesToDelete} || true" : ''}
+            ${namespacesToDelete ? "oc delete--ignore-not-found project ${namespacesToDelete}" : ''}
 
             NAMESPACES_TO_DELETE='${namespacesToDelete}'
-            for NAMESPACE in \${NAMESPACES_TO_DELETE}
-            do
-                until
-                    !(oc project \${NAMESPACE} > /dev/null 2>&1)
-                do
+            if [[ ! -z \${NAMESPACES_TO_DELETE} ]]
+            then
+                while [[ ! -z \$(oc get --ignore-not-found \${NAMESPACES_TO_DELETE} -n ${projectInfo.cicdMasterNamespace}) ]]
                     sleep 3
                 done
-            done
+            fi
         """
     }
 
@@ -108,12 +101,6 @@ def call(Map args) {
                 onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
             }
         }
-    }
-
-    stage('Apply ResourceQuotas on all project namespaces') {
-        onboardingUtils.applyNonProdResourceQuotas(projectInfo)
-
-        onboardingUtils.applySandboxResourceQuotas(projectInfo)
     }
 
     stage('Delete old github public keys with curl') {
