@@ -15,27 +15,23 @@ def call(Map args) {
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments and pipelines if necessary') {
-        def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : ''
+        def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : "${projectInfo.id}-nonexistant"
 
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
             oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -o yaml -n ${projectInfo.cicdMasterNamespace} > ${el.cicd.TEMP_DIR}/bcs
-            until [[ ! -z \$(oc delete --ignore-not-found -f  ${el.cicd.TEMP_DIR}/bcs -n ${projectInfo.cicdMasterNamespace}) ]]
+            until [[ -z \$(oc delete --ignore-not-found -f  ${el.cicd.TEMP_DIR}/bcs -n ${projectInfo.cicdMasterNamespace}) ]]
             do
                 sleep 3
             done
 
             ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
 
-            NAMESPACES_TO_DELETE='${namespacesToDelete}'
-            if [[ ! -z \${NAMESPACES_TO_DELETE} ]]
-            then
-                while [[ ! -z \$(oc delete projects ---ignore-not-found \${NAMESPACES_TO_DELETE} -n ${projectInfo.cicdMasterNamespace}) ]]
-                do
-                    sleep 3
-                done
-            fi
+            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete} -n ${projectInfo.cicdMasterNamespace}) ]]
+            do
+                sleep 3
+            done
         """
     }
 
