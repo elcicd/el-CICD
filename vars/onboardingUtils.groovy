@@ -20,7 +20,7 @@ def init() {
 def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
     nodeSelectors = nodeSelectors ? "--node-selector='${nodeSelectors}'" : ''
     sh """
-        if [[ -z \$(oc get projects --ignore-not-found ${namespace}) ]]
+        if [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespace}) ]]
         then
             oc adm new-project ${namespace} ${nodeSelectors}
 

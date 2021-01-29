@@ -15,7 +15,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             oc get groups ${projectInfo.rbacGroup}
         """
 
-        def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --ignore-not-found ${projectInfo.cicdMasterNamespace}")
+        def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdProjectsExist) {
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
