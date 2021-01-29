@@ -91,7 +91,7 @@ def call(Map args) {
 
             def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
 
-            applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
+            onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
         }
     }
 
@@ -105,7 +105,7 @@ def call(Map args) {
 
                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
 
-                applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
+                onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
             }
         }
     }
