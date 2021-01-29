@@ -89,15 +89,15 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
     sh """
         oc process --local \
-                -f nfs-pv-template.yml \
-                -l projectid=${projectInfo.id}\
-                -p PV_NAME=${nfsShareName} \
-                -p CAPACITY=${nfsShare.capacity} \
-                -p ACCESS_MODE=${nfsShare.accessMode} \
-                -p NFS_EXPORT=${nfsShare.exportPath} \
-                -p NFS_SERVER=${nfsShare.server} \
-                -p CLAIM_NAME=${nfsShare.claimName} \
-                -p NAMESPACE=${projectInfo.id}-${env} \
+                   -f nfs-pv-template.yml \
+                   -l projectid=${projectInfo.id}\
+                   -p PV_NAME=${nfsShareName} \
+                   -p CAPACITY=${nfsShare.capacity} \
+                   -p ACCESS_MODE=${nfsShare.accessMode} \
+                   -p NFS_EXPORT=${nfsShare.exportPath} \
+                   -p NFS_SERVER=${nfsShare.server} \
+                   -p CLAIM_NAME=${nfsShare.claimName} \
+                   -p NAMESPACE=${projectInfo.id}-${env} \
             | oc apply -f -
 
         ${shellEcho ''}

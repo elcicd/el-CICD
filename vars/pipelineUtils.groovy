@@ -117,10 +117,10 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroup : 'missing rbacGroup'
 
     assert projectInfo.scmHost ==~
-        /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
+        /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
         "bad or missing scmHost '${projectInfo.scmHost}"
     assert projectInfo.scmRestApiHost ==~
-        /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
+        /^(([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])\.)*([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])(\/[\p{Alnum}][\p{Alnum}-]*)*$/ :
         "bad or missing scmRestApiHost '${projectInfo.scmHost}"
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
