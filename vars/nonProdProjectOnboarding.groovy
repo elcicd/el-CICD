@@ -20,25 +20,20 @@ def call(Map args) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-            BCS=\$(oc get bc --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}')
-            if [[ ! -z \${BCS} ]]
-            then
-                while [[ ! -z \$(oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}) ]]
-                do
-                    sleep 3
-                done
-            fi
+            BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}')
+            oc delete bc --ignore-not-found --wait \${BCS} -n ${projectInfo.cicdMasterNamespace}) 
 
             ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
 
-            ${namespacesToDelete ? "oc delete--ignore-not-found project ${namespacesToDelete}" : ''}
+            ${namespacesToDelete ? "oc delete --ignore-not-found project ${namespacesToDelete}" : ''}
 
             NAMESPACES_TO_DELETE='${namespacesToDelete}'
             if [[ ! -z \${NAMESPACES_TO_DELETE} ]]
             then
-                while [[ ! -z \$(oc get --ignore-not-found \${NAMESPACES_TO_DELETE} -n ${projectInfo.cicdMasterNamespace}) ]]
-                    sleep 3
-                done
+                oc get --no-headers --ignore-not-found \${NAMESPACES_TO_DELETE} -n ${projectInfo.cicdMasterNamespace}
+                #while [[ ! -z \$(oc get --no-headers --ignore-not-found \${NAMESPACES_TO_DELETE} -n ${projectInfo.cicdMasterNamespace}) ]]
+                #    sleep 3
+                #done
             fi
         """
     }
