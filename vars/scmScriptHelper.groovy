@@ -98,7 +98,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
             ${bcName}
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
               sed -e "s/%HOSTNAME%/${el.cicd.CLUSTER_WILDCARD_DOMAIN}/g"   \
-                  -e "s/%GROUP_NAME%/${projectInfo.rbacGroup}/g"   \
+                  -e "s/%CICD_NAMESPACE%/${projectInfo.cicdMasterNamespace}/g"   \
                   -e "s/%PROJECT_ID%-%MICROSERVICE_NAME%/${microService.id}/g"  \
                   -e "s/%BC_NAME%/\${BC_NAME}/g" > ${webhookFile}
 
