@@ -52,6 +52,8 @@ _create_el_cicd_meta_info_config_map() {
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
     sleep 5
     sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
+    sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_COMMON_CONFIG_FILE} >> /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
+    echo CLUSTER_API_HOSTNAME=$(oc config current-context | awk -F '/' '{ print $2 }') >> /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
 
     oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_SYSTEM_CONFIG_FILE} -n ${EL_CICD_MASTER_NAMESPACE}
 

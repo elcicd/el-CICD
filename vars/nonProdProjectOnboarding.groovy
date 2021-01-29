@@ -83,7 +83,7 @@ def call(Map args) {
     stage('Setup openshift sandbox environments') {
         if (projectInfo.sandboxEnvs > 0) {
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
-            def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.devEnv] ?: projectInfo.resourceQuotas.default
+            def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
 
             projectInfo.sandboxNamespaces.each { namespace ->
                 onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)

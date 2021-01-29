@@ -88,20 +88,17 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_
 def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TOKEN) {
     def curlCommand
 
-    def bcName = "BC_NAME=`oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.name}' -n ${projectInfo.cicdMasterNamespace}`"
-
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
 
+        def HOSTNAME = sh(returnStdOut: true, script: """oc config current-context | awk -F '/' '{print \$2 }'""")
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
-            ${bcName}
+            BC_SELF_LINK=\$(oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
-              sed -e "s/%HOSTNAME%/${el.cicd.CLUSTER_WILDCARD_DOMAIN}/g"   \
-                  -e "s/%CICD_NAMESPACE%/${projectInfo.cicdMasterNamespace}/g"   \
-                  -e "s/%PROJECT_ID%-%MICROSERVICE_NAME%/${microService.id}/g"  \
-                  -e "s/%BC_NAME%/\${BC_NAME}/g" > ${webhookFile}
-
+              sed -e "s/%HOSTNAME%/${el.cicd.CLUSTER_API_HOSTNAME}/"   \
+                  -e "s/%BC_SELF_LINK%/\${BC_SELF_LINK}/"   \
+                  -e "s/%MICROSERVICE_ID%/${microService.id}/" > ${webhookFile}
 
             curl -ksS -X POST ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
         """

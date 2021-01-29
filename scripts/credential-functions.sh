@@ -64,7 +64,7 @@ _push_github_public_ssh_deploy_key() {
     fi
 
     local GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
-    local EL_CICD_GITHUB_URL="https://${GIT_REPO_ACCESS_TOKEN}@${EL_CICD_GIT_API_DOMAIN}/repos/${EL_CICD_ORGANIZATION}/${1}/keys"
+    local EL_CICD_GITHUB_URL="https://${GIT_REPO_ACCESS_TOKEN}@${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${1}/keys"
 
     # DELETE old key, if any
     local KEY_ID=$(curl -ksS -X GET ${EL_CICD_GITHUB_URL} | jq ".[] | select(.title  == \"${2}\") | .id")

@@ -7,6 +7,8 @@ CLI_OPTION=${1}
 
 EL_CICD_SYSTEM_CONFIG_FILE=${2}
 
+EL_CICD_COMMON_CONFIG_FILE=el-cicd-default.config
+
 _TRUE='true'
 _FALSE='false'
 _YES='Yes'
@@ -66,6 +68,7 @@ echo 'Loading el-CICD environment...'
 
 set -o allexport
 
+source ${CONFIG_REPOSITORY}/${EL_CICD_COMMON_CONFIG_FILE}
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
 source ${SCRIPTS_DIR}/bootstrap-functions-defs.sh
