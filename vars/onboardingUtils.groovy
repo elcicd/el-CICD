@@ -72,17 +72,19 @@ def createNamepaces(def projectInfo, def namespaces, def environments, def nodeS
 }
 
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
-    sh "oc delete quota -l=projectid=${projectInfo.id} -n ${namespace}"
+    sh "oc delete quota --wait -l=projectid=${projectInfo.id} -n ${namespace}"
 
     if (resourceQuotaFile) {
-        sh """
-            sleep 3
+        dir(el.cicd.RESOURCE_QUOTA_DIR) {
+            sh """
+                sleep 3
 
-            oc apply -f ${resourceQuotaFile} -n ${namespace}
-            oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
+                oc apply -f ${resourceQuotaFile} -n ${namespace}
+                oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
 
-            ${shellEcho ''}
-        """
+                ${shellEcho ''}
+            """
+        }
     }
 }
 
