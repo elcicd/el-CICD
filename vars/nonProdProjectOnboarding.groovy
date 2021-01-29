@@ -20,8 +20,8 @@ def call(Map args) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-            oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -o yaml -n ${projectInfo.cicdMasterNamespace} > ${el.cicd.TEMP_DIR}/bcs
-            until [[ -z \$(oc delete --ignore-not-found -f  ${el.cicd.TEMP_DIR}/bcs -n ${projectInfo.cicdMasterNamespace} 2>/dev/null) ]]
+            BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
+            until [[ -z \$(oc delete --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
             do
                 sleep 3
             done
