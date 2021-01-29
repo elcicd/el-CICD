@@ -92,7 +92,7 @@ def call(Map args) {
             def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.devEnv] ?: projectInfo.resourceQuotas.default
 
             projectInfo.sandboxNamespaces.each { namespace ->
-                onboardingUtils.createNamepaces(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
+                onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
 
                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
 

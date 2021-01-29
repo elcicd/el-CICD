@@ -38,39 +38,6 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
     """
 }
 
-def createNamepaces(def projectInfo, def namespaces, def environments, def nodeSelectors) {
-    pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", namespaces.join(', '))
-
-    sh """
-        NODE_SELECTORS=(${nodeSelectors.join(' ') ?: ''})
-        ENVS=(${environments.join(' ')})
-        NAMESPACES=(${namespaces.join(' ')})
-        for i in \${!NAMESPACES[@]}
-        do
-            if [[ -z \$(oc get projects --ignore-not-found \${NAMESPACES[\${i}]}) ]]
-            then
-                if [[ ! -z \${NODE_SELECTORS[\${i}]} ]]
-                then
-                    oc adm new-project \${NAMESPACES[\${i}]} --node-selector="\${NODE_SELECTORS[\${i}]}"
-                else
-                    oc new-project \${NAMESPACES[\${i}]}
-                fi
-
-                oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n \${NAMESPACES[\${i}]}
-
-                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\${i}]}
-
-                oc adm policy add-cluster-role-to-user sealed-secrets-management \
-                    system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\${i}]}
-                oc adm policy add-cluster-role-to-user secrets-unsealer \
-                    system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n \${NAMESPACES[\${i}]}
-
-                ${shellEcho ''}
-            fi
-        done
-    """
-}
-
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
     sh "oc delete quota --wait -l=projectid=${projectInfo.id} -n ${namespace}"
 
