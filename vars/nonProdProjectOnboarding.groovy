@@ -21,7 +21,7 @@ def call(Map args) {
             ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
             oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -o yaml -n ${projectInfo.cicdMasterNamespace} > ${el.cicd.TEMP_DIR}/bcs
-            until [[ ! -z \$(oc delete bc --ignore-not-found -f  ${el.cicd.TEMP_DIR}/bcs -n ${projectInfo.cicdMasterNamespace}) ]]
+            until [[ ! -z \$(oc delete --ignore-not-found -f  ${el.cicd.TEMP_DIR}/bcs -n ${projectInfo.cicdMasterNamespace}) ]]
             do
                 sleep 3
             done
