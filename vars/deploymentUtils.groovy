@@ -67,8 +67,8 @@ def buildTemplate(def templateDef) {
     if (templateDef.envPatchFile) {
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            echo
-            echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
+            ${shellEcho ''}
+            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}"}
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
@@ -86,7 +86,9 @@ def buildTemplate(def templateDef) {
     else {
         sh """
             echo
-            echo "No patch found for appName: ${templateDef.appName}/ template file: ${templateFile}" 
+            ${shellEcho "No patch found for:",
+                        "appName: ${templateDef.appName}",
+                        "template file: ${templateFile}"}
             cat ${templateFile} > ${templateDef.patchedFile}
         """
     }
@@ -216,9 +218,9 @@ def rolloutLatest(def projectInfo, def microServices) {
                     oc rollout latest \${DC} -n ${projectInfo.deployToNamespace} 2>&1 || :
                 done
             else
-                ${shellEcho   "******"}
-                { echo "No DeploymentConfigs found for \${MICROSERVICE_NAME}"; } 2>1
-                ${shellEcho   "******"}
+                ${shellEcho   "******",
+                              "No DeploymentConfigs found for \${MICROSERVICE_NAME}",
+                              "******"}
             fi
         done
     """
@@ -234,6 +236,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
             ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
+
             oc create cm ${metaInfoCmName} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=microservice=${microService.name} \
@@ -243,6 +246,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
                 -n ${projectInfo.deployToNamespace}
+
             oc label cm ${metaInfoCmName} \
                 projectid=${projectInfo.id} \
                 microservice=${microService.name} \
