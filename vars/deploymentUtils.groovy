@@ -67,8 +67,8 @@ def buildTemplate(def templateDef) {
     if (templateDef.envPatchFile) {
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            ${shellEcho ''}
-            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}"}
+            ${shellEcho '',
+                        "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}" }
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
