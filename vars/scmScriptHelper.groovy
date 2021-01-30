@@ -96,9 +96,9 @@ def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TO
         curlCommand = """
             BC_SELF_LINK=\$(oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
-              sed -e "s/%HOSTNAME%/${el.cicd.CLUSTER_API_HOSTNAME}/"   \
-                  -e "s/%BC_SELF_LINK%/\${BC_SELF_LINK}/"   \
-                  -e "s/%MICROSERVICE_ID%/${microService.id}/" > ${webhookFile}
+              sed -e "s|%HOSTNAME%|${el.cicd.CLUSTER_API_HOSTNAME}|"   \
+                  -e "s|%BC_SELF_LINK%|\${BC_SELF_LINK}|"   \
+                  -e "s|%MICROSERVICE_ID%|${microService.id}|" > ${webhookFile}
 
             curl -ksS -X POST ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
         """
