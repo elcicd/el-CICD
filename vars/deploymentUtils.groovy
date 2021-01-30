@@ -47,7 +47,7 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
                     templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
                     def patchName = templateDef.templateName ?: templateDef.file
 
-                    templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml"
+                    templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
                     buildTemplate(templateDef)
 
