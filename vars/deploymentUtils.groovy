@@ -30,87 +30,6 @@ def readTemplateDefs() {
     return templateDefs
 }
 
-def readPatchFile(def patchFile) {
-    patchFile += patchFile.endsWith('.patch') ? '' : '.patch'
-    try {
-        readYaml file: patchFile
-    }
-    catch (Exception eYaml) {
-        try {
-            readJSON file: patchFile
-        }
-        catch (Exception eJson) {
-            pipelineUtils.errorBanner("ERROR: BAD ${patchFile} format!",
-                                      "File must be named *.patch",
-                                      "Lint in a yaml or JSON editor before trying again.",
-                                      "",
-                                      "YAML ERROR: ${eYaml.getMessage()}",
-                                      "",
-                                      "JSON ERROR: ${eJson.getMessage()}")
-        }
-    }
-}
-
-def findTemplateObject(def template, def patch) {
-    template.objects.find { object ->
-        object.kind == patch.kind && object.metadata.name == patch.metadata.name
-    }
-}
-
-def findContainer(def object, def patch) {
-    def container = object.spec.template.spec.containers.find { container ->
-        container.name == patchContainer.name
-    }
-}
-
-def patchContainers(def object, def patch) {
-    def patchContainers = patch.spec.template?.spec?.containers ?: patch.spec.jobTemplate.spec.template.spec.containers
-    if (patchContainers) {
-        patchContainers.each { patchContainer ->
-            def templateContainers = object.spec.template?.spec?.containers ?: object.spec.jobTemplate.spec.template.spec.containers
-            def container = templateContainers.find { container ->
-                container.name == patchContainer.name
-            }
-
-            if (container) {
-                container = mergeMaps(container, patchContainer)
-            }
-            else {
-                object.spec.template.spec.containers.add(patchContainer)
-            }
-        }
-    }
-    return patchContainers != null
-}
-
-def patchVolumes(def object, def patch) {
-    def patchVolumes = patch.spec.template?.spec?.volumes ?: patch.spec.jobTemplate?.spec?.template?.spec?.volumes
-    if (patchVolumes) {
-        def templateVolumes
-        if (object.spec.template)  {
-            object.spec.template.spec.volumes = object.spec.template.spec.volumes ?: []
-            templateVolumes = object.spec.template.spec.volumes
-        }
-        else {
-            object.spec.jobTemplate.spec.template.spec.volumes = object.spec.jobTemplate.spec.template.spec.volumes ?: []
-            templateVolumes = object.spec.jobTemplate.spec.template.spec.volumes
-        }
-        templateVolumes.addAll(patchVolumes)
-    }
-    return patchVolumes != null
-}
-
-def patchParameters(def templateDefs, def patch) {
-    if (patch.parameters) {
-        if (templateDefs.parameters){
-            templateDefs.parameters = patch.parameters.collect()
-        }
-        else {
-            templateDefs.parameters.addAll(patch.parameters)
-        }
-    }
-}
-
 def buildTemplatesAndGetParams(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
@@ -124,11 +43,13 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
 
             if (microService.templateDefs.templates) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
+                    templateDef.appName = templateDef.appName ?: microService.name
                     templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
                     def patchName = templateDef.templateName ?: templateDef.file
-                    templateDef.patchedFile = 'patched-' + patchName + '-' + index + '.yml'
 
-                    (templateDef.templateName && templateDef.envPatchFile)  ? kustomize(templateDef) : buildTemplate(templateDef)
+                    templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml"
+
+                    buildTemplate(templateDef)
 
                     templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
                 }
@@ -140,51 +61,35 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
     }
 }
 
-def kustomize(def templateDef) {
+def buildTemplate(def templateDef) {
     def templateFileName = templateDef.file ?: "${templateDef.templateName}.yml"
     def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateFileName}"
-    def tempKustomizeDir = './kustomize-tmp'
-    sh """
-        echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
-        mkdir -p ${tempKustomizeDir}
-        cp "${templateFile}" ${tempKustomizeDir}
-        cp --parents ${templateDef.envPatchFile} ${tempKustomizeDir}
-
-        cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-            sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
-
-        kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
-
-        cat ${templateDef.patchedFile}
-        rm -rf ${tempKustomizeDir}
-    """
-}
-
-def buildTemplate(def templateDef) {
-    def template = readYaml file: templateDef.file
-
     if (templateDef.envPatchFile) {
-        echo "Patching ${templateDef.file} with patch: ${templateDef.envPatchFile}"
-        patch = readPatchFile(templateDef.envPatchFile)
+        def tempKustomizeDir = './kustomize-tmp'
+        sh """
+            echo
+            echo 'Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}'
+            mkdir -p ${tempKustomizeDir}
+            cp "${templateFile}" ${tempKustomizeDir}
 
-        def object = findTemplateObject(template, patch)
-        if (object.kind == 'DeploymentConfig' || object.kind == 'CronJob') {
-            patchContainers(object, patch)
-            if (!patchVolumes(object, patch)) {
-                echo "No volumes found: ${templateDef.envPatchFile}"
-            }
-        }
-        else {
-            pipelineUtils.errorBanner("Only DeploymentConfig and CronJob resources can be patched: ${templateDef.file}")
-        }
+            cp --parents ${templateDef.envPatchFile} ${tempKustomizeDir}
+
+            cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
+                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
+
+            kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
+
+            cat ${templateDef.patchedFile}
+            rm -rf ${tempKustomizeDir}
+        """
     }
     else {
-        echo "NO PATCH TO APPLY TO TEMPLATE:  ${templateDef.file}"
+        sh """
+            echo
+            echo "No patch found for appName: ${templateDef.appName}/ template file: ${templateFile}" 
+            cat ${templateFile} > ${templateDef.patchedFile}
+        """
     }
-
-    echo "Writing ${templateDef.file} to ${templateDef.patchedFile}"
-    def json = groovy.json.JsonOutput.toJson(template)
-    sh "echo '${json}' > ${templateDef.patchedFile}"
 }
 
 def processTemplates(def projectInfo, def microServices, def imageTag) {
@@ -196,13 +101,12 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
         if (microService.templateDefs) {
             dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
-                    def appName = templateDef.appName ?: microService.name
                     if (templateDef.params) {
-                        templateDef.params.ROUTE_NAME = templateDef.params.ROUTE_NAME ?: appName
+                        templateDef.params.ROUTE_NAME = templateDef.params.ROUTE_NAME ?: templateDef.appName
 
                         if (!templateDef.params.ROUTE_HOST) {
                             def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
-                            templateDef.params.ROUTE_HOST = "${appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+                            templateDef.params.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
                         }
                     }
 
@@ -223,7 +127,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             ${paramsStr} \
                             -p 'PROJECT_ID=${projectInfo.id}' \
                             -p 'MICROSERVICE_NAME=${microService.name}' \
-                            -p 'APP_NAME=${appName}' \
+                            -p 'APP_NAME=${templateDef.appName}' \
                             -p 'IMAGE_REPOSITORY=${imageRepository}' \
                             -p 'PULL_SECRET=${pullSecret}' \
                             -p 'ENV=${projectInfo.deployToEnv}' \
