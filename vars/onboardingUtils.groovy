@@ -56,34 +56,34 @@ def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
 }
 
 def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
-    // def pvNames = [:]
-    // if (projectInfo.nfsShares) {
-    //     pipelineUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
+    def pvNames = [:]
+    if (projectInfo.nfsShares) {
+        pipelineUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
 
-    //     dir(el.cicd.OKD_TEMPLATES_DIR) {
-    //         projectInfo.nfsShares.each { nfsShare ->
-    //             def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
-    //             envs.each { env ->
-    //                 pvName = "${projectInfo.id}-${env}-${nfsShare.claimName}"
-    //                 pvNames[(pvName)] = true
-    //                 if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env == projectInfo.prodEnv)) {
-    //                     createNfsShare(projectInfo, nfsShare, pvName, env)
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+        dir(el.cicd.OKD_TEMPLATES_DIR) {
+            projectInfo.nfsShares.each { nfsShare ->
+                def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
+                envs.each { env ->
+                    pvName = "${projectInfo.id}-${env}-${nfsShare.claimName}"
+                    pvNames[(pvName)] = true
+                    if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env == projectInfo.prodEnv)) {
+                        createNfsShare(projectInfo, nfsShare, pvName, env)
+                    }
+                }
+            }
+        }
+    }
 
-    // pipelineUtils.echoBanner("REMOVE UNUSED, RELEASED NFS PERSISTENT VOLUMES, IF ANY")
-    // def releasedPvs = sh(returnStdout: true, script: """
-    //     oc get pv -l projectid=${projectInfo.id} --ignore-not-found | grep 'Released' | awk '{ print \$1 }'
-    // """).split('\n').findAll { it.trim() }
+    pipelineUtils.echoBanner("REMOVE UNNEEDED, AVAILABLE AND RELEASED ${projectInfo.id} NFS PERSISTENT VOLUMES, IF ANY")
+    def releasedPvs = sh(returnStdout: true, script: """
+        oc get pv -l projectid=${projectInfo.id} --ignore-not-found | grep 'Released|Available' | awk '{ print \$1 }'
+    """).split('\n').findAll { it.trim() }
 
-    // releasedPvs.each { pvName ->
-    //     if (!pvNames[(pvName)]) {
-    //         sh "oc delete pv ${pvName}"
-    //     }
-    // }
+    releasedPvs.each { pvName ->
+        if (!pvNames[(pvName)]) {
+            sh "oc delete pv ${pvName}"
+        }
+    }
 }
 
 def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
