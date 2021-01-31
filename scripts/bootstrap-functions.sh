@@ -66,7 +66,7 @@ _create_el_cicd_meta_info_config_map() {
     awk -F= '!line[$1]++' ${EL_CICD_SYSTEM_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ') | envsubst > ${EL_CICD_META_INFO_NAME}
     cd ${CURRENT_DIR}
 
-    echo CLUSTER_API_HOSTNAME=$(oc config current-context | awk -F '/' '{ print $2 }') >> /tmp/${EL_CICD_META_INFO_NAME}
+    echo CLUSTER_API_HOSTNAME >> /tmp/${EL_CICD_META_INFO_NAME}
 
     oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
 

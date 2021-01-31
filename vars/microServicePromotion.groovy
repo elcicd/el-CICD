@@ -187,8 +187,8 @@ def call(Map args) {
                             sh """
                                 ${shellEcho  "-> Creating Deployment Branch for the image ${microService.id}: ${microService.deploymentBranch}"}
                                 ${sshAgentBash GITHUB_PRIVATE_KEY,
-                                            "git branch ${microService.deploymentBranch}",
-                                            "git push origin ${microService.deploymentBranch}:${microService.deploymentBranch}"}
+                                               "git branch ${microService.deploymentBranch}",
+                                               "git push origin ${microService.deploymentBranch}:${microService.deploymentBranch}"}
                             """
                         }
                     }
