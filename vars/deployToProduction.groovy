@@ -179,7 +179,7 @@ def call(Map args) {
                         withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
                                 ${shellEcho "-> Creating deployment branch: ${microService.releaseVersionGitBranch}"}
-                                ${sshAgentBash GITHUB_PRIVATE_KEY,
+                                ${sshAgentBash 'GITHUB_PRIVATE_KEY',
                                                "git branch ${microService.releaseVersionGitBranch}",
                                                "git push origin ${microService.releaseVersionGitBranch}"}
                             """

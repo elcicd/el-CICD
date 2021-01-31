@@ -165,7 +165,7 @@ def call(Map args) {
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
                             ${shellEcho "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
-                            ${sshAgentBash GITHUB_PRIVATE_KEY, "git tag ${gitReleaseCandidateTag}", "git push --tags"}
+                            ${sshAgentBash 'GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags"}
                         """
                     }
                 }
