@@ -15,7 +15,7 @@ _push_github_public_ssh_deploy_key el-CICD-config \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
-JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${EL_CICD_MASTER_NAMESPACE})
+JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
 
 echo
 echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'
@@ -34,7 +34,7 @@ CICD_ENVIRONMENTS="${PRE_PROD} ${PROD_ENV}"
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
-    _create_env_docker_registry_secret ${ENV} ${EL_CICD_MASTER_NAMESPACE}
+    _create_env_docker_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
 done
 
 echo

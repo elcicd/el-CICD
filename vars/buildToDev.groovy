@@ -93,14 +93,14 @@ void call(Map args) {
                                  --to-docker \
                                  --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
                                  --push-secret=${pullSecret} \
-                                 --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS}:${el.cicd.EL_CICD_BUILD_SECRETS} \
+                                 --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}:${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                                  -n ${projectInfo.cicdMasterNamespace}
 
                     oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.cicdMasterNamespace}
                 fi
 
                 chmod 777 Dockerfile
-                sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS=./${el.cicd.EL_CICD_BUILD_SECRETS}' Dockerfile
+                sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME}' Dockerfile
 
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile

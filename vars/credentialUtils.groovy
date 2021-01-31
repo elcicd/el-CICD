@@ -25,17 +25,17 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 
     def pullSecretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     sh """
-        oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+        oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
-        oc get secret ${el.cicd.EL_CICD_BUILD_SECRETS} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+        oc get secret ${el.cicd.EL_CICD_BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
         for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
         do
-            oc get secrets \${PULL_SECRET_NAME} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | \
+            oc get secrets \${PULL_SECRET_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
                 ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
                 oc apply -f - -n ${projectInfo.cicdMasterNamespace}
         done
@@ -45,7 +45,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
     def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     sh """
-        oc get secrets ${secretName} -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+        oc get secrets ${secretName} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${namespace}
 
         ${shellEcho ''}
@@ -60,7 +60,7 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 //         NAMESPACES=(${namespaces.join(' ')})
 //         for i in \${!NAMESPACES[@]}
 //         do
-//             oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.EL_CICD_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+//             oc get secrets -l \${ENVS[\${i}]}-env -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
 //                 oc apply -f - -n \${NAMESPACES[\${i}]}
 
 //             ${shellEcho ''}

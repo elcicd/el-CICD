@@ -36,7 +36,7 @@ def call(Map args) {
     }
 
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
-        pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH EL_CICD_GIT_PROVIDER REPO ON NON-PROD JENKINS FOR ${projectInfo.id}")
+        pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
 
         writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
                   text: libraryResource("buildconfigs/build-to-dev-pipeline-template.yml")
@@ -104,7 +104,7 @@ def call(Map args) {
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
-        pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EL_CICD_GIT_PROVIDER FOR EACH REPO")
+        pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
         withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             projectInfo.microServices.each { microService ->

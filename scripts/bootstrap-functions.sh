@@ -4,10 +4,10 @@
 _bootstrap_el_cicd() {
     local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
-    if [[ -z "${EL_CICD_MASTER_NAMESPACE}" ]]
+    if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
         echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${EL_CICD_SYSTEM_CONFIG_FILE}"
-        echo "Set the value of EL_CICD_MASTER_NAMESPACE ${EL_CICD_SYSTEM_CONFIG_FILE} to and rerun."
+        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${EL_CICD_SYSTEM_CONFIG_FILE} to and rerun."
         echo "Exiting."
         exit 1
     fi
@@ -51,16 +51,30 @@ _create_el_cicd_meta_info_config_map() {
     echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
     sleep 5
-    sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_COMMON_CONFIG_FILE} > /tmp/${EL_CICD_COMMON_CONFIG_FILE}
     sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
 
-    awk -F= '!a[$1]++' /tmp/${EL_CICD_SYSTEM_CONFIG_FILE} /tmp/${EL_CICD_COMMON_CONFIG_FILE} > /tmp/${EL_CICD_META_INFO_NAME}
+    echo
+    for FILE in $(echo "${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
+    do
+        sed -e 's/\s*$//' ${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE} > /tmp/${FILE}
+    done
+
+    # iterates over each file an prints (default awk behavior) each unique line; thus, if second file contains the same first property
+    # value, it skips it in the second file, and all is outpput to the tmp file for creating the final ConfigMap below
+    local CURRENT_DIR=$(pwd)
+    cd /tmp
+    awk -F= '!line[$1]++' ${EL_CICD_SYSTEM_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ') | envsubst > ${EL_CICD_META_INFO_NAME}
+    cd ${CURRENT_DIR}
 
     echo CLUSTER_API_HOSTNAME=$(oc config current-context | awk -F '/' '{ print $2 }') >> /tmp/${EL_CICD_META_INFO_NAME}
 
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_META_INFO_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
 
-    rm /tmp/${EL_CICD_COMMON_CONFIG_FILE} /tmp/${EL_CICD_SYSTEM_CONFIG_FILE} /tmp/${EL_CICD_META_INFO_NAME}
+    echo
+    for FILE in ${EL_CICD_SYSTEM_CONFIG_FILE} $(echo "${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
+    do
+        rm /tmp/${FILE}
+    done
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
@@ -70,7 +84,7 @@ __gather_and_confirm_bootstrap_info_with_user() {
     UPDATE_JENKINS=$(__get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
 
     echo
-    if [[ ! -z $(oc get is --ignore-not-found ${EL_CICD_JENKINS_IMAGE_STREAM} -n openshift) ]]
+    if [[ ! -z $(oc get is --ignore-not-found ${JENKINS_IMAGE_STREAM} -n openshift) ]]
     then
         UPDATE_EL_CICD_JENKINS=$(__get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
     fi
@@ -82,13 +96,15 @@ __gather_and_confirm_bootstrap_info_with_user() {
 __bootstrap_el_cicd_onboarding_server() {
     local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
-    local DEL_NAMESPACE=$(oc projects -q | grep ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
+    local DEL_NAMESPACE=$(oc projects -q | grep ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
     if [[ ! -z "${DEL_NAMESPACE}" ]]
     then
         __delete_master_namespace
     fi
 
     __create_master_namespace_with_selectors
+
+    _create_el_cicd_meta_info_config_map
 
     if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
     then
@@ -127,21 +143,22 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
     else
         echo
-        echo "WARNING: '${EL_CICD_JENKINS_IMAGE_STREAM}' ImageStream was not found."
+        echo "WARNING: '${JENKINS_IMAGE_STREAM}' ImageStream was not found."
         echo 'el-CICD Jenkins WILL BE BUILT.'
     fi
 
     echo
+    echo "Cluster API hostname? '${CLUSTER_API_HOSTNAME}'"
     echo "Cluster wildcard Domain? '*.${CLUSTER_WILDCARD_DOMAIN}'"
 
-    local DEL_NAMESPACE=$(oc projects -q | grep ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
+    local DEL_NAMESPACE=$(oc projects -q | grep ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
     if [[ ! -z "${DEL_NAMESPACE}" ]]
     then
         echo
-        echo -n "WARNING: '${EL_CICD_MASTER_NAMESPACE}' was found, and will WILL BE DESTROYED AND REBUILT"
+        echo -n "WARNING: '${ONBOARDING_MASTER_NAMESPACE}' was found, and will WILL BE DESTROYED AND REBUILT"
     else 
         echo
-        echo -n "'${EL_CICD_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
+        echo -n "'${ONBOARDING_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
     fi
 
     if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
@@ -173,8 +190,8 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 
 __create_master_namespace_with_selectors() {
     echo
-    NODE_SELECTORS=$(echo ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')
-    local CREATE_MSG="Creating ${EL_CICD_MASTER_NAMESPACE}"
+    NODE_SELECTORS=$(echo ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
+    local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
     if [[ ! -z  ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
     then
         CREATE_MSG=" with node selectors: ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
@@ -183,9 +200,9 @@ __create_master_namespace_with_selectors() {
 
     if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
     then
-        oc adm new-project ${EL_CICD_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+        oc adm new-project ${ONBOARDING_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
     else
-        oc new-project ${EL_CICD_MASTER_NAMESPACE}
+        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
     fi
 }
 
@@ -196,30 +213,30 @@ __create_onboarding_automation_server() {
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                                   -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
                                   -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                  -p JENKINS_IMAGE_STREAM_TAG=${EL_CICD_JENKINS_IMAGE_STREAM}:latest \
+                                  -p JENKINS_IMAGE_STREAM_TAG=${JENKINS_IMAGE_STREAM}:latest \
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e CASC_JENKINS_CONFIG=${EL_CICD_JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
-                                  -n ${EL_CICD_MASTER_NAMESPACE}
+                                  -e CASC_JENKINS_CONFIG=${JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
+                                  -n ${ONBOARDING_MASTER_NAMESPACE}
 
     echo
     echo "Creating the Onboarding Automation Server pipelines:"
     for PIPELINE_TEMPLATE in ${PIPELINE_TEMPLATES[@]}
     do
         oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
-                -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} -n ${EL_CICD_MASTER_NAMESPACE} | \
-            oc apply -f - -n ${EL_CICD_MASTER_NAMESPACE}
+                -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE} | \
+            oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
     done
 
     echo
     echo "'jenkins' service account needs cluster-admin permissions for managing multiple projects and permissions"
-    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${EL_CICD_MASTER_NAMESPACE}
+    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
 
     echo
     echo -n "Waiting for Jenkins to be ready."
     until
-        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${EL_CICD_MASTER_NAMESPACE} | grep "1/1"
+        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${ONBOARDING_MASTER_NAMESPACE} | grep "1/1"
     do
         echo -n '.'
     done
@@ -231,16 +248,16 @@ __create_onboarding_automation_server() {
 
 __delete_master_namespace() {
     echo
-    oc delete project ${EL_CICD_MASTER_NAMESPACE}
-    echo -n "Deleting ${EL_CICD_MASTER_NAMESPACE} namespace"
+    oc delete project ${ONBOARDING_MASTER_NAMESPACE}
+    echo -n "Deleting ${ONBOARDING_MASTER_NAMESPACE} namespace"
     until
-        !(oc project ${EL_CICD_MASTER_NAMESPACE} > /dev/null 2>&1)
+        !(oc project ${ONBOARDING_MASTER_NAMESPACE} > /dev/null 2>&1)
     do
         echo -n '.'
         sleep 1
     done
     echo
-    echo "Namespace ${EL_CICD_MASTER_NAMESPACE} deleted.  Sleep 10s to confirm cleanup."
+    echo "Namespace ${ONBOARDING_MASTER_NAMESPACE} deleted.  Sleep 10s to confirm cleanup."
     sleep 10
 }
 

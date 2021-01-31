@@ -4,8 +4,6 @@
 rm -rf ${SECRET_FILE_TEMP_DIR}
 mkdir -p ${SECRET_FILE_TEMP_DIR}
 
-_create_el_cicd_meta_info_config_map
-
 echo
 echo "Adding read only deploy key for el-CICD"
 _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
@@ -16,7 +14,7 @@ _push_github_public_ssh_deploy_key el-CICD-config \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
-JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${EL_CICD_MASTER_NAMESPACE})
+JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
 
 echo
 echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'
@@ -35,7 +33,7 @@ CICD_ENVIRONMENTS="${DEV_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_EN
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do
-    _create_env_docker_registry_secret ${ENV} ${EL_CICD_MASTER_NAMESPACE}
+    _create_env_docker_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
 done
 
 echo
@@ -51,8 +49,8 @@ do
 done
 
 echo
-echo "Creating ${EL_CICD_BUILD_SECRETS} secret containing el-CICD build secret(s) in ${EL_CICD_MASTER_NAMESPACE}"
-oc create secret generic ${EL_CICD_BUILD_SECRETS} --from-file=${BUILD_SECRETS_DIR} -n ${EL_CICD_MASTER_NAMESPACE}
+echo "Creating ${EL_CICD_BUILD_SECRETS_NAME} secret containing el-CICD build secret(s) in ${ONBOARDING_MASTER_NAMESPACE}"
+oc create secret generic ${EL_CICD_BUILD_SECRETS_NAME} --from-file=${BUILD_SECRETS_DIR} -n ${ONBOARDING_MASTER_NAMESPACE}
 
 _run_custom_credentials_script non-prod
 

@@ -50,7 +50,8 @@ def node(Map args, Closure body) {
 
     def podLabel = args.agentName ?: args.agent
 
-    def secretVolume = args.isBuild ? [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS}", mountPath: "/mnt/")] : []
+    def secretVolume = args.isBuild ?
+        [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")] : []
 
     podTemplate([
         label: "${podLabel}",
@@ -64,9 +65,9 @@ def node(Map args, Closure body) {
                 image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
-                resourceRequestMemory: '512Mi',
+                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceRequestCpu: '100m',
+                resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
         ],
@@ -144,7 +145,7 @@ def initializeStage() {
             mkdir -p ${el.cicd.TEMP_DIR}
             oc version
         """
-        
+
         el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
         el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
         sh """

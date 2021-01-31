@@ -42,7 +42,7 @@ _install_sealed_secrets() {
         oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/controller.yaml
 
         echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
-        oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${EL_CICD_MASTER_NAMESPACE}
+        oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
 
         echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed!"
     else 
