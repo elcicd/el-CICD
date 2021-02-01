@@ -65,8 +65,7 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
     if (envPatchFile) {
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            ${shellEcho '',
-                        "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
+            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
@@ -84,9 +83,10 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
     else {
         sh """
             echo
-            ${shellEcho "No kustomize patch defined for templateDef #${index}: ${templateFileName}",
-                        "    appName: ${templateDef.appName}",
-                        "    template file: ${templateFile}"}
+            ${shellEcho "No kustomize patch defined for:",
+                        "  templateDef #${index}: ${templateFileName}",
+                        "  appName: ${templateDef.appName}",
+                        "  template file: ${templateFile}"}
             cat ${templateFile} > ${templateDef.patchedFile}
         """
     }

@@ -173,10 +173,6 @@ def echoBanner(def ... msgs) {
     echo createBanner(msgs)
 }
 
-def shellEcho(def msg) {
-    return "{ echo '${msg}'; } 2> /dev/null"
-}
-
 def shellEchoBanner(def ... msgs) {
     return "{ echo '${createBanner(msgs)}'; } 2> /dev/null"
 }
