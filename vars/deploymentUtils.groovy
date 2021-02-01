@@ -30,7 +30,7 @@ def readTemplateDefs() {
     return templateDefs
 }
 
-def buildTemplatesAndGetParams(def projectInfo, def microServices) {
+def processTemplateDefs(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     pipelineUtils.echoBanner("BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS")
@@ -44,11 +44,9 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
             if (microService.templateDefs.templates) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     templateDef.appName = templateDef.appName ?: microService.name
-                    templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
-
                     templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
-                    buildTemplate(templateDef)
+                    kustomizeTemplate(templateDef, index)
 
                     templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
                 }
@@ -60,21 +58,22 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
     }
 }
 
-def buildTemplate(def templateDef) {
+def kustomizeTemplate(def templateDef, def index) {
     def templateFileName = templateDef.file ?: "${templateDef.templateName}.yml"
     def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateFileName}"
-    if (templateDef.envPatchFile) {
+    def envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
+    if (envPatchFile) {
         def tempKustomizeDir = './kustomize-tmp'
         sh """
             ${shellEcho '',
-                        "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${templateDef.envPatchFile}" }
+                        "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
-            cp --parents ${templateDef.envPatchFile} ${tempKustomizeDir}
+            cp ${envPatchFile} ${tempKustomizeDir}
 
             cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${templateDef.envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
+                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${envPatchFile}|' > ${tempKustomizeDir}/kustomization.yml
 
             kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
@@ -85,9 +84,9 @@ def buildTemplate(def templateDef) {
     else {
         sh """
             echo
-            ${shellEcho "No patch found for:",
-                        "appName: ${templateDef.appName}",
-                        "template file: ${templateFile}"}
+            ${shellEcho "No kustomize patch defined for templateDef #${index}: ${templateFileName}",
+                        "    appName: ${templateDef.appName}",
+                        "    template file: ${templateFile}"}
             cat ${templateFile} > ${templateDef.patchedFile}
         """
     }

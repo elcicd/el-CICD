@@ -21,7 +21,7 @@ def call(Map args) {
 
     stage('Build templates and retrieve template definitions') {
         if (args.microServices) {
-            deploymentUtils.buildTemplatesAndGetParams(args.projectInfo, args.microServices)
+            deploymentUtils.processTemplateDefs(args.projectInfo, args.microServices)
         }
         else {
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS"
