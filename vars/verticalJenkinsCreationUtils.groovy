@@ -40,7 +40,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     stage('Creating CICD namespaces and rbacGroup Jenkins') {
-        def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${nodeSelectors}'" : ''
+        def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${el.cicd.CICD_MASTER_NODE_SELECTORS }'" : ''
 
         sh """
             ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
