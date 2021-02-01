@@ -46,7 +46,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
                     templateDef.appName = templateDef.appName ?: microService.name
                     templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
-                    kustomizeTemplate(templateDef, index)
+                    kustomizeTemplate(projectInfo, templateDef, index)
 
                     templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
                 }
@@ -58,7 +58,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
     }
 }
 
-def kustomizeTemplate(def templateDef, def index) {
+def kustomizeTemplate(def projectInfo, def templateDef, def index) {
     def templateFileName = templateDef.file ?: "${templateDef.templateName}.yml"
     def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateFileName}"
     def envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
