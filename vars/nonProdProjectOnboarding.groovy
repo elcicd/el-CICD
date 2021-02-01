@@ -1,8 +1,7 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the project onboarding pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/project-onboarding-pipeline-template
+ * Defines the bulk of the project onboarding pipeline.
  */
 
 def call(Map args) {
@@ -17,22 +16,9 @@ def call(Map args) {
     stage('Remove stale namespace environments and pipelines if necessary') {
         def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : "${projectInfo.id}-nonexistant"
 
-        sh """
-            ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
+        onboardingUtils.cleanStalePipelines(projectInfo)
 
-            BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
-            until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
-            do
-                sleep 3
-            done
-
-            ${namespacesToDelete ? pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete) : ''}
-
-            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
-            do
-                sleep 3
-            done
-        """
+        args.rebuildNonProd ? cleanProjectNamespaces(projectInfo.nonProdNamespaces.values()) : true
     }
 
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
@@ -75,7 +61,6 @@ def call(Map args) {
             credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
 
             def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
-
             onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
         }
     }

@@ -17,6 +17,32 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
+def cleanStalePipelines(def projectInfo) {
+    sh """
+        ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
+
+        BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
+        until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
+        do
+            sleep 3
+        done
+    """
+}
+
+def cleanProjectNamespaces(def namespacesToDelete) {
+    if (namespacesToDelete) {
+        namespacesToDelete = namespacesToDelete.join(' ')
+        sh """
+            ${pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete)}
+
+            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
+            do
+                sleep 3
+            done
+        """
+    }
+}
+
 def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
     nodeSelectors = nodeSelectors ? "--node-selector='${nodeSelectors}'" : ''
     sh """

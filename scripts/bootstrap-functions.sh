@@ -230,8 +230,16 @@ __create_onboarding_automation_server() {
     done
 
     echo
-    echo "'jenkins' service account needs cluster-admin permissions for managing multiple projects and permissions"
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    echo
+    echo "Be aware that the el-CICD Onboarding 'jenkins' service account needs cluster-admin"
+    echo "permissions for managing and creating multiple cluster resources RBAC"
+    echo
+    echo "NOTE: This DOES NOT apply to CICD servers"
+    echo
     oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
+    echo
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
 
     echo
     echo -n "Waiting for Jenkins to be ready."

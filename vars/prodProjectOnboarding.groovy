@@ -1,60 +1,35 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the project onboarding pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/project-onboarding-pipeline-template
- *
+ * Defines the bulk of the project onboarding pipeline.
  */
 
 def call(Map args) {
     onboardingUtils.init()
 
     def projectInfo = args.projectInfo
-    projectInfo.rbacGroup = params.RBAC_GROUP ?: projectInfo.rbacGroup
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
 
-    stage('Remove stale namespace environments, if necessary') {
-        if (args.recreateProd) {
-            sh """
-                oc delete project ${projectInfo.prodNamespace} || true
-                until
-                    !(oc project  ${projectInfo.prodNamespace} > /dev/null 2>&1)
-                do
-                    sleep 1
-                done
-            """
-        }
+    stage('Remove stale namespace environments and pipelines if necessary') {
+        onboardingUtils.cleanStalePipelines(projectInfo)
+
+        args.recreateProd ? cleanProjectNamespaces([projectInfo.prodNamespace]) : true
     }
 
-    stage('Setup prod openshift namespace environment') {
-        def nodeSelectors = el.cicd["${projectInfo.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
+    stage('Setup openshift namespace environments') {
+        pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.nonProdNamespaces.values().join(', '))
 
-        sh """
-            ${pipelineUtils.shellEchoBanner("SETUP OKD PROD NAMESPACE ENVIRONMENT AND JENKINS RBAC FOR ${projectInfo.id}")}
+        def nodeSelectors = el.cicd["${el.cicd.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
 
-            if [[ `oc projects | grep ${projectInfo.prodNamespace} | wc -l` -lt 1 ]]
-            then
-                __NODE_SELS=${nodeSelectors ?: ''}
-                if [[ ! -z \${__NODE_SELS} ]]
-                then
-                    oc adm new-project ${projectInfo.prodNamespace} --node-selector="${nodeSelectors}"
-                else
-                    oc adm new-project ${projectInfo.prodNamespace}
-                fi
+        onboardingUtils.createNamepace(projectInfo, projectInfo.prodNamespace, projectInfo.prodEnv, nodeSelectors)
 
-                oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.prodNamespace}
+        credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
 
-                oc policy add-role-to-user edit system:serviceaccount:${projectInfo.}:jenkins -n ${projectInfo.prodNamespace}
-
-                oc adm policy add-cluster-role-to-user sealed-secrets-management system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
-                oc adm policy add-cluster-role-to-user secrets-unsealer system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${projectInfo.prodNamespace}
-
-                oc get secrets -l ${projectInfo.prodEnv}-env=true -o yaml -n ${el.cicd.EL_CICD_PROD_MASTER_NAMEPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | oc create -f - -n ${projectInfo.prodNamespace}
-            fi
-        """
+        def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
+        onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
     stage('Delete old github public keys with curl') {
