@@ -286,8 +286,10 @@ __run_custom_config_scripts() {
     then
         for FILE in ${SCRIPTS}
         do
-            echo "Running custom script $(basename ${FILE})" 
+            echo
+            echo "Found ${FILE}; running..."
             eval "${FILE}"
+            echo "Custom script ${FILE} completed"
         done
     else
         echo 'No custom config scripts found...'
