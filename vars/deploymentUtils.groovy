@@ -45,7 +45,6 @@ def buildTemplatesAndGetParams(def projectInfo, def microServices) {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     templateDef.appName = templateDef.appName ?: microService.name
                     templateDef.envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
-                    def patchName = templateDef.templateName ?: templateDef.file
 
                     templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
@@ -104,8 +103,6 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
             dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     if (templateDef.params) {
-                        templateDef.params.ROUTE_NAME = templateDef.params.ROUTE_NAME ?: templateDef.appName
-
                         if (!templateDef.params.ROUTE_HOST) {
                             def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
                             templateDef.params.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
