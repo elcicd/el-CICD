@@ -1,9 +1,7 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Utility methods for onboading applications into the CICD framework
- *
- * @see the projectid-onboard pipeline for example on how to use
+ * Utility methods for onboading applications into the el-CICD framework
  */
 
 def init() {
