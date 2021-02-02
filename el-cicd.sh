@@ -48,6 +48,18 @@ EL_CICD_SYSTEM_CONFIG_FILE=${2}
 
 CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
 
+if [[ ${CLI_OPTION} == '--help' ]]
+then
+    echo "${HELP_MSG}"
+    exit 0
+elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
+then
+    echo "ERROR: Uknown or missing config-file: ${EL_CICD_SYSTEM_CONFIG_FILE}"
+    echo
+    echo "${HELP_MSG}"
+    exit 1
+fi
+
 SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
 
 RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
@@ -94,19 +106,6 @@ echo
 echo 'el-CICD environment loaded'
 
 set +o allexport
-
-
-if [[ ${CLI_OPTION} == '--help' ]]
-then
-    echo "${HELP_MSG}"
-    exit 0
-elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
-then
-    echo "ERROR: Uknown or missing config-file: ${EL_CICD_SYSTEM_CONFIG_FILE}"
-    echo
-    echo "${HELP_MSG}"
-    exit 1
-fi
 
 echo
 case ${CLI_OPTION} in

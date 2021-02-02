@@ -65,6 +65,8 @@ void call(Map args) {
     }
 
     stage('build image and push to repository') {
+        pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")
+
         projectInfo.imageTag = projectInfo.devEnv
         if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
             def index = projectInfo.deployToNamespace.split('-').last()
@@ -75,15 +77,8 @@ void call(Map args) {
         def pullSecret = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
-        def buildSecretName = "${projectInfo.codeBase}${el.cicd.BUILD_SECRET_POSTFIX}"
-        def buildSecret = sh(returnStdout: true, script: """
-            oc get secret --ignore-not-found  ${buildSecretName} -o jsonpath='{.metadata.name}' -n ${projectInfo.cicdMasterNamespace}
-        """)
-
         dir(microService.workDir) {
             sh """
-                ${pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")}
-
                 if [[ ! -n `oc get bc ${buildConfigName} -n ${projectInfo.cicdMasterNamespace} --ignore-not-found` ]]
                 then
                     oc new-build --name ${buildConfigName} \
