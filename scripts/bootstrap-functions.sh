@@ -49,7 +49,7 @@ _bootstrap_el_cicd() {
 _create_el_cicd_meta_info_config_map() {
     echo
     echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
-    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME}
+    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
     sleep 5
     sed -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
 

@@ -50,10 +50,19 @@ def call(Map args) {
                 }
 
                 stage('Refresh pull secrets per build environment') {
-                    pipelineUtils.echoBanner("COPY PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}:", namespaces.join(', '))
+                    pipelineUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
 
-                    projectInfo.nonProdNamespaces.each { env, namespace -> 
-                        credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                    if (args.isNonProd) {
+                        projectInfo.nonProdNamespaces.each { env, namespace -> 
+                            credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                        }
+
+                        projectInfo.sandboxNamespaces.each { namespace -> 
+                            credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                        }
+                    }
+                    else {
+                        credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
                     }
                 }
             }
