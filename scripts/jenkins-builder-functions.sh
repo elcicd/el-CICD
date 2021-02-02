@@ -2,10 +2,10 @@
 
 __init_jenkins_build() {
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
-    
+
     mkdir -p ${TARGET_JENKINS_BUILD_DIR}
 
-    find ${CONFIG_REPOSITORY_JENKINS} -type f -exec cp {} ${TARGET_JENKINS_BUILD_DIR} \;
+    cp -vRT ${CONFIG_REPOSITORY_JENKINS} ${TARGET_JENKINS_BUILD_DIR}
 
     if [[ ! -z ${JENKINS_BUILD_DIRS} ]]
     then

@@ -100,7 +100,7 @@ done
 
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
-CLUSTER_API_HOSTNAME=$(oc config current-context | awk -F '/' '{ print $2 }')
+CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
 
 echo
 echo 'el-CICD environment loaded'
