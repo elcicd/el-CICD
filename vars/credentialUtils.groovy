@@ -29,9 +29,13 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
-        oc get secret ${el.cicd.EL_CICD_BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
-            ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-            oc apply -f - -n ${projectInfo.cicdMasterNamespace}
+        BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}
+        if [[ ! -z ${BUILD_SECRETS_NAME} ]]
+        then
+            oc get secret ${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
+                ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
+                oc apply -f - -n ${projectInfo.cicdMasterNamespace}
+        fi
 
         for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
         do

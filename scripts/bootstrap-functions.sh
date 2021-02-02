@@ -178,6 +178,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     fi
 
     echo
+    while read -e -t 0.1; do : ; done
     echo "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
     read CONTINUE
