@@ -26,6 +26,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 
     def pullSecretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     sh """
+        ${shellEcho ''}
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
             ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
@@ -33,6 +34,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
         BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME ?: ''}
         if [[ ! -z \${BUILD_SECRETS_NAME} ]]
         then
+            ${shellEcho ''}
             oc get secret \${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
                 ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
                 oc apply -f - -n ${projectInfo.cicdMasterNamespace}
@@ -40,6 +42,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 
         for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
         do
+            ${shellEcho ''}
             oc get secrets \${PULL_SECRET_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
                 ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
                 oc apply -f - -n ${projectInfo.cicdMasterNamespace}
@@ -50,6 +53,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
     def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     sh """
+        ${shellEcho ''}
         oc get secrets ${secretName} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
             oc apply -f - -n ${namespace}
 
@@ -73,7 +77,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def tokenIds = []
     envs.each { ENV ->
         def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
-        if (!tokenIds.contains(tokenIds)) {
+        if (!tokenIds.contains(tokenId)) {
             pipelineUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
             jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
             pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
@@ -98,7 +102,7 @@ def deleteDeployKeysFromGithub(def projectInfo) {
                         ${shellEcho  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${microService.gitRepoName}"}
                         ${curlCommandToDeleteDeployKeyByIdFromScm}/\${KEY_ID}
                     else
-                        ${shellEcho  "OLD DEPLOY KEY NOT FOUND: ${microService.gitRepoName}"}
+                        ${shellEcho  '', "OLD DEPLOY KEY NOT FOUND: ${microService.gitRepoName}"}
                     fi
                 """
             }
@@ -116,6 +120,7 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     projectInfo.microServices.each { microService ->
         def doDelete = "${getCurlCommand()} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
         sh """
+            ${shellEcho ''}
             ${maskCommand(doDelete)}
         """
     }
@@ -136,7 +141,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
 
             def jenkinsUrls = getJenkinsCredsUrls(projectInfo, microService.gitSshPrivateKeyName)
             sh """
-                ${shellEcho  "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
+                ${shellEcho  '', "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
                 ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
 
                 ${pushDeployKeyIdCurlCommand}
@@ -161,6 +166,7 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         sh """
+            ${shellEcho ''}
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
             cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
@@ -177,6 +183,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
         def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         def httpCode = 
             sh(returnStdout: true, script: """
+                ${shellEcho ''}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
                 cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
