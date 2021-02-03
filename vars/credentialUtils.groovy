@@ -82,6 +82,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
 
             jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
             pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
+            sleep 3
             pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
 
             tokenIds.add(tokenId)
