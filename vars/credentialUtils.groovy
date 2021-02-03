@@ -70,12 +70,15 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
+    def tokenIds = []
     envs.each { ENV ->
         def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
-        pipelineUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
-        jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
-        pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
+        if (!tokenIds.contains(tokenIds)) {
+            pipelineUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
+            jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
+            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
+            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
+        }
     }
 }
 
