@@ -181,6 +181,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
 
                 rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
             """)
+        httpCode = httpCode - curlCommand
         echo '================================'
         echo "httpCode: ${httpCode}"
         echo '================================'
