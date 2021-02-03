@@ -63,13 +63,18 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
 }
 
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
-    sh "oc delete quota --wait -l=projectid=${projectInfo.id} -n ${namespace}"
+    sh """
+        QUOTAS=$(oc get quota --ignore-not-found -l=projectid=${projectInfo.id} -n ${namespace})
+        if [[ ! -z \${QUOTAS} ]]
+        then
+            oc delete quota --wait --ignore-not-found \${QUOTAS} -n ${namespace}
+            sleep 3
+        fi
+    """
 
     if (resourceQuotaFile) {
         dir(el.cicd.RESOURCE_QUOTA_DIR) {
             sh """
-                sleep 3
-
                 oc apply -f ${resourceQuotaFile} -n ${namespace}
                 oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
 
