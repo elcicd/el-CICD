@@ -22,6 +22,7 @@ def cleanStalePipelines(def projectInfo) {
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
         until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
         do
+            ${shellEcho ''}
             sleep 3
         done
     """
@@ -35,6 +36,7 @@ def cleanProjectNamespaces(def namespacesToDelete) {
 
             until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
             do
+                ${shellEcho ''}
                 sleep 3
             done
         """
