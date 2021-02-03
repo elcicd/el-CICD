@@ -146,7 +146,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                 ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
                 ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
 
-                rm -f ${credsFileName}
+                rm -f ${credsFileName} ${microService.gitSshPrivateKeyName} ${microService.gitSshPrivateKeyName}.pub
             """
         }
     }
