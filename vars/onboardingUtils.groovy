@@ -64,7 +64,7 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
 
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
     sh """
-        QUOTAS=$(oc get quota --ignore-not-found -l=projectid=${projectInfo.id} -n ${namespace})
+        QUOTAS=\$(oc get quota --ignore-not-found -l=projectid=${projectInfo.id} -n ${namespace})
         if [[ ! -z \${QUOTAS} ]]
         then
             oc delete quota --wait --ignore-not-found \${QUOTAS} -n ${namespace}
