@@ -4,11 +4,8 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
-def getJenkinsCredsUrls(def projectInfoOrNamespace, def tokenId) {
-    def cicdMasterNamespace = (projectInfoOrNamespace instanceof String || projectInfoOrNamespace instanceof GString) ?
-        projectInfoOrNamespace : projectInfoOrNamespace.cicdMasterNamespace
-
-    def jenkinsUrl = "https://jenkins-${cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+def getJenkinsCredsUrls(def projectInfo, def tokenId) {
+    def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
     def updateRelativePath = "credentials/store/system/domain/_/credential/${tokenId}/config.xml"
 
@@ -135,7 +132,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
 
                 ${pushDeployKeyIdCurlCommand}
 
-                ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON NON-PROD JENKINS: ${microService.name}"}
+                ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${microService.name}"}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
                 cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
