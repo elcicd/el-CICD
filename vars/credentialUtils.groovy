@@ -180,7 +180,7 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
                 rm -f ${SECRET_FILE_NAME}
             """).replaceAll(/[\s]/, '')
         if (!httpCode.startsWith('2')) {
-            pipelineUtils.errorBanner("Push SSH private key to Jenkins failed: ${keyId})")
+            pipelineUtils.errorBanner("Push SSH private key (${keyId}) to Jenkins failed with HTTP code: ${httpCode}")
         }
     }
 }
@@ -199,7 +199,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                 rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
             """).replaceAll(/[\s]/, '')
         if (!httpCode.startsWith('2')) {
-            pipelineUtils.errorBanner("Push image repo access token to Jenkins failed: ${tokenId})")
+            pipelineUtils.errorBanner("Push image repo access token (${tokenId}) to Jenkins failed with HTTP code: ${httpCode}")
         }
     }
 }
