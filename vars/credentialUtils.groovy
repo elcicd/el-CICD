@@ -4,6 +4,10 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
+def getCurlCommand() {
+    return 'curl -ksS -o /dev/null -X POST -w "%{http_code}" -H "Authorization: Bearer \$(oc whoami -t)"'
+}
+
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
     def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def createRelativePath = 'credentials/store/system/domain/_/createCredentials'
@@ -106,9 +110,8 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
-    def curlCommand = 'curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)"'
     projectInfo.microServices.each { microService ->
-        def doDelete = "${curlCommand} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
+        def doDelete = "${getCurlCommand()} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
         sh """
             ${maskCommand(doDelete)}
         """
@@ -123,7 +126,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand =
-            """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${credsFileName}"""
+            """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
         projectInfo.microServices.each { microService ->
             def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
@@ -152,7 +155,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
 def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
     def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE")]
-    def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
+    def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         sh """
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
@@ -168,14 +171,18 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
 
 def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tokenId) {
     withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-        def curlCommand = """curl -ksS -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
-        sh """
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
-            cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
+        def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
+        def httpCode = 
+            sh(returnStdout: true, script: """
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
+                cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
-            ${maskCommand(curlCommand)}
+                ${maskCommand(curlCommand)}
 
-            rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
-        """
+                rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
+            """
+        echo '================================'
+        echo "httpCode: ${httpCode}"
+        echo '================================'
     }
 }
