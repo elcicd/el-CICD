@@ -25,8 +25,6 @@ objects:
         env:
           - name: PROJECT_ID
             description: Project ID from auto-tracker, representing all microservices for a project
-          - name: RBAC_GROUP
-            description: If true, the prod namespace will be deleted and recreated from scratch for the project
           - name: RECREATE_PROD
             description: If true, the prod namespace will be deleted and recreated from scratch for the project
             value: "false"
@@ -35,7 +33,6 @@ objects:
               parameters(
                   [
                       string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
-                      string(name: 'RBAC_GROUP', description: 'RBAC Group', trim: true),
                       booleanParam(name: 'RECREATE_PROD', defaultValue: false, description: 'If true, the prod namespace will be deleted and recreated from scratch for the project')
                   ]
               )
@@ -55,7 +52,6 @@ objects:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID,
-                      rbacGroup: params.RBAC_GROUP,
                       recreateProd: params.RECREATE_PROD?.toString() == 'true']
           el.node(args)
           {
