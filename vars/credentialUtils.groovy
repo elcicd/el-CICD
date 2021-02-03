@@ -168,16 +168,20 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE")]
     def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
-        sh """
-            ${shellEcho ''}
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
-            cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
+        def httpCode = 
+            sh(returnStdout: true, script: """
+                ${shellEcho ''}
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
+                cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 
-            ${maskCommand(curlCommand)}
+                ${maskCommand(curlCommand)}
 
-            rm -f ${SECRET_FILE_NAME}
-        """
+                rm -f ${SECRET_FILE_NAME}
+            """).replaceAll(/[\s]/, '')
+        if (!httpCode.startsWith('2')) {
+            pipelineUtils.errorBanner("Push SSH private key to Jenkins failed: ${keyId})")
+        }
     }
 }
 
@@ -193,9 +197,9 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                 ${maskCommand(curlCommand)}
 
                 rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
-            """)
-        echo '================================'
-        echo "httpCode: ${httpCode}"
-        echo '================================'
+            """).replaceAll(/[\s]/, '')
+        if (!httpCode.startsWith('2')) {
+            pipelineUtils.errorBanner("Push image repo access token to Jenkins failed: ${tokenId})")
+        }
     }
 }
