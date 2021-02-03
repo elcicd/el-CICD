@@ -47,6 +47,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
 
+            ${shellEcho ''}
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                           -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
                                           -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
