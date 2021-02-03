@@ -180,7 +180,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                 ${maskCommand(curlCommand)}
 
                 rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
-            """
+            """)
         echo '================================'
         echo "httpCode: ${httpCode}"
         echo '================================'
