@@ -7,11 +7,12 @@ __init_jenkins_build() {
 
     cp -vRT ${CONFIG_REPOSITORY_JENKINS} ${TARGET_JENKINS_BUILD_DIR}
 
-    if [[ ! -z ${JENKINS_BUILD_DIRS} ]]
+    if [[ ! -z ${JENKINS_AGENTS_BUILD_DIRS} ]]
     then
-        for BUILD_DIR in $(echo ${JENKINS_BUILD_DIRS} | tr ':' ' ')
+        echo
+        for BUILD_DIR in $(echo ${JENKINS_AGENTS_BUILD_DIRS} | tr ':' ' ')
         do
-            cp -r ${BUILD_DIR} ${TARGET_JENKINS_BUILD_DIR}
+            cp -vRT ${BUILD_DIR} ${TARGET_JENKINS_BUILD_DIR}
         done
     fi
 }
