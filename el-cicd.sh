@@ -14,7 +14,7 @@ ACCESS TO THE el-CICD NON-PROD AND PROD MASTER JENKINS SHOULD BE RESTRICTED TO C
 EOM
 
 read -r -d '' HELP_MSG << EOM
-Usage: el-cicd.sh [OPTION] [config-file]
+Usage: el-cicd.sh [OPTION] [root-config-file]
 
 Bootstraps and/or pushes credentials to an el-CICD Onboarding Automation Server
 
@@ -54,7 +54,7 @@ then
     exit 0
 elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
 then
-    echo "ERROR: Uknown or missing config-file: ${EL_CICD_SYSTEM_CONFIG_FILE}"
+    echo "ERROR: Uknown or missing [root-config-file]: ${EL_CICD_SYSTEM_CONFIG_FILE}"
     echo
     echo "${HELP_MSG}"
     exit 1
@@ -88,16 +88,20 @@ do
 done
 
 echo
-echo "SOURCING ROOT CONFIG FILE: ${EL_CICD_SYSTEM_CONFIG_FILE}"
+echo 'WARNING: Each configuration file sourced will overwrite the last one in case of'
+echo '         conflicting variable definitions.'
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
 echo
-for FILE in $(echo "${INCLUDE_BOOTSTRAP_FILES}:${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
+FILE_LIST=$(echo "${INCLUDE_BOOTSTRAP_FILES}:${INCLUDE_SYSTEM_FILES}" | tr ':' '\n' | tac | tr '\n' ' ')
+for FILE in ${FILE_LIST}
 do
     echo "sourcing config file: ${FILE}"
     source ${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE}
 done
 
+echo
+echo "SOURCING ROOT CONFIG FILE: ${EL_CICD_SYSTEM_CONFIG_FILE}"
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
 
 CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
