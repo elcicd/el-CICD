@@ -6,8 +6,9 @@
 
 def call(String command) {
     return """
-        { set +x; } 2> /dev/null
-        echo '${command}'
+        { set +x; }
+        echo '${command}' 1>&2
+        2> /dev/null
         ${command}
         set -x
     """
