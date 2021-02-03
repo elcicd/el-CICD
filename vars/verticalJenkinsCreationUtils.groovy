@@ -102,6 +102,7 @@ def refreshSharedPipelines(def projectInfo, def pipelines) {
             sh """
                 for FILE in ${pipelines.join(' ')}
                 do
+                    ${shellEcho ''}
                     oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} -n ${projectInfo.cicdMasterNamespace} | \
                         oc apply -f - -n ${projectInfo.cicdMasterNamespace}
                 done
