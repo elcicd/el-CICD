@@ -86,14 +86,11 @@ __create_source_file() {
     # value, it skips it in the second file, and all is outpput to the tmp file for creating the final ConfigMap below
     local CURRENT_DIR=$(pwd)
     cd ${CONFIG_REPOSITORY_BOOTSTRAP}
-    for FILE in ${INCLUDE_FILES}
-    do
-        sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${FILE}
-    done
     awk -F= '!line[$1]++' ../${ROOT_CONFIG_FILE} ${INCLUDE_FILES} > ${META_INFO_FILE}
     cd ${CURRENT_DIR}
 
     echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE}
+    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE}
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
