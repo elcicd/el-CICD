@@ -19,7 +19,7 @@ def initMetaData(Map metaData) {
     cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
     cicd.preProdEnv = cicd.PRE_PROD_ENV.toLowerCase()
 
-    cicd.nonProdEnvs = []
+    cicd.nonProdEnvs = [cicd.devEnv]
     cicd.nonProdEnvs.addAll(cicd.testEnvs)
     cicd.nonProdEnvs.add(cicd.preProdEnv)
 
