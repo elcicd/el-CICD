@@ -16,8 +16,9 @@ def initMetaData(Map metaData) {
     cicd.TEST_ENVS = cicd.TEST_ENVS ? cicd.TEST_ENVS.split(':') : []
 
     cicd.devEnv = cicd.DEV_ENV.toLowerCase()
-    cicd.testEnvs = cicd.TEST_ENVS ? cicd.TEST_ENVS.collect { it.toLowerCase() } : null
+    cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
     cicd.preProdEnv = cicd.PRE_PROD_ENV.toLowerCase()
+    cicd.nonProdEnvs = testEnvs.add(cicd.preProdEnv)
     cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
 
     cicd.IGNORE = ''

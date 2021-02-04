@@ -28,19 +28,20 @@ def cleanStalePipelines(def projectInfo) {
     """
 }
 
-def cleanProjectNamespaces(def namespacesToDelete) {
-    if (namespacesToDelete) {
-        namespacesToDelete = namespacesToDelete.join(' ')
-        sh """
-            ${pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete)}
-
-            until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
-            do
-                ${shellEcho ''}
-                sleep 3
-            done
-        """
+def cleanProjectNamespaces(def projectInfo, def envs) {
+    def namespacesToDelete = ''
+    envs.each {
+        namespacesToDelete += "${projectInfo.id}-${it} "
     }
+    sh """
+        ${pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete)}
+
+        until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete}) ]]
+        do
+            ${shellEcho ''}
+            sleep 3
+        done
+    """
 }
 
 def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {

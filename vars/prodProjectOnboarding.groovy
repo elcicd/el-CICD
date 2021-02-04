@@ -15,8 +15,6 @@ def call(Map args) {
 
     stage('Remove stale namespace environments and pipelines if necessary') {
         onboardingUtils.cleanStalePipelines(projectInfo)
-
-        args.recreateProd ? cleanProjectNamespaces([projectInfo.prodNamespace]) : true
     }
 
     stage('Setup openshift namespace environments') {

@@ -32,8 +32,7 @@ objects:
           properties([
               parameters(
                   [
-                      string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
-                      booleanParam(name: 'RECREATE_PROD', defaultValue: false, description: 'If true, the prod namespace will be deleted and recreated from scratch for the project')
+                      string(name: 'PROJECT_ID', description: 'Project ID', trim: true)
                   ]
               )
           ])
@@ -51,8 +50,7 @@ objects:
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
-                      projectId: params.PROJECT_ID,
-                      recreateProd: params.RECREATE_PROD?.toString() == 'true']
+                      projectId: params.PROJECT_ID]
           el.node(args)
           {
               prodProjectOnboarding(args)

@@ -18,7 +18,7 @@ def call(Map args) {
 
         onboardingUtils.cleanStalePipelines(projectInfo)
 
-        args.rebuildNonProd ? cleanProjectNamespaces(projectInfo.nonProdNamespaces.values()) : true
+        args.rebuildNonProd ? cleanProjectNamespaces(projectInfo, el.cicd.nonProdEnvs) : true
     }
 
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
