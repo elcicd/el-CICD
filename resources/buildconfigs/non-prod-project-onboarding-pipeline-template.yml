@@ -33,7 +33,12 @@ objects:
               parameters(
                   [
                       string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
-                      booleanParam(name: 'REBUILD_NON_PROD', defaultValue: false, description: 'Should the non-prod environment(s) be rebuilt if they exist')
+                      booleanParam(name: 'REBUILD_NON_PROD',
+                                   defaultValue: false,
+                                   description: 'Should all non-prod environment(s) be torn down and new, empty projects created',
+                      booleanParam(name: 'REBUILD_SANDBOXES_ONLY',
+                                   defaultValue: false,
+                                   description: 'Should the sandbox environment(s) be torn down and new, empty projects created')
                   ]
               )
           ])
@@ -53,7 +58,8 @@ objects:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID,
-                      rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true']
+                      rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true',
+                      rebuildSandboxes: params.REBUILD_SANDBOXES_ONLY?.toString() == 'true']
           el.node(args)
           {
               nonProdProjectOnboarding(args)

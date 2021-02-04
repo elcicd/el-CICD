@@ -16,8 +16,8 @@ def call(Map args) {
     stage('Remove stale namespace environments and pipelines if necessary') {
         onboardingUtils.cleanStalePipelines(projectInfo)
 
-        if (args.rebuildNonProd) {
-            def namespacesToDelete = el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" }
+        if (args.rebuildNonProd || args.rebuildSandboxes) {
+            def namespacesToDelete = args.rebuildNonProd ? el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" } : []
             pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
 
             sh """
