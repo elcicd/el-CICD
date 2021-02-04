@@ -161,10 +161,10 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo -n "'${ONBOARDING_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
     fi
 
-    if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
+    if [[ ! -z ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
     then
         echo -n " with the following node selectors:"
-        echo "${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+        echo "${ONBOARDING_MASTER_NODE_SELECTORS}"
     else
         echo
     fi
@@ -193,15 +193,15 @@ __create_master_namespace_with_selectors() {
     echo
     NODE_SELECTORS=$(echo ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
     local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
-    if [[ ! -z  ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
+    if [[ ! -z  ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
     then
-        CREATE_MSG=" with node selectors: ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+        CREATE_MSG=" with node selectors: ${ONBOARDING_MASTER_NODE_SELECTORS}"
     fi
     echo ${CREATE_MSG}
 
-    if [[ ! -z ${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS} ]]
+    if [[ ! -z ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
     then
-        oc adm new-project ${ONBOARDING_MASTER_NAMESPACE} --node-selector="${EL_CICD_MASTER_NAMESPACE_NODE_SELECTORS}"
+        oc adm new-project ${ONBOARDING_MASTER_NAMESPACE} --node-selector="${ONBOARDING_MASTER_NODE_SELECTORS}"
     else
         oc new-project ${ONBOARDING_MASTER_NAMESPACE}
     fi
