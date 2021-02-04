@@ -35,7 +35,7 @@ objects:
                       string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
                       booleanParam(name: 'REBUILD_NON_PROD',
                                    defaultValue: false,
-                                   description: 'Should all non-prod environment(s) be torn down and new, empty projects created',
+                                   description: 'Should all non-prod environment(s) be torn down and new, empty projects created'),
                       booleanParam(name: 'REBUILD_SANDBOXES_ONLY',
                                    defaultValue: false,
                                    description: 'Should the sandbox environment(s) be torn down and new, empty projects created')
