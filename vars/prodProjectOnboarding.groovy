@@ -28,8 +28,7 @@ def call(Map args) {
 
         credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
 
-        def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
-        echo "projectInfo.resourceQuotas: ${projectInfo.resourceQuotas}"
+        def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.prodEnv] ?: projectInfo.resourceQuotas.default
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
