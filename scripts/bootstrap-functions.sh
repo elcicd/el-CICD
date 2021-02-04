@@ -6,8 +6,8 @@ _bootstrap_el_cicd() {
 
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
-        echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${EL_CICD_SYSTEM_CONFIG_FILE}"
-        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${EL_CICD_SYSTEM_CONFIG_FILE} to and rerun."
+        echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
+        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} to and rerun."
         echo "Exiting."
         exit 1
     fi
@@ -50,36 +50,32 @@ _source_el_cicd_meta_info_files() {
     echo
     echo 'WARNING: Each configuration file sourced will overwrite the last one in case of'
     echo '         conflicting variable definitions.'
-    source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
+    source ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}
 
     local META_INFO_FILE=/tmp/_source_el_cicd_meta_info_files
 
-    INCLUDE_FILES="$(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
+    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}  $(echo ${BOOTSTRAP_SYSTEM_FILES}:${BOOTSTRAP_FILES} | tr ':' ' ')"
     __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
 
     # It's a hack, but ensures all files are read and realized properly if references to other variables are made later in file
-    echo "SOURCING CONFIG FILES: ${EL_CICD_SYSTEM_CONFIG_FILE} ${INCLUDE_FILES}"
+    echo "SOURCING CONFIG FILES: ${ROOT_CONFIG_FILE} $(echo ${BOOTSTRAP_SYSTEM_FILES}:${BOOTSTRAP_FILES} | tr ':' ' ')"
     source ${META_INFO_FILE}
     source ${META_INFO_FILE}
-
-    # rm ${META_INFO_FILE}
 }
 
 _create_el_cicd_meta_info_config_map() {
     echo
-    echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
+    echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
     sleep 5
 
     local META_INFO_FILE=/tmp/_create_el_cicd_meta_info_config_map
 
-    INCLUDE_FILES="$(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ')"
-    __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
+    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} $(echo ${BOOTSTRAP_SYSTEM_FILES} | tr ':' ' ')"
+    __create_source_file ${META_INFO_FILE} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
 
-    echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${EL_CICD_SYSTEM_CONFIG_FILE} ${INCLUDE_FILES}"
+    echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
     oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
-
-    rm ${META_INFO_FILE}
 }
 
 __create_source_file() {
@@ -89,14 +85,12 @@ __create_source_file() {
     # iterates over each file an prints (default awk behavior) each unique line; thus, if second file contains the same first property
     # value, it skips it in the second file, and all is outpput to the tmp file for creating the final ConfigMap below
     local CURRENT_DIR=$(pwd)
-    sed -i -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
-    awk -F= '!line[$1]++' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > ${META_INFO_FILE}
     cd ${CONFIG_REPOSITORY_BOOTSTRAP}
     for FILE in ${INCLUDE_FILES}
     do
-        sed -i -e 's/\s*$//' ${FILE}
+        sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${FILE}
     done
-    awk -F= '!line[$1]++' ${INCLUDE_FILES} >> ${META_INFO_FILE}
+    awk -F= '!line[$1]++' ../${ROOT_CONFIG_FILE} ${INCLUDE_FILES} > ${META_INFO_FILE}
     cd ${CURRENT_DIR}
 
     echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE}

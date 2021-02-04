@@ -44,7 +44,7 @@ BOOTSTRAP_DIR=$(pwd)
 
 CLI_OPTION=${1}
 
-EL_CICD_SYSTEM_CONFIG_FILE=${2}
+ROOT_CONFIG_FILE=${2}
 
 CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
 
@@ -52,9 +52,9 @@ if [[ ${CLI_OPTION} == '--help' ]]
 then
     echo "${HELP_MSG}"
     exit 0
-elif [[ ! -f ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} ]]
+elif [[ ! -f ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ]]
 then
-    echo "ERROR: Uknown or missing [root-config-file]: ${EL_CICD_SYSTEM_CONFIG_FILE}"
+    echo "ERROR: Uknown or missing [root-config-file]: ${ROOT_CONFIG_FILE}"
     echo
     echo "${HELP_MSG}"
     exit 1
@@ -90,6 +90,8 @@ do
 done
 
 _source_el_cicd_meta_info_files
+
+exit 0
 
 echo
 echo 'el-CICD environment loaded'
