@@ -96,8 +96,19 @@ echo
 FILE_LIST=$(echo "${INCLUDE_BOOTSTRAP_FILES}:${INCLUDE_SYSTEM_FILES}" | tr ':' '\n' | tac | tr '\n' ' ')
 for FILE in ${FILE_LIST}
 do
+    if [[ -f  ${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE} ]]
+    then
+        FILE=${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE}
+    elif [[ -f ${CONFIG_REPOSITORY}/${FILE} ]]
+    then
+        FILE=${CONFIG_REPOSITORY}/${FILE}
+    else
+        echo "ERROR: CANNOT FIND CONFIG FILE ${FILE} in ${CONFIG_REPOSITORY} or ${CONFIG_REPOSITORY_BOOTSTRAP} DIRECTORIES"
+        exit 1
+    fi
     echo "sourcing config file: ${FILE}"
-    source ${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE}
+    source ${FILE}
+    cp ${FILE} /tmp
 done
 
 echo
