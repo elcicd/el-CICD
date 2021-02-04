@@ -107,7 +107,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     pipelineUtils.echoBanner("REMOVE UNNEEDED, AVAILABLE AND RELEASED ${projectInfo.id} NFS PERSISTENT VOLUMES, IF ANY")
     def releasedPvs = sh(returnStdout: true, script: """
         ${shellEcho ''}
-        oc get pv -l projectid=test-cicd-extras --ignore-not-found | egrep 'Released|Available' | awk '{ print \$1 }'
+        oc get pv -l projectid=${projectInfo.id} --ignore-not-found | egrep 'Released|Available' | awk '{ print \$1 }'
     """).split('\n').findAll { it.trim() }
 
     releasedPvs.each { pvName ->
