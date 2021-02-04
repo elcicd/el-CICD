@@ -54,11 +54,11 @@ _source_el_cicd_meta_info_files() {
 
     local META_INFO_FILE=/tmp/_source_el_cicd_meta_info_files
 
-    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}  $(echo ${BOOTSTRAP_SYSTEM_FILES}:${BOOTSTRAP_FILES} | tr ':' ' ')"
+    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}  $(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
     __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
 
     # It's a hack, but ensures all files are read and realized properly if references to other variables are made later in file
-    echo "SOURCING CONFIG FILES: ${ROOT_CONFIG_FILE} $(echo ${BOOTSTRAP_SYSTEM_FILES}:${BOOTSTRAP_FILES} | tr ':' ' ')"
+    echo "SOURCING CONFIG FILES: ${ROOT_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
     source ${META_INFO_FILE}
     source ${META_INFO_FILE}
 }
@@ -71,7 +71,7 @@ _create_el_cicd_meta_info_config_map() {
 
     local META_INFO_FILE=/tmp/_create_el_cicd_meta_info_config_map
 
-    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} $(echo ${BOOTSTRAP_SYSTEM_FILES} | tr ':' ' ')"
+    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ')"
     __create_source_file ${META_INFO_FILE} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
 
     echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
