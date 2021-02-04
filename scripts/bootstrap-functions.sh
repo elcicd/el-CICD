@@ -46,34 +46,60 @@ _bootstrap_el_cicd() {
     echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete"
 }
 
+_source_el_cicd_meta_info_files() {
+    echo
+    echo 'WARNING: Each configuration file sourced will overwrite the last one in case of'
+    echo '         conflicting variable definitions.'
+    source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
+
+    local META_INFO_FILE=/tmp/_source_el_cicd_meta_info_files
+
+    INCLUDE_FILES="$(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
+    __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
+
+    # It's a hack, but ensures all files are read and realized properly if references to other variables are made later in file
+    echo "SOURCING CONFIG FILES: ${EL_CICD_SYSTEM_CONFIG_FILE} ${INCLUDE_FILES}"
+    source ${META_INFO_FILE}
+    source ${META_INFO_FILE}
+
+    # rm ${META_INFO_FILE}
+}
+
 _create_el_cicd_meta_info_config_map() {
     echo
     echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
     sleep 5
 
-    echo
-    for FILE in $(echo "${EL_CICD_SYSTEM_CONFIG_FILE}:${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
-    do
-        sed -i -e 's/\s*$//' /tmp/${FILE}
-    done
+    local META_INFO_FILE=/tmp/_create_el_cicd_meta_info_config_map
+
+    INCLUDE_FILES="$(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ')"
+    __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
+
+    echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${EL_CICD_SYSTEM_CONFIG_FILE} ${INCLUDE_FILES}"
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
+
+    rm ${META_INFO_FILE}
+}
+
+__create_source_file() {
+    local META_INFO_FILE=${1}
+    local INCLUDE_FILES=${2}
 
     # iterates over each file an prints (default awk behavior) each unique line; thus, if second file contains the same first property
     # value, it skips it in the second file, and all is outpput to the tmp file for creating the final ConfigMap below
     local CURRENT_DIR=$(pwd)
-    cd /tmp
-    awk -F= '!line[$1]++' ${EL_CICD_SYSTEM_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ') | envsubst > ${EL_CICD_META_INFO_NAME}
+    sed -i -e 's/\s*$//' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
+    awk -F= '!line[$1]++' ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} > ${META_INFO_FILE}
+    cd ${CONFIG_REPOSITORY_BOOTSTRAP}
+    for FILE in ${INCLUDE_FILES}
+    do
+        sed -i -e 's/\s*$//' ${FILE}
+    done
+    awk -F= '!line[$1]++' ${INCLUDE_FILES} >> ${META_INFO_FILE}
     cd ${CURRENT_DIR}
 
-    echo CLUSTER_API_HOSTNAME >> /tmp/${EL_CICD_META_INFO_NAME}
-
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=/tmp/${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
-
-    echo
-    for FILE in ${EL_CICD_SYSTEM_CONFIG_FILE} $(echo "${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
-    do
-        rm /tmp/${FILE}
-    done
+    echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE}
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {

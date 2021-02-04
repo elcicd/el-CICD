@@ -77,6 +77,8 @@ _FALSE='false'
 _YES='Yes'
 _NO='No'
 
+CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+
 echo
 echo 'Loading el-CICD environment...'
 
@@ -87,36 +89,7 @@ do
     source ${SCRIPTS_DIR}/${FILE}
 done
 
-echo
-echo 'WARNING: Each configuration file sourced will overwrite the last one in case of'
-echo '         conflicting variable definitions.'
-source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
-
-echo
-FILE_LIST=$(echo "${INCLUDE_BOOTSTRAP_FILES}:${INCLUDE_SYSTEM_FILES}" | tr ':' '\n' | tac | tr '\n' ' ')
-for FILE in ${FILE_LIST}
-do
-    if [[ -f  ${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE} ]]
-    then
-        FILE=${CONFIG_REPOSITORY_BOOTSTRAP}/${FILE}
-    elif [[ -f ${CONFIG_REPOSITORY}/${FILE} ]]
-    then
-        FILE=${CONFIG_REPOSITORY}/${FILE}
-    else
-        echo "ERROR: CANNOT FIND CONFIG FILE ${FILE} in ${CONFIG_REPOSITORY} or ${CONFIG_REPOSITORY_BOOTSTRAP} DIRECTORIES"
-        exit 1
-    fi
-    echo "sourcing config file: ${FILE}"
-    source ${FILE}
-    cp -v ${FILE} /tmp
-done
-
-echo
-echo "SOURCING ROOT CONFIG FILE: ${EL_CICD_SYSTEM_CONFIG_FILE}"
-source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
-cp -v ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} /tmp
-
-CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+_source_el_cicd_meta_info_files
 
 echo
 echo 'el-CICD environment loaded'
