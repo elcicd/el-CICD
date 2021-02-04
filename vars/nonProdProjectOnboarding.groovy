@@ -14,11 +14,22 @@ def call(Map args) {
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments and pipelines if necessary') {
-        def namespacesToDelete = args.rebuildNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : "${projectInfo.id}-nonexistant"
-
         onboardingUtils.cleanStalePipelines(projectInfo)
 
-        args.rebuildNonProd ? cleanProjectNamespaces(projectInfo, el.cicd.nonProdEnvs) : true
+        if (args.rebuildNonProd) {
+            def namespacesToDelete = el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" }
+            pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
+
+            sh """
+                SBXS=\$(oc projects | egrep '${projectInfo.id}-sandbox-[0-9]+' | tr '\n' ' '"))
+                until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete.join(' ')} \${SBXS}) ]]
+                do
+                    ${shellEcho ''}
+                    sleep 3
+                done
+            """
+
+        }
     }
 
     stage('Add build-to-dev pipeline for each Github repo on non-prod Jenkins') {
