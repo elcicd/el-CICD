@@ -91,8 +91,6 @@ done
 
 _source_el_cicd_meta_info_files
 
-exit 0
-
 echo
 echo 'el-CICD environment loaded'
 
