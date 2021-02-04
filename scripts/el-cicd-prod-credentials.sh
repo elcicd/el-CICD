@@ -3,8 +3,6 @@
 rm -rf ${SECRET_FILE_TEMP_DIR}
 mkdir -p ${SECRET_FILE_TEMP_DIR}
 
-_create_el_cicd_meta_info_config_map
-
 echo
 echo "Adding read only deploy key for el-CICD"
 _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 

@@ -51,10 +51,9 @@ _create_el_cicd_meta_info_config_map() {
     echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}"
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
     sleep 5
-    sed -i -e 's/\s*$//' /tmp/${EL_CICD_SYSTEM_CONFIG_FILE}
 
     echo
-    for FILE in $(echo "${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
+    for FILE in $(echo "${EL_CICD_SYSTEM_CONFIG_FILE}:${INCLUDE_SYSTEM_FILES}" | tr ':' ' ')
     do
         sed -i -e 's/\s*$//' /tmp/${FILE}
     done
@@ -195,7 +194,7 @@ __create_master_namespace_with_selectors() {
     local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
     if [[ ! -z  ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
     then
-        CREATE_MSG=" with node selectors: ${ONBOARDING_MASTER_NODE_SELECTORS}"
+        CREATE_MSG="${CREATE_MSG} with node selectors: ${ONBOARDING_MASTER_NODE_SELECTORS}"
     fi
     echo ${CREATE_MSG}
 

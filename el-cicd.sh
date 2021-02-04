@@ -108,13 +108,13 @@ do
     fi
     echo "sourcing config file: ${FILE}"
     source ${FILE}
-    cp ${FILE} /tmp
+    cp -v ${FILE} /tmp
 done
 
 echo
 echo "SOURCING ROOT CONFIG FILE: ${EL_CICD_SYSTEM_CONFIG_FILE}"
 source ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE}
-cp ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} /tmp
+cp -v ${CONFIG_REPOSITORY}/${EL_CICD_SYSTEM_CONFIG_FILE} /tmp
 
 CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
 
