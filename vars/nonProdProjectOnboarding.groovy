@@ -21,7 +21,7 @@ def call(Map args) {
             pipelineUtils.shellEchoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
 
             sh """
-                SBXS=\$(oc projects | egrep '${projectInfo.id}-sandbox-[0-9]+' | tr '\n' ' '"))
+                SBXS=\$(oc projects | egrep '${projectInfo.id}-sandbox-[0-9]+' | tr '\n' ' ')
                 until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete.join(' ')} \${SBXS}) ]]
                 do
                     ${shellEcho ''}
