@@ -26,7 +26,10 @@ objects:
           - name: PROJECT_ID
             description: Project ID from auto-tracker, representing all microservices for a project
           - name: REBUILD_NON_PROD
-            description: If true, non-prod environment(s) will be destroyed and rebuilt from scratch
+            description: Should all non-prod environment(s) be torn down and new, empty projects created
+            value: "false"
+          - name: REBUILD_SANDBOXES_ONLY
+            description: Should the sandbox environment(s) be torn down and new, empty projects created
             value: "false"
         jenkinsfile: |-
           properties([
