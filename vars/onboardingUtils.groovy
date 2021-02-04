@@ -112,8 +112,10 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 
     releasedPvs.each { pvName ->
         if (!pvNames[pvName]) {
-            ${shellEcho ''}
-            sh "oc delete pv ${pvName}"
+            sh """
+                ${shellEcho ''}
+                oc delete pv ${pvName}
+            """
         }
     }
 }
