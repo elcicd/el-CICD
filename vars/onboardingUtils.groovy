@@ -94,10 +94,12 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
             projectInfo.nfsShares.each { nfsShare ->
                 def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
                 envs.each { env ->
-                    pvName = "${projectInfo.id}-${env}-${nfsShare.claimName}"
-                    pvNames[pvName] = true
-                    if ((isNonProd && env != projectInfo.prodEnv) || (!isNonProd && env == projectInfo.prodEnv)) {
-                        createNfsShare(projectInfo, nfsShare, pvName, env)
+                    if (nfsShare.envs.contains(env)) {
+                        namespace = isNonProd ? projectInfo.nonProdNamespaces[env] : projectInfo.prodNamespace
+                        pvName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+                        createNfsShare(projectInfo, namespace, pvName, nfsShare)
+
+                        pvNames[pvName] = true
                     }
                 }
             }
@@ -110,8 +112,6 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
         oc get pv -l projectid=${projectInfo.id} --ignore-not-found | egrep 'Released|Available' | awk '{ print \$1 }'
     """).split('\n').findAll { it.trim() }
 
-    echo "pvNames: ${pvNames}"
-    echo "pvNames[pvName]: ${pvNames[pvName]}"
     releasedPvs.each { pvName ->
         if (!pvNames[pvName]) {
             sh """
@@ -122,19 +122,19 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     }
 }
 
-def createNfsShare(def projectInfo, def nfsShare, def nfsShareName, def env) {
+def createNfsShare(def projectInfo, def namespace, def pvName, def nfsShare) {
     sh """
         ${shellEcho ''}
         oc process --local \
                    -f nfs-pv-template.yml \
                    -l projectid=${projectInfo.id}\
-                   -p PV_NAME=${nfsShareName} \
+                   -p PV_NAME=${pvName} \
                    -p CAPACITY=${nfsShare.capacity} \
                    -p ACCESS_MODE=${nfsShare.accessMode} \
                    -p NFS_EXPORT=${nfsShare.exportPath} \
                    -p NFS_SERVER=${nfsShare.server} \
                    -p CLAIM_NAME=${nfsShare.claimName} \
-                   -p NAMESPACE=${projectInfo.id}-${env} \
+                   -p NAMESPACE=${namespace} \
             | oc apply -f -
     """
 }
