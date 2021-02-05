@@ -155,7 +155,7 @@ def call(Map args) {
     }
 
     stage('Tag all images and configuration commits') {
-        pipelineUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON THE ${projectInfo.deploymentBranch} BRANCH FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
+        pipelineUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON EACH MICROSERVICE DEPLOYMENT BRANCH FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
 
         projectInfo.microServices.each { microService ->
             if (microService.promote) {
