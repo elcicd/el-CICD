@@ -172,7 +172,7 @@ _run_custom_credentials_script() {
 
     echo
     echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
-    if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT}.sh ]]
+    if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
     then
         echo "Found ${CUSTOM_CREDENTIALS_SCRIPT}; running..."
         ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT}
