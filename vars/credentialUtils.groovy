@@ -92,8 +92,12 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
             pipelineUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
             jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
-            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
-            sleep 3
+            try {
+                pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
+            }
+            catch (Exception e) {
+                echo "Creating ${tokenId} on CICD failed, trying update"
+            }
             pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
 
             tokenIds.add(tokenId)
