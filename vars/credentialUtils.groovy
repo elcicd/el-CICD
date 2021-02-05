@@ -64,14 +64,25 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pipelineUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
+
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    try {
+        pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    }
+    catch (Exception e) {
+        echo "Creating ${keyId} on CICD failed, trying update"
+    }
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pipelineUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    try {
+        pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+    }
+    catch (Exception e) {
+        echo "Creating ${keyId} on CICD failed, trying update"
+    }
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     def tokenIds = []
