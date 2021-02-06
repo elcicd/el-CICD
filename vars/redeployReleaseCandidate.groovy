@@ -100,7 +100,7 @@ def call(Map args) {
             def userName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
             def skopeoCopyComd = """
                 skopeo copy --src-creds ${userName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
-                            --dest-creds ${userName} \
+                            --dest-creds ${userName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                             --src-tls-verify=false \
                             --dest-tls-verify=false
             """
