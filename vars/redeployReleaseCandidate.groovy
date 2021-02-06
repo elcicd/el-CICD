@@ -28,14 +28,16 @@ def call(Map args) {
 
         def allImagesExist = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
+            def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.PRE_PROD_ENV}"
 
-                    def imageFound = sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2>&1 || :").trim()
+                    def imageFound = sh(returnStdout: true, script: """
+                        skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} 2>&1 || :
+                    """).trim()
 
                     def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "-> ERROR: no image found in image repo: ${projectInfo.PRE_PROD_ENV}"
                     echo msg
