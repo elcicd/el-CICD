@@ -27,7 +27,8 @@ def call(Map args) {
                                  projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', '))
 
         def allImagesExist = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                                variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
             def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
@@ -39,7 +40,8 @@ def call(Map args) {
                         skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} 2>&1 || :
                     """).trim()
 
-                    def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "-> ERROR: no image found in image repo: ${projectInfo.PRE_PROD_ENV}"
+                    def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
+                                           "-> ERROR: no image found in image repo: ${projectInfo.PRE_PROD_ENV}"
                     echo msg
 
                     allImagesExist = allImagesExist && imageFound
@@ -48,7 +50,8 @@ def call(Map args) {
         }
 
         if (!allImagesExist) {
-            pipelineUtils.errorBanner("BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseCandidateTag}")
+            def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseCandidateTag}"
+            pipelineUtils.errorBanner(msg)
         }
     }
 
@@ -89,11 +92,18 @@ def call(Map args) {
     }
 
     stage('Tag images') {
-        pipelineUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:", "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
+        pipelineUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
+                                 "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def userNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
-            def skopeoCopyComd = "skopeo copy --src-creds ${userNamePwd} --dest-creds ${userNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                                variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            def userName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+            def skopeoCopyComd = """
+                skopeo copy --src-creds ${userName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
+                            --dest-creds ${userName} \
+                            --src-tls-verify=false \
+                            --dest-tls-verify=false
+            """
 
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
@@ -101,13 +111,15 @@ def call(Map args) {
                 if (microService.releaseCandidateGitTag) {
                     def preProdImageUrl = "${preProdImageRepo}/${microService.id}"
 
-                    def msg =
-                        "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${projectInfo.preProdEnv}-${microService.srcCommitHash}"
+                    def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} " +
+                              "TAGGED AS ${projectInfo.preProdEnv} and ${projectInfo.preProdEnv}-${microService.srcCommitHash}"
 
                     sh """
-                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} docker://${preProdImageUrl}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
+                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
+                                          docker://${preProdImageUrl}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
 
-                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} docker://${preProdImageUrl}:${projectInfo.preProdEnv}
+                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
+                                          docker://${preProdImageUrl}:${projectInfo.preProdEnv}
 
                         ${shellEcho "******",
                                     msg,
