@@ -22,13 +22,15 @@ def call(Map args) {
 
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+            def preProdUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
 
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
             imageExists = projectInfo.microServices.find { microService ->
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
-                return sh(returnStdout: true, script: "skopeo inspect --raw --creds ${preProdUserNamePwd} ${preProdImageUrl} 2&>1 || :")
+                return sh(returnStdout: true, script: """
+                    skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2&>1 || :
+                """)
             }
         }
 
@@ -78,14 +80,16 @@ def call(Map args) {
 
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+            def preProdUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
 
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
             imageMissing = projectInfo.microServices.find { microService ->
                 if (microService.promote) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
-                    return !sh(returnStdout: true, script: "skopeo inspect --raw --creds ${preProdUserNamePwd} ${preProdImageUrl} 2>&1 || :").trim()
+                    return !sh(returnStdout: true, script: """
+                        skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2>&1 || :
+                    """).trim()
                 }
             }
         }
@@ -137,7 +141,7 @@ def call(Map args) {
         pipelineUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+            def preProdUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]"
 
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
             projectInfo.microServices.find { microService ->
@@ -145,8 +149,12 @@ def call(Map args) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
                     def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
                     sh """
-                        skopeo copy --src-tls-verify=false --dest-tls-verify=false \
-                                    --src-creds ${preProdUserNamePwd} --dest-creds ${preProdUserNamePwd}  ${preProdImageUrl} ${preProdReleaseCandidateImageUrl}
+                        skopeo copy --src-tls-verify=false \
+                                    --dest-tls-verify=false \
+                                    --src-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
+                                    --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
+                                    ${preProdImageUrl} \
+                                    ${preProdReleaseCandidateImageUrl}
                         ${shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
                     """
                 }
