@@ -63,7 +63,7 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
     def templateFile = templateDef.file ?: "${el.cicd.OKD_TEMPLATES_DIR}/${templateFileName}"
     def envPatchFile = templateDef[projectInfo.deployToEnv]?.patchFile ?: templateDef.patchFile
     if (envPatchFile) {
-        def envPatchFileName = envPatchFile..split('/').last()
+        def envPatchFileName = envPatchFile.split('/').last()
         def tempKustomizeDir = './kustomize-tmp'
         sh """
             ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
