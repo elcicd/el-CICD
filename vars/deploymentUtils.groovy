@@ -24,8 +24,8 @@ def mergeMaps(def toMap, def fromMap) {
 
 def readTemplateDefs() {
     def templateDefs = findFiles(glob: "**/template-defs.json")
-    templateDefs = projectFile ?: findFiles(glob: "**/template-defs.yml")
-    templateDefs = projectFile ?: findFiles(glob: "**/template-defs.yaml")
+    templateDefs = templateDefs ?: findFiles(glob: "**/template-defs.yml")
+    templateDefs = templateDefs ?: findFiles(glob: "**/template-defs.yaml")
 
     if (templateDefs) {
         templateDefs = templateDefs[0].path
