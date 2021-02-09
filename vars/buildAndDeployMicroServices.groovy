@@ -25,7 +25,7 @@ def call(Map args) {
                        booleanParam(name: 'recreateAll', description: 'Clean the environment of all resources before deploying')]
 
         inputs += projectInfo.microServices.collect { microService ->
-            booleanParam(name: "${microService.name}", description: "${microService.active ? '' : el.cicd.INACTIVE}")
+            booleanParam(name: microService.name, description: microService.status)
         }
 
         def cicdInfo = input(message: "Select namepsace and microservices to build to:", parameters: inputs)

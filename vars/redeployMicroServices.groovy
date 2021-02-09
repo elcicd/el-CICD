@@ -52,8 +52,8 @@ def call(Map args) {
                     branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", ">>> ${microService.deploymentImageTag} <<<") : branchesAndTimes
 
                 inputs +=
-                    choice(name: "${microService.name}",
-                           description: "${microService.active ? '' : el.cicd.INACTIVE}",
+                    choice(name: microService.name,
+                           description: microService.status,
                            choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
             }
         }

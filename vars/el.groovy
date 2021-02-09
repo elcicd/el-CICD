@@ -40,8 +40,6 @@ def initMetaData(Map metaData) {
     cicd.SCANNER = 'scanner'
     cicd.ASSEMBLER = 'assembler'
 
-    cicd.INACTIVE = 'INACTIVE'
-
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
     cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
