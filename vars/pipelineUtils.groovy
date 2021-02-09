@@ -35,14 +35,13 @@ def gatherProjectInfoStage(def projectId) {
 
         dir (el.cicd.PROJECT_DEFS_DIR) {
             def projectFile = findFiles(glob: "**/${projectId}.json")
-            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.js")
             projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
             projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yaml")
 
             if (projectFile) {
                 projectFile = projectFile[0].path
                 try {
-                    projectInfo= readYaml file: projectFile
+                    projectInfo = readYaml file: projectFile
                 }
                 catch (Exception e) {
                     projectInfo = readJSON file: projectFile

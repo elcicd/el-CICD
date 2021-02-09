@@ -23,10 +23,23 @@ def mergeMaps(def toMap, def fromMap) {
 }
 
 def readTemplateDefs() {
-    def templateDefs
-    if (fileExists('template-defs.json')) {
-        templateDefs = readJSON file: 'template-defs.json'
+    def templateDefs = findFiles(glob: "**/template-defs.json")
+    templateDefs = projectFile ?: findFiles(glob: "**/template-defs.yml")
+    templateDefs = projectFile ?: findFiles(glob: "**/template-defs.yaml")
+
+    if (templateDefs) {
+        templateDefs = templateDefs[0].path
+        try {
+            templateDefs = readYaml file: projectFile
+        }
+        catch (Exception e) {
+            templateDefs = readJSON file: projectFile
+        }
     }
+    else {
+        errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.json/yaml/yml and be legitimate JSON or YAML")
+    }
+
     return templateDefs
 }
 
