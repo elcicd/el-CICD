@@ -30,9 +30,10 @@ def initMetaData(Map metaData) {
     cicd.REMOVE = 'REMOVE'
 
     cicd.PRE = 'pre'
-    cicd.POST = 'post'
-    cicd.ON_SUCCESS = 'on-success'
+    cicd.INIT = 'init'
     cicd.ON_FAIL = 'on-fail'
+    cicd.ON_SUCCESS = 'on-success'
+    cicd.POST = 'post'
 
     cicd.BUILDER = 'builder'
     cicd.TESTER = 'tester'
@@ -87,6 +88,8 @@ def node(Map args, Closure body) {
                 if (args.projectId) {
                     args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
                 }
+
+                runHookScript(el.cicd.INIT, args)
 
                 body.call(args)
 
