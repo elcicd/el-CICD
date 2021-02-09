@@ -53,7 +53,7 @@ def call(Map args) {
 
                 inputs +=
                     choice(name: microService.name,
-                           description: microService.status,
+                           description: "status: ${microService.status}",
                            choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
             }
         }

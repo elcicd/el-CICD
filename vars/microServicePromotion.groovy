@@ -30,7 +30,7 @@ def call(Map args) {
 
         inputs += projectInfo.microServices.collect { microService ->
             choice(name: microService.name,
-                   description: microService.status,
+                   description: "status: ${microService.status}",
                    choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")
         }
 

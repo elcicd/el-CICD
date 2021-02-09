@@ -56,7 +56,7 @@ def call(Map args) {
         }
 
         def inputs = projectInfo.microServices.findAll {it.releaseCandidateAvailable }.collect { microService ->
-            booleanParam(name: microService.name, defaultValue: microService.status, description: microService.status)
+            booleanParam(name: microService.name, defaultValue: microService.status, description: "status: ${microService.status}")
         }
 
         if (!inputs) {
