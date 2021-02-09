@@ -65,7 +65,7 @@ void call(Map args) {
     }
 
     stage('build image and push to repository') {
-        pipelineUtils.shellEchoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")
+        pipelineUtils.echoBanner("BUILD ARTIFACT AND PUSH TO ARTIFACT REPOSITORY")
 
         projectInfo.imageTag = projectInfo.devEnv
         if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
