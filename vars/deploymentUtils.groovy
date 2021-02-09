@@ -30,10 +30,10 @@ def readTemplateDefs() {
     if (templateDefs) {
         templateDefs = templateDefs[0].path
         try {
-            templateDefs = readYaml file: projectFile
+            templateDefs = readYaml file: templateDefs
         }
         catch (Exception e) {
-            templateDefs = readJSON file: projectFile
+            templateDefs = readJSON file: templateDefs
         }
     }
     else {
