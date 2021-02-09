@@ -82,8 +82,11 @@ def gatherProjectInfoStage(def projectId) {
 
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
         projectInfo.sandboxNamespaces = []
-        (1..projectInfo.sandboxEnvs).each { i ->
-            projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
+        projectInfo.sandboxEnvs = projectInfo.sandboxEnvs ?: 0
+        if (projectInfo.sandboxEnvs >= 1) {
+            (1..projectInfo.sandboxEnvs).each { i ->
+                projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
+            }
         }
 
         projectInfo.DEV_ENV = el.cicd.DEV_ENV
