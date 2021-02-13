@@ -45,33 +45,41 @@ def call(Map args) {
                     credentialUtils.deleteDeployKeysFromGithub(projectInfo)
                 }
 
-                stage('Create and push public key for each github repo to github with curl') {
-                    credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+                def sdlcNamespace = args.isNonProd ? projectInfo.devNamespace : projectInfo.prodNamespace
+                def sldcNamespacesExist = sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${sdlcNamespace}")
+
+                if (sldcNamespacesExist) {
+                    stage('Create and push public key for each github repo to github with curl') {
+                        credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+                    }
+
+                    stage('Refresh pull secrets per build environment') {
+                        pipelineUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
+
+                        if (args.isNonProd) {
+                            def devNamespaceExist =
+                                sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.devNamespace}")
+                            if (devNamespaceExist) {
+                                projectInfo.nonProdNamespaces.each { env, namespace -> 
+                                    credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                                }
+
+                                projectInfo.sandboxNamespaces.each { namespace -> 
+                                    credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                                }
+                            }
+                        }
+                        else {
+                            def prodNamespaceExist =
+                                sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.prodNamespace}")
+                            if (prodNamespaceExist) {
+                                credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
+                            }
+                        }
+                    }
                 }
-
-                stage('Refresh pull secrets per build environment') {
-                    pipelineUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
-
-                    if (args.isNonProd) {
-                        def devNamespaceExist =
-                            sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.devNamespace}")
-                        if (devNamespaceExist) {
-                            projectInfo.nonProdNamespaces.each { env, namespace -> 
-                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
-                            }
-
-                            projectInfo.sandboxNamespaces.each { namespace -> 
-                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
-                            }
-                        }
-                    }
-                    else {
-                        def prodNamespaceExist =
-                            sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.prodNamespace}")
-                        if (prodNamespaceExist) {
-                            credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
-                        }
-                    }
+                else {
+                    pipelineUtils.echoBanner("WARNING [${projectInfo.id}]: SDLC namespace ${sdlcNamespace} NOT FOUND; skipping")
                 }
             }
             else {
