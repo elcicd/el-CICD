@@ -129,8 +129,6 @@ __bootstrap_el_cicd_onboarding_server() {
         PIPELINE_TEMPLATES='prod-project-onboarding'
     fi
 
-    PIPELINE_TEMPLATES="${PIPELINE_TEMPLATES} refresh-credentials"
-
     __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
@@ -242,9 +240,21 @@ __create_onboarding_automation_server() {
     for PIPELINE_TEMPLATE in ${PIPELINE_TEMPLATES[@]}
     do
         oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
-                -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE} | \
+                   -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
+                   -n ${ONBOARDING_MASTER_NAMESPACE} | \
             oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
     done
+
+    local IS_NON_PROD='false'
+    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
+    then
+        IS_NON_PROD='true'
+    fi
+    oc process -f ${BUILD_CONFIGS_DIR}/refresh-credentials-pipeline-template.yml \
+               -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
+               -p IS_NON_PROD=${IS_NON_PROD} \
+               -n ${ONBOARDING_MASTER_NAMESPACE} | \
+        oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
 
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="

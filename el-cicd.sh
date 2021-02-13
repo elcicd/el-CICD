@@ -4,37 +4,36 @@
 read -r -d '' WARNING_MSG << EOM
 ===================================================================
 WARNING:
-This script should only be run on Non-Prod or Prod bastion
+SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED
 
 WHEN USING THIS IN YOUR OWN CLUSTER:
-    FORK THE el-CICD-config REPOSITORY FIRST AND CREATE YOUR OWN PUBLIC/KEYS AND CREDENTIALS AS NEEDED
+    - FORK THE el-CICD AND el-CICD-config REPOSITORIES
+    - CREATE YOUR OWN PUBLIC/KEYS AND CREDENTIALS AS NEEDED
 
-ACCESS TO THE el-CICD NON-PROD AND PROD MASTER JENKINS SHOULD BE RESTRICTED TO CLUSTER ADMINS
+ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER ADMINS
 ===================================================================
 EOM
 
 read -r -d '' HELP_MSG << EOM
 Usage: el-cicd.sh [OPTION] [root-config-file]
 
-Bootstraps and/or pushes credentials to an el-CICD Onboarding Automation Server
+el-CICD Install Utility
 
 Options:
-    -N,   --non-prod:        bootstraps Non-Prod el-CICD Onboarding Automation Server
-    -n,   --non-prod-creds:  refresh credentials for a Non-Prod el-CICD Onboarding Automation Server
+    -N,   --non-prod:        bootstraps Non-prod el-CICD Onboarding Automation Server
+    -n,   --non-prod-creds:  refresh Non-prod el-CICD Onboarding Automation Server credentials
     -P,   --prod:            bootstraps Prod el-CICD Onboarding Automation Server
-    -p,   --prod-creds:      refresh credentials for a Prod el-CICD Onboarding Automation Server
-    -c,   --cicd-creds:      run the refresh-credentials pipeline on the el-CICD Onboarding Automation Server
+    -p,   --prod-creds:      refresh Prod el-CICD Onboarding Automation Server credentials
+    -c,   --cicd-creds:      run the refresh-credentials pipeline
     -s,   --sealed-secrets:  reinstall/upgrade Sealed Secrets
     -j,   --jenkins:         only build el-CICD Jenkins image
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
         --help:            print el-CICD.sh help
 
-config-file: file name or path relative the root of the sibling directory el-CICD-config
+root-config-file:
+    file name or path to a root configuration file relative the root of the el-CICD-config directory
 EOM
-
-echo "${WARNING_MSG}"
-sleep 2
 
 cd "$(dirname "${0}")"
 
@@ -48,17 +47,31 @@ ROOT_CONFIG_FILE=${2}
 
 CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
 
-if [[ ${CLI_OPTION} == '--help' ]]
-then
-    echo "${HELP_MSG}"
-    exit 0
-elif [[ ! -f ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ]]
-then
-    echo "ERROR: Uknown or missing [root-config-file]: ${ROOT_CONFIG_FILE}"
-    echo
-    echo "${HELP_MSG}"
-    exit 1
-fi
+case "${CLI_OPTION}" in
+    '')
+         echo "Usage: el-cicd.sh [OPTION] [root-config-file]"
+         echo "Try 'el-cicd.sh --help' for more information."
+         exit 1
+    ;;
+
+    '--help')
+        echo "${HELP_MSG}"
+        exit 0
+    ;;
+
+    *)
+        if [[ ! -f ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ]]
+        then
+            echo "ERROR: Uknown or missing [root-config-file]: ${ROOT_CONFIG_FILE}"
+            echo
+            echo "${HELP_MSG}"
+            exit 1
+        fi
+    ;;
+esac
+
+echo "${WARNING_MSG}"
+sleep 2
 
 SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
 

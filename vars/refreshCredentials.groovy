@@ -53,16 +53,24 @@ def call(Map args) {
                     pipelineUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
 
                     if (args.isNonProd) {
-                        projectInfo.nonProdNamespaces.each { env, namespace -> 
-                            credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
-                        }
+                        def devNamespaceExist =
+                            sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.devNamespace}")
+                        if (devNamespaceExist) {
+                            projectInfo.nonProdNamespaces.each { env, namespace -> 
+                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                            }
 
-                        projectInfo.sandboxNamespaces.each { namespace -> 
-                            credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                            projectInfo.sandboxNamespaces.each { namespace -> 
+                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                            }
                         }
                     }
                     else {
-                        credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
+                        def prodNamespaceExist =
+                            sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.prodNamespace}")
+                        if (prodNamespaceExist) {
+                            credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
+                        }
                     }
                 }
             }
