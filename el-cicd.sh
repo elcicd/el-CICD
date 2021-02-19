@@ -29,7 +29,7 @@ Options:
     -j,   --jenkins:         only build el-CICD Jenkins image
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
-        --help:            print el-CICD.sh help
+          --help:            display this help text and exit
 
 root-config-file:
     file name or path to a root configuration file relative the root of the el-CICD-config directory
