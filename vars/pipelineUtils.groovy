@@ -108,6 +108,10 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.devNamespace = projectInfo.devEnv ? projectInfo.nonProdNamespaces[projectInfo.devEnv] : null
         projectInfo.preProdNamespace = projectInfo.nonProdNamespaces[projectInfo.preProdEnv]
         projectInfo.prodNamespace = projectInfo.prodEnv ? "${projectInfo.id}-${projectInfo.prodEnv}" : null
+
+
+        projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
+        projectInfo.nfsShares = projectInfo.nfsShares ?: []
     }
 
     validateProjectInfo(projectInfo)
@@ -138,17 +142,15 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    projectInfo?.resourceQuotas.each { env, resourceQuotaFile ->
+    projectInfo.resourceQuotas.each { env, resourceQuotaFile ->
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
             "resourceQuotas keys must be either an environment or 'default': '${env}'"
 
         assert resourceQuotaFile && fileExists("${el.cicd.RESOURCE_QUOTA_DIR}/${resourceQuotaFile}")
     }
 
-    if (projectInfo.nfsShares) {
-        projectInfo.nfsShares.each { nfsShare ->
-            validateNfsShare(projectInfo, nfsShare)
-        }
+    projectInfo.nfsShares.each { nfsShare ->
+        validateNfsShare(projectInfo, nfsShare)
     }
 }
 
