@@ -64,7 +64,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 }
 
 def waitUntilJenkinsIsReady(def projectInfo) {
-    stage ('Wait until Jenkin is ready') {
+    stage ('Wait until Jenkins is ready') {
         sh """
             ${pipelineUtils.shellEchoBanner("ENSURE ${projectInfo.cicdMasterNamespace} JENKINS IS READY (CAN TAKE A FEW MINUTES)")}
 
