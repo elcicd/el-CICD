@@ -25,7 +25,7 @@ def APPLICATION_JSON_HDR = '-H application:json'
 def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
     def curlCommand
 
-    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${el.cicd.CLUSTER_WILDCARD_DOMAIN}-${projectInfo.id}"
+    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
