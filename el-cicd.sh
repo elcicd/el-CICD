@@ -17,7 +17,7 @@ EOM
 read -r -d '' HELP_MSG << EOM
 Usage: el-cicd.sh [OPTION] [root-config-file]
 
-el-CICD Install Utility
+el-CICD Admin Utility
 
 Options:
     -N,   --non-prod:        bootstraps Non-prod el-CICD Onboarding Automation Server
