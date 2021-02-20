@@ -25,7 +25,7 @@ def initMetaData(Map metaData) {
 
     cicd.prodEnv = cicd.PROD_ENV.toLowerCase()
 
-    cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+    cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
 
     cicd.IGNORE = ''
     cicd.PROMOTE = 'PROMOTE'

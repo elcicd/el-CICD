@@ -25,7 +25,7 @@ def APPLICATION_JSON_HDR = '-H application:json'
 def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
     def curlCommand
 
-    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
+    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     if (projectInfo.scmHost.contains('github')) {
         def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
@@ -61,7 +61,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
 def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
-    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}-${projectInfo.id}"
+    def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     readOnly = readOnly ? 'true' : 'false'
     if (projectInfo.scmHost.contains('github')) {
