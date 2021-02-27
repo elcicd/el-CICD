@@ -238,7 +238,7 @@ def rolloutLatest(def projectInfo, def microServices) {
     """
 }
 
-def confirmCeployments(def projectInfo, def microServices) {
+def confirmDeployments(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
@@ -247,16 +247,17 @@ def confirmCeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})
-            if [[ ! -z "\${DCS}" ]]
-            then
-                echo \${DCS} | timeout 300 | xargs -n1 -t | oc rollout status -n ${projectInfo.deployToNamespace}
-            else
-                ${shellEcho   '******',
-                              'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
-                              '******'}
-            fi
+            DCS="\${DCS} \$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})"
         done
+
+        if [[ ! -z "\${DCS}" ]]
+        then
+            echo \${DCS} | timeout 300 xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
+        else
+            ${shellEcho   '******',
+                          'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
+                          '******'}
+        fi
     """
 }
 

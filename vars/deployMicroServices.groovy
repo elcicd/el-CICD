@@ -58,7 +58,7 @@ def call(Map args) {
 
     stage('Confirm successful deployment in namespace from artifact repository') {
         if (args.microServices) {
-            deploymentUtils.confirmCeployments(args.projectInfo, args.microServices)
+            deploymentUtils.confirmDeployments(args.projectInfo, args.microServices)
         }
         else {
             echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
