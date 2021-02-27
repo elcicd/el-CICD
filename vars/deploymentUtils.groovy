@@ -225,7 +225,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
                     oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
                     sleep 1
-                    if [[ ! -z \$(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC})  ]]
+                    if [[ ! -z \$(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC}') ]]
                     then
                         # want to force it: first one sometimes doesn't take if there was no image change
                         oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
@@ -353,6 +353,7 @@ def waitingForPodsToTerminate(def projectInfo, def microServiceNames) {
         while [[ ! -z \$(oc get pods ${microServiceNames} -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
         do
             printf "%0.s-" \$(seq 1 \${COUNTER})
+            echo
             sleep 3
         done
         set -x
