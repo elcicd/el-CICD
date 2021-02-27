@@ -211,7 +211,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})
+            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace})
             if [[ ! -z "\${DCS}" ]]
             then
                 for DC in \${DCS}
@@ -252,7 +252,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'
+            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'
             if [[ ! -z \${DC} ]]
             then
                 DCS="\${DCS} \${DC}"
