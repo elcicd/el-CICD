@@ -254,7 +254,7 @@ def confirmCeployments(def projectInfo, def microServices) {
                 for DC in \${DCS}
                 do
                     ${shellEcho 'Waiting to confirm successful rollout of DeploymentConfig ${DC}...'}
-                    oc rollout status  dc/\$DC} --timeout=4m
+                    oc rollout status  dc/\${DC} --timeout=4m
                     if [[ "\$?" -ne 0  ]]
                     then
                         ${shellEcho 'ERROR: Deployment FAILED, exiting...'}
