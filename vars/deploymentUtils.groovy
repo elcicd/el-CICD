@@ -223,11 +223,13 @@ def rolloutLatest(def projectInfo, def microServices) {
                         sleep 10
                     fi
 
-                    DC="dc/\${DC}"
-                    oc rollout latest \${DC} -n ${projectInfo.deployToNamespace}
-                    sleep 3
-                    # want to force it: first one probably didn't take if there was no image change
-                    oc rollout latest \${DC} -n ${projectInfo.deployToNamespace} 2>&1 || :
+                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
+                    sleep 1
+                    if [[ ! -z $(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC})  ]]
+                    then
+                        # want to force it: first one sometimes doesn't take if there was no image change
+                        oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
+                    fi
                 done
             else
                 ${shellEcho   "******",
@@ -247,7 +249,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})" | egrep 'dc/[a-z]'
+            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'
             if [[ ! -z \${DC} ]]
             then
                 DCS="\${DCS} \${DC}"
@@ -260,7 +262,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         if [[ ! -z "\${DCS}" ]]
         then
-            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ""}; oc rollout status -n ${projectInfo.deployToNamespace} {}'
+            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ''}; oc rollout status -n ${projectInfo.deployToNamespace} {}'
         fi
     """
 }
@@ -321,7 +323,16 @@ def removeAllMicroservices(def projectInfo) {
 
         oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
 
-        sleep 20
+        ${shellEcho '', 'Waiting for pods to terminate...'}
+        set +x
+        sleep 3
+        COUNTER=1
+        while [[ ! -z $(oc get pods -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
+        do
+            printf "%0.s-" \$(seq 1 \${COUNTER})
+            sleep 3
+        done
+        set -x
     """
 }
 
@@ -338,6 +349,15 @@ def removeMicroservices(def projectInfo, def microServices) {
             oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
         done
 
-        sleep 10
+        ${shellEcho '', 'Waiting for microservice pods to terminate...'}
+        set +x
+        sleep 3
+        COUNTER=1
+        while [[ ! -z $(oc get pods ${microServiceNames} -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
+        do
+            printf "%0.s-" \$(seq 1 \${COUNTER})
+            sleep 3
+        done
+        set -x
     """
 }
