@@ -5,6 +5,6 @@
  */
 
 def call(Object... msgs) {
-    msgs = msgs ? msgs.collect { "echo '${it.toString()}';" }.join(' ') : 'echo;'
+    msgs = msgs ? msgs.collect { "echo \"${it.toString()}\";" }.join(' ') : 'echo;'
     return "{ ${msgs} } 2> /dev/null"
 }
