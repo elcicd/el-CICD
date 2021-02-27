@@ -224,13 +224,16 @@ def rolloutLatest(def projectInfo, def microServices) {
                     fi
 
                     oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
-                    sleep 1
-                    if [[ ! -z \$(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC}') ]]
-                    then
-                        # want to force it: first one sometimes doesn't take if there was no image change
-                        oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
-                    fi
                 done
+
+                # want to force it: first one sometimes doesn't take if there was no image change
+                set +x
+                sleep 3
+                for DC in \${DCS}
+                do
+                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} || :
+                done
+                set -x
             else
                 ${shellEcho   "******",
                               "No DeploymentConfigs found for \${MICROSERVICE_NAME}",
@@ -355,6 +358,7 @@ def waitingForPodsToTerminate(def projectInfo, def microServiceNames) {
             printf "%0.s-" \$(seq 1 \${COUNTER})
             echo
             sleep 3
+            let COUNTER+=1
         done
         set -x
     """
