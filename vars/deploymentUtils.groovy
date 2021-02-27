@@ -238,6 +238,38 @@ def rolloutLatest(def projectInfo, def microServices) {
     """
 }
 
+def confirmCeployments(def projectInfo, def microServices) {
+    assert projectInfo; assert microServices
+
+    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    sh """
+        ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
+
+        for MICROSERVICE_NAME in ${microServiceNames}
+        do
+            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})
+            if [[ ! -z "\${DCS}" ]]
+            then
+                for DC in \${DCS}
+                do
+                    ${shellEcho 'Waiting to confirm successful rollout of DeploymentConfig ${DC}...'}
+                    if [[ ! oc rollout status  dc/\$DC} --timeout=4m ]]
+                    then
+                        ${shellEcho 'ERROR: Deployment FAILED, exiting...'}
+                        exit 1
+                    else
+                        ${shellEcho 'Deployment SUCCEEDED FOR : ${MICROSERVICE_NAME}'}
+                    fi
+                done
+            else
+                ${shellEcho   '******',
+                              'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
+                              '******'}
+            fi
+        done
+    """
+}
+
 def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 

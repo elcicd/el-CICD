@@ -6,6 +6,7 @@
  */
 
 def call(Map args) {
+    def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
 
     stage('Remove all microservices to be deployed for complete recreation') {
         if (args.recreate) {
@@ -51,7 +52,16 @@ def call(Map args) {
             deploymentUtils.rolloutLatest(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN DEV FROM ARTIFACT REPOSITORY"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
+        }
+    }
+
+    stage('Confirm successful deployment in namespace from artifact repository') {
+        if (args.microServices) {
+            deploymentUtils.confirmCeployments(args.projectInfo, args.microServices)
+        }
+        else {
+            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
         }
     }
 
