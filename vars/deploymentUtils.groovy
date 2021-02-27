@@ -216,6 +216,7 @@ def rolloutLatest(def projectInfo, def microServices) {
             then
                 for DC in \${DCS}
                 do
+                    ${shellEcho   ''}
                     ERROR_DEPLOYMENTS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep -vi ' Completed ' | awk '{print \$1}' | tr '\n' ' ')
                     if [[ ! -z \${ERROR_DEPLOYMENTS} ]]
                     then
@@ -235,9 +236,10 @@ def rolloutLatest(def projectInfo, def microServices) {
                 done
                 set -x
             else
-                ${shellEcho   "******",
-                              "No DeploymentConfigs found for \${MICROSERVICE_NAME}",
-                              "******"}
+                ${shellEcho   '',
+                              '******',
+                              'No DeploymentConfigs found for ${MICROSERVICE_NAME}',
+                              '******'}
             fi
         done
     """
@@ -252,15 +254,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'
-            if [[ ! -z \${DC} ]]
-            then
-                DCS="\${DCS} \${DC}"
-            else
-                ${shellEcho '******',
-                            'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
-                            '******'}
-            fi
+            DCS="\${DCS} \$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'"
         done
 
         if [[ ! -z "\${DCS}" ]]
@@ -327,7 +321,7 @@ def removeAllMicroservices(def projectInfo) {
         oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
     """
 
-    waitingForPodsToTerminate(projectInfo, '')
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
 }
 
 def removeMicroservices(def projectInfo, def microServices) {
@@ -344,16 +338,16 @@ def removeMicroservices(def projectInfo, def microServices) {
         done
     """
 
-    waitingForPodsToTerminate(projectInfo, microServiceNames)
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
 }
 
-def waitingForPodsToTerminate(def projectInfo, def microServiceNames) {
+def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
         ${shellEcho '', 'Waiting for microservice pods to terminate...'}
         set +x
         sleep 3
         COUNTER=1
-        while [[ ! -z \$(oc get pods ${microServiceNames} -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
+        while [[ ! -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
             printf "%0.s-" \$(seq 1 \${COUNTER})
             echo
