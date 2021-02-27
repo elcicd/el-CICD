@@ -225,7 +225,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
                     oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
                     sleep 1
-                    if [[ ! -z $(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC})  ]]
+                    if [[ ! -z \$(oc rollout history dc/\${DC} -n ${projectInfo.deployToNamespace} | egrep -v 'Conplete|STATUS|\${DC})  ]]
                     then
                         # want to force it: first one sometimes doesn't take if there was no image change
                         oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
