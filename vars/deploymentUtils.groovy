@@ -211,7 +211,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace})
+            DCS=\$(oc get dc --ignore-not-found  -l microservice=\${MICROSERVICE_NAME} --ignore-not-found -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace})
             if [[ ! -z "\${DCS}" ]]
             then
                 for DC in \${DCS}
