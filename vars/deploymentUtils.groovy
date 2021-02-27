@@ -247,16 +247,20 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS="\${DCS} \$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})"
+            DC=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})" | egrep 'dc/[a-z]'
+            if [[ ! -z \${DC} ]]
+            then
+                DCS="\${DCS} \${DC}"
+            else
+                ${shellEcho '******',
+                            'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
+                            '******'}
+            fi
         done
 
         if [[ ! -z "\${DCS}" ]]
         then
-            echo \${DCS} | timeout 300 xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
-        else
-            ${shellEcho   '******',
-                          'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
-                          '******'}
+            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ''}; oc rollout status -n ${projectInfo.deployToNamespace} {}'
         fi
     """
 }
