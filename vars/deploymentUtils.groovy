@@ -250,7 +250,7 @@ def confirmCeployments(def projectInfo, def microServices) {
             DCS=\$(oc get dc -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}' -n ${projectInfo.deployToNamespace})
             if [[ ! -z "\${DCS}" ]]
             then
-                echo \${DCS} | timeout -t 300 | xargs -n1 -t | oc rollout status -n ${projectInfo.deployToNamespace}
+                echo \${DCS} | timeout 300 | xargs -n1 -t | oc rollout status -n ${projectInfo.deployToNamespace}
             else
                 ${shellEcho   '******',
                               'No DeploymentConfigs found for ${MICROSERVICE_NAME}, nothing to confirm',
