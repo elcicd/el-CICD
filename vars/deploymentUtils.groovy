@@ -322,18 +322,9 @@ def removeAllMicroservices(def projectInfo) {
         ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
 
         oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
-
-        ${shellEcho '', 'Waiting for pods to terminate...'}
-        set +x
-        sleep 3
-        COUNTER=1
-        while [[ ! -z $(oc get pods -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
-        do
-            printf "%0.s-" \$(seq 1 \${COUNTER})
-            sleep 3
-        done
-        set -x
     """
+
+    waitingForPodsToTerminate('')
 }
 
 def removeMicroservices(def projectInfo, def microServices) {
@@ -348,12 +339,18 @@ def removeMicroservices(def projectInfo, def microServices) {
         do
             oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
         done
+    """
 
+    waitingForPodsToTerminate(microServiceNames)
+}
+
+def waitingForPodsToTerminate(def microServiceNames) {
+    sh """
         ${shellEcho '', 'Waiting for microservice pods to terminate...'}
         set +x
         sleep 3
         COUNTER=1
-        while [[ ! -z $(oc get pods ${microServiceNames} -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
+        while [[ ! -z \$(oc get pods ${microServiceNames} -n ${projectInfo.deployToNamespace} | grep 'Terminating') ]]
         do
             printf "%0.s-" \$(seq 1 \${COUNTER})
             sleep 3
