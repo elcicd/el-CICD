@@ -324,7 +324,7 @@ def removeAllMicroservices(def projectInfo) {
         oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
     """
 
-    waitingForPodsToTerminate('')
+    waitingForPodsToTerminate(projectInfo, '')
 }
 
 def removeMicroservices(def projectInfo, def microServices) {
@@ -341,10 +341,10 @@ def removeMicroservices(def projectInfo, def microServices) {
         done
     """
 
-    waitingForPodsToTerminate(microServiceNames)
+    waitingForPodsToTerminate(projectInfo, microServiceNames)
 }
 
-def waitingForPodsToTerminate(def microServiceNames) {
+def waitingForPodsToTerminate(def projectInfo, def microServiceNames) {
     sh """
         ${shellEcho '', 'Waiting for microservice pods to terminate...'}
         set +x
