@@ -261,7 +261,7 @@ def confirmDeployments(def projectInfo, def microServices) {
         for DC in \${DCS}
         do
             ${shellEcho ''}
-            oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}'
+            oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}
         done
     """
 }
