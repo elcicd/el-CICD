@@ -124,7 +124,8 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         }
                     }
 
-                    def paramMap = templateDef.params.clone()
+                    def paramMap = [:]
+                    paramMap.putAll(templateDef.params)
                     templateDef[projectInfo.deployToEnv]?.each {
                         paramMap[it.key] = it.value
                     }
