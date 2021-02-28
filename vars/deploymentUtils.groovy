@@ -216,7 +216,7 @@ def rolloutLatest(def projectInfo, def microServices) {
         FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
         if [[ ! -z \${FOR_DELETE_PODS} ]]
         then
-            oc delete pods --ignore-not-found FOR_DELETE_PODS
+            oc delete pods --ignore-not-found \${FOR_DELETE_PODS}
         fi
     """
 
@@ -226,7 +226,6 @@ def rolloutLatest(def projectInfo, def microServices) {
         ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
         DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-        set +x
         # rollout twice just in case first one doesn't take (sometimes happens if there was no image change)
         for I in {1..2}
         do
