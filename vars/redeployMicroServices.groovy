@@ -50,8 +50,10 @@ def call(Map args) {
                 branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
                 def deployLine
+                echo ''
                 branchesAndTimes.split('\n').each { line ->
-                    deployLine = !deployLine && line.contains(microService.deploymentImageTag) ? line : deployLine
+                    echo "line: ${line}"
+                    deployLine = !deployLine && line.startsWith(microService.deploymentImageTag) ? line : deployLine
                 }
                 branchesAndTimes = deployLine ? branchesAndTimes.replaceFirst(deployLine, "${deployLine} <DEPLOYED>") : branchesAndTimes
 
