@@ -260,7 +260,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         if [[ ! -z "\${DCS}" ]]
         then
-            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ''}; oc rollout status -n ${projectInfo.deployToNamespace} {}'
+            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ''}; oc rollout status -n ${projectInfo.deployToNamespace}'
         fi
     """
 }
