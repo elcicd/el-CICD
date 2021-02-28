@@ -45,11 +45,11 @@ def call(Map args) {
             dir(microService.workDir) {
                 branchPrefix = "refs/remotes/**/${branchPrefix}*"
                 def branchesAndTimesScript =
-                    "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate:relative))' --sort='-committerdate' '${branchPrefix}'"
+                    "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate))' --sort='-committerdate' '${branchPrefix}'"
                 def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
                 branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
                 branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
-                    branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", ">>> ${microService.deploymentImageTag} <<<") : branchesAndTimes
+                    branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", "ACTIVE -> ${microService.deploymentImageTag}") : branchesAndTimes
 
                 inputs +=
                     choice(name: microService.name,
@@ -65,7 +65,7 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
             microService.remove = (answer == el.cicd.REMOVE)
-            microService.redeploy = (answer != el.cicd.IGNORE && answer != el.cicd.REMOVE)
+            microService.redeploy = (answer && answer != el.cicd.REMOVE)
 
             if (microService.redeploy) {
                 microService.deploymentImageTag = (answer =~ "${projectInfo.deployToEnv}-[0-9a-z]{7}")[0]
@@ -73,7 +73,7 @@ def call(Map args) {
                 microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${microService.deploymentImageTag}"
             }
 
-            willRedeployOrRemove = willRedeployOrRemove || answer != el.cicd.IGNORE
+            willRedeployOrRemove = willRedeployOrRemove || answer
         }
 
         if (!willRedeployOrRemove) {

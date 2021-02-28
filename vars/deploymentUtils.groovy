@@ -124,7 +124,11 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         }
                     }
 
-                    def paramsStr = templateDef.params.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
+                    def paramMap = templateDef.params.clone()
+                    templateDef[projectInfo.deployToEnv]?.each {
+                        paramMap[it.key] = it.value
+                    }
+                    def paramsStr = paramMap.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
                     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -257,6 +261,8 @@ def confirmDeployments(def projectInfo, def microServices) {
             oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}
         done
     """
+
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
 }
 
 def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
@@ -350,7 +356,7 @@ def removeMicroservices(def projectInfo, def microServices) {
 
 def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
-        ${shellEcho '', 'Waiting for microservice pods to terminate...'}
+        ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
         set +x
         sleep 3
         COUNTER=1
