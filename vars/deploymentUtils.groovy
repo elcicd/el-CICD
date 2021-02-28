@@ -219,7 +219,7 @@ def rolloutLatest(def projectInfo, def microServices) {
         then
             for I in {1..2}
             do
-                oc delete pods \${FOR_DELETE_PODS} || :
+                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
                 set +x
                 sleep 3
             done
