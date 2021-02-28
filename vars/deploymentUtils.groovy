@@ -267,14 +267,14 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
 
         sh """
             ${pipelineUtils.shellEchoBanner("UPDATE LABELS AND ${metaInfoCmName}:",
-                                            "projectid = ${projectInfo.id}",
-                                            "microservice = ${microService.name}",
-                                            "git-repo = ${microService.gitRepoName}",
-                                            "src-commit-hash = ${microService.srcCommitHash}",
-                                            "deployment-branch = ${microService.deploymentBranch ?: UNDEFINED}",
-                                            "deployment-commit-hash = ${microService.deploymentCommitHash}",
-                                            "release-version = ${projectInfo.releaseVersionTag ?: UNDEFINED}",
-                                            "build-number = ${BUILD_NUMBER}")}
+                                            "  projectid = ${projectInfo.id}",
+                                            "  microservice = ${microService.name}",
+                                            "  git-repo = ${microService.gitRepoName}",
+                                            "  src-commit-hash = ${microService.srcCommitHash}",
+                                            "  deployment-branch = ${microService.deploymentBranch ?: UNDEFINED}",
+                                            "  deployment-commit-hash = ${microService.deploymentCommitHash}",
+                                            "  release-version = ${projectInfo.releaseVersionTag ?: UNDEFINED}",
+                                            "  build-number = ${BUILD_NUMBER}")}
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
 
