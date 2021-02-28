@@ -8,7 +8,16 @@
 def call(Map args) {
     def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
 
-    stage('Remove all microservices to be deployed for complete recreation') {
+    stage('Build templates and retrieve template definitions') {
+        if (args.microServices) {
+            deploymentUtils.processTemplateDefs(args.projectInfo, args.microServices)
+        }
+        else {
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS"
+        }
+    }
+
+    stage('Remove all microservices to be deployed, if selected') {
         if (args.recreate) {
             deploymentUtils.removeMicroservices(args.projectInfo, args.microServices)
         }
@@ -16,16 +25,7 @@ def call(Map args) {
             deploymentUtils.removeAllMicroservices(args.projectInfo)
         }
         else {
-            echo "RECREATION NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED FOR COMPLETE RECREATION"
-        }
-    }
-
-    stage('Build templates and retrieve template definitions') {
-        if (args.microServices) {
-            deploymentUtils.processTemplateDefs(args.projectInfo, args.microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS"
+            echo "RECREATE NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED"
         }
     }
 
