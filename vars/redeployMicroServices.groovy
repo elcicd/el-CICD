@@ -49,7 +49,7 @@ def call(Map args) {
                 def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
                 branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
                 branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
-                    branchesAndTimes.replaceFirst("${microService.deploymentImageTag}", "${microService.deploymentImageTag} <DEPLOYED>") : branchesAndTimes
+                    "${branchesAndTimes} <DEPLOYED>" : branchesAndTimes
 
                 inputs +=
                     choice(name: microService.name,
