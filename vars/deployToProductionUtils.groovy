@@ -78,4 +78,6 @@ def cleanupPreviousRelease(def projectInfo) {
 
         oc delete all,configmaps,sealedsecrets,routes,cronjobs -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
     """
+
+    deploymentUtils.waitingForPodsToTerminate(projectInfo.prodNamespace)
 }

@@ -39,7 +39,7 @@ def call(Map args) {
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
         withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${IMAGE_REPO_ACCESS_TOKEN}"
+            def imageRepoUserNamePwd = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${IMAGE_REPO_ACCESS_TOKEN}"
             def imageRepo = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
 
@@ -139,8 +139,8 @@ def call(Map args) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN'),
                              string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                def fromUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
-                def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${PROD_IMAGE_REPO_ACCESS_TOKEN}"
+                def fromUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+                def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":$\{PROD_IMAGE_REPO_ACCESS_TOKEN}"
                 def skopeoCopyComd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
 
                 def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -152,11 +152,13 @@ def call(Map args) {
                         def prodImageUrl = "${prodImageRepo}/${microService.id}:${projectInfo.releaseVersionTag}"
 
                         sh """
+                            ${shellEcho ''}
                             ${skopeoCopyComd} docker://${preProdImageUrl} docker://${prodImageUrl}
 
-                            ${shellEcho "******",
+                            ${shellEcho '',
+                                        '******',
                                         "${microService.name}: ${projectInfo.releaseCandidateTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersionTag} in ${projectInfo.prodEnv}",
-                                        "******" }
+                                        '******'}
                         """
                     }
                 }
@@ -178,7 +180,7 @@ def call(Map args) {
                     dir(microService.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shellEcho "-> Creating deployment branch: ${microService.releaseVersionGitBranch}"}
+                                ${shellEcho '', "-> Creating deployment branch: ${microService.releaseVersionGitBranch}"}
                                 ${sshAgentBash 'GITHUB_PRIVATE_KEY',
                                                "git branch ${microService.releaseVersionGitBranch}",
                                                "git push origin ${microService.releaseVersionGitBranch}"}
