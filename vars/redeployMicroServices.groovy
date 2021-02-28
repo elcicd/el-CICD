@@ -54,9 +54,6 @@ def call(Map args) {
                     deployLine = !deployLine && line.startsWith(microService.deploymentImageTag) ? line : deployLine
                 }
                 branchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} <DEPLOYED>") : branchesAndTimes
-                echo ''
-                echo "FINAL deployLine: ${deployLine}"
-                echo "branchesAndTimes: ${branchesAndTimes}"
 
                 inputs +=
                     choice(name: microService.name,
