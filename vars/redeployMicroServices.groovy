@@ -45,7 +45,7 @@ def call(Map args) {
             dir(microService.workDir) {
                 branchPrefix = "refs/remotes/**/${branchPrefix}*"
                 def branchesAndTimesScript =
-                    "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate:relative))' --sort='-committerdate' '${branchPrefix}'"
+                    "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate))' --sort='-committerdate' '${branchPrefix}'"
                 def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
                 branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
                 branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
