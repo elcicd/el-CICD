@@ -149,7 +149,8 @@ def initializeStage() {
 
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
         sh """
-            rm -rf ${WORKSPACE}/*
+            rm -rf ${WORKSPACE}
+            mkdir -p ${WORKSPACE}
             mkdir -p ${el.cicd.TEMP_DIR}
             oc version
         """

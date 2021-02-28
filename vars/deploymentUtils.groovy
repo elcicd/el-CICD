@@ -234,8 +234,10 @@ def rolloutLatest(def projectInfo, def microServices) {
             do
                 oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
             done
+            set +x
             sleep 3
         done
+        set -x
     """
 }
 
