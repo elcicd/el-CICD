@@ -88,7 +88,7 @@ def call(Map args) {
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
         withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
             projectInfo.microServices.each { microService ->
                 if (microService.redeploy) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -123,7 +123,7 @@ def call(Map args) {
                                  projectInfo.microServices.findAll{ it.redeploy }.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":${TO_IMAGE_REPO_ACCESS_TOKEN}"
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
             projectInfo.microServices.each { microService ->
                 if (microService.redeploy) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
