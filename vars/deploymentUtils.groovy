@@ -192,6 +192,7 @@ def applyResources(def projectInfo, def microServices) {
                         deployment-commit-hash=${microService.deploymentCommitHash} \
                         release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
                         deploy-time=\$(date +%d.%m.%Y-%H.%M.%S%Z) \
+                        build-number=${BUILD_NUMBER} \
                         -n ${projectInfo.deployToNamespace}
                     ${shellEcho   '******'}
                 else
@@ -207,40 +208,33 @@ def rolloutLatest(def projectInfo, def microServices) {
 
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
     sh """
+        ${pipelineUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
+
+        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+
+        FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
+        FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
+        if [[ ! -z \${FOR_DELETE_PODS} ]]
+        then
+            oc delete pods --ignore-not-found FOR_DELETE_PODS
+        fi
+    """
+
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
+
+    sh """
         ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
-        for MICROSERVICE_NAME in ${microServiceNames}
+        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+        set +x
+        # rollout twice just in case first one doesn't take (sometimes happens if there was no image change)
+        for I in {1..2}
         do
-            DCS=\$(oc get dc --ignore-not-found  -l microservice=\${MICROSERVICE_NAME} --ignore-not-found -o 'jsonpath={range .items[*]}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace})
-            if [[ ! -z "\${DCS}" ]]
-            then
-                for DC in \${DCS}
-                do
-                    ${shellEcho   ''}
-                    ERROR_DEPLOYMENTS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "\${DC}-.*-deploy" | grep -vi ' Completed ' | awk '{print \$1}' | tr '\n' ' ')
-                    if [[ ! -z \${ERROR_DEPLOYMENTS} ]]
-                    then
-                        oc delete pods \${ERROR_DEPLOYMENTS} -n ${projectInfo.deployToNamespace}
-                        sleep 10
-                    fi
-
-                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace}
-                done
-
-                # want to force it: first one sometimes doesn't take if there was no image change
-                set +x
-                sleep 3
-                for DC in \${DCS}
-                do
-                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} || :
-                done
-                set -x
-            else
-                ${shellEcho   '',
-                              '******',
-                              'No DeploymentConfigs found for ${MICROSERVICE_NAME}',
-                              '******'}
-            fi
+            for DC in \${DCS}
+            do
+                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null
+            done
+            sleep 3
         done
     """
 }
@@ -253,11 +247,7 @@ def confirmDeployments(def projectInfo, def microServices) {
         ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
         JSONPATH='jsonpath={range .items[*]}{ .metadata.name }{" "}{end}'
-        for MICROSERVICE_NAME in ${microServiceNames}
-        do
-            DCS="\${DCS} \$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o "\${JSONPATH}" -n ${projectInfo.deployToNamespace} | tr '\n' ' ' | xargs)"
-        done
-
+        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o "\${JSONPATH}" -n ${projectInfo.deployToNamespace} | tr '\n' ' ' | xargs)"
         for DC in \${DCS}
         do
             ${shellEcho ''}
