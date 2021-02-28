@@ -140,7 +140,7 @@ def call(Map args) {
                              string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
             {
                 def fromUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
-                def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":$\{PROD_IMAGE_REPO_ACCESS_TOKEN}"
+                def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PROD_IMAGE_REPO_ACCESS_TOKEN}"
                 def skopeoCopyComd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
 
                 def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
