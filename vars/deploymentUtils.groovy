@@ -258,9 +258,10 @@ def confirmDeployments(def projectInfo, def microServices) {
             DCS="\${DCS} \$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o "\${JSONPATH}" -n ${projectInfo.deployToNamespace} | tr '\n' ' ' | xargs)"
         done
 
-        if [[ ! -z "\${DCS}" ]]
+        for DC in \${DCS}
         then
-            echo \${DCS} | timeout 300 xargs -n1 -t sh -c '${shellEcho ''}; oc rollout status -n ${projectInfo.deployToNamespace}'
+            ${shellEcho ''}
+            oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}'
         fi
     """
 }
