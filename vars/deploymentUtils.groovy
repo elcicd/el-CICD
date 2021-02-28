@@ -232,7 +232,7 @@ def rolloutLatest(def projectInfo, def microServices) {
         do
             for DC in \${DCS}
             do
-                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null
+                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
             done
             sleep 3
         done
