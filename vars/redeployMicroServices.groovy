@@ -48,8 +48,12 @@ def call(Map args) {
                     "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate))' --sort='-committerdate' '${branchPrefix}'"
                 def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
                 branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
-                branchesAndTimes = microService.deploymentImageTag && branchesAndTimes.find(microService.deploymentImageTag) ?
-                    "${branchesAndTimes <DEPLOYED>" : branchesAndTimes
+
+                def deployLine
+                branchesAndTimes.eachLine { line ->
+                    deployLine = !deployLine && line.contains(microService.deploymentImageTag) ? line : deployLine
+                }
+                branchesAndTimes.replaceFirst(deployLine, "${deployLine} <DEPLOYED>")
 
                 inputs +=
                     choice(name: microService.name,
