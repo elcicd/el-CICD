@@ -147,13 +147,14 @@ def call(Map args) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
                     def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
                     sh """
+                        ${shellEcho ''}
                         skopeo copy --src-tls-verify=false \
                                     --dest-tls-verify=false \
                                     --src-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     ${preProdImageUrl} \
                                     ${preProdReleaseCandidateImageUrl}
-                        ${shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                        ${"${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
                     """
                 }
             }

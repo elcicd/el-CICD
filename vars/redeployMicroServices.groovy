@@ -131,7 +131,7 @@ def call(Map args) {
                     def toImageUrl = "${imageRepo}/${microService.id}:${projectInfo.deployToEnv}"
                     def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
                     sh """
-                        ${shellEcho "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
+                        ${shellEcho '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
 
                         ${skopeoComd} docker://${fromImageUrl} docker://${toImageUrl}
                     """

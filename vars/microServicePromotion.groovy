@@ -165,10 +165,13 @@ def call(Map args) {
 
                         def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
                         sh """
+                            ${shellEcho ''}
                             ${skopeoPromoteCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
 
+                            ${shellEcho ''}
                             ${skopeoTagCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
 
+                            ${shellEcho ''}
                             ${shellEcho  "--> ${msg}"}
                         """
                     }
