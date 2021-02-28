@@ -266,10 +266,19 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
         def metaInfoCmName = "${projectInfo.id}-${microService.name}-${el.cicd.CM_META_INFO_POSTFIX}"
 
         sh """
-            ${pipelineUtils.shellEchoBanner("UPDATE ${metaInfoCmName}")}
+            ${pipelineUtils.shellEchoBanner("UPDATE LABELS AND ${metaInfoCmName}:",
+                                            "projectid = ${projectInfo.id}", 
+                                            "microservice = ${microService.name}",
+                                            "git-repo = ${microService.gitRepoName}",
+                                            "src-commit-hash = ${microService.srcCommitHash}",
+                                            "deployment-branch = ${microService.deploymentBranch ?: UNDEFINED}",
+                                            "deployment-commit-hash = ${microService.deploymentCommitHash}",
+                                            "release-version = ${projectInfo.releaseVersionTag ?: UNDEFINED}",
+                                            "build-number = ${BUILD_NUMBER"})}
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
 
+            ${shellEcho ''}
             oc create cm ${metaInfoCmName} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=microservice=${microService.name} \
@@ -278,8 +287,10 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
 
+            ${shellEcho ''}
             oc label cm ${metaInfoCmName} \
                 projectid=${projectInfo.id} \
                 microservice=${microService.name} \
@@ -288,6 +299,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
                 deployment-commit-hash=${microService.deploymentCommitHash} \
                 release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
         """
     }
