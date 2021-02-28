@@ -217,13 +217,7 @@ def rolloutLatest(def projectInfo, def microServices) {
         # just in case first one doesn't take (sometimes happens if there was no image change)
         if [[ ! -z \${FOR_DELETE_PODS} ]]
         then
-            for I in {1..2}
-            do
-                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
-                set +x
-                sleep 3
-            done
-            set -x
+            oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
         fi
     """
 
