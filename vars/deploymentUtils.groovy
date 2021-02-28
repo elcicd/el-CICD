@@ -252,9 +252,10 @@ def confirmDeployments(def projectInfo, def microServices) {
     sh """
         ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
+        JSONPATH='jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}{end}'
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS="\${DCS} \$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'jsonpath={range .items[*]}{"dc/"}{ .metadata.name }{" "}{end}' -n ${projectInfo.deployToNamespace}) | egrep 'dc/[a-z]'"
+            DCS="\${DCS} \$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o '\${JSONPATH}' -n ${projectInfo.deployToNamespace} | tr '\n' ' ') "
         done
 
         if [[ ! -z "\${DCS}" ]]
