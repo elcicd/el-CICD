@@ -51,9 +51,11 @@ def call(Map args) {
 
                 def deployLine
                 echo ''
+                echo "microService.deploymentImageTag: ${microService.deploymentImageTag}"
                 branchesAndTimes.split('\n').each { line ->
                     echo "line: ${line}"
                     deployLine = !deployLine && line.startsWith(microService.deploymentImageTag) ? line : deployLine
+                    echo "deployLine: ${deployLine}"
                 }
                 branchesAndTimes = deployLine ? branchesAndTimes.replaceFirst(deployLine, "${deployLine} <DEPLOYED>") : branchesAndTimes
 
