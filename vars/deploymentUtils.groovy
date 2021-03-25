@@ -218,15 +218,18 @@ def rolloutLatest(def projectInfo, def microServices) {
     sh """
         ${pipelineUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
 
-        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+        for MICROSERVICE_NAME in ${microServiceNames}
+        do
+            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
 
-        FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
-        FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
-        # just in case first one doesn't take (sometimes happens if there was no image change)
-        if [[ ! -z \${FOR_DELETE_PODS} ]]
-        then
-            oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
-        fi
+            FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
+            FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
+
+            if [[ ! -z \${FOR_DELETE_PODS} ]]
+            then
+                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
+            fi
+        done
     """
 
     waitingForPodsToTerminate(projectInfo.deployToNamespace)
@@ -234,19 +237,22 @@ def rolloutLatest(def projectInfo, def microServices) {
     sh """
         ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
-        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-        # just in case first one doesn't take (sometimes happens if there was no image change)
-        for I in {1..2}
+        for MICROSERVICE_NAME in ${microServiceNames}
         do
-            for DC in \${DCS}
+            DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+            # just in case first one doesn't take (sometimes happens if there was no image change)
+            for I in {1..2}
             do
-                ${shellEcho ''}
-                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                for DC in \${DCS}
+                do
+                    ${shellEcho ''}
+                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                done
+                set +x
+                sleep 3
             done
-            set +x
-            sleep 3
+            set -x
         done
-        set -x
     """
 }
 

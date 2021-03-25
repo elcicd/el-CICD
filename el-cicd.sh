@@ -158,7 +158,7 @@ case ${CLI_OPTION} in
 
     '--jenkins' | '-j')
         echo "BUILD JENKINS IMAGE"
-        _build_el_cicd_jenkins_imaged
+        _build_el_cicd_jenkins_image
     ;;
 
     '--agents' | '-a')
