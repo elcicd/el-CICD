@@ -239,7 +239,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
             # just in case first one doesn't take (sometimes happens if there was no image change)
             for I in {1..2}
             do
@@ -263,12 +263,14 @@ def confirmDeployments(def projectInfo, def microServices) {
     sh """
         ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
-        JSONPATH='jsonpath={range .items[*]}{ .metadata.name }{" "}{end}'
-        DCS="\$(oc get dc --ignore-not-found -l build-number=\${BUILD_NUMBER} -o "\${JSONPATH}" -n ${projectInfo.deployToNamespace} | tr '\n' ' ' | xargs)"
-        for DC in \${DCS}
+        for MICROSERVICE_NAME in ${microServiceNames}
         do
-            ${shellEcho ''}
-            oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}
+            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+            for DC in \${DCS}
+            do
+                ${shellEcho ''}
+                oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}
+            done
         done
     """
 
