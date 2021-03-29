@@ -4,7 +4,7 @@ Main functional library for el-CICD project.  See `el-CICD-docs` project for ful
 
 This document is part of the el-CICD project, a complete CICD system for the OKD Container Platform.
 
-Copyright (C) 2020 Evan "Hippy" Slatis
+Copyright (C) 2021 Evan "Hippy" Slatis
 email: hippyod -at- yahoo -dot- com
 
 ===================================
