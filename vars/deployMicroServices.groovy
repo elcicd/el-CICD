@@ -6,6 +6,7 @@
  */
 
 def call(Map args) {
+    def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
 
     stage('Build templates and retrieve template definitions') {
         if (args.microServices) {
@@ -37,14 +38,20 @@ def call(Map args) {
         }
     }
 
-    stage('Apply and deploy all openshift resources') {
+    stage('Apply all openshift resources') {
         if (args.microServices) {
-            deploymentUtils.cleanupOldDeployments(args.projectInfo, args.microServices)
-
             deploymentUtils.applyResources(args.projectInfo, args.microServices)
         }
         else {
-            def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING APPLY ALL OKD RESOURCES"
+        }
+    }
+
+    stage('Deploy image in namespace from artifact repository') {
+        if (args.microServices) {
+            deploymentUtils.rolloutLatest(args.projectInfo, args.microServices)
+        }
+        else {
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
         }
     }
@@ -54,7 +61,7 @@ def call(Map args) {
             deploymentUtils.confirmDeployments(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING CONFIRMATION OF DEPLOYMENTS"
+            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
         }
     }
 
@@ -63,7 +70,7 @@ def call(Map args) {
             deploymentUtils.updateMicroServiceMetaInfo(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
         }
     }
 
@@ -72,7 +79,7 @@ def call(Map args) {
             deploymentUtils.cleanupOrphanedResources(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
         }
     }
 
