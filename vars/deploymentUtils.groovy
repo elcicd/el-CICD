@@ -244,19 +244,13 @@ def rolloutLatest(def projectInfo, def microServices) {
             for RESOURCE in dc deploy
             do
                 DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-                # just in case first one doesn't take (sometimes happens if there was no image change)
-                for I in {1..2}
+
+                for DC in \${DCS}
                 do
-                    for DC in \${DCS}
-                    do
-                        ${shellEcho ''}
-                        oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER} -n ${projectInfo.deployToNamespace} 
-                        oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
-                    done
-                    set +x
-                    sleep 3
+                    ${shellEcho ''}
+                    oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER} -n ${projectInfo.deployToNamespace} 
+                    oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
                 done
-                set -x
             done
         done
     """
