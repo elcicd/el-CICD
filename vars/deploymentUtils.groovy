@@ -250,7 +250,7 @@ def rolloutLatest(def projectInfo, def microServices) {
                     for DC in \${DCS}
                     do
                         ${shellEcho ''}
-                        oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER}
+                        oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER} -n ${projectInfo.deployToNamespace} 
                         oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
                     done
                     set +x
