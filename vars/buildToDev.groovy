@@ -79,7 +79,7 @@ void call(Map args) {
 
         dir(microService.workDir) {
             sh """
-                HAS_BC=$(oc get bc --no-headers --ignore-not-found ${buildConfigName} -n ${projectInfo.cicdMasterNamespace} | tr -d '[:space:]')
+                HAS_BC=\$(oc get bc --no-headers --ignore-not-found ${buildConfigName} -n ${projectInfo.cicdMasterNamespace} | tr -d '[:space:]')
                 if [[ -z \${HAS_BC} ]]
                 then
                     oc new-build --name ${buildConfigName} \
