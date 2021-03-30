@@ -156,6 +156,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'PULL_SECRET=${pullSecret}' \
                             -p 'ENV=${projectInfo.deployToEnv}' \
                             -p 'IMAGE_TAG=${imageTag}' \
+                            -p 'BUILD_NUMBER=${BUILD_NUMBER}' \
                             -f ${templateDef.patchedFile} \
                             -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
                     """
@@ -248,7 +249,7 @@ def rolloutLatest(def projectInfo, def microServices) {
                 ${shellEcho ''}
                 set +x
                 oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
-                sleep 3  # Just in case first one doesn't take (sometimes happens if there was no image change)
+                sleep 1  # Just in case first one doesn't take (sometimes happens if there was no image change)
                 oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
                 set -x
             done
