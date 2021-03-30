@@ -115,17 +115,6 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
         if (microService.templateDefs) {
             dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
-                    def templateName = templateDef.params?.templateName
-                    if (templateName?.contains('route') || templateName?.contains('ingress')) {
-                        if (!templateDef.params.ROUTE_HOST) {
-                            def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? 
-                                (projectInfo.deployToNamespace - projectInfo.id) : ''
-
-                            templateDef.params.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
-                            templateDef.params.INGRESS_PATH = templateDef.params.INGRESS_PATH ?: '/'
-                        }
-                    }
-
                     def paramMap = [:]
                     if (templateDef.params) {
                         paramMap.putAll(templateDef.params)
@@ -134,6 +123,17 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                     templateDef[projectInfo.deployToEnv]?.each {
                         paramMap[it.key] = it.value
                     }
+
+                    if (templateDef.templateName?.startsWith('route') || templateDef.templateName?.startsWith('ingress')) {
+                        if (!paramMap.ROUTE_HOST) {
+                            def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? 
+                                (projectInfo.deployToNamespace - projectInfo.id) : ''
+
+                            paramMap.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+                            paramMap.INGRESS_PATH = paramMap.INGRESS_PATH ?: '/'
+                        }
+                    }
+
                     def paramsStr = paramMap.collect { key, value -> "-p '${key}=${value}'" }.join(' ')
 
                     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
