@@ -249,9 +249,9 @@ def rolloutLatest(def projectInfo, def microService) {
                 DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
                 if [[ ! -z \${DCS} ]]
                 then
-                    ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST DEPLOYMENTS FOR ${microService.name})}
+                    ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST DEPLOYMENTS FOR ${microService.name}")}
                 else
-                    ${pipelineUtils.shellEchoBanner("NO DEPLOYMENTS FOUND FOR ${microService.name})}
+                    ${pipelineUtils.shellEchoBanner("NO DEPLOYMENTS FOUND FOR ${microService.name}")}
                 fi
 
                 for DC in \${DCS}
