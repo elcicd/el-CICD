@@ -168,6 +168,30 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
     }
 }
 
+def cleanupOldDeployments(def projectInfo, def microServices) {
+    assert projectInfo; assert microServices
+
+    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    sh """
+        ${pipelineUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
+
+        for MICROSERVICE_NAME in ${microServiceNames}
+        do
+            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+
+            FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
+            FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
+
+            if [[ ! -z \${FOR_DELETE_PODS} ]]
+            then
+                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
+            fi
+        done
+    """
+
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
+}
+
 def applyResources(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
@@ -209,41 +233,27 @@ def applyResources(def projectInfo, def microServices) {
                     ${shellEcho  'No OpenShift deployment resource(s) found'}
                 fi
             """
+
+            rolloutLatest(projectInfo, microService) 
         }
     }
 }
 
-def rolloutLatest(def projectInfo, def microServices) {
-    assert projectInfo; assert microServices
-
-    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
-    sh """
-        ${pipelineUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
-
-        for MICROSERVICE_NAME in ${microServiceNames}
-        do
-            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-
-            FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
-            FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
-
-            if [[ ! -z \${FOR_DELETE_PODS} ]]
-            then
-                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
-            fi
-        done
-    """
-
-    waitingForPodsToTerminate(projectInfo.deployToNamespace)
+def rolloutLatest(def projectInfo, def microService) {
+    assert projectInfo; assert microService
 
     sh """
-        ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
-        for MICROSERVICE_NAME in ${microServiceNames}
-        do
             for RESOURCE in dc deploy
             do
                 DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+                if [[ ! -z \${DCS} ]]
+                then
+                    ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST DEPLOYMENTS FOR ${microService.name})}
+                else
+                    ${pipelineUtils.shellEchoBanner("NO DEPLOYMENTS FOUND FOR ${microService.name})}
+                fi
+
                 for DC in \${DCS}
                 do
                     ${shellEcho ''}

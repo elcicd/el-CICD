@@ -38,18 +38,11 @@ def call(Map args) {
         }
     }
 
-    stage('Apply all openshift resources') {
+    stage('Apply and deploy all openshift resources') {
         if (args.microServices) {
-            deploymentUtils.applyResources(args.projectInfo, args.microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING APPLY ALL OKD RESOURCES"
-        }
-    }
+            deployToEnv.cleanupOldDeployments(args.projectInfo, args.microServices)
 
-    stage('Deploy image in namespace from artifact repository') {
-        if (args.microServices) {
-            deploymentUtils.rolloutLatest(args.projectInfo, args.microServices)
+            deploymentUtils.applyResources(args.projectInfo, args.microServices)
         }
         else {
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
@@ -61,7 +54,7 @@ def call(Map args) {
             deploymentUtils.confirmDeployments(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
+            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING CONFIRMATION OF DEPLOYMENTS"
         }
     }
 
@@ -70,7 +63,7 @@ def call(Map args) {
             deploymentUtils.updateMicroServiceMetaInfo(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
+            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
         }
     }
 
@@ -79,7 +72,7 @@ def call(Map args) {
             deploymentUtils.cleanupOrphanedResources(args.projectInfo, args.microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
+            echo "NO MICROSERVICES WERE DEPLOYED: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
         }
     }
 
