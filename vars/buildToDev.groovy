@@ -74,12 +74,13 @@ void call(Map args) {
         }
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
-        def pullSecret = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
+        def pullSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
         dir(microService.workDir) {
             sh """
-                if [[ ! -n `oc get bc ${buildConfigName} -n ${projectInfo.cicdMasterNamespace} --ignore-not-found` ]]
+                HAS_BC=$(oc get bc --no-headers --ignore-not-found ${buildConfigName} -n ${projectInfo.cicdMasterNamespace} | tr -d '[:space:]')
+                if [[ -z \${HAS_BC} ]]
                 then
                     oc new-build --name ${buildConfigName} \
                                  --labels projectid=${projectInfo.id} \
@@ -91,7 +92,7 @@ void call(Map args) {
                                  --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}:${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                                  -n ${projectInfo.cicdMasterNamespace}
 
-                    oc set build-secret --pull bc/${buildConfigName} ${pullSecret} -n ${projectInfo.cicdMasterNamespace}
+                    oc set build-secret --pull bc/${buildConfigName} ${pullSecretName} -n ${projectInfo.cicdMasterNamespace}
                 fi
 
                 chmod 777 Dockerfile
