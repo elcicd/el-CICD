@@ -249,7 +249,14 @@ def rolloutLatest(def projectInfo, def microServices) {
                 do
                     ${shellEcho ''}
                     oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER} -n ${projectInfo.deployToNamespace} 
-                    oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                    if [[ \${RESOURCE} == 'dc' ]]
+                    then
+                        set +x
+                        oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                        sleep 3  # Just in case first one doesn't take (sometimes happens if there was no image change)
+                        oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                        set -x
+                    fi
                 done
             done
         done
