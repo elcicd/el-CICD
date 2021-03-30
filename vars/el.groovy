@@ -44,6 +44,8 @@ def initMetaData(Map metaData) {
 
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
+    cicd.ALL_OKD_RESOURCES = '${el.cicd.ALL_OKD_RESOURCES}'
+
     cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
 
     cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'

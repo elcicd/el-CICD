@@ -335,8 +335,7 @@ def cleanupOrphanedResources(def projectInfo, def microServices) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${microService.name} THAT ARE NOT PART OF DEPLOYMENT COMMIT ${microService.deploymentCommitHash}")}
 
-            oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs \
-                -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
+            oc delete ${el.cicd.ALL_OKD_RESOURCES}  -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
                 -n ${projectInfo.deployToNamespace}
         """
     }
@@ -348,7 +347,7 @@ def removeAllMicroservices(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
 
-        oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
+        oc delete ${el.cicd.ALL_OKD_RESOURCES} -l microservice -n ${projectInfo.deployToNamespace}
     """
 
     waitingForPodsToTerminate(projectInfo.deployToNamespace)
@@ -364,7 +363,7 @@ def removeMicroservices(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
+            oc delete ${el.cicd.ALL_OKD_RESOURCES} -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
         done
     """
 

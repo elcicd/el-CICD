@@ -76,7 +76,7 @@ def cleanupPreviousRelease(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
 
-        oc delete all,configmaps,sealedsecrets,routes,cronjobs -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
+        oc delete dc,deploy,svc,rc,rs,hpa,configmaps,sealedsecrets,routes,ingress,cronjobs -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
     """
 
     deploymentUtils.waitingForPodsToTerminate(projectInfo.prodNamespace)
