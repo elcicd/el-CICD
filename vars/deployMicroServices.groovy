@@ -6,7 +6,6 @@
  */
 
 def call(Map args) {
-    def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
 
     stage('Build templates and retrieve template definitions') {
         if (args.microServices) {
@@ -40,11 +39,12 @@ def call(Map args) {
 
     stage('Apply and deploy all openshift resources') {
         if (args.microServices) {
-            deployToEnv.cleanupOldDeployments(args.projectInfo, args.microServices)
+            deploymentUtils.cleanupOldDeployments(args.projectInfo, args.microServices)
 
             deploymentUtils.applyResources(args.projectInfo, args.microServices)
         }
         else {
+            def env = (args.projectInfo.deployToNamespace - args.projectInfo.id).toUpperCase()
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
         }
     }
