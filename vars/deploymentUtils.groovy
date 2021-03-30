@@ -241,23 +241,16 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            for RESOURCE in dc deploy
-            do
-                DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
 
-                for DC in \${DCS}
-                do
-                    ${shellEcho ''}
-                    oc set env \${RESOURCE}/\${DC} BUILD_NUMBER=${BUILD_NUMBER} -n ${projectInfo.deployToNamespace} 
-                    if [[ \${RESOURCE} == 'dc' ]]
-                    then
-                        set +x
-                        oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
-                        sleep 3  # Just in case first one doesn't take (sometimes happens if there was no image change)
-                        oc rollout latest \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
-                        set -x
-                    fi
-                done
+            for DC in \${DCS}
+            do
+                ${shellEcho ''}
+                set +x
+                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                sleep 3  # Just in case first one doesn't take (sometimes happens if there was no image change)
+                oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                set -x
             done
         done
     """
