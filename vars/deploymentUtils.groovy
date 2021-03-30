@@ -159,6 +159,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'BUILD_NUMBER=${BUILD_NUMBER}' \
                             -f ${templateDef.patchedFile} \
                             -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
+                        cat ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
                     """
                 }
             }
