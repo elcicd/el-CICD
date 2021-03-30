@@ -88,7 +88,7 @@ void call(Map args) {
                                  --strategy=docker \
                                  --to-docker \
                                  --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
-                                 --push-secret=${pullSecret} \
+                                 --push-secret=${pullSecretName} \
                                  --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}:${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                                  -n ${projectInfo.cicdMasterNamespace}
 
