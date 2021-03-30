@@ -335,7 +335,7 @@ def cleanupOrphanedResources(def projectInfo, def microServices) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${microService.name} THAT ARE NOT PART OF DEPLOYMENT COMMIT ${microService.deploymentCommitHash}")}
 
-            oc delete ${el.cicd.ALL_OKD_RESOURCES}  -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
+            oc delete ${el.cicd.ALL_OKD_RESOURCES} -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
                 -n ${projectInfo.deployToNamespace}
         """
     }
