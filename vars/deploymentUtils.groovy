@@ -243,14 +243,14 @@ def rolloutLatest(def projectInfo, def microServices) {
         do
             for RESOURCE in dc deploy
             do
-                DCS="\$(oc get $(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+                DCS="\$(oc get \$(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
                 # just in case first one doesn't take (sometimes happens if there was no image change)
                 for I in {1..2}
                 do
                     for DC in \${DCS}
                     do
                         ${shellEcho ''}
-                        oc rollout latest $(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                        oc rollout latest \$(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
                     done
                     set +x
                     sleep 3
@@ -272,11 +272,11 @@ def confirmDeployments(def projectInfo, def microServices) {
         do
             for RESOURCE in dc deploy
             do
-                DCS="\$(oc get $(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+                DCS="\$(oc get \$(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
                 for DC in \${DCS}
                 do
                     ${shellEcho ''}
-                    oc rollout status $(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace}
+                    oc rollout status \$(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace}
                 done
             done
         done
