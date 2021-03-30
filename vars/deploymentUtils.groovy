@@ -189,7 +189,7 @@ def applyResources(def projectInfo, def microServices) {
                         oc delete cronjob -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     fi
 
-                    oc delete --cascade=false --wait dc -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
+                    oc delete --cascade=false --wait dc,deploy -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
                     ${shellEcho '******'}
 
@@ -241,19 +241,22 @@ def rolloutLatest(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-            # just in case first one doesn't take (sometimes happens if there was no image change)
-            for I in {1..2}
+            for RESOURCE in dc deploy
             do
-                for DC in \${DCS}
+                DCS="\$(oc get $(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+                # just in case first one doesn't take (sometimes happens if there was no image change)
+                for I in {1..2}
                 do
-                    ${shellEcho ''}
-                    oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                    for DC in \${DCS}
+                    do
+                        ${shellEcho ''}
+                        oc rollout latest $(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
+                    done
+                    set +x
+                    sleep 3
                 done
-                set +x
-                sleep 3
+                set -x
             done
-            set -x
         done
     """
 }
@@ -267,11 +270,14 @@ def confirmDeployments(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-            for DC in \${DCS}
+            for RESOURCE in dc deploy
             do
-                ${shellEcho ''}
-                oc rollout status dc/\${DC} -n ${projectInfo.deployToNamespace}
+                DCS="\$(oc get $(RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+                for DC in \${DCS}
+                do
+                    ${shellEcho ''}
+                    oc rollout status $(RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace}
+                done
             done
         done
     """
@@ -332,7 +338,7 @@ def cleanupOrphanedResources(def projectInfo, def microServices) {
         sh """
             ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${microService.name} THAT ARE NOT PART OF DEPLOYMENT COMMIT ${microService.deploymentCommitHash}")}
 
-            oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs \
+            oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs \
                 -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
                 -n ${projectInfo.deployToNamespace}
         """
@@ -345,7 +351,7 @@ def removeAllMicroservices(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
 
-        oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
+        oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice -n ${projectInfo.deployToNamespace}
     """
 
     waitingForPodsToTerminate(projectInfo.deployToNamespace)
@@ -361,7 +367,7 @@ def removeMicroservices(def projectInfo, def microServices) {
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            oc delete dc,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
+            oc delete dc,deploy,svc,rc,hpa,configmaps,sealedsecrets,routes,cronjobs -l microservice=\${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
         done
     """
 
