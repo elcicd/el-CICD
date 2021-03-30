@@ -233,9 +233,9 @@ def applyResources(def projectInfo, def microServices) {
                     ${shellEcho  'No OpenShift deployment resource(s) found'}
                 fi
             """
-
-            rolloutLatest(projectInfo, microService) 
         }
+
+        rolloutLatest(projectInfo, microService) 
     }
 }
 
@@ -243,22 +243,20 @@ def rolloutLatest(def projectInfo, def microService) {
     assert projectInfo; assert microService
 
     sh """
+        for RESOURCE in dc deploy
+        do
+            DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=${microService.name} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
+            if [[ ! -z \${DCS} ]]
+            then
+                ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST DEPLOYMENTS FOR ${microService.name}")}
+            else
+                ${pipelineUtils.shellEchoBanner("NO DEPLOYMENTS FOUND FOR ${microService.name}")}
+            fi
 
-            for RESOURCE in dc deploy
+            for DC in \${DCS}
             do
-                DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
-                if [[ ! -z \${DCS} ]]
-                then
-                    ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST DEPLOYMENTS FOR ${microService.name}")}
-                else
-                    ${pipelineUtils.shellEchoBanner("NO DEPLOYMENTS FOUND FOR ${microService.name}")}
-                fi
-
-                for DC in \${DCS}
-                do
-                    ${shellEcho ''}
-                    oc rollout restart \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
-                done
+                ${shellEcho ''}
+                oc rollout restart \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
             done
         done
     """
