@@ -41,6 +41,7 @@ def initMetaData(Map metaData) {
     cicd.TESTER = 'tester'
     cicd.SCANNER = 'scanner'
     cicd.ASSEMBLER = 'assembler'
+    cicd.DEPLOYER = 'deployer'
 
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 

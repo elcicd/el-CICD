@@ -27,7 +27,7 @@ void call(Map args) {
     stage('Checkout code from repository') {
         pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
 
-        pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
+        pipelineUtils.cloneGitRepo(component, microService.gitBranch)
 
         dir (microService.workDir) {
             sh """

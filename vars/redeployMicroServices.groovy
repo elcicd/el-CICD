@@ -13,7 +13,7 @@ def call(Map args) {
         pipelineUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
         projectInfo.microServices.each { microService ->
-            pipelineUtils.cloneGitRepo(microService, projectInfo.gitBranch)
+            pipelineUtils.cloneGitRepo(component, projectInfo.gitBranch)
         }
     }
 

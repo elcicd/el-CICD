@@ -1,7 +1,7 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-to-dev pipeline.  Called inline from the
+ * Defines the bulk of the build-and-deploy-microservices pipeline.  Called inline from the
  * a realized el-CICD/resources/buildconfigs/build-and-deploy-microservices-pipeline-template.
  *
  */
@@ -36,7 +36,7 @@ def call(Map args) {
         projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
     }
 
-    stage('Clean ${} if requested') {
+    stage('Clean environment if requested') {
         if (projectInfo.recreateAll) {
             deploymentUtils.removeAllMicroservices(projectInfo)
         }

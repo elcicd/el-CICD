@@ -6,18 +6,18 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-def cloneGitRepo(microService, gitReference) {
-   assert microService ; assert gitReference
+def cloneGitRepo(def component, def gitReference) {
+   assert component ; assert gitReference
 
-    dir (microService.workDir) {
+    dir (component.workDir) {
         checkout([$class: 'GitSCM',
                   branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: microService.gitSshPrivateKeyName, url: microService.gitRepoUrl ]]
+                  userRemoteConfigs: [[ credentialsId: component.gitSshPrivateKeyName, url: component.gitRepoUrl ]]
                ])
 
         def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-        microService.srcCommitHash = microService.srcCommitHash ?: currentHash
-        microService.deploymentCommitHash = currentHash
+        component.srcCommitHash = component.srcCommitHash ?: currentHash
+        component.deploymentCommitHash = currentHash
     }
 }
 
@@ -56,15 +56,19 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
 
-        projectInfo.microServices.each { microService ->
-            microService.projectId = projectInfo.id
-            microService.name = microService.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
-            microService.id = "${projectInfo.id}-${microService.name}"
+        projectInfo.components = []
+        projectInfo.components.addAll(projectInfo.microServices)
+        projectInfo.components.addAll(projectInfo.libraries)
 
-            microService.workDir = "${WORKSPACE}/${microService.gitRepoName}"
+        projectInfo.components.each { component ->
+            component.projectId = projectInfo.id
+            component.name = component.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+            component.id = "${projectInfo.id}-${component.name}"
 
-            microService.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${microService.gitRepoName}.git"
-            microService.gitSshPrivateKeyName = "${microService.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+            component.workDir = "${WORKSPACE}/${component.gitRepoName}"
+
+            component.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.gitRepoName}.git"
+            component.gitSshPrivateKeyName = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
         }
 
         projectInfo.devEnv = el.cicd.devEnv
@@ -131,11 +135,11 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
     assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
-    assert projectInfo.microServices.size() > 0 : "No microservices defined"
+    assert projectInfo.components.size() > 0 : "No microservices or libraries defined"
 
-    projectInfo.microServices.each { microService ->
-        assert microService.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${microService.gitRepoName}"
-        assert microService.codeBase ==~ /[a-z-]+/ : "bad git repo name for codeBase, [a-z]+: ${microService.codeBase}"
+    projectInfo.components.each { component ->
+        assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
+        assert component.codeBase ==~ /[a-z-]+/ : "bad git repo name for codeBase, [a-z]+: ${component.codeBase}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->

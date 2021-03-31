@@ -109,19 +109,19 @@ def deleteDeployKeysFromGithub(def projectInfo) {
     pipelineUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM GIT REPOS")
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        projectInfo.microServices.each { microService ->
-            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN')
+        projectInfo.components.each { component ->
+            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             def curlCommandToDeleteDeployKeyByIdFromScm =
-                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN')
+                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             try {
                 sh """
                     KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
                     if [[ ! -z \${KEY_ID} ]]
                     then
-                        ${shellEcho  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${microService.gitRepoName}"}
+                        ${shellEcho  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
                         ${curlCommandToDeleteDeployKeyByIdFromScm}/\${KEY_ID}
                     else
-                        ${shellEcho  '', "OLD DEPLOY KEY NOT FOUND: ${microService.gitRepoName}"}
+                        ${shellEcho  '', "OLD DEPLOY KEY NOT FOUND: ${component.gitRepoName}"}
                     fi
                 """
             }
@@ -136,8 +136,8 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
-    projectInfo.microServices.each { microService ->
-        def doDelete = "${getCurlCommand()} ${jenkinsUrl}/${microService.gitSshPrivateKeyName}/doDelete "
+    projectInfo.components.each { component ->
+        def doDelete = "${getCurlCommand()} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete "
         sh """
             ${shellEcho ''}
             ${maskCommand(doDelete)}
@@ -155,25 +155,25 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
         def jenkinsCurlCommand =
             """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-        projectInfo.microServices.each { microService ->
-            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, microService, 'GITHUB_ACCESS_TOKEN', false)
+        projectInfo.components.each { component ->
+            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
-            def jenkinsUrls = getJenkinsCredsUrls(projectInfo, microService.gitSshPrivateKeyName)
+            def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
             sh """
-                ${shellEcho  '', "ADDING PUBLIC KEY TO GIT REPO: ${microService.gitRepoName}"}
-                ssh-keygen -b 2048 -t rsa -f '${microService.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+                ${shellEcho  '', "ADDING PUBLIC KEY TO GIT REPO: ${component.gitRepoName}"}
+                ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
 
                 ${pushDeployKeyIdCurlCommand}
 
-                ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${microService.name}"}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${microService.gitSshPrivateKeyName}/g" > ${credsFileName}
-                cat ${microService.gitSshPrivateKeyName} >> ${credsFileName}
+                ${shellEcho  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
+                cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
 
                 ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
                 ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
 
-                rm -f ${credsFileName} ${microService.gitSshPrivateKeyName} ${microService.gitSshPrivateKeyName}.pub
+                rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
             """
         }
     }

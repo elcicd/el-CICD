@@ -122,7 +122,7 @@ def call(Map args) {
             projectInfo.microServices.each { microService ->
                 if (microService.promote) {
                     dir(microService.workDir) {
-                        pipelineUtils.cloneGitRepo(microService, microService.srcCommitHash)
+                        pipelineUtils.cloneGitRepo(component, microService.srcCommitHash)
 
                         microService.previousDeploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployFromEnv)
                         microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployToEnv)

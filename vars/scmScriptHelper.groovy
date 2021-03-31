@@ -22,12 +22,12 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 @Field
 def APPLICATION_JSON_HDR = '-H application:json'
 
-def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
+def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def component, def ACCESS_TOKEN) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
 
         curlCommand = "${CURL_GET} ${url} | ${jqIdFilter}"
@@ -42,11 +42,11 @@ def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def microService, def A
     return curlCommand
 }
 
-def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService, def ACCESS_TOKEN) {
+def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def component, def ACCESS_TOKEN) {
     def curlCommand
 
     if (projectInfo.scmHost.contains('github')) {
-        curlCommand = "curl -ksS -X DELETE https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        curlCommand = "curl -ksS -X DELETE https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
     }
     else if (projectInfo.scmHost.contains('gitlab')) {
         pipelineUtils.errorBanner("GitLab is not supported yet")
@@ -58,17 +58,17 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def microService
     return curlCommand
 }
 
-def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_TOKEN, def readOnly) {
+def getScriptToPushDeployKeyToScm(def projectInfo, def component, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     readOnly = readOnly ? 'true' : 'false'
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/keys"
+        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
         curlCommand = """
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
-            cat ${microService.gitSshPrivateKeyName}.pub >> ${secretFile}
+            cat ${component.gitSshPrivateKeyName}.pub >> ${secretFile}
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
             sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
 
@@ -85,19 +85,19 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def microService, def ACCESS_
     return curlCommand
 }
 
-def getScriptToPushWebhookToScm(def projectInfo, def microService, def ACCESS_TOKEN) {
+def getScriptToPushWebhookToScm(def projectInfo, def component, def ACCESS_TOKEN) {
     def curlCommand
 
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${microService.gitRepoName}/hooks"
+        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks"
 
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
-            BC_SELF_LINK=\$(oc get bc -l microservice=${microService.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
+            BC_SELF_LINK=\$(oc get bc -l microservice=${component.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
               sed -e "s|%HOSTNAME%|${el.cicd.CLUSTER_API_HOSTNAME}|"   \
                   -e "s|%BC_SELF_LINK%|\${BC_SELF_LINK}|"   \
-                  -e "s|%MICROSERVICE_ID%|${microService.id}|" > ${webhookFile}
+                  -e "s|%COMPONENT_ID%|${component.id}|" > ${webhookFile}
 
             curl -ksS -X POST ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
         """

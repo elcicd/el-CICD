@@ -72,7 +72,7 @@ def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
 
 def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     def pvNames = [:]
-    if (projectInfo.nfsShares) {
+    if (projectInfo.microServices && projectInfo.nfsShares) {
         pipelineUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
 
         dir(el.cicd.OKD_TEMPLATES_DIR) {

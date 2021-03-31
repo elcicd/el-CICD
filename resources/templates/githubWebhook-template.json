@@ -5,7 +5,7 @@
     "push"
   ],
   "config": {
-    "url": "https://%HOSTNAME%%BC_SELF_LINK%/webhooks/%MICROSERVICE_ID%/github",
+    "url": "https://%HOSTNAME%%BC_SELF_LINK%/webhooks/%COMPONENT_ID%/github",
     "content_type": "json",
     "insecure_ssl": "1"
   }
