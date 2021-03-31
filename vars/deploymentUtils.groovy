@@ -160,11 +160,11 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
                         
                         echo
-                        echo '********** TEMPLATE PROCESS RESULT ************
+                        echo '********** TEMPLATE PROCESS RESULT ************'
                         echo
                         cat ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
                         echo
-                        echo '******** TEMPLATE PROCESS END RESULT **********
+                        echo '******** TEMPLATE PROCESS END RESULT **********'
                         echo
                     """
                 }
