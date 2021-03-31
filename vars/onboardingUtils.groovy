@@ -20,7 +20,7 @@ def cleanStalePipelines(def projectInfo) {
         ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
         ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
-        set +x
+        set -x
         COUNTER=1
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
         until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
