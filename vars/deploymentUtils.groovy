@@ -158,7 +158,8 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -p 'BUILD_NUMBER=${BUILD_NUMBER}' \
                             -f ${templateDef.patchedFile} \
                             -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
-                        
+
+                        set +x
                         echo
                         echo '********** TEMPLATE PROCESS RESULT ************'
                         echo
@@ -166,6 +167,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                         echo
                         echo '******** TEMPLATE PROCESS END RESULT **********'
                         echo
+                        set -x
                     """
                 }
             }
