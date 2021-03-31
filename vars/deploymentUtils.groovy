@@ -130,6 +130,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                                 (projectInfo.deployToNamespace - projectInfo.id) : ''
 
                             paramMap.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+                            paramMap.INGRESS_PATH = paramMap.INGRESS_PATH ?: '/'
                         }
                     }
 
