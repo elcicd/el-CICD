@@ -21,16 +21,10 @@ def cleanStalePipelines(def projectInfo) {
 
         ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
-        set +x
-        COUNTER=1
-        until [[ -z \${BCS} || -z \$(oc delete bc --ignore-not-found \${BCS} -n ${projectInfo.cicdMasterNamespace}) ]]
+        for BC in \${BCS}
         do
-            printf "%0.s-" \$(seq 1 \${COUNTER})
-            echo
-            sleep 2
-            let COUNTER+=1
+            oc delete bc --wait \${BC} -n ${projectInfo.cicdMasterNamespace}
         done
-        set -x
     """
 }
 
