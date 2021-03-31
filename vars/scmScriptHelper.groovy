@@ -93,7 +93,7 @@ def getScriptToPushWebhookToScm(def projectInfo, def component, def ACCESS_TOKEN
 
         def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
         curlCommand = """
-            BC_SELF_LINK=\$(oc get bc -l microservice=${component.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
+            BC_SELF_LINK=\$(oc get bc -l component=${component.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
               sed -e "s|%HOSTNAME%|${el.cicd.CLUSTER_API_HOSTNAME}|"   \
                   -e "s|%BC_SELF_LINK%|\${BC_SELF_LINK}|"   \
