@@ -57,8 +57,8 @@ objects:
       jenkinsPipelineStrategy:
         env:
           - name: IS_SNAPSHOT
-            description: branch to build
-            value: ${IS_SNAPSHOT}
+            description: If true, the build is a snapshot build for the library
+            value: true
           - name: GIT_BRANCH
             description: branch to build
             value: ${GIT_BRANCH}
@@ -66,7 +66,7 @@ objects:
           properties([
               parameters(
                   [
-                      string(name: 'IS_SNAPSHOT',  defaultValue: "${DEPLOY_TO_NAMESPACE}", description: 'The namespace to deploy to', trim: true),
+                      booleanParam(name: 'IS_SNAPSHOT', defaultValue: true, description: "If true, the build is a snapshot build for the library")
                       string(name: 'GIT_BRANCH',  defaultValue: "${GIT_BRANCH}", description: 'Git repo branch name', trim: true)
                   ]
               )
