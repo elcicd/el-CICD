@@ -17,7 +17,7 @@ def call(Map args) {
         onboardingUtils.cleanStalePipelines(projectInfo)
 
         if (projectInfo.microServices) {
-            if (args.rebuildNonProd || args.rebuildSandboxes)) {
+            if (args.rebuildNonProd || args.rebuildSandboxes) {
                 def namespacesToDelete = args.rebuildNonProd ? el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" } : []
                 pipelineUtils.echoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
 

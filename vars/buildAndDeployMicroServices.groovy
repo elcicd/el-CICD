@@ -13,7 +13,7 @@ def call(Map args) {
     stage("Select sandbox, microservice, and branch") {
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
 
-        namespaces = []        
+        namespaces = []
         (1..projectInfo.sandboxEnvs).each { i ->
             namespaces += "${sandboxNamespacePrefix}-${i}"
         }
