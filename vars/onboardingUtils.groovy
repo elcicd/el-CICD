@@ -19,12 +19,22 @@ def cleanStalePipelines(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-        ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
+
+        set +x
         for BC in \${BCS}
         do
-            oc delete bc --wait \${BC} -n ${projectInfo.cicdMasterNamespace}
-        done
+            echo 'Removing \${BC}...'
+            COUNTER=1
+            until [[ -z \$(oc delete bc --ignore-not-found \${BC} -n ${projectInfo.cicdMasterNamespace}) ]]
+            do
+                printf "%0.s-" \$(seq 1 \${COUNTER})
+                echo
+                sleep 3
+                let COUNTER+=1
+            done
+        done 
+        set -x
     """
 }
 
