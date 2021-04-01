@@ -68,7 +68,7 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             def refName = microService.releaseVersionGitBranch ?: microService.releaseCandidateGitTag
             if (refName) {
-                pipelineUtils.cloneGitRepo(microservice, refName)
+                pipelineUtils.cloneGitRepo(microService, refName)
             }
         }
     }
