@@ -19,9 +19,8 @@ def cleanStalePipelines(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-        BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
-
         set +x
+        BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
         for BC in \${BCS}
         do
             echo "Removing \${BC}..."
@@ -35,6 +34,7 @@ def cleanStalePipelines(def projectInfo) {
             done
         done 
         set -x
+        sleep 10
     """
 }
 
