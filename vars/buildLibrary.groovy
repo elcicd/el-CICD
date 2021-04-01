@@ -9,7 +9,7 @@
 void call(Map args) {
 
     def projectInfo = args.projectInfo
-    def library = projectInfo.librarys.find { it.name == args.libraryName }
+    def library = projectInfo.libraries.find { it.name == args.libraryName }
 
     library.gitBranch = args.gitBranch
     library.isSnapshot = args.isSnapshot
