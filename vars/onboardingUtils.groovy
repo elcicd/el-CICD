@@ -29,12 +29,11 @@ def cleanStalePipelines(def projectInfo) {
             do
                 printf "%0.s-" \$(seq 1 \${COUNTER})
                 echo
-                sleep 3
+                sleep 2
                 let COUNTER+=1
             done
         done 
         set -x
-        sleep 10
     """
 }
 
