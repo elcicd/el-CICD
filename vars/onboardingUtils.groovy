@@ -17,7 +17,7 @@ def init() {
 
 def cleanStalePipelines(def projectInfo) {
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVING STALE PIPELINES FOR ${projectInfo.id}, IF ANY")}
+        ${pipelineUtils.shellEchoBanner("REMOVING STALE BUILD PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
         set +x
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
