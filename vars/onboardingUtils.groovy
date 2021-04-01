@@ -24,7 +24,7 @@ def cleanStalePipelines(def projectInfo) {
         set +x
         for BC in \${BCS}
         do
-            echo 'Removing \${BC}...'
+            echo "Removing \${BC}..."
             COUNTER=1
             until [[ -z \$(oc delete bc --ignore-not-found \${BC} -n ${projectInfo.cicdMasterNamespace}) ]]
             do
