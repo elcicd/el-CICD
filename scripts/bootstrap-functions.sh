@@ -23,11 +23,13 @@ _bootstrap_el_cicd() {
     then
         echo
         oc import-image jenkins -n openshift
+        sleep 2
     fi
 
     if [[ -z ${UPDATE_EL_CICD_JENKINS} || ${UPDATE_EL_CICD_JENKINS} == ${_YES} ]]
     then
         _build_el_cicd_jenkins_image
+        sleep 2
     fi
 
     __bootstrap_el_cicd_onboarding_server ${EL_CICD_ONBOARDING_SERVER_TYPE}
