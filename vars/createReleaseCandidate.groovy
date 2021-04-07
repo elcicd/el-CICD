@@ -28,8 +28,8 @@ def call(Map args) {
             imageExists = projectInfo.microServices.find { microService ->
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
-                return !sh(returnStdout: true, script: """
-                    skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} > /dev/null || :
+                return sh(returnStdout: true, script: """
+                    skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2> /dev/null || :
                 """)
             }
         }
