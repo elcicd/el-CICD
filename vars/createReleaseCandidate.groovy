@@ -29,7 +29,7 @@ def call(Map args) {
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
                 return sh(returnStdout: true, script: """
-                    skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2&>1 || :
+                    skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2>&1 || :
                 """)
             }
         }
@@ -120,17 +120,17 @@ def call(Map args) {
         def promotionNames = projectInfo.microServices.findAll{ it.promote }.collect { it.name }.join(' ')
         def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
         def msg = """
-            Creating this manifest will result in the following actions:
+            Creating this Release Candidate will result in the following actions:
 
             -> Release Candidate Tag: ${projectInfo.releaseCandidateTag}
 
-            -> To be tagged with Release Version for promotion to PROD:
+            -> To be tagged as a Release Candidate for promotion to PROD:
             ${promotionNames}
 
             -> THE FOLLOWING MICROSERVICES WILL BE MARKED FOR REMOVAL FROM PROD:
             ${removalNames}
 
-            Should the release manifest ${projectInfo.releaseCandidateTag} be created?
+            Should the Release Candidate ${projectInfo.releaseCandidateTag} be created?
         """
         input(msg)
     }
