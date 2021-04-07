@@ -86,8 +86,8 @@ def call(Map args) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
                     return !sh(returnStdout: true, script: """
-                        skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} > /dev/null || :
-                    """).trim()
+                        skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} 2> /dev/null || :
+                    """)
                 }
             }
         }
