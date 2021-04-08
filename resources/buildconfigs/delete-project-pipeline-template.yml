@@ -13,7 +13,7 @@ parameters:
   description: Pipeline Template Name
   displayName: PIPELINE_TEMPLATE_NAME
   required: true
-  value: delete-project-template
+  value: delete-project
 - name: IS_NON_PROD
   description: Is this for a Non-prod Onboarding Automation Server
   displayName: IS_NON_PROD
