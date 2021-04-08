@@ -113,12 +113,12 @@ def call(Map args) {
             deployAllMsg,
             projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '),
             '',
-            "-> All other microservices and their associated resources NOT in this release WILL BE REMOVED!",
+            '-> All other microservices and their associated resources NOT in this release WILL BE REMOVED!',
             projectInfo.microServices.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
             '',
             '===========================================',
             'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
-            ''.
+            '',
             'ARE YOU SURE YOU WISH TO PROCEED?'
         )
 
