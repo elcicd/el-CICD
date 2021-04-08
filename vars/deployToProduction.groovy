@@ -105,6 +105,7 @@ def call(Map args) {
 
         def msg = pipelineUtils.createBanner(
             "${promotionOrDeploymentMsg} TO PRODUCTION",
+            '',
             "===========================================",
             '',
             '-> Microservices included in this release:',
@@ -117,6 +118,7 @@ def call(Map args) {
             projectInfo.microServices.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
             '',
             '===========================================',
+            '',
             'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
             '',
             'ARE YOU SURE YOU WISH TO PROCEED?'
