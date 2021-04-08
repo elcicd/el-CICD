@@ -119,7 +119,7 @@ def call(Map args) {
         def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
 
         def msg = pipelineUtils.createBanner(
-            "CONFIRM CREATION OF PRODUCTION MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
+            "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
             '',
             '===========================================',
             '',
@@ -133,7 +133,7 @@ def call(Map args) {
             '',
             '===========================================',
             '',
-            'PLEASE REREAD THE ABOVE RELEASE CANDIDATE MANFIFEST CAREFULLY AND PROCEED WITH CAUTION',
+            'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
             '',
             "Should the Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )
