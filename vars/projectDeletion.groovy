@@ -25,6 +25,7 @@ def call(Map args) {
 
             oc delete project --ignore-not-found ${namespacesToDelete}
 
+            set +x
             COUNTER=1
             until
                 -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete})
@@ -34,6 +35,7 @@ def call(Map args) {
                 sleep 3
                 let COUNTER+=1
             done
+            set -x
         """
     }
 
