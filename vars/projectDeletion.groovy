@@ -27,7 +27,7 @@ def call(Map args) {
 
             COUNTER=1
             until
-                -z $(oc get projects --ignore-not-found \${NAMESPACE})
+                -z \$(oc get projects --ignore-not-found \${NAMESPACE})
             do
                 printf "%0.s-" \$(seq 1 \${COUNTER})
                 echo
