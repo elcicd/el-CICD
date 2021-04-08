@@ -115,13 +115,12 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        pipelineUtils.echoBanner("")
-
         def promotionNames = projectInfo.microServices.findAll{ it.promote }.collect { it.name }.join(' ')
         def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
 
         def msg = pipelineUtils.createBanner(
             "CONFIRM CREATION OF PRODUCTION MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
+            '',
             '===========================================',
             '',
             'Creating this Release Candidate will result in the following actions:',
@@ -134,7 +133,7 @@ def call(Map args) {
             '',
             '===========================================',
             'PLEASE REREAD THE ABOVE RELEASE CANDIDATE MANFIFEST CAREFULLY AND PROCEED WITH CAUTION',
-            ''.
+            '',
             "Should the Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )
 
