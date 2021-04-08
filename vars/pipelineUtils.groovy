@@ -113,7 +113,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.devNamespace = projectInfo.devEnv ? projectInfo.nonProdNamespaces[projectInfo.devEnv] : null
         projectInfo.preProdNamespace = projectInfo.nonProdNamespaces[projectInfo.preProdEnv]
-        projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}" : null
+        projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}"
 
 
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
