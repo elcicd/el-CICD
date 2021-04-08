@@ -133,7 +133,7 @@ def call(Map args) {
             removalNames,
             '',
             '===========================================',
-            'PLEASE REREAD THE ABOVE RELEASE CANDDIDATE MANFIFEST CAREFULLY AND PROCEED WITH CAUTION',
+            'PLEASE REREAD THE ABOVE RELEASE CANDIDATE MANFIFEST CAREFULLY AND PROCEED WITH CAUTION',
             ''.
             "Should the Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )

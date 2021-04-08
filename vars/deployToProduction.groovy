@@ -107,7 +107,7 @@ def call(Map args) {
             "${promotionOrDeploymentMsg} TO PRODUCTION",
             "===========================================",
             '',
-            '-> Microservices included in this release:'
+            '-> Microservices included in this release:',
             projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', '),
             '',
             deployAllMsg,
