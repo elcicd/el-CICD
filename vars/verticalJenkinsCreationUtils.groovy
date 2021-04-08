@@ -21,12 +21,12 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
 
+            waitUntilJenkinsIsReady(projectInfo)
+
             def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
             refreshSharedPipelines(projectInfo, pipelines)
 
             credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
-
-            waitUntilJenkinsIsReady(projectInfo)
 
             stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
                 credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)

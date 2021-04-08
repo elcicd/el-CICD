@@ -126,12 +126,10 @@ __bootstrap_el_cicd_onboarding_server() {
 
     if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
     then
-        PIPELINE_TEMPLATES='non-prod-project-onboarding non-prod-project-delete'
+        __create_onboarding_automation_server 'non-prod-project-onboarding'
     else
-        PIPELINE_TEMPLATES='prod-project-onboarding'
+        __create_onboarding_automation_server 'prod-project-onboarding'
     fi
-
-    __create_onboarding_automation_server "${PIPELINE_TEMPLATES}"
 }
 
 __summarize_and_confirm_bootstrap_run_with_user() {
@@ -224,8 +222,6 @@ __create_master_namespace_with_selectors() {
 }
 
 __create_onboarding_automation_server() {
-    local PIPELINE_TEMPLATES=${1}
-
     echo
     oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
                                   -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
@@ -237,26 +233,20 @@ __create_onboarding_automation_server() {
                                   -e CASC_JENKINS_CONFIG=${JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
                                   -n ${ONBOARDING_MASTER_NAMESPACE}
 
+
+    local IS_NON_PROD=$([ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ] && echo 'true' || echo 'false')
+
     echo
     echo "Creating the Onboarding Automation Server pipelines:"
-    for PIPELINE_TEMPLATE in ${PIPELINE_TEMPLATES[@]}
+    for PIPELINE_TEMPLATE in refresh-credentials delete-project ${EL_CICD_ONBOARDING_SERVER_TYPE}-project-onboarding
     do
-        oc process -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
+        oc process --ignore-unknown-parameters \
+                   -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
                    -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
+                   -p IS_NON_PROD=${IS_NON_PROD} \
                    -n ${ONBOARDING_MASTER_NAMESPACE} | \
             oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
     done
-
-    local IS_NON_PROD='false'
-    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
-    then
-        IS_NON_PROD='true'
-    fi
-    oc process -f ${BUILD_CONFIGS_DIR}/refresh-credentials-pipeline-template.yml \
-               -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
-               -p IS_NON_PROD=${IS_NON_PROD} \
-               -n ${ONBOARDING_MASTER_NAMESPACE} | \
-        oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
 
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="

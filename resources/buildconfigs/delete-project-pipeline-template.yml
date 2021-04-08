@@ -3,7 +3,7 @@
 kind: Template
 apiVersion: template.openshift.io/v1
 metadata:
-  name: non-prod-project-delete-template
+  name: delete-project-template
 parameters:
 - name: EL_CICD_META_INFO_NAME
   description: Name oc config map holding el-CICD meta-info
@@ -13,7 +13,11 @@ parameters:
   description: Pipeline Template Name
   displayName: PIPELINE_TEMPLATE_NAME
   required: true
-  value: non-prod-project-delete
+  value: delete-project-template
+- name: IS_NON_PROD
+  description: Is this for a Non-prod Onboarding Automation Server
+  displayName: IS_NON_PROD
+  required: true
 objects:
 - kind: "BuildConfig"
   apiVersion: "v1"
@@ -52,8 +56,9 @@ objects:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID,
-                      deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS?.toString() == 'true']
+                      deleteRbacGroupJenkins: params.DELETE_RBAC_GROUP_JENKINS?.toString() == 'true',
+                      isNonProd: ${IS_NON_PROD}]
           el.node(args)
           {
-              nonProdProjectDelete(args)
+              projectDeletion(args)
           }

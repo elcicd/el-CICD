@@ -50,6 +50,7 @@ def initMetaData(Map metaData) {
     cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
 
     cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
+    cicd.HOTFIX_NAMESPACE_BADGE = 'hotfix'
 
     cicd = cicd.asImmutable()
 }

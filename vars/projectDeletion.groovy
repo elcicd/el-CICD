@@ -8,27 +8,31 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage('Remove project namespace environments') {
-        def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
-        namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
+        def namespacesToDelete = args.isNonProd ? projectInfo.nonProdNamespaces.values().join(' ') : projectInfo.prodNamespace
+        if (args.isNonProd) {
+            namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
+            namespacesToDelete += projectInfo.allowsHotfixes ? ' ' + projectInfo.hotfixNamespace : ''
+        }
+
         namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.cicdMasterNamespace}" : ''
 
         def msg = args.deleteRbacGroupJenkins ?
-            "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} NON-PROD ENVIRONMENT(S)" :
-            "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENTS"
+            "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
+            "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENT(S):"
 
         sh """
-            ${pipelineUtils.shellEchoBanner("REMOVING PROJECT NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}")}
+            ${pipelineUtils.shellEchoBanner(msg, namespacesToDelete)}
 
-            oc delete project ${namespacesToDelete} || true
+            oc delete project --ignore-not-found ${namespacesToDelete}
 
-            NAMESPACES_TO_DELETE='${namespacesToDelete}'
-            for NAMESPACE in \${NAMESPACES_TO_DELETE}
+            COUNTER=1
+            until
+                -z $(oc get projects --ignore-not-found \${NAMESPACE})
             do
-                until
-                    !(oc project \${NAMESPACE} > /dev/null 2>&1)
-                do
-                    sleep 3
-                done
+                printf "%0.s-" \$(seq 1 \${COUNTER})
+                echo
+                sleep 3
+                let COUNTER+=1
             done
         """
     }

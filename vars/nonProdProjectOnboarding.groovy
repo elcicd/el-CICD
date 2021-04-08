@@ -21,8 +21,9 @@ def call(Map args) {
                 def namespacesToDelete = args.rebuildNonProd ? el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" } : []
                 pipelineUtils.echoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
 
+                def nsRegex = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}-[0-9]+|${projectInfo.id}-${el.cicd.HOTFIX_NAMESPACE_BADGE}"
                 sh """
-                    SBXS=\$(oc projects | egrep '${projectInfo.id}-sandbox-[0-9]+' | tr '\n' ' ')
+                    SBXS=\$(oc projects | egrep '${nsRegex}' | tr '\n' ' ')
                     until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete.join(' ')} \${SBXS}) ]]
                     do
                         ${shellEcho ''}
@@ -85,7 +86,7 @@ def call(Map args) {
         }
     }
 
-    stage('Setup openshift namespace environments') {
+    stage('Setup OKD namespace environments') {
         if (projectInfo.microServices) {
             pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.nonProdNamespaces.values().join(', '))
 
@@ -107,8 +108,11 @@ def call(Map args) {
         }
     }
 
-    stage('Setup openshift sandbox environments') {
-        if (projectInfo.microServices && projectInfo.sandboxEnvs > 0) {
+    stage('Setup OKD sandbox and/or hotfix environment(s)') {
+        if (projectInfo.microServices && (projectInfo.sandboxEnvs > 0 || projectInfo.hotfixNamespace)) {
+            def nsNames = "${projectInfo.sandboxNamespaces.join(', ')} ${projectInfo.hotfixNamespace}"
+            pipelineUtils.echoBanner("Setup OKD sandbox and/or hotfix environment(s):", projectInfo.sandboxNamespaces.join(', '))
+
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
 
