@@ -103,7 +103,7 @@ def call(Map args) {
             '-> YOU HAVE ELECTED TO REDEPLOY ALL MICROSERVICES:' :
             '-> Microservices to be deployed:'
 
-        def mag = pipelineUtils.createBanner(
+        def msg = pipelineUtils.createBanner(
             "${promotionOrDeploymentMsg} TO PRODUCTION",
             "===========================================",
             '',
