@@ -103,33 +103,24 @@ def call(Map args) {
             '-> YOU HAVE ELECTED TO REDEPLOY ALL MICROSERVICES:' :
             '-> Microservices to be deployed:'
 
-        input("""
-
-            ===========================================
-            ${promotionOrDeploymentMsg} TO PRODUCTION
-            ===========================================
-
-            *******
-            -> Microservices included in this release:
-            ${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', ')}
-            *******
-
-            *******
-            ${deployAllMsg}
-            ${projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', ')}
-            *******
-
-            *******
-            -> All other microservices and their associated resources NOT in this release WILL BE REMOVED!
-            ${projectInfo.microServices.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', ')}
-            *******
-
-            ===========================================
-            PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION
-
-            ARE YOU SURE YOU WISH TO PROCEED?
-            ===========================================
-        """)
+        def mag = pipelineUtils.createBanner(
+            "${promotionOrDeploymentMsg} TO PRODUCTION",
+            "===========================================",
+            '',
+            '-> Microservices included in this release:'
+            "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', ')}",
+            '',
+            "${deployAllMsg}",
+            "${projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', ')}",
+            '',
+            "-> All other microservices and their associated resources NOT in this release WILL BE REMOVED!",
+            "${projectInfo.microServices.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', ')}",
+            '',
+            '===========================================',
+            'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
+            ''.
+            'ARE YOU SURE YOU WISH TO PROCEED?'
+        )
     }
 
     stage('Promote images') {
