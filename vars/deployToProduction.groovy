@@ -121,6 +121,8 @@ def call(Map args) {
             ''.
             'ARE YOU SURE YOU WISH TO PROCEED?'
         )
+
+        input(msg)
     }
 
     stage('Promote images') {
