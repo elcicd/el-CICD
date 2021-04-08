@@ -46,25 +46,14 @@ def call(Map args) {
         }
     }
 
-    if (!args.deleteRbacGroupJenkins) {
+    if (args.isNonProd) {
         stage('Remove project build-to-dev pipelines from Jenkins') {
-            def namespacesToDelete = projectInfo.nonProdNamespaces.values().join(' ')
-            namespacesToDelete += projectInfo.sandboxNamespaces ? ' ' + projectInfo.sandboxNamespaces.join(' ') : ''
-            namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.cicdMasterNamespace}" : ''
-
-            sh """
-                ${pipelineUtils.shellEchoBanner("REMOVING PROJECT BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}")}
-
-                for BCS in \$(oc get bc -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} -o jsonpath='{.items[*].metadata.name}')
-                do
-                    while [ \$(oc get bc \${BCS} -n ${projectInfo.cicdMasterNamespace} | grep \${BCS} | wc -l) -gt 0 ] ;
-                    do
-                        oc delete bc \${BCS} --ignore-not-found -n ${projectInfo.cicdMasterNamespace}
-                        sleep 3
-                        ${shellEcho '-'}
-                    done
-                done
-            """
+            if (!args.deleteRbacGroupJenkins) {
+                cleanStalePipelines(projectInfo)
+            }
+            else {
+                pipelineUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
+            }
         }
     }
 }
