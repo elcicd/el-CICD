@@ -27,8 +27,7 @@ def call(Map args) {
 
             set +x
             COUNTER=1
-            until
-                -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete})
+            until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete}) ]]
             do
                 printf "%0.s-" \$(seq 1 \${COUNTER})
                 echo
