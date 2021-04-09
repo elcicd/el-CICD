@@ -112,9 +112,7 @@ def call(Map args) {
         if (projectInfo.microServices && (projectInfo.sandboxEnvs > 0 || projectInfo.hotfixNamespace)) {
             def namespaces = []
             namespaces.addAll(projectInfo.sandboxNamespaces)
-            if (projectInfo.allowsHotfixes) {
-                namespaces.addAll(projectInfo.hotfixNamespace)
-            }
+            projectInfo.allowsHotfixes && namespaces << projectInfo.hotfixNamespace
 
             pipelineUtils.echoBanner("Setup OKD sandbox and/or hotfix environment(s):", namespaces.join(', '))
 
