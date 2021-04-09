@@ -11,18 +11,10 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select sandbox, microservice, and branch") {
-        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-
-        def namespaces = []
-        projectInfo.allowsHotfixes && namespaces << projectInfo.hotfixNamespace
-        namespaces.addAll(projectInfo.sandboxNamespaces)
-
-        String deployableNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
-
-        List inputs = [choice(name: 'deployableNamespaces', description: 'Build Namespace', choices: deployableNamespaces),
+        List inputs = [choice(name: 'buildToNamespace', description: 'The Namespace to build and deploy to', choices: projectInfo.builderNamespaces),
                        string(name: 'gitBranch',  defaultValue: projectInfo.gitBranch, description: 'The branch to build', trim: true),
                        booleanParam(name: 'buildAll', description: 'Build all microservices'),
-                       booleanParam(name: 'recreateAll', description: 'Clean the environment of all resources before deploying')]
+                       booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
 
         inputs += projectInfo.microServices.collect { microService ->
             booleanParam(name: microService.name, description: "status: ${microService.status}")
@@ -30,7 +22,7 @@ def call(Map args) {
 
         def cicdInfo = input(message: "Select namepsace and microservices to build to:", parameters: inputs)
 
-        projectInfo.deployToNamespace = cicdInfo.deployableNamespaces
+        projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.gitBranch = cicdInfo.gitBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
         projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }

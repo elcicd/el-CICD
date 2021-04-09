@@ -99,6 +99,7 @@ _create_env_docker_registry_secret() {
     local DRY_RUN=client
     if [[ ${OCP_VERSION} == 3 ]]
     then
+        # option values changed in future versions of kubectl/oc cli
         DRY_RUN=true
     fi
 

@@ -25,7 +25,7 @@ def call(Map args) {
         }
 
         if (projectInfo.allowsHotfixes) {
-            promotionChoices += "${el.cicd.HOTFIX_NAMESPACE_BADGE}${ENV_DELIMITER}${el.CICD.preProdEnv}"
+            promotionChoices += "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.CICD.preProdEnv}"
         }
 
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),

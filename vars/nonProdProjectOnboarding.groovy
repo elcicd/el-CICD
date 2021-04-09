@@ -14,27 +14,22 @@ def call(Map args) {
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments if requested') {
-        onboardingUtils.cleanStalePipelines(projectInfo)
+        ${pipelineUtils.shellEchoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")}
 
-        if (projectInfo.microServices) {
-            if (args.rebuildNonProd || args.rebuildSandboxes) {
-                def namespacesToDelete = args.rebuildNonProd ? el.cicd.nonProdEnvs.collect { "${projectInfo.id}-${it}" } : []
-                pipelineUtils.echoBanner("REMOVING STALE NON-PROD ENVIRONMENT(S) FOR ${projectInfo.id}:", namespacesToDelete.join(' '))
-
-                def nsRegex = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}-[0-9]+|${projectInfo.id}-${el.cicd.HOTFIX_NAMESPACE_BADGE}"
-                sh """
-                    SBXS=\$(oc projects | egrep '${nsRegex}' | tr '\n' ' ')
-                    until [[ -z \$(oc delete projects --ignore-not-found ${namespacesToDelete.join(' ')} \${SBXS}) ]]
-                    do
-                        ${shellEcho ''}
-                        sleep 3
-                    done
-                """
+        if (args.rebuildNonProd || args.rebuildSandboxes) {
+            def namespacesToDelete = []
+            namespacesToDelete.addAll(projectInfo.sandboxNamespaces)
+            if (args.rebuildNonProd) {
+                namespacesToDelete.addAll(projectInfo.nonProdNamespaces)
+                namespacesToDelete.add(projectInfo.hotfixNamespace)
             }
+
+            onboardingUtils.deleteNamespaces(namespacesToDelete)
         }
-        else if (args.rebuildNonProd || args.rebuildSandboxes) {
-            pipelineUtils.echoBanner("NO MICROSERVICES DEFINED IN PROJECT: NO PROJECT NAMESPACES TO REMOVE")
-        }
+    }
+
+    stage('Clean stale pipelines') {
+        onboardingUtils.cleanStalePipelines(projectInfo)
     }
 
     stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {

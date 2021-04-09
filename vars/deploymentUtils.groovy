@@ -376,13 +376,13 @@ def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
         ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
         set +x
-        sleep 3
+        sleep 2
         COUNTER=1
         while [[ ! -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
             printf "%0.s-" \$(seq 1 \${COUNTER})
             echo
-            sleep 3
+            sleep 2
             let COUNTER+=1
         done
         set -x

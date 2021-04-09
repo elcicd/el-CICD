@@ -28,7 +28,7 @@ objects:
           - name: REBUILD_NON_PROD
             description: Should all non-prod environment(s) be torn down and new, empty projects created
             value: "false"
-          - name: REBUILD_SANDBOXES_ONLY
+          - name: REBUILD_SANDBOXES
             description: Should the sandbox environment(s) be torn down and new, empty projects created
             value: "false"
         jenkinsfile: |-
@@ -39,7 +39,7 @@ objects:
                       booleanParam(name: 'REBUILD_NON_PROD',
                                    defaultValue: false,
                                    description: 'Should all non-prod environment(s) be torn down and new, empty projects created'),
-                      booleanParam(name: 'REBUILD_SANDBOXES_ONLY',
+                      booleanParam(name: 'REBUILD_SANDBOXES',
                                    defaultValue: false,
                                    description: 'Should the sandbox environment(s) be torn down and new, empty projects created')
                   ]
@@ -62,7 +62,7 @@ objects:
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID,
                       rebuildNonProd: params.REBUILD_NON_PROD?.toString() == 'true',
-                      rebuildSandboxes: params.REBUILD_SANDBOXES_ONLY?.toString() == 'true']
+                      rebuildSandboxes: params.REBUILD_SANDBOXES?.toString() == 'true']
           el.node(args)
           {
               nonProdProjectOnboarding(args)

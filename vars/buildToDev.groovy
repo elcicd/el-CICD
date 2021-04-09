@@ -7,7 +7,6 @@
  */
 
 void call(Map args) {
-
     def projectInfo = args.projectInfo
     def microService = projectInfo.microServices.find { it.name == args.microServiceName }
 
@@ -16,16 +15,12 @@ void call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
 
-    def allowedNamespaces = [projectInfo.devNamespace]
-    projectInfo.allowsHotfixes && allowedNamespaces << projectInfo.hotfixNamespace
-    allowedNamespaces.addAll(projectInfo.sandboxNamespaces)
-
-    if (!allowedNamespaces.find{ it == projectInfo.deployToNamespace})
+    if (!.find{ it == projectInfo.deployToNamespace})
     {
         pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
                                   '',
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
-                                  allowedNamespaces.join(' '))
+                                  projectInfo.builderNamespaces.join(' '))
     }
 
     stage('Checkout code from repository') {
@@ -71,11 +66,7 @@ void call(Map args) {
     stage('build image and push to repository') {
         pipelineUtils.echoBanner("BUILD IMAGE AND PUSH TO REPOSITORY")
 
-        projectInfo.imageTag = projectInfo.devEnv
-        if (projectInfo.deployToNamespace.contains(el.cicd.SANDBOX_NAMESPACE_BADGE)) {
-            def index = projectInfo.deployToNamespace.split('-').last()
-            projectInfo.imageTag = "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${index}"
-        }
+        projectInfo.imageTag = projectInfo.deployToNamespace - "${project.id}-"
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
         def pullSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]

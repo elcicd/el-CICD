@@ -19,6 +19,8 @@ def initMetaData(Map metaData) {
     cicd.testEnvs = cicd.TEST_ENVS.collect { it.toLowerCase() }
     cicd.preProdEnv = cicd.PRE_PROD_ENV.toLowerCase()
 
+    cicd.hotfixEnv = cicd.HOTFIX_ENV.toLowerCase()
+
     cicd.nonProdEnvs = [cicd.devEnv]
     cicd.nonProdEnvs.addAll(cicd.testEnvs)
     cicd.nonProdEnvs.add(cicd.preProdEnv)
@@ -45,12 +47,11 @@ def initMetaData(Map metaData) {
 
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
-    cicd.ALL_OKD_RESOURCES = 'dc,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
+    cicd.ALL_OKD_RESOURCES = 'deploymentconfig,deploy,replicationcontrollers,replicasets,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
 
     cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
 
     cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
-    cicd.HOTFIX_NAMESPACE_BADGE = 'hotfix'
 
     cicd = cicd.asImmutable()
 }

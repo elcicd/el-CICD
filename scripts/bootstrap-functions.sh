@@ -263,7 +263,7 @@ __create_onboarding_automation_server() {
     echo
     echo -n "Waiting for Jenkins to be ready."
     until
-        sleep 3 && oc get pods --ignore-not-found -l name=jenkins -n ${ONBOARDING_MASTER_NAMESPACE} | grep "1/1"
+        sleep 2 && oc get pods --ignore-not-found -l name=jenkins -n ${ONBOARDING_MASTER_NAMESPACE} | grep "1/1"
     do
         echo -n '.'
     done

@@ -29,7 +29,7 @@ echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
 _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
 echo
-CICD_ENVIRONMENTS="${DEV_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
+CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV}  $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
 echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
 for ENV in ${CICD_ENVIRONMENTS}
 do

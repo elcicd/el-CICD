@@ -73,6 +73,8 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.devEnv = el.cicd.devEnv
 
+        projectInfo.hotfixEnv = el.cicd.hotfixEnv
+
         projectInfo.testEnvs = (el.cicd.testEnvs && projectInfo.enabledTestEnvs) ?
             el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) } : []
 
@@ -83,20 +85,8 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
         projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
 
-        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
-        projectInfo.sandboxNamespaces = []
-        projectInfo.sandboxEnvs = projectInfo.sandboxEnvs ?: 0
-        if (projectInfo.sandboxEnvs >= 1) {
-            (1..projectInfo.sandboxEnvs).each { i ->
-                projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
-            }
-        }
-
-        if (projectInfo.allowsHotfixes) {
-            projectInfo.hotfixNamespace = "${projectInfo.id}-${el.cicd.HOTFIX_NAMESPACE_BADGE}"
-        }
-
         projectInfo.DEV_ENV = el.cicd.DEV_ENV
+        projectInfo.HOTFIX_ENV = el.cicd.HOTFIX_ENV
         projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
         projectInfo.PROD_ENV = el.cicd.PROD_ENV
 
@@ -115,6 +105,20 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.preProdNamespace = projectInfo.nonProdNamespaces[projectInfo.preProdEnv]
         projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}"
 
+        projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
+
+        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
+        projectInfo.sandboxNamespaces = []
+        projectInfo.sandboxEnvs = projectInfo.sandboxEnvs ?: 0
+        if (projectInfo.sandboxEnvs >= 1) {
+            (1..projectInfo.sandboxEnvs).each { i ->
+                projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
+            }
+        }
+
+        projectInfo.builderNamespaces = [projectInfo.devNamespace]
+        projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
+        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces)
 
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
