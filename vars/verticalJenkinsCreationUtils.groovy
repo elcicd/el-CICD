@@ -24,8 +24,6 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
 
-            waitUntilJenkinsIsReady(projectInfo)
-
             def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
             refreshSharedPipelines(projectInfo, pipelines)
 
@@ -62,32 +60,8 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                                           -n ${projectInfo.cicdMasterNamespace}
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
-        """
-    }
-}
 
-def waitUntilJenkinsIsReady(def projectInfo) {
-    stage ('Wait until Jenkins is ready') {
-        sh """
-            ${pipelineUtils.shellEchoBanner("ENSURE ${projectInfo.cicdMasterNamespace} JENKINS IS READY (CAN TAKE A FEW MINUTES)")}
-
-            set +x
-            COUNTER=1
-            for PROJECT in ${projectInfo.cicdMasterNamespace}
-            do
-                until
-                    oc get pods -l name=jenkins -n \${PROJECT} | grep "1/1"
-                do
-                    printf "%0.s-" \$(seq 1 \${COUNTER})
-                    echo
-                    sleep 2
-                    let COUNTER+=1
-                done
-            done
-
-            echo "Jenkins up, sleep for 10 more seconds to make sure each servers REST api are ready"
-            sleep 10
-            set -x
+            oc rollout status dc jenkins 
         """
     }
 }
