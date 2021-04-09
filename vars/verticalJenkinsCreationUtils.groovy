@@ -19,7 +19,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             sh(returnStdout: true, script: "oc get rc --ignore-not-found -l app=jenkins-persistent -n ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdMasterProjectExist) {
-            onboardingutils.deleteNamespaces(projectInfo.cicdMasterNamespace)
+            onboardingUtils.deleteNamespaces(projectInfo.cicdMasterNamespace)
 
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
