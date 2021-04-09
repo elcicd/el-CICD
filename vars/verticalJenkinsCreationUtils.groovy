@@ -63,7 +63,11 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             ${shellEcho ''}
             sleep 2
+            ${shellEcho 'Waiting for Jenkins to come up...'}
             oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
+            ${shellEcho ''}
+            ${shellEcho 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
+            sleep 5
         """
     }
 }
