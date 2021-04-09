@@ -14,7 +14,7 @@ def call(Map args) {
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments if requested') {
-        ${pipelineUtils.shellEchoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")}
+        pipelineUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
 
         if (args.rebuildNonProd || args.rebuildSandboxes) {
             def namespacesToDelete = []
