@@ -14,14 +14,9 @@ def call(Map args) {
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
 
         namespaces = []
-        if (projectInfo.allowsHotfixes) {
-            namespaces += projectInfo.hotfixNamespace
-        }
+        projectInfo.allowsHotfixes && namespaces << projectInfo.hotfixNamespace
+        namespaces.addAll(projectInfo.sandboxNamespaces)
 
-        (1..projectInfo.sandboxEnvs).each { i ->
-            namespaces += "${sandboxNamespacePrefix}-${i}"
-        }
-        
         String deployableNamespaces = "${projectInfo.devNamespace}\n" + namespaces.join('\n')
 
         List inputs = [choice(name: 'deployableNamespaces', description: 'Build Namespace', choices: deployableNamespaces),
