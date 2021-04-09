@@ -61,7 +61,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
 
-            oc rollout status dc jenkins 
+            oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
         """
     }
 }
