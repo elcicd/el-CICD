@@ -237,6 +237,18 @@ __create_onboarding_automation_server() {
     local IS_NON_PROD=$([ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ] && echo 'true' || echo 'false')
 
     echo
+    echo -n "Waiting for Jenkins to be ready."
+    until
+        sleep 2 && oc get pods --ignore-not-found -l name=jenkins -n ${ONBOARDING_MASTER_NAMESPACE} | grep "1/1"
+    do
+        echo -n '.'
+    done
+
+    echo
+    echo 'Jenkins up, sleep for 10 more seconds to make sure server REST api is ready'
+    sleep 10
+
+    echo
     echo "Creating the Onboarding Automation Server pipelines:"
     for PIPELINE_TEMPLATE in refresh-credentials delete-project ${EL_CICD_ONBOARDING_SERVER_TYPE}-project-onboarding
     do
@@ -259,18 +271,6 @@ __create_onboarding_automation_server() {
     oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
-
-    echo
-    echo -n "Waiting for Jenkins to be ready."
-    until
-        sleep 2 && oc get pods --ignore-not-found -l name=jenkins -n ${ONBOARDING_MASTER_NAMESPACE} | grep "1/1"
-    do
-        echo -n '.'
-    done
-
-    echo
-    echo 'Jenkins up, sleep for 10 more seconds to make sure server REST api is ready'
-    sleep 10
 }
 
 __delete_master_namespace() {
