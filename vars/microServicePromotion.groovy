@@ -23,6 +23,11 @@ def call(Map args) {
                 from = key
             }
         }
+
+        if (projectInfo.allowsHotfixes) {
+            promotionChoices += "${el.cicd.HOTFIX_NAMESPACE_BADGE}${ENV_DELIMITER}${el.CICD.preProdEnv}"
+        }
+
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
                       choice(name: 'defaultAction',
                              description: 'Default action to apply to all microservices',

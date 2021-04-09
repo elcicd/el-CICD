@@ -16,7 +16,8 @@ void call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
     if (projectInfo.deployToNamespace != projectInfo.devNamespace &&
-        !projectInfo.sandboxNamespaces.find{ it == projectInfo.deployToNamespace})
+        !projectInfo.sandboxNamespaces.find{ it == projectInfo.deployToNamespace} &&
+        (!projectInfo.allowsHotfixes || projectInfo.deployToNamespace != projectInfo.hotfixNamespace))
     {
         def sboxNamepaces = projectInfo.sandboxNamespaces.join(' ')
         pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--", '',
