@@ -20,22 +20,9 @@ def call(Map args) {
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
             "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENT(S):"
 
-        sh """
-            ${pipelineUtils.shellEchoBanner(msg, namespacesToDelete)}
+        pipelineUtils.echoBanner(msg, namespacesToDelete)
 
-            oc delete project --ignore-not-found ${namespacesToDelete}
-
-            set +x
-            COUNTER=1
-            until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete}) ]]
-            do
-                printf "%0.s-" \$(seq 1 \${COUNTER})
-                echo
-                sleep 3
-                let COUNTER+=1
-            done
-            set -x
-        """
+        deleteNamespaces(namespacesToDelete)
     }
 
     stage('Delete GitHub deploy keys') {

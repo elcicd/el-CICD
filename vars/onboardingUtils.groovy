@@ -15,6 +15,23 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
+def deleteNamespaces(def namespaces) {
+    sh """
+        oc delete project --ignore-not-found ${namespacesToDelete}
+
+        set +x
+        COUNTER=1
+        until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete}) ]]
+        do
+            printf "%0.s-" \$(seq 1 \${COUNTER})
+            echo
+            sleep 3
+            let COUNTER+=1
+        done
+        set -x
+    """
+}
+
 def cleanStalePipelines(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING STALE BUILD PIPELINES FOR ${projectInfo.id}, IF ANY")}

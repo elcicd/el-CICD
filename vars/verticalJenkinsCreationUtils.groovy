@@ -15,9 +15,12 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             oc get groups ${projectInfo.rbacGroup} --no-headers
         """
 
-        def cicdProjectsExist = sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.cicdMasterNamespace}")
+        def cicdMasterProjectExist =
+            sh(returnStdout: true, script: "oc get rc --ignore-not-found -l app=jenkins-persistent -n ${projectInfo.cicdMasterNamespace}")
 
-        if (!cicdProjectsExist) {
+        if (!cicdMasterProjectExist) {
+            deleteNamespaces(projectInfo.cicdMasterNamespace)
+
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
 
