@@ -82,6 +82,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.prodEnv = el.cicd.prodEnv
 
         projectInfo.nonProdEnvs = [projectInfo.devEnv]
+        projectInfo.allowsHotfixes && projectInfo.nonProdEnvs << projectInfo.hotfixEnv
         projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
         projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
 
@@ -91,9 +92,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.PROD_ENV = el.cicd.PROD_ENV
 
         projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
-        projectInfo.NON_PROD_ENVS = [projectInfo.DEV_ENV]
-        projectInfo.NON_PROD_ENVS.addAll(projectInfo.TEST_ENVS)
-        projectInfo.NON_PROD_ENVS.add(projectInfo.PRE_PROD_ENV)
+        projectInfo.NON_PROD_ENVS = projectInfo.nonProdNamespaces.collect { it.toUpperCase() }
 
         projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
         projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"

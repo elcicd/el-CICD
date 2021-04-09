@@ -32,7 +32,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
         BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME ?: ''}
-        if [[ ! -z \${BUILD_SECRETS_NAME} ]]
+        if [[ ! -z \${BUILD_SECRETS_NAME} && "${envs}" ==  *"${projectInfo.devEnv}"* ]]
         then
             ${shellEcho ''}
             oc get secret \${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
