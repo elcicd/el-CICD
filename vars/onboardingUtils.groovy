@@ -17,11 +17,11 @@ def init() {
 
 def deleteNamespaces(def namespaces) {
     sh """
-        oc delete project --ignore-not-found ${namespacesToDelete}
+        oc delete project --ignore-not-found ${namespaces}
 
         set +x
         COUNTER=1
-        until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespacesToDelete}) ]]
+        until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespaces}) ]]
         do
             printf "%0.s-" \$(seq 1 \${COUNTER})
             echo
