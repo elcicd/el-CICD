@@ -22,7 +22,7 @@ def call(Map args) {
 
         pipelineUtils.echoBanner(msg, namespacesToDelete)
 
-        deleteNamespaces(namespacesToDelete)
+        onboardingUtils.deleteNamespaces(namespacesToDelete)
     }
 
     stage('Delete GitHub deploy keys') {
