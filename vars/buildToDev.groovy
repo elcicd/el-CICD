@@ -15,14 +15,17 @@ void call(Map args) {
 
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
-    if (projectInfo.deployToNamespace != projectInfo.devNamespace &&
-        !projectInfo.sandboxNamespaces.find{ it == projectInfo.deployToNamespace} &&
-        (!projectInfo.allowsHotfixes || projectInfo.deployToNamespace != projectInfo.hotfixNamespace))
+
+    def allowedNamespaces = [projectInfo.devNamespace]
+    projectInfo.allowsHotfixes && allowedNamespaces << projectInfo.hotfixNamespace
+    allowedNamespaces.addAll(projectInfo.sandboxNamespaces)
+
+    if (!allowedNamespaces.find{ it == projectInfo.deployToNamespace})
     {
-        def sboxNamepaces = projectInfo.sandboxNamespaces.join(' ')
-        pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--", '',
+        pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
+                                  '',
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
-                                  "${projectInfo.devNamespace} ${sboxNamepaces}")
+                                  allowedNamespaces.join(' '))
     }
 
     stage('Checkout code from repository') {
