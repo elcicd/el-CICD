@@ -54,7 +54,7 @@ _source_el_cicd_meta_info_files() {
     echo '         conflicting variable definitions.'
     source ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}
 
-    local META_INFO_FILE=/tmp/_source_el_cicd_meta_info_files
+    local META_INFO_FILE=/tmp/el_cicd_meta_info_files
 
     INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}  $(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
     __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
@@ -71,7 +71,7 @@ _create_el_cicd_meta_info_config_map() {
     oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
     sleep 5
 
-    local META_INFO_FILE=/tmp/_create_el_cicd_meta_info_config_map
+    local META_INFO_FILE=/tmp/el_cicd_meta_info_config_map
 
     INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ')"
     __create_source_file ${META_INFO_FILE} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
