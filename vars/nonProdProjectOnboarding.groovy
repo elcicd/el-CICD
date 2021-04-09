@@ -103,18 +103,14 @@ def call(Map args) {
         }
     }
 
-    stage('Setup OKD sandbox and/or hotfix environment(s)') {
+    stage('Setup OKD sandbox environment(s)') {
         if (projectInfo.microServices && (projectInfo.sandboxEnvs > 0 || projectInfo.hotfixNamespace)) {
-            def namespaces = []
-            namespaces.addAll(projectInfo.sandboxNamespaces)
-            projectInfo.allowsHotfixes && namespaces << projectInfo.hotfixNamespace
-
-            pipelineUtils.echoBanner("Setup OKD sandbox and/or hotfix environment(s):", namespaces.join(', '))
+            pipelineUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.join(', '))
 
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
 
-            namespaces.each { namespace ->
+            projectInfo.sandboxNamespaces.each { namespace ->
                 onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
 
                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)

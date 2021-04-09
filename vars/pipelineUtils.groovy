@@ -95,17 +95,21 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.NON_PROD_ENVS.addAll(projectInfo.TEST_ENVS)
         projectInfo.NON_PROD_ENVS.add(projectInfo.PRE_PROD_ENV)
 
-        projectInfo.nonProdNamespaces = [(projectInfo.devEnv): "${projectInfo.id}-${projectInfo.devEnv}"]
-        projectInfo.testEnvs.each { env ->
-            projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}"
-        }
-        projectInfo.nonProdNamespaces[(projectInfo.preProdEnv)] = "${projectInfo.id}-${projectInfo.preProdEnv}"
-
-        projectInfo.devNamespace = projectInfo.devEnv ? projectInfo.nonProdNamespaces[projectInfo.devEnv] : null
-        projectInfo.preProdNamespace = projectInfo.nonProdNamespaces[projectInfo.preProdEnv]
+        projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
+        projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"
         projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}"
 
         projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
+
+        projectInfo.nonProdNamespaces = [(projectInfo.devEnv): projectInfo.devNamespace]
+        if (projectInfo.allowsHotfixes) {
+            projectInfo.nonProdNamespaces[(projectInfo.hotfixEnv)] = projectInfo.hotfixNamespace
+        }
+
+        projectInfo.testEnvs.each { env ->
+            projectInfo.nonProdNamespaces[(env)] = "${projectInfo.id}-${env}"
+        }
+        projectInfo.nonProdNamespaces[(projectInfo.preProdEnv)] = projectInfo.preProdNamespace
 
         def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
         projectInfo.sandboxNamespaces = []
