@@ -49,7 +49,7 @@ def call(Map args) {
     if (args.isNonProd) {
         stage('Remove project build-to-dev pipelines from Jenkins') {
             if (!args.deleteRbacGroupJenkins) {
-                cleanStalePipelines(projectInfo)
+                onboardingUtils.cleanStalePipelines(projectInfo)
             }
             else {
                 pipelineUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
