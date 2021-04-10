@@ -19,8 +19,8 @@ def call(Map args) {
             promotionChoices += "${fromEnv}${ENV_DELIMITER}${toEnv}"
             fromEnv = toEnv
         }
-        promotionChoices = "${fromEnv}${ENV_DELIMITER}${projectInfo.preProdEnv}"
-        projectInfo.allowsHotfixes && (promotionChoices << "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
+        promotionChoices += "${fromEnv}${ENV_DELIMITER}${projectInfo.preProdEnv}"
+        projectInfo.allowsHotfixes && (promotionChoices += "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
 
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
                       choice(name: 'defaultAction',
