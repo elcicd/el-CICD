@@ -123,10 +123,6 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
         projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces)
 
-        projectInfo.sdlcNamespaces = [projectInfo.devEnv]
-        projectInfo.sdlcNamespaces.addAll(projectInfo.testEnvs)
-        projectInfo.sdlcNamespaces.addAll(projectInfo.preProdEnv)
-
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
     }

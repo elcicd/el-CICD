@@ -13,20 +13,14 @@ def call(Map args) {
         pipelineUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
 
         def ENV_DELIMITER = ' to '
-        def from
+        def fromEnv = projectInfo.devEnv
         def promotionChoices = []
-        projectInfo.sdlcNamespaces.findAll { key, value ->
-            if (key != projectInfo.prodEnv) {
-                if (from) {
-                    promotionChoices += "${from}${ENV_DELIMITER}${key}"
-                }
-                from = key
-            }
+        projectInfo.testEnvs.findAll { toEnv ->
+            promotionChoices += "${fromEnv}${ENV_DELIMITER}${toEnv}"
+            fromEnv = toEnv
         }
-
-        if (projectInfo.allowsHotfixes) {
-            promotionChoices += "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}"
-        }
+        promotionChoices = "${fromEnv}${ENV_DELIMITER}${projectInfo.preProdEnv}"
+        projectInfo.allowsHotfixes && (promotionChoices << "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
 
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
                       choice(name: 'defaultAction',
