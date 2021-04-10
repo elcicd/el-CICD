@@ -55,10 +55,9 @@ def call(Map args) {
                 }
                 branchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} <DEPLOYED>") : branchesAndTimes
 
-                inputs +=
-                    choice(name: microService.name,
-                           description: "status: ${microService.status}",
-                           choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
+                inputs += choice(name: microService.name,
+                                 description: "status: ${microService.status}",
+                                 choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
             }
         }
 
@@ -98,7 +97,7 @@ def call(Map args) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
                     if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2>&1 || :").trim()) {
-                        errorMsgs += "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
+                        errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
                     }
                 }
             }

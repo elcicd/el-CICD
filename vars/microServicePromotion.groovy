@@ -16,11 +16,11 @@ def call(Map args) {
         def fromEnv = projectInfo.devEnv
         def promotionChoices = []
         projectInfo.testEnvs.findAll { toEnv ->
-            promotionChoices += "${fromEnv}${ENV_DELIMITER}${toEnv}"
+            promotionChoices << "${fromEnv}${ENV_DELIMITER}${toEnv}"
             fromEnv = toEnv
         }
-        promotionChoices += "${fromEnv}${ENV_DELIMITER}${projectInfo.preProdEnv}"
-        projectInfo.allowsHotfixes && (promotionChoices += "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
+        promotionChoices << "${fromEnv}${ENV_DELIMITER}${projectInfo.preProdEnv}"
+        projectInfo.allowsHotfixes && (promotionChoices << "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
 
         def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
                       choice(name: 'defaultAction',
@@ -73,7 +73,7 @@ def call(Map args) {
                         def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
                         def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
                         if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${fromUserNamePwd} ${imageUrl} 2>&1 || :").trim()) {
-                            errorMsgs += "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
+                            errorMsgs << "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                         }
                     }
                 }
