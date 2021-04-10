@@ -77,7 +77,11 @@ _create_el_cicd_meta_info_config_map() {
     __create_source_file ${META_INFO_FILE} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
 
     echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
+    local META_INFO_FILE_FINAL=${META_INFO_FILE}_FINAL
+    cat ${META_INFO_FILE} | envsubst > ${META_INFO_FILE_FINAL}
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE_FINAL} -n ${ONBOARDING_MASTER_NAMESPACE}
+
+    rm ${META_INFO_FILE} ${META_INFO_FILE_FINAL}
 }
 
 __create_source_file() {

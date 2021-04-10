@@ -21,10 +21,10 @@ def getJenkinsCredsUrls(def projectInfo, def tokenId) {
     return jenkinsCredsUrls
 }
 
-def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
+def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def ENVS) {
     pipelineUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
 
-    def pullSecretNames = envs.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
+    def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     sh """
         ${shellEcho ''}
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
@@ -32,7 +32,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
         BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME ?: ''}
-        if [[ ! -z \${BUILD_SECRETS_NAME} && "${envs}" ==  *"${projectInfo.devEnv}"* ]]
+        if [[ ! -z \${BUILD_SECRETS_NAME} && "${ENVS}" ==  *"${projectInfo.DEV_ENV}"* ]]
         then
             ${shellEcho ''}
             oc get secret \${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
@@ -61,7 +61,7 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
     """
 }
 
-def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
+def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pipelineUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
@@ -86,7 +86,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     def tokenIds = []
-    envs.each { ENV ->
+    ENVS.each { ENV ->
         def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
         if (!tokenIds.contains(tokenId)) {
             pipelineUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")

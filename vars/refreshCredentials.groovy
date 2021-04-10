@@ -24,17 +24,17 @@ def call(Map args) {
             def cicdProjectsExist =
                 sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.cicdMasterNamespace}")
             if (cicdProjectsExist) {
-                def envs = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
+                def ENVS = args.isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
 
                 if (!rbacGroups[(projectInfo.rbacGroup)]) {
                     rbacGroups[(projectInfo.rbacGroup)] = true
 
                     stage('Copy el-CICD meta-info pull secrets to rbacGroup Jenkins') {
-                        credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
+                        credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, ENVS)
                     }
 
                     stage('Push el-CICD credentials') {
-                        credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+                        credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, ENVS)
                     }
                 }
                 else {
