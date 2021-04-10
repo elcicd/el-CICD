@@ -66,7 +66,7 @@ void call(Map args) {
     stage('build image and push to repository') {
         pipelineUtils.echoBanner("BUILD IMAGE AND PUSH TO REPOSITORY")
 
-        projectInfo.imageTag = projectInfo.deployToNamespace - "${project.id}-"
+        projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
         def pullSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
