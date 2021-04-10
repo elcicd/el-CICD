@@ -15,7 +15,7 @@ void call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
 
-    if (!.find{ it == projectInfo.deployToNamespace})
+    if (!projectInfo.builderNamespaces.find{ it == projectInfo.deployToNamespace})
     {
         pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
                                   '',
