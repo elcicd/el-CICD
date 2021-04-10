@@ -16,10 +16,10 @@ def init() {
 }
 
 def deleteNamespaces(def namespaces) {
-    if (namepsaces instanceof Collection) {
+    if (namespaces instanceof Collection) {
         namespaces = namespaces.join(' ')
     }
-    
+
     sh """
         oc delete project --ignore-not-found ${namespaces}
 
