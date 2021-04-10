@@ -25,6 +25,8 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
     pipelineUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
 
     def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
+    def copyBuildSecrets = ENVS.contains(projectInfo.DEV_ENV).toString()
+
     sh """
         ${shellEcho ''}
         oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
@@ -32,7 +34,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
             oc apply -f - -n ${projectInfo.cicdMasterNamespace}
 
         BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME ?: ''}
-        if [[ ! -z \${BUILD_SECRETS_NAME} && "${ENVS}" ==  *"${projectInfo.DEV_ENV}"* ]]
+        if [[ ! -z \${BUILD_SECRETS_NAME} && "${copyBuildSecrets}" ==  'true']]
         then
             ${shellEcho ''}
             oc get secret \${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
