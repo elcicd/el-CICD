@@ -22,9 +22,9 @@ def call(Map args) {
 
         def msg = args.deleteRbacGroupJenkins ?
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
-            "REMOVING ${projectInfo.id} NON-PROD ENVIRONMENT(S):"
+            "REMOVING ${projectInfo.id} ENVIRONMENT(S):"
 
-        pipelineUtils.echoBanner(msg, namespacesToDelete)
+        pipelineUtils.echoBanner(msg, namespacesToDelete.join(' '))
 
         onboardingUtils.deleteNamespaces(namespacesToDelete)
     }

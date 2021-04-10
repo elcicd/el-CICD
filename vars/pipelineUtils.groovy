@@ -115,7 +115,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.sandboxEnvs = projectInfo.sandboxEnvs ?: 0
         if (projectInfo.sandboxEnvs >= 1) {
             (1..projectInfo.sandboxEnvs).each { i ->
-                projectInfo.sandboxNamespaces += "${sandboxNamespacePrefix}-${i}"
+                projectInfo.sandboxNamespaces << "${sandboxNamespacePrefix}-${i}"
             }
         }
 
