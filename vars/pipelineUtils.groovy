@@ -92,7 +92,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.PROD_ENV = el.cicd.PROD_ENV
 
         projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
-        projectInfo.NON_PROD_ENVS = projectInfo.nonProdNamespaces.collect { it.toUpperCase() }
+        projectInfo.NON_PROD_ENVS = projectInfo.nonProdEnvs.collect { it.toUpperCase() }
 
         projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
         projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"
