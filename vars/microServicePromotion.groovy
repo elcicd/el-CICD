@@ -15,7 +15,7 @@ def call(Map args) {
         def ENV_DELIMITER = ' to '
         def from
         def promotionChoices = []
-        projectInfo.nonProdNamespaces.findAll { key, value ->
+        projectInfo.sdlcNamespaces.findAll { key, value ->
             if (key != projectInfo.prodEnv) {
                 if (from) {
                     promotionChoices += "${from}${ENV_DELIMITER}${key}"
