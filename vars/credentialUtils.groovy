@@ -26,6 +26,7 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 
     def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     def copyBuildSecrets = ENVS.contains(projectInfo.DEV_ENV)
+    echo "envs: ${ENVS}"
 
     sh """
         ${shellEcho ''}
