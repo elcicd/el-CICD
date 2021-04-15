@@ -27,6 +27,8 @@ objects:
             description: Project ID from auto-tracker, representing all microservices for a project
           - name: RELEASE_CANDIDATE_TAG
             description: Release candidate tag used to create the production manifest
+          - name: RELEASE_REGION
+            description: Region that release is being deployed to
           - name: DEPLOY_ALL
             description: If true, deploy everything regardless of change status
             value: "false"
@@ -36,6 +38,7 @@ objects:
                   [
                       string(name: 'PROJECT_ID', description: 'Project ID', trim: true),
                       string(name: 'RELEASE_CANDIDATE_TAG', description: 'Release candidate tag used to create the production manifest', trim: true),
+                      string(name: 'RELEASE_REGION', description: 'Release candidate tag used to create the production manifest', trim: true),
                       booleanParam(name: 'DEPLOY_ALL', defaultValue: false, description: 'If true, deploy everything regardless of change status')
                   ]
               )
@@ -56,6 +59,7 @@ objects:
                       pipelineTemplateName: '${PIPELINE_TEMPLATE_NAME}',
                       projectId: params.PROJECT_ID,
                       releaseCandidateTag: params.RELEASE_CANDIDATE_TAG,
+                      releaseRegion: params.RELEASE_REGION,
                       deployAll: params.DEPLOY_ALL?.toString() == 'true']
           el.node(args)
           {

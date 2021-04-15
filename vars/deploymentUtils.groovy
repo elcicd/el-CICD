@@ -52,9 +52,12 @@ def processTemplateDefs(def projectInfo, def microServices) {
 
     microServices.each { microService ->
         dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
+            sh "mkdir -p ${projectInfo.deployToEnv}"
+
             microService.templateDefs = readTemplateDefs()
 
             if (microService.templateDefs.templates) {
+
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     templateDef.appName = templateDef.appName ?: microService.name
                     templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
@@ -62,6 +65,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
                     kustomizeTemplate(projectInfo, templateDef, index)
 
                     templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
+                    templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToRegion]?.params)
                 }
             }
             else {
@@ -145,7 +149,6 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                                     'PROCESSED AND APPLYING OCP TEMPLATE ' + templateDef.patchedFile,
                                     'PARAMS: ' + paramsStr,
                                     '******' }
-                        mkdir -p ${projectInfo.deployToEnv}
                         oc process --local --ignore-unknown-parameters \
                             ${paramsStr} \
                             -p 'PROJECT_ID=${projectInfo.id}' \
@@ -179,7 +182,16 @@ def applyResources(def projectInfo, def microServices) {
         dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
             sh """
                 mkdir -p default
-                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found"}
+                ${shellEcho ''}
+                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found for ${projectInfo.deployToEnv}"}
+
+                RELEASE_REGION=${project.releaseRegion}
+                if [[ ! -z \${RELEASE_REGION} ]]
+                then
+                    ${shellEcho ''}
+                    cp -f -v ${projectInfo.deployToEnv}-${project.releaseRegion}/* ${projectInfo.deployToEnv} 2> /dev/null || \
+                        ${shellEcho "No default OCP resources found for ${projectInfo.deployToEnv}-${project.releaseRegion}"}
+                fi
 
                 cd ${projectInfo.deployToEnv}
                 if [[ \$(ls *.{yml,yaml,json} 2> /dev/null | wc -l) -gt 0 ]]

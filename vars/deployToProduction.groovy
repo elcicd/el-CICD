@@ -14,7 +14,12 @@ def call(Map args) {
         args.releaseCandidateTag.substring(el.cicd.RELEASE_VERSION_PREFIX.length()) : args.releaseCandidateTag
     projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${projectInfo.releaseCandidateTag}"
     projectInfo.deployToEnv = projectInfo.prodEnv
+    if (args.releaseRegion) {
+        projectInfo.releaseRegion = args.releaseRegion
+        projectInfo.deployToRegion = "${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"
+    }
     projectInfo.deployToNamespace = projectInfo.prodNamespace
+
 
     stage('Gather all git branches, tags, and source commit hashes') {
         pipelineUtils.echoBanner("GATHER ALL GIT BRANCHES, TAGS, AND SOURCE COMMIT HASHES")
