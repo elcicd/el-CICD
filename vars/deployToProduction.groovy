@@ -110,6 +110,7 @@ def call(Map args) {
 
         def msg = pipelineUtils.createBanner(
             "${promotionOrDeploymentMsg} TO PRODUCTION",
+            "REGION: ${projectInfo.releaseRegion ?: 'none'}",
             '',
             "===========================================",
             '',

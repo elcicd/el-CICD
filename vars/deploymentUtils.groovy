@@ -185,7 +185,7 @@ def applyResources(def projectInfo, def microServices) {
                 ${shellEcho ''}
                 cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found for ${projectInfo.deployToEnv}"}
 
-                RELEASE_REGION=${project.releaseRegion}
+                RELEASE_REGION=${projectInfo.releaseRegion}
                 if [[ ! -z \${RELEASE_REGION} ]]
                 then
                     ${shellEcho ''}
