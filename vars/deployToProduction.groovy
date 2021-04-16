@@ -78,22 +78,27 @@ def call(Map args) {
         }
     }
 
-    stage('Collect deployment hashes; if incremental release, prune unchanged microservices from deployment') {
+    stage('Collect deployment hashes; prune unchanged microservices from deployment') {
         pipelineUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
 
-        def metaInfoRelease = sh(returnStdout: true, script: "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :")
+        def metaInfoReleaseShell = 
+            "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
+        def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.releaseVersionTag
+
+        def metaInfoRegionShell = 
+            "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
+        def metaInfoRegionChanged = sh(returnStdout: true, script: metaInfoRegionShell) != projectInfo.releaseRegion
         projectInfo.microServices.each { microService ->
             if (microService.releaseCandidateGitTag) {
                 dir(microService.workDir) {
-                    def deploymentCommitHash
-                    if (!deployAll && metaInfoRelease == projectInfo.releaseVersionTag) {
+                    def deploymentCommitHashChanged = false
+                    if (!deployAll && !metaInfoRegionChanged && !metaInfoReleaseChanged) {
                         def depCommitHashScript = "oc get cm ${microService.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
-                        deploymentCommitHash = sh(returnStdout: true, script: depCommitHashScript)
+                        deploymentCommitHashChanged = sh(returnStdout: true, script: depCommitHashScript) != microService.deploymentCommitHash
                     }
 
-                    if (deployAll || !projectInfo.hasBeenReleased || deploymentCommitHash != microService.deploymentCommitHash) {
-                        microService.promote = true
-                    }
+                    microService.promote =
+                        !projectInfo.hasBeenReleased || metaInfoRegionChanged || deployAll || deploymentCommitHashChanged
                 }
             }
         }
@@ -110,7 +115,7 @@ def call(Map args) {
 
         def msg = pipelineUtils.createBanner(
             "${promotionOrDeploymentMsg} TO PRODUCTION",
-            "REGION: ${projectInfo.releaseRegion ?: 'none'}",
+            "REGION: ${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
             '',
             "===========================================",
             '',

@@ -8,12 +8,6 @@
 
 import groovy.transform.Field
 
-@Field
-def UNDEFINED = 'undefined'
-
-@Field
-def OKD_CONFIG_DIR = '.openshift'
-
 def mergeMaps(def toMap, def fromMap) {
     if (toMap && fromMap) {
         fromMap.each { k, v -> toMap[k] = toMap[k] in Map ? mapMerge(toMap[k], v) : v }
@@ -51,7 +45,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
+        dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
             sh "mkdir -p ${projectInfo.deployToEnv}"
 
             microService.templateDefs = readTemplateDefs()
@@ -117,7 +111,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
 
     microServices.each { microService ->
         if (microService.templateDefs) {
-            dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
+            dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def paramMap = [:]
                     if (templateDef.params) {
@@ -179,7 +173,7 @@ def applyResources(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${OKD_CONFIG_DIR}") {
+        dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p default
                 ${shellEcho ''}
@@ -216,7 +210,7 @@ def applyResources(def projectInfo, def microServices) {
                         projectid=${projectInfo.id} \
                         microservice=${microService.name} \
                         deployment-commit-hash=${microService.deploymentCommitHash} \
-                        release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                        release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
                         deploy-time=\$(date +%d.%m.%Y-%H.%M.%S%Z) \
                         build-number=${BUILD_NUMBER} \
                         -n ${projectInfo.deployToNamespace}
@@ -308,9 +302,9 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                                             "  microservice = ${microService.name}",
                                             "  git-repo = ${microService.gitRepoName}",
                                             "  src-commit-hash = ${microService.srcCommitHash}",
-                                            "  deployment-branch = ${microService.deploymentBranch ?: UNDEFINED}",
+                                            "  deployment-branch = ${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
                                             "  deployment-commit-hash = ${microService.deploymentCommitHash}",
-                                            "  release-version = ${projectInfo.releaseVersionTag ?: UNDEFINED}",
+                                            "  release-version = ${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                                             "  build-number = ${BUILD_NUMBER}")}
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
@@ -321,9 +315,10 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=microservice=${microService.name} \
                 --from-literal=git-repo=${microService.gitRepoName} \
                 --from-literal=src-commit-hash=${microService.srcCommitHash} \
-                --from-literal=deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
+                --from-literal=deployment-branch=${microService.deploymentBranch ?: el.cicd.UNDEFINED} \
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
-                --from-literal=release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                --from-literal=release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
+                --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
 
@@ -333,9 +328,10 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 microservice=${microService.name} \
                 git-repo=${microService.gitRepoName} \
                 src-commit-hash=${microService.srcCommitHash} \
-                deployment-branch=${microService.deploymentBranch ?: UNDEFINED} \
+                deployment-branch=${microService.deploymentBranch ?: el.cicd.UNDEFINED} \
                 deployment-commit-hash=${microService.deploymentCommitHash} \
-                release-version=${projectInfo.releaseVersionTag ?: UNDEFINED} \
+                release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
+                release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                 build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
         """

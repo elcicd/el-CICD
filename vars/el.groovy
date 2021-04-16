@@ -29,6 +29,8 @@ def initMetaData(Map metaData) {
 
     cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
 
+    cicd.UNDEFINED = 'undefined'
+
     cicd.IGNORE = ''
     cicd.PROMOTE = 'PROMOTE'
     cicd.REMOVE = 'REMOVE'
@@ -48,6 +50,8 @@ def initMetaData(Map metaData) {
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
     cicd.ALL_OKD_RESOURCES = 'deploymentconfig,deploy,replicationcontrollers,replicasets,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
+
+    cicd.OKD_DEPLOY_DEF_DIR = '.openshift'
 
     cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
 

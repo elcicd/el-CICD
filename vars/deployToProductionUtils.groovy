@@ -56,6 +56,7 @@ def updateProjectMetaInfo(def projectInfo) {
             oc create cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
+                --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                 --from-literal=microservices=${microServiceNames} \
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.prodNamespace}
@@ -63,6 +64,7 @@ def updateProjectMetaInfo(def projectInfo) {
             ${shellEcho ''}
             oc label cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 projectid=${projectInfo.id} \
+                release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                 release-version=${projectInfo.releaseVersionTag} \
                 build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.prodNamespace}
