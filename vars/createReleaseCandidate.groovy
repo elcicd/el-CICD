@@ -160,7 +160,7 @@ def call(Map args) {
                                     --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     ${preProdImageUrl} \
                                     ${preProdReleaseCandidateImageUrl}
-                        ${"${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                        ${shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
                     """
                 }
             }
