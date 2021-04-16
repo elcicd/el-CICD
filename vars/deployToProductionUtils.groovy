@@ -78,7 +78,7 @@ def cleanupPreviousRelease(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
 
-        oc delete ${el.cicd.ALL_OKD_RESOURCES} -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
+        oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
     """
 
     deploymentUtils.waitingForPodsToTerminate(projectInfo.prodNamespace)

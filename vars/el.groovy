@@ -49,7 +49,7 @@ def initMetaData(Map metaData) {
 
     cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
-    cicd.ALL_OKD_RESOURCES = 'deploymentconfig,deploy,replicationcontrollers,replicasets,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
+    cicd.OKD_CLEANUP_RESOURCE_LIST = 'deploymentconfig,deploy,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
 
     cicd.OKD_DEPLOY_DEF_DIR = '.openshift'
 
