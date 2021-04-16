@@ -211,6 +211,7 @@ def applyResources(def projectInfo, def microServices) {
                         microservice=${microService.name} \
                         deployment-commit-hash=${microService.deploymentCommitHash} \
                         release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
+                        release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                         deploy-time=\$(date +%d.%m.%Y-%H.%M.%S%Z) \
                         build-number=${BUILD_NUMBER} \
                         -n ${projectInfo.deployToNamespace}
