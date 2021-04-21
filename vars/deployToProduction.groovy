@@ -203,6 +203,10 @@ def call(Map args) {
         else {
             echo "-> RELEASE DEPLOYMENT BRANCH(ES) HAVE ALREADY BEEN CREATED: SKIPPING"
         }
+
+        projectInfo.microServices.each { microService ->
+            microService.deploymentBranch = microService.releaseVersionGitBranch
+        }
     }
 
     deployMicroServices(projectInfo: projectInfo,
