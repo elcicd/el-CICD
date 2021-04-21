@@ -1,7 +1,7 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Utility methods for apply OCP resources
+ * Utility methods for apply OKD resources
  *
  * @see the projectid-onboard pipeline for example on how to use
  */
@@ -140,7 +140,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                     def fileName = templateDef.file ?: "${templateDef.templateName}.yml"
                     sh """
                         ${shellEcho '******',
-                                    'PROCESSED AND APPLYING OCP TEMPLATE ' + templateDef.patchedFile,
+                                    'PROCESSED AND APPLYING OKD TEMPLATE ' + templateDef.patchedFile,
                                     'PARAMS: ' + paramsStr,
                                     '******' }
                         oc process --local --ignore-unknown-parameters \
@@ -177,14 +177,14 @@ def applyResources(def projectInfo, def microServices) {
             sh """
                 mkdir -p default
                 ${shellEcho ''}
-                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OCP resources found for ${projectInfo.deployToEnv}"}
+                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OKD resources found for ${projectInfo.deployToEnv}"}
 
                 RELEASE_REGION=${projectInfo.releaseRegion}
                 if [[ ! -z \${RELEASE_REGION} ]]
                 then
                     ${shellEcho ''}
                     cp -f -v ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}/* ${projectInfo.deployToEnv} 2> /dev/null || \
-                        ${shellEcho "No default OCP resources found for ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"}
+                        ${shellEcho "No default OKD resources found for ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"}
                 fi
 
                 cd ${projectInfo.deployToEnv}
@@ -192,7 +192,7 @@ def applyResources(def projectInfo, def microServices) {
                 then
                     ${shellEcho '',
                                 '******',
-                                "APPLYING OCP RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
+                                "APPLYING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
                     IMAGE_PULL_BACKOFF_PODS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "${microService.name}-.*" | grep -i 'ImagePull')||:
                     if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
                     then
@@ -205,10 +205,13 @@ def applyResources(def projectInfo, def microServices) {
 
                     ${shellEcho '',
                                 '******',
-                                "LABELING OCP RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
+                                "LABELING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
                     oc label --overwrite --recursive -f . \
                         projectid=${projectInfo.id} \
                         microservice=${microService.name} \
+                        git-repo=${microService.gitRepoName} \
+                        src-commit-hash=${microService.srcCommitHash} \
+                        deployment-branch=${microService.deploymentBranch ?: el.cicd.UNDEFINED} \
                         deployment-commit-hash=${microService.deploymentCommitHash} \
                         release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
                         release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
@@ -298,6 +301,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
         def metaInfoCmName = "${projectInfo.id}-${microService.name}-${el.cicd.CM_META_INFO_POSTFIX}"
 
         sh """
+            DEPLOY_TIME=\$(date +%d.%m.%Y-%H.%M.%S%Z)
             ${pipelineUtils.shellEchoBanner("UPDATE LABELS AND ${metaInfoCmName}:",
                                             "  projectid = ${projectInfo.id}",
                                             "  microservice = ${microService.name}",
@@ -306,6 +310,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                                             "  deployment-branch = ${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
                                             "  deployment-commit-hash = ${microService.deploymentCommitHash}",
                                             "  release-version = ${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                                            "  release-region = ${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
                                             "  build-number = ${BUILD_NUMBER}")}
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
@@ -320,6 +325,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=deployment-commit-hash=${microService.deploymentCommitHash} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
                 --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
+                --from-literal=deploy-time=\${DEPLOY_TIME} \
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
 
@@ -333,6 +339,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 deployment-commit-hash=${microService.deploymentCommitHash} \
                 release-version=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
                 release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
+                deploy-time=\${DEPLOY_TIME} \
                 build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
         """
