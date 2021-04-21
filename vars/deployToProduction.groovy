@@ -17,6 +17,10 @@ def call(Map args) {
     if (args.releaseRegion) {
         projectInfo.releaseRegion = args.releaseRegion
         projectInfo.deployToRegion = "${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"
+
+        if (!projectInfo.releaseRegions.find { it == projectInfo.releaseRegion }) {
+            pipelineUtils.errorBanner("REGION ${projectInfo.releaseRegion} IS NOT ONE OF ${projectInfo.releaseRegions}")
+        }
     }
     projectInfo.deployToNamespace = projectInfo.prodNamespace
 
