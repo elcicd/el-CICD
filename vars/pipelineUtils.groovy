@@ -210,7 +210,7 @@ def createBanner(def ... msgs) {
 
 def msgFlatten(def list, def msgs) {
     def list = list ?: []
-    if (msgs !instanceof String || msgs !instanceof GString) {
+    if (!(msgs instanceof String) && !(msgs instanceof GString)) {
         msgs.each { msg ->
             list = msgFlatten(list, msg)
         }
