@@ -208,10 +208,10 @@ def createBanner(def ... msgs) {
     """
 }
 
-def msgFlatten(def list, msgs) {
+def msgFlatten(def list, def msgs) {
     list = list ?: []
     if (msgs instanceof List) {
-        msgs.each { msg
+        msgs.each { msg ->
             if (msg instanceof List) {
                 list = msgFlatten(list, msg)
             }
@@ -220,4 +220,6 @@ def msgFlatten(def list, msgs) {
             }
         }
     }
+
+    return  list
 }
