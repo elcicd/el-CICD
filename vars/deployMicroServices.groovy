@@ -95,14 +95,11 @@ def call(Map args) {
     stage('Inform users of success') {
         def checkoutMsgs = []
         args.microServices.each { microService ->
-            checkocheckoutMsgs += ''
-            checkocheckoutMsgs += "**********"
-            checkocheckoutMsgs += "DEPLOYMENT BRANCH FOR ${microService.name}: ${microService.deploymentBranch}"
-            checkocheckoutMsgs += "git checkout ${microService.deploymentBranch}"
-            checkocheckoutMsgs += "**********"
-
-            if (microService != microServices.last() {
-            }
+            checkoutMsgs += ''
+            checkoutMsgs += "**********"
+            checkoutMsgs += "DEPLOYMENT BRANCH FOR ${microService.name}: ${microService.deploymentBranch}"
+            checkoutMsgs += "git checkout ${microService.deploymentBranch}"
+            checkoutMsgs += "**********"
         }
 
         pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${projectInfo.deployToNamespace}:", checkoutMsgs)
