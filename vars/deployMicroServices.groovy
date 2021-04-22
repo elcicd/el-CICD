@@ -102,6 +102,6 @@ def call(Map args) {
             checkoutMsgs += "**********"
         }
 
-        pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${projectInfo.deployToNamespace}:", checkoutMsgs)
+        pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${args.projectInfo.deployToNamespace}:", checkoutMsgs)
     }
 }
