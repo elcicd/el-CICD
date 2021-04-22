@@ -202,7 +202,7 @@ def createBanner(def ... msgs) {
     return """
         ===========================================
 
-        ${msgs.msgFlatten(null, msgs).join("\n        ")}
+        ${msgFlatten(null, msgs).join("\n        ")}
 
         ===========================================
     """
