@@ -202,8 +202,22 @@ def createBanner(def ... msgs) {
     return """
         ===========================================
 
-        ${msgs.flatten().join("\n        ")}
+        ${msgs.msgFlatten(null, msgs).join("\n        ")}
 
         ===========================================
     """
+}
+
+def msgFlatten(def list, msgs) {
+    list = list ?: []
+    if (msgs instanceof List) {
+        msgs.each { msg
+            if (msg instanceof List) {
+                list = msgFlatten(list, msg)
+            }
+            else {
+                list += msg
+            }
+        }
+    }
 }
