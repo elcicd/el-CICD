@@ -92,7 +92,7 @@ def call(Map args) {
         }
     }
 
-    if (args.projectInfo.deploymentBranch) {
+    if (args.microServices.find { it.deploymentBranch}) {
         stage('Inform users of success') {
             def checkoutMsgs = []
             args.microServices.each { microService ->
