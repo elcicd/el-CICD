@@ -210,13 +210,13 @@ def createBanner(def ... msgs) {
 
 def msgFlatten(def list, def msgs) {
     list = list ?: []
-    if (msgs instanceof String) {
-        list += msgs
-    }
-    else {
+    if (msgs instanceof Collection || msgs.getClass().isArray()) {
         msgs.each { msg ->
             list = msgFlatten(list, msg)
         }
+    }
+    else {
+        list += msgs
     }
 
     return  list
