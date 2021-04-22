@@ -210,14 +210,12 @@ def createBanner(def ... msgs) {
 
 def msgFlatten(def list, def msgs) {
     list = list ?: []
-    if (msgs instanceof List) {
+    if (msgs instanceof String) {
+        list += msgs
+    }
+    else {
         msgs.each { msg ->
-            if (msg instanceof List) {
-                list = msgFlatten(list, msg)
-            }
-            else {
-                list += msg
-            }
+            list = msgFlatten(list, msg)
         }
     }
 
