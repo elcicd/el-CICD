@@ -33,11 +33,11 @@ def call(Map args) {
         if (!projectInfo.microServices.find{ it.releaseCandidateGitTag })  {
             pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
-        else if (projectInfo.microServices.find{ it.releaseVersionGitBranch && !it.releaseCandidateGitTag })  {
+        else if (projectInfo.microServices.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
             pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
                                       "Release Tags: ${projectInfo.microServices.collect{ it.releaseCandidateGitTag }}",
-                                      "Release Branches: ${projectInfo.microServices.collect{ it.releaseVersionGitBranch }}")
+                                      "Release Branches: ${projectInfo.microServices.collect{ it.deploymentBranch }}")
         }
     }
 
@@ -75,7 +75,7 @@ def call(Map args) {
         pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
         projectInfo.microServices.each { microService ->
-            def refName = microService.releaseVersionGitBranch ?: microService.releaseCandidateGitTag
+            def refName = microService.deploymentBranch ?: microService.releaseCandidateGitTag
             if (refName) {
                 pipelineUtils.cloneGitRepo(microService, refName)
             }
@@ -186,14 +186,14 @@ def call(Map args) {
         if (!projectInfo.hasBeenReleased) {
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
-                    microService.releaseVersionGitBranch = "v${microService.releaseCandidateGitTag}"
+                    microService.deploymentBranch = "v${microService.releaseCandidateGitTag}"
                     dir(microService.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shellEcho '', "-> Creating deployment branch: ${microService.releaseVersionGitBranch}"}
+                                ${shellEcho '', "-> Creating deployment branch: ${microService.deploymentBranch}"}
                                 ${sshAgentBash 'GITHUB_PRIVATE_KEY',
-                                               "git branch ${microService.releaseVersionGitBranch}",
-                                               "git push origin ${microService.releaseVersionGitBranch}"}
+                                               "git branch ${microService.deploymentBranch}",
+                                               "git push origin ${microService.deploymentBranch}"}
                             """
                         }
                     }
@@ -202,10 +202,6 @@ def call(Map args) {
         }
         else {
             echo "-> RELEASE DEPLOYMENT BRANCH(ES) HAVE ALREADY BEEN CREATED: SKIPPING"
-        }
-
-        projectInfo.microServices.each { microService ->
-            microService.deploymentBranch = microService.releaseVersionGitBranch
         }
     }
 

@@ -91,4 +91,20 @@ def call(Map args) {
             echo "NO MICROSERVICES TO REMOVE: SKIPPING REMOVE MICROSERVICES SELECTED FOR REMOVAL"
         }
     }
+
+    stage('Inform users of success') {
+        def checkoutMsgs = []
+        args.microServices.each { microService ->
+            checkocheckoutMsgs += ''
+            checkocheckoutMsgs += "**********"
+            checkocheckoutMsgs += "DEPLOYMENT BRANCH FOR ${microService.name}: ${microService.deploymentBranch}"
+            checkocheckoutMsgs += "git checkout ${microService.deploymentBranch}"
+            checkocheckoutMsgs += "**********"
+
+            if (microService != microServices.last() {
+            }
+        }
+
+        pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${projectInfo.deployToNamespace}:", checkoutMsgs)
+    }
 }

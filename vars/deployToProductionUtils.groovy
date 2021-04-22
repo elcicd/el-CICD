@@ -27,9 +27,9 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
                     }
                     else {
                         projectInfo.hasBeenReleased = true
-                        microService.releaseVersionGitBranch = name.trim().find( /[\w.-]+$/)
-                        assert microService.releaseVersionGitBranch ==~ "${projectInfo.releaseVersionTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${microService.name}]: ${microService.releaseVersionGitBranch}"
+                        microService.deploymentBranch = name.trim().find( /[\w.-]+$/)
+                        assert microService.deploymentBranch ==~ "${projectInfo.releaseVersionTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${microService.name}]: ${microService.deploymentBranch}"
                     }
                 }
                 microService.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)

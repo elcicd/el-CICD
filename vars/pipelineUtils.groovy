@@ -199,14 +199,10 @@ def errorBanner(def ... msgs) {
 }
 
 def createBanner(def ... msgs) {
-    if (msgs[0] instanceof List) {
-        msgs = msgs[0]
-    }
-
     return """
         ===========================================
 
-        ${msgs.join("\n        ")}
+        ${msgs.flatten().join("\n        ")}
 
         ===========================================
     """
