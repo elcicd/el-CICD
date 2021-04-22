@@ -209,8 +209,8 @@ def createBanner(def ... msgs) {
 }
 
 def msgFlatten(def list, def msgs) {
-    list = list ?: []
-    if (msgs instanceof Collection || msgs.getClass().isArray()) {
+    def list = list ?: []
+    if (msgs !instanceof String || msgs !instanceof GString) {
         msgs.each { msg ->
             list = msgFlatten(list, msg)
         }
