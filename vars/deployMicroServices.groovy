@@ -92,16 +92,18 @@ def call(Map args) {
         }
     }
 
-    stage('Inform users of success') {
-        def checkoutMsgs = []
-        args.microServices.each { microService ->
-            checkoutMsgs += ''
-            checkoutMsgs += "**********"
-            checkoutMsgs += "DEPLOYMENT BRANCH FOR ${microService.name}: ${microService.deploymentBranch}"
-            checkoutMsgs += "git checkout ${microService.deploymentBranch}"
-            checkoutMsgs += "**********"
-        }
+    if (args.projectInfo.deploymentBranch) {
+        stage('Inform users of success') {
+            def checkoutMsgs = []
+            args.microServices.each { microService ->
+                checkoutMsgs += ''
+                checkoutMsgs += "**********"
+                checkoutMsgs += "DEPLOYMENT BRANCH FOR ${microService.name}: ${microService.deploymentBranch}"
+                checkoutMsgs += "git checkout ${microService.deploymentBranch}"
+                checkoutMsgs += "**********"
+            }
 
-        pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${args.projectInfo.deployToNamespace}:", checkoutMsgs)
+            pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${args.projectInfo.deployToNamespace}:", checkoutMsgs)
+        }
     }
 }
