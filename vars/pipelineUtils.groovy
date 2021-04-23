@@ -148,12 +148,15 @@ def validateProjectInfo(def projectInfo) {
 
     projectInfo.components.each { component ->
         assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
-        assert component.codeBase ==~ /[a-z-]+/ : "bad git repo name for codeBase, [a-z]+: ${component.codeBase}"
+        assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
+
+    assert projectInfo.releaseRegions.find { it ==~ /[a-z-]+/ }.size() == projectInfo.releaseRegions.size() :
+        "bad release region name(s), [a-z-]+, ${projectInfo.releaseRegions}"
 
     projectInfo.resourceQuotas.each { env, resourceQuotaFile ->
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
