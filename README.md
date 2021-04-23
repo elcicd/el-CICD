@@ -1,8 +1,8 @@
 # el-CICD
 
-Main functional library for el-CICD project.  See `el-CICD-docs` project for full project documentation.
+Main functional library for the el-CICD project.  See [`el-CICD-docs`](https://github.com/elcicd/el-CICD-docs) project for full project documentation.
 
-This document is part of the el-CICD project, a complete CICD system for the OKD Container Platform.
+This document is part of the el-CICD project, a complete CICD COTS solution for the OKD Container Platform.
 
 Copyright (C) 2021 Evan "Hippy" Slatis
 email: hippyod -at- yahoo -dot- com
