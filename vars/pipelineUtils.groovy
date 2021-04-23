@@ -155,7 +155,7 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    assert projectInfo.releaseRegions.find { it ==~ /[a-z-]+/ }.size() == projectInfo.releaseRegions.size() :
+    assert projectInfo.releaseRegions.findAll { it ==~ /[a-z-]+/ }.size() == projectInfo.releaseRegions.size() :
         "bad release region name(s), [a-z-]+, ${projectInfo.releaseRegions}"
 
     projectInfo.resourceQuotas.each { env, resourceQuotaFile ->
