@@ -193,13 +193,7 @@ def applyResources(def projectInfo, def microServices) {
                     ${shellEcho '',
                                 '******',
                                 "APPLYING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
-                    IMAGE_PULL_BACKOFF_PODS=\$(oc get pods --no-headers -n ${projectInfo.deployToNamespace} | grep "${microService.name}-.*" | grep -i 'ImagePull')||:
-                    if [[ ! -z "\${IMAGE_PULL_BACKOFF_PODS}" ]]
-                    then
-                        oc delete cronjob -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
-                    fi
-
-                    oc delete --cascade=false --wait dc,deploy -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
+                    oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
                     ${shellEcho '******'}
 
