@@ -20,7 +20,7 @@ def call(Map args) {
             def namespacesToDelete = []
             namespacesToDelete.addAll(projectInfo.sandboxNamespaces)
             if (args.rebuildNonProd) {
-                namespacesToDelete.addAll(projectInfo.nonProdNamespaces)
+                namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
                 namespacesToDelete.add(projectInfo.hotfixNamespace)
             }
 
