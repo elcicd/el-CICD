@@ -102,7 +102,7 @@ _create_env_docker_registry_secret() {
         # option values changed in future versions of kubectl/oc cli
         DRY_RUN=true
     fi
-    
+
     echo
     echo "Creating secret ${SECRET_NAME} for SDLC environment ${ENV}"
     local SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SECRET_NAME}

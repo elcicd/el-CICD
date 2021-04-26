@@ -56,15 +56,6 @@ def call(Map args) {
         }
     }
 
-    stage('Confirm successful deployment in namespace from artifact repository') {
-        if (args.microServices) {
-            deploymentUtils.confirmDeployments(args.projectInfo, args.microServices)
-        }
-        else {
-            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
-        }
-    }
-
     stage('Update microservice meta-info maps') {
         if (args.microServices) {
             deploymentUtils.updateMicroServiceMetaInfo(args.projectInfo, args.microServices)
@@ -80,6 +71,15 @@ def call(Map args) {
         }
         else {
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
+        }
+    }
+
+    stage('Confirm successful deployment in namespace from artifact repository') {
+        if (args.microServices) {
+            deploymentUtils.confirmDeployments(args.projectInfo, args.microServices)
+        }
+        else {
+            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${env} FROM ARTIFACT REPOSITORY"
         }
     }
 

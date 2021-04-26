@@ -239,11 +239,14 @@ def rolloutLatest(def projectInfo, def microServices) {
             DCS="\$(oc get dc --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
 
             FOR_DELETE_DCS=\$(echo \${DCS} | tr ' ' '|')
-            FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
-
-            if [[ ! -z \${FOR_DELETE_PODS} ]]
+            if [[ ! -z \${FOR_DELETE_DCS} ]]
             then
-                oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
+                FOR_DELETE_PODS=\$(oc get pods  -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | egrep "(\${FOR_DELETE_DCS})-[0-9]+-deploy" | xargs)
+
+                if [[ ! -z \${FOR_DELETE_PODS} ]]
+                then
+                    oc delete pods --ignore-not-found \${FOR_DELETE_PODS} -n ${projectInfo.deployToNamespace} 
+                fi
             fi
         done
     """
