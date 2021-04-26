@@ -56,6 +56,9 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
 
+        projectInfo.microServices = projectInfo.microServices ?: []
+        projectInfo.libraries = projectInfo.libraries ?: []
+
         projectInfo.components = []
         projectInfo.components.addAll(projectInfo.microServices)
         projectInfo.components.addAll(projectInfo.libraries)
@@ -122,6 +125,8 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.builderNamespaces = [projectInfo.devNamespace]
         projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
         projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces)
+
+        projectInfo.releaseRegions = projectInfo.releaseRegions ?: []
 
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
