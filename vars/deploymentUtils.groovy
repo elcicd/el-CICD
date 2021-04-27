@@ -199,7 +199,7 @@ def applyResources(def projectInfo, def microServices) {
                                                   -l microservice=${microService.name} \
                                                   -o custom-columns=:.metadata.name \
                                                   -n ${projectInfo.deployToNamespace} | tr '\n' ' ')
-                    oc delete pods \${COMPLETED_PODS} 2>&1  || :
+                    oc delete pods \${COMPLETED_PODS} -n ${projectInfo.deployToNamespace} 2>&1  || :
 
                     oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
