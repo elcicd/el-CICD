@@ -36,7 +36,7 @@ _build_el_cicd_jenkins_image() {
            -e "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
         ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
 
-    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
+    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${TARGET_JENKINS_BUILD_DIR} --no-cache=true --wait --follow -n openshift
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
 }
@@ -60,7 +60,7 @@ _build_el_cicd_jenkins_agent_images_image() {
             echo "Starting Agent Build: ${AGENT_NAME}"
 
             cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-            oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --wait --follow -n openshift
+            oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --no-cache=true --wait --follow -n openshift
         done
 
         rm -rf ${TARGET_JENKINS_BUILD_DIR}

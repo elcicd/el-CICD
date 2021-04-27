@@ -232,6 +232,7 @@ __create_onboarding_automation_server() {
                                   -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
                                   -p JENKINS_IMAGE_STREAM_TAG=${JENKINS_IMAGE_STREAM}:latest \
                                   -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
+                                  -e OPENSHIFT_ENABLE_OAUTH=true \
                                   -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                   -e TRY_UPGRADE_IF_NO_MARKER=true \
                                   -e CASC_JENKINS_CONFIG=${JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
