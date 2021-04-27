@@ -193,8 +193,10 @@ def applyResources(def projectInfo, def microServices) {
                     ${shellEcho '',
                                 '******',
                                 "APPLYING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
+                    COMPLETED_PODS=\$(oc get pods --no-headers --ignore-not-found --field-selector=status.phase==Succeeded \
+                                                  -l microservice=${microService.name} -o custom-columns=:.metadata.name | tr '\n' ' ')
+                    oc delete \${COMPLETED_PODS} 2&>1  || :
 
-                    oc delete \$(oc get pods --ignore-not-found --field-selector=status.phase==Succeeded -l microservice=${microService.name}) 2&>1  || :
                     oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
                     ${shellEcho '******'}
