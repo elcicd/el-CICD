@@ -72,7 +72,7 @@ def call(Map args) {
                     if (microService.promote) {
                         def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
                         def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
-                        if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${fromUserNamePwd} ${imageUrl} 2> /dev/null || :").trim()) {
+                        if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${fromUserNamePwd} ${imageUrl} || :").trim()) {
                             errorMsgs << "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                         }
                     }
