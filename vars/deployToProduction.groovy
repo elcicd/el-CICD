@@ -56,7 +56,8 @@ def call(Map args) {
                 if (microService.releaseCandidateGitTag) {
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${imageTag}"
 
-                    def imageFound = sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2>&1 || :").trim()
+                    def imageFound =
+                        sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2> /dev/null || :").trim()
 
                     def msg = imageFound ? "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}" : "-> ERROR: no image found in image repo: ${imageUrl}"
                     echo msg

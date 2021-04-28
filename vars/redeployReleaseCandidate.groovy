@@ -34,14 +34,14 @@ def call(Map args) {
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
-                    def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.PRE_PROD_ENV}"
+                    def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
                     def imageFound = sh(returnStdout: true, script: """
-                        skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} 2>&1 || :
+                        skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} 2> /dev/null || :
                     """).trim()
 
                     def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
-                                           "-> ERROR: no image found in image repo: ${projectInfo.PRE_PROD_ENV}"
+                                           "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}"
                     echo msg
 
                     allImagesExist = allImagesExist && imageFound

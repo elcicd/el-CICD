@@ -96,7 +96,7 @@ def call(Map args) {
                 if (microService.redeploy) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
-                    if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2>&1 || :").trim()) {
+                    if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} 2> /dev/null || :").trim()) {
                         errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
                     }
                 }
