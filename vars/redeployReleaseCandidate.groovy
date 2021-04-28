@@ -37,7 +37,7 @@ def call(Map args) {
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
                     def imageFound = sh(returnStdout: true, script: """
-                        skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} 2> /dev/null || :
+                        skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl}  || :
                     """).trim()
 
                     def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
