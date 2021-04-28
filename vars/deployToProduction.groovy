@@ -59,7 +59,15 @@ def call(Map args) {
                     def imageFound =
                         sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} || :").trim()
 
-                    def msg = imageFound ? "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}" : "-> ERROR: no image found in image repo: ${imageUrl}"
+                    def msg
+                    if (imageFound) {
+                        msg = microService.deploymentBranch ?
+                            "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}" :
+                    }
+                    else {
+                        msg = "-> ERROR: no image found in image repo: ${imageUrl}"
+                    }
+
                     echo msg
 
                     allImagesExist = allImagesExist && imageFound
