@@ -62,7 +62,7 @@ def call(Map args) {
                     def msg
                     if (imageFound) {
                         msg = microService.deploymentBranch ?
-                            "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}" :
+                            "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}"
                     }
                     else {
                         msg = "-> ERROR: no image found in image repo: ${imageUrl}"
