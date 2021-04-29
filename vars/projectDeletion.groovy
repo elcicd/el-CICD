@@ -10,7 +10,7 @@ def call(Map args) {
     stage('Remove project namespace environments') {
         def namespacesToDelete = []
         if (args.isNonProd) {
-            namespacesToDelete.addAll(projectInfo.nonProdNamespaces)
+            namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
             namespacesToDelete.addAll(projectInfo.sandboxNamespaces)
             projectInfo.allowsHotfixes && namespacesToDelete.add(projectInfo.hotfixNamespace)
         }
