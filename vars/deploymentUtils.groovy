@@ -201,8 +201,8 @@ def applyResources(def projectInfo, def microServices) {
                                                   -n ${projectInfo.deployToNamespace} | tr '\n' ' ')
                     oc delete pods \${COMPLETED_PODS} -n ${projectInfo.deployToNamespace} 2>&1  || :
 
-                    oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
-                    oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
+                    # oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
+                    oc replace --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
                     ${shellEcho '******'}
 
                     ${shellEcho '',
