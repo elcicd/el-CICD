@@ -124,7 +124,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
 
                     if (templateDef.templateName?.startsWith('route') || templateDef.templateName?.startsWith('ingress')) {
                         if (!paramMap.ROUTE_HOST) {
-                            def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ? 
+                            def postfix = (projectInfo.deployToEnv != projectInfo.prodEnv) ?
                                 (projectInfo.deployToNamespace - projectInfo.id) : ''
 
                             paramMap.ROUTE_HOST = "${templateDef.appName}${postfix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()

@@ -1,6 +1,12 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+export _TRUE='true'
+export _FALSE='false'
+
+export _YES='Yes'
+export _NO='No'
+
 _bootstrap_el_cicd() {
     local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
@@ -103,12 +109,12 @@ __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
     echo
-    UPDATE_JENKINS=$(__get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
+    UPDATE_JENKINS=$(_get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
 
     echo
     if [[ ! -z $(oc get is --ignore-not-found ${JENKINS_IMAGE_STREAM} -n openshift) ]]
     then
-        UPDATE_EL_CICD_JENKINS=$(__get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
+        UPDATE_EL_CICD_JENKINS=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
     fi
 
     echo
@@ -195,13 +201,17 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "JENKINS AGENTS WILL BE BUILT"
     fi
 
+    _confirm_continue
+}
+
+_confirm_continue() {
     echo
-    while read -e -t 0.1; do : ; done
-    echo "Do you wish to continue? [${_YES}/${_NO}]: "
+    echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
     read CONTINUE
     if [[ ${CONTINUE} != ${_YES} ]]
     then
+        echo
         echo "You must enter ${_YES} for bootstrap to continue.  Exiting..."
         exit 0
     fi
@@ -327,8 +337,9 @@ __base_jenkins_agent_exists() {
     fi
 }
 
-__get_yes_no_answer() {
+_get_yes_no_answer() {
     read -p "${1}" -n 1 USER_ANSWER
+    >&2 echo
 
     if [[ ${USER_ANSWER} == 'Y' ]]
     then

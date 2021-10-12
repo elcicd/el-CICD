@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+cd "$(dirname ${0})"
+
 read -r -d '' WARNING_MSG << EOM
 ===================================================================
 WARNING:
@@ -34,8 +36,6 @@ Options:
 root-config-file:
     file name or path to a root configuration file relative the root of the el-CICD-config directory
 EOM
-
-cd "$(dirname "${0}")"
 
 set -e -o allexport
 
@@ -84,12 +84,6 @@ CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=../jenkins-target
 
-_TRUE='true'
-_FALSE='false'
-
-_YES='Yes'
-_NO='No'
-
 CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
 
 echo
@@ -114,11 +108,13 @@ case ${CLI_OPTION} in
 
     '--non-prod' | '-N')
         echo "BOOTSTRAPPING NON-PROD"
+
         _bootstrap_el_cicd non-prod
     ;;
 
     '--prod' | '-P')
         echo "BOOTSTRAPPING PROD"
+
         _bootstrap_el_cicd prod
     ;;
 
