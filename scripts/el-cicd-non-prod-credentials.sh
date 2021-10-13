@@ -52,6 +52,7 @@ echo
 echo "Creating ${EL_CICD_BUILD_SECRETS_NAME} secret containing el-CICD build secret(s) in ${ONBOARDING_MASTER_NAMESPACE}"
 oc delete secret --ignore-not-found ${EL_CICD_BUILD_SECRETS_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
 sleep 5
+mkdir -p ${BUILD_SECRET_FILE_DIR}
 oc create secret generic ${EL_CICD_BUILD_SECRETS_NAME} --from-file=${BUILD_SECRET_FILE_DIR} -n ${ONBOARDING_MASTER_NAMESPACE}
 
 _run_custom_credentials_script non-prod

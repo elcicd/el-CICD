@@ -17,7 +17,7 @@ ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER 
 EOM
 
 read -r -d '' HELP_MSG << EOM
-Usage: el-cicd.sh [OPTION] [root-config-file]
+Usage: oc el-cicd-adm [OPTION] [root-config-file]
 
 el-CICD Admin Utility
 
@@ -49,8 +49,8 @@ CONFIG_REPOSITORY=${BOOTSTRAP_DIR}/../el-CICD-config
 
 case "${CLI_OPTION}" in
     '')
-         echo "Usage: el-cicd.sh [OPTION] [root-config-file]"
-         echo "Try 'el-cicd.sh --help' for more information."
+         echo "Usage: oc el-cicd-adm [OPTION] [root-config-file]"
+         echo "Try 'el-cicd-adm --help' for more information."
          exit 1
     ;;
 
