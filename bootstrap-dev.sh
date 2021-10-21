@@ -1,44 +1,36 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-cd "$(dirname ${0})"
+read -r -d '' HELP_MSG << EOM
+Usage: bootstrap-dev.sh [OPTION] [root-config-file]
 
-BOOTSTRAP_DIR=$(pwd)
+el-CICD Admin Utility
 
-EL_CICD_HOME=$(dirname ${BOOTSTRAP_DIR})
+Options:
+    -D,   --setup-dev:       setup an environment for developing el-CICD
+    -T,   --tear-down-dev:   tear down an environment for developing el-CICD
+          --help:            display this help text and exit
 
-CONFIG_DIR=${EL_CICD_HOME}/el-CICD-config
+root-config-file:
+    file name or path to a root configuration file relative the root of the el-CICD-config directory
+EOM
 
-RESOURCES_DIR=${BOOTSTRAP_DIR}/scripts/resources
+echo
+case ${1} in
 
-source ${BOOTSTRAP_DIR}/scripts/bootstrap-functions.sh
-source ${BOOTSTRAP_DIR}/scripts/bootstrap-dev-functions.sh
+    '--setup-dev' | '-D')
+        $(pwd)/kubectl-el_cicd_adm -D ${2}
+    ;;
 
-source ${CONFIG_DIR}/bootstrap/el-cicd-default-system.conf
-source ${CONFIG_DIR}/bootstrap/el-cicd-default-bootstrap.conf
-source ${CONFIG_DIR}/bootstrap/el-cicd-bootstrap-dev-env.conf
+    '--tear-down-dev' | '-T')
+        $(pwd)/kubectl-el_cicd_adm -T ${2}
+    ;;
 
-set -e
-if [[ $1 == '--setup' ]]
-then
-    __bootstrap_dev_environment
-elif [[ $1 == '--remove' ]]
-then
-    __remove_dev_environment
-elif [[ $1 == '--remove-nexus' ]]
-then
-    __remove_nexus3
-elif [[ $1 == '--remove-nexus-full' ]]
-then
-    __remove_nexus3
+    *)
+        echo "ERROR: Unknown command option '${CLI_OPTION}'"
+        echo
+        echo "${HELP_MSG}"
+        exit 1
+    ;;
+esac
 
-    __remove_nexus3_nfs_share
-elif [[ $1 == '--create-credentials' ]]
-then
-    __create_credentials
-else
-    echo 'You must specify one of the following flags:'
-    echo '    --setup          Sets up el-CICD developer environment'
-    echo '    --remove -nexus  Removes el-CICD developer environment and Nexus3 NFS share'
-    echo '    --create-creds   Only generate credentials'
-fi

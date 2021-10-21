@@ -31,15 +31,56 @@ Options:
     -j,   --jenkins:         only build el-CICD Jenkins image
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
+    -D,   --setup-dev:       setup an environment for developing el-CICD
+    -T,   --tear-down-dev:      tear down an environment for developing el-CICD
           --help:            display this help text and exit
 
 root-config-file:
     file name or path to a root configuration file relative the root of the el-CICD-config directory
 EOM
 
-set -e -o allexport
+read -r -d '' DEV_SETUP_WELCOME_MSG << EOM
+Welcome to the el-CICD setup utility for developing with or on el-CICD.
+Before completing the setup, please make sure of the following:
+
+1) Log into an OKD cluster as cluster admin, or you can use Red Hat CodeReady Containers:
+   https://developers.redhat.com/products/codeready-containers/overview
+   NOTE: el-CICD can setup CodeReady Containers for you if requested.
+
+2) Have a GitHub account and a personal access token with repo and admin:repo_hook privileges ready for use.
+
+3) Have root priveleges on this machine. sudo password is required to complete setup.
+
+el-CICD will perform the necessary setup for running the tutorial or developing with el-CICD:
+    - Optionally setup CodeReady Containers, if downloaded to the el-CICD-dev directory and not currently installed.
+    - Optionally setup up a Nexus3 image repository to mimic an external repository, with or without an NFS share.
+    - Clone and push all el-CICD and demo project Git repositories into your GitHub account.
+    - Install the Sealed Secrets controller onto your cluster
+
+NOTE: This utility is idempotent and can be rerun mutliple times.
+EOM
+
+read -r -d '' DEV_TEAR_DOWN_WELCOME_MSG << EOM
+Welcome to the el-CICD dev environment tear down utility.
+Before beginning to tear down your environment, please make sure of the following:
+
+1) Log into an OKD cluster as cluster admin, or you can use Red Hat CodeReady Containers:
+   https://developers.redhat.com/products/codeready-containers/overview
+   NOTE: el-CICD can setup CodeReady Containers for you if requested.
+
+2) Have root priveleges on this machine. sudo password is required to complete setup.
+
+el-CICD will optionally tear down:
+    - CodeReady Containers
+    - The cluster docker registry
+    - Remove el-CICD repositories pushed to your Git host
+EOM
+
+set -o allexport
 
 BOOTSTRAP_DIR=$(pwd)
+
+EL_CICD_HOME=$(dirname ${BOOTSTRAP_DIR})
 
 CLI_OPTION=${1}
 
@@ -74,6 +115,7 @@ echo "${WARNING_MSG}"
 sleep 2
 
 SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
+SCRIPTS_RESOURCES_DIR=${SCRIPTS_DIR}/resources
 
 RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
 BUILD_CONFIGS_DIR=${RESOURCES_DIR}/buildconfigs
@@ -89,12 +131,14 @@ CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
 echo
 echo 'Loading el-CICD environment...'
 
+set -e
 echo
-for FILE in bootstrap-functions.sh credential-functions.sh jenkins-builder-functions.sh
+for FILE in $(ls ${SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
 do
-    echo "sourcing file: ${FILE}"
-    source ${SCRIPTS_DIR}/${FILE}
+    echo "Sourcing file: ${FILE}"
+    source "${SCRIPTS_DIR}/${FILE}"
 done
+set +e
 
 _source_el_cicd_meta_info_files
 
@@ -123,7 +167,7 @@ case ${CLI_OPTION} in
 
         _create_el_cicd_meta_info_config_map
 
-        eval ./scripts/el-cicd-non-prod-credentials.sh
+        _refresh_non_prod_credentials
     ;;
 
     '--prod-creds' | '-p')
@@ -131,7 +175,7 @@ case ${CLI_OPTION} in
 
         _create_el_cicd_meta_info_config_map
 
-        eval ./scripts/el-cicd-prod-credentials.sh
+        _refresh_prod_credentials
     ;;
 
     '--cicd-creds' | '-c')
@@ -167,6 +211,18 @@ case ${CLI_OPTION} in
         _build_el_cicd_jenkins_image
 
         _build_el_cicd_jenkins_agent_images_image
+    ;;
+
+    '--setup-dev' | '-D')
+        echo "BOOTSTRAPPING EL-CICD DEVELOPMENT ENVIRONMENT"
+
+        __bootstrap_dev_environment
+    ;;
+
+    '--tear-down-dev' | '-T')
+        echo "TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
+
+        __tear_down_dev_environment
     ;;
 
     *)

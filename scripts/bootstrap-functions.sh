@@ -42,7 +42,7 @@ _bootstrap_el_cicd() {
 
     echo
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
-    ${SCRIPTS_DIR}/el-cicd-${EL_CICD_ONBOARDING_SERVER_TYPE}-credentials.sh
+    _refresh_${EL_CICD_ONBOARDING_SERVER_TYPE/-/_}_credentials
 
     echo
     echo "RUN ALL CUSTOM SCRIPTS '${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
@@ -95,7 +95,7 @@ __create_source_file() {
     local INCLUDE_FILES=${2}
 
     # iterates over each file an prints (default awk behavior) each unique line; thus, if second file contains the same first property
-    # value, it skips it in the second file, and all is outpput to the tmp file for creating the final ConfigMap below
+    # value, it skips it in the second file, and all is output to the tmp file for creating the final ConfigMap below
     local CURRENT_DIR=$(pwd)
     cd ${CONFIG_REPOSITORY_BOOTSTRAP}
     awk -F= '!line[$1]++' ../${ROOT_CONFIG_FILE} ${INCLUDE_FILES} > ${META_INFO_FILE}
@@ -124,11 +124,7 @@ __gather_and_confirm_bootstrap_info_with_user() {
 __bootstrap_el_cicd_onboarding_server() {
     local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
-    local DEL_NAMESPACE=$(oc projects -q | grep ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
-    if [[ ! -z "${DEL_NAMESPACE}" ]]
-    then
-        __delete_master_namespace
-    fi
+    _delete_namespace ${ONBOARDING_MASTER_NAMESPACE} 10
 
     __create_master_namespace_with_selectors
 
@@ -285,19 +281,30 @@ __create_onboarding_automation_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
 }
 
-__delete_master_namespace() {
-    echo
-    oc delete project ${ONBOARDING_MASTER_NAMESPACE}
-    echo -n "Deleting ${ONBOARDING_MASTER_NAMESPACE} namespace"
-    until
-        !(oc project ${ONBOARDING_MASTER_NAMESPACE} > /dev/null 2>&1)
-    do
-        echo -n '.'
-        sleep 1
-    done
-    echo
-    echo "Namespace ${ONBOARDING_MASTER_NAMESPACE} deleted.  Sleep 10s to confirm cleanup."
-    sleep 10
+_delete_namespace() {
+    local NAMESPACE=$1
+    local SLEEP_SEC=$2
+
+    local DEL_NAMESPACE=$(oc projects -q | grep ${NAMESPACE} | tr -d '[:space:]')
+    if [[ ! -z "${DEL_NAMESPACE}" ]]
+    then
+        echo
+        oc delete project ${NAMESPACE}
+        echo -n "Deleting ${NAMESPACE} namespace"
+        until
+            !(oc project ${NAMESPACE} > /dev/null 2>&1)
+        do
+            echo -n '.'
+            sleep 1
+        done
+
+        echo
+        if [[ ! -z ${SLEEP_SEC} ]]
+        then
+            echo "Namespace ${NAMESPACE} deleted.  Sleep ${SLEEP_SEC} second(s) to confirm."
+            sleep ${SLEEP_SEC}
+        fi
+    fi
 }
 
 __build_jenkins_agents_if_necessary() {

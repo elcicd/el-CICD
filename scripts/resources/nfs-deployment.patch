@@ -1,0 +1,13 @@
+spec:
+  template:
+    spec:
+      volumes:
+      - name: docker-registry
+        persistentVolumeClaim:
+          claimName: docker-registry-pvc
+      containers:
+      - name: docker-registry-%REGISTRY_NAME%
+        volumeMounts:
+        - name: docker-registry
+          mountPath: /var/lib/registry
+          subPath: %REGISTRY_NAME%

@@ -1,27 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-read -r -d '' DEV_SETUP_WELCOME_MSG << EOM
-Welcome to the el-CICD setup utility for developing with or on el-CICD.
-Before completing the setup, please make sure of the following:
-
-1) Log into an OKD cluster as cluster admin, or you can use Red Hat CodeReady Containers:
-   https://developers.redhat.com/products/codeready-containers/overview
-   NOTE: el-CICD can setup CodeReady Containers for you if requested.
-
-2) Have a GitHub account and a personal access token with repo and admin:repo_hook privileges ready for use.
-
-3) Have root priveleges on this machine. sudo password is required to complete setup.
-
-el-CICD will perform the necessary setup for running the tutorial or developing with el-CICD:
-    - Optionally setup CodeReady Containers, if downloaded to the el-CICD-dev directory and not currently installed.
-    - Optionally setup up a Nexus3 image repository to mimic an external repository, with or without an NFS share.
-    - Clone and push all el-CICD and demo project Git repositories into your GitHub account.
-    - Install the Sealed Secrets controller onto your cluster
-
-NOTE: This utility is idempotent and can be rerun mutliple times.
-EOM
-
 __bootstrap_dev_environment() {
     echo
     echo "${DEV_SETUP_WELCOME_MSG}"
@@ -35,9 +14,11 @@ __bootstrap_dev_environment() {
         __bootstrap_clean_crc
     fi
 
-    if [[ ${INSTALL_NEXUS3} == ${_YES} ]]
+    __additional_cluster_config
+
+    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
-        __setup_nexus33
+        __setup_docker_registry
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
@@ -51,7 +32,7 @@ __gather_dev_setup_info() {
     CRC_TAR_XZ=$(ls ${EL_CICD_HOME}/crc-*.tar.xz 2>/dev/null | wc -l)
     if [[ ${CRC_TAR_XZ} == '1' && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
     then
-        echo "CRC can be setup with 8 vcpus, 48 GB of RAM, and 128 GB of disk space."
+        echo "CRC needs a minimum of 8 vCPUs, 48GB of RAM, and 128GB of disk space."
         echo
         echo "WARNING: el-CICD will completely remove any old CRC installs."
         SETUP_CRC=$(_get_yes_no_answer 'Do you wish to setup CRC? [Y/n] ')
@@ -60,12 +41,13 @@ __gather_dev_setup_info() {
     fi
 
     echo
-    INSTALL_NEXUS3=$(_get_yes_no_answer 'Do you wish to install Nexus3 on your OKD cluster? [Y/n] ')
-    if [[ ${INSTALL_NEXUS3} == ${_YES} ]]
+    INSTALL_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development Docker Registry on your cluster? [Y/n] ')
+    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
-        SETUP_NEXUS_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for Nexus(for developers)? [Y/n] ')
+        SETUP_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your Docker Registry (for developers)? [Y/n] ')
     fi
 
+    echo
     GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you to (re)generate the credential files? [Y/n] ')
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
     then
@@ -84,19 +66,19 @@ __gather_dev_setup_info() {
 __summarize_and_confirm_dev_setup_info() {
     echo
     echo "SUMMARY:"
-    echo 
+    echo
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
-        echo "CRC will be setup."
-    else 
-        echo "CRC will NOT be setup."
+        echo "CRC will be setup.  Login to kubeadmin will be automated."
+    else
+        echo "CRC will NOT be setup.  You should already be logged into a cluster as a cluster admin."
     fi
 
-    if [[ ${INSTALL_NEXUS3} == ${_YES} ]]
+    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
-        echo -n "Nexus3 will be installed on your cluster WITH"
-        if [[ ${SETUP_NEXUS_NFS} != ${_YES} ]]
+        echo -n "Docker Registry will be installed on your cluster WITH"
+        if [[ ${SETUP_DOCKER_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
         fi
@@ -115,7 +97,7 @@ __summarize_and_confirm_dev_setup_info() {
 }
 
 __bootstrap_clean_crc() {
-    __remove_existing_crc
+    _remove_existing_crc
 
     echo
     echo "Extracting CRC tar.xz to ${EL_CICD_HOME}"
@@ -123,10 +105,6 @@ __bootstrap_clean_crc() {
 
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
-    echo
-    ${CRC_EXEC} stop
-
-    echo rm -rf ${HOME}/.crc
 
     echo
     ${CRC_EXEC} setup
@@ -137,22 +115,53 @@ __bootstrap_clean_crc() {
 
     eval $(${CRC_EXEC} oc-env)
     source <(oc completion ${CRC_SHELL})
+
+    echo
+    echo "crc login as kubeadmin"
+    local CRC_LOGIN=$(${CRC_EXEC} console --credentials | sed -n 2p | sed -e "s/.*'\(.*\)'/\1/")
+    eval ${CRC_LOGIN} --insecure-skip-tls-verify
 }
 
-__create_nexus3_nfs_share() {
+__additional_cluster_config() {
     echo
-    if [[ ! -d /mnt/nexus-data || -z $(sudo exportfs | grep ${NEXUS_DATA_NFS_DIR}) ]]
-    then
-        echo 'Creating NFS share on host for Nexus, if necessary: /mnt/nexus-data'
-        sudo mkdir -p ${NEXUS_DATA_NFS_DIR}
-
-        if [[ -z $(cat /etc/exports | grep ${NEXUS_DATA_NFS_DIR}) ]]
+    for GROUP in ${CRC_TEST_RBAC_GROUPS}
+    do
+        if [[ ! -z $(oc get groups ${GROUP} 2&> /dev/null) ]]
         then
-            echo "${NEXUS_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports
+            echo "Creating test RBAC group '${GROUP}'"
+            oc adm groups new ${GROUP}
+        else
+            echo "RBAC group '${GROUP}' found. Skipping..."
+        fi
+    done
+
+    echo
+    if [[ -z $(oc get secrets -n kube-system | grep sealed-secrets-key) ]]
+    then
+        echo "Creating Sealed Secrets master key"
+        oc create -f ${SCRIPTS_RESOURCES_DIR}//master.key
+        oc delete pod --ignore-not-found -n kube-system -l name=sealed-secrets-controller
+    else
+        echo "Sealed Secrets master key found. Apply manually if still required.  Skipping..."
+    fi
+}
+
+__create_docker_registry_nfs_share() {
+    echo
+    if [[ ! -d ${DOCKER_REGISTRY_DATA_NFS_DIR} || -z $(sudo exportfs | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
+    then
+        echo "Creating NFS share on host for Nexus, if necessary: ${DOCKER_REGISTRY_DATA_NFS_DIR}"
+        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_DEV}
+        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_NON_PROD}
+        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_PROD}
+
+        if [[ -z $(cat /etc/exports | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
+        then
+            echo "${DOCKER_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports
         fi
 
-        sudo chown -R nobody:nobody ${NEXUS_DATA_NFS_DIR}
-        sudo chmod 777 ${NEXUS_DATA_NFS_DIR}
+        sudo chown -R nobody:nobody ${DOCKER_REGISTRY_DATA_NFS_DIR}
+        sudo chmod 777 ${DOCKER_REGISTRY_DATA_NFS_DIR}
         sudo exportfs -a
         sudo systemctl restart nfs-server.service
     else
@@ -160,52 +169,68 @@ __create_nexus3_nfs_share() {
     fi
 }
 
-__setup_nexus33() {
-    if [[ ${SETUP_NEXUS_NFS} == ${_YES} ]]
+__setup_docker_registry() {
+    mkdir -p ${TMP_DIR}
+
+    oc new-project ${DOCKER_REGISTRY_NAMESPACE}
+
+    if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
     then
-        __create_nexus3_nfs_share
+        __create_docker_registry_nfs_share
 
-        local NEXUS_K8S_FILE=nexus-nfs-local.yml
-    else
-        local NEXUS_K8S_FILE=nexus-ephemeral.yml
+        oc create -f ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv.yml
     fi
-    echo
-    oc apply -f ${RESOURCES_DIR}/${NEXUS_K8S_FILE}
+
+    __generate_deployments
 
     echo
-    oc rollout status deploy nexus -n nexus
-    echo
-    echo 'Nexus is up!'
-    sleep 2
-
-    __create_nexus3_image_repositories
-}
-
-__create_nexus3_image_repositories() {
-    CURL_COMMAND="curl -Ss -o /dev/null -w '%{http_code}' -u ${NEXUS_ADMIN}:${NEXUS_ADMIN_PWD} --header 'Content-Type: application/json'"
-
-    NEXUS_URL='http://elcicd-nexus.apps-crc.testing/service/rest/v1'
-
-    curl -X PUT ${NEXUS_URL}/security/anonymous -H 'accept: application/json' -H 'Content-Type: application/json' \
-        -d '{ "enabled": false, "userId": "anonymous", "realmName": "NexusAuthorizingRealm" }'
+    oc create -f ${TMP_DIR} -n ${DOCKER_REGISTRY_NAMESPACE}
+    # rm -rf ${TMP_DIR}
 
     echo
-    echo 'Creating the dev, nonprod, and prod image repositories, if necessary'
-    NEXUS_DOCKER_REPO_URL="${NEXUS_URL}/repositories/docker/hosted"
-    for REPO in dev nonprod prod
+    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DOCKER_REGISTRY_NAMESPACE} | xargs)"
+    for DC in ${DCS}
     do
         echo
-        if [[ $(eval "${CURL_COMMAND} ${NEXUS_DOCKER_REPO_URL}/${REPO}") != '200' ]]
+        oc rollout status deploy/${DC} -n ${DOCKER_REGISTRY_NAMESPACE}
+    done
+
+    echo
+    echo 'Docker Registry is up!'
+    sleep 2
+}
+
+__generate_deployments() {
+    local IMAGE_REPOS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
+    local IMAGE_REPOS=''
+    for REPO in ${IMAGE_REPOS_LIST[@]}
+    do
+        IMAGE_REPOS="${IMAGE_REPOS} $(eval echo \${${REPO}${IMAGE_REPO_USERNAME_POSTFIX}})"
+    done
+    IMAGE_REPOS=$(echo ${IMAGE_REPOS} | xargs -n1 | sort -u | xargs)
+
+    for REGISTRY_NAME in ${IMAGE_REPOS}
+    do
+        local TMP_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}-tmp.yml
+        local OUTPUT_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}.yml
+
+        sed -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g"  \
+            -e "s/%CLUSTER_WILDCARD_DOMAIN%/${CLUSTER_WILDCARD_DOMAIN}/g" \
+            ${SCRIPTS_RESOURCES_DIR}/docker-registry-template.yml > ${TMP_FILE}
+
+        if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
         then
-            if [[ $(eval "${CURL_COMMAND} ${NEXUS_DOCKER_REPO_URL} -d @${RESOURCES_DIR}/${REPO}ImageRepoDef.json") == '201' ]]
-            then
-                echo "${REPO} repository created"
-            else
-                echo "WARNING: FAILED TO CREATE ${REPO} REPOSITORY. It could be the default password was changed."
-            fi
-        else
-            echo "${REPO} image repository already exists.  Skipping..."
+            local PATCH=$(sed -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g" ${SCRIPTS_RESOURCES_DIR}/nfs-deployment.patch)
+            oc patch --local -f "${TMP_FILE}" -p "${PATCH}" -o yaml > ${OUTPUT_FILE}
+            awk '/^apiVersion:.*/ { print "---" } 1' ${OUTPUT_FILE} > ${TMP_FILE}
         fi
+
+        local HTPASSWD=$(htpasswd -Bbn ${REGISTRY_NAME} ${DOCKER_REGISTRY_USER_PWD})
+        echo '---' >> ${TMP_FILE}
+        oc create secret generic ${REGISTRY_NAME}-auth-secret --dry-run=client --from-literal=htpasswd=${HTPASSWD} \
+            -n ${DOCKER_REGISTRY_NAMESPACE} -o yaml >> ${TMP_FILE}
+
+        mv ${TMP_FILE} ${OUTPUT_FILE}
     done
 }
 
@@ -233,63 +258,10 @@ __create_credentials() {
     for ENV in ${CICD_ENVIRONMENTS}
     do
         echo "Creating the image repository access token file for ${ENV} environment"
-        echo ${NEXUS_ADMIN} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        echo ${DOCKER_REGISTRY_ADMIN} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
     done
 }
 
 __set_config(){
     sudo sed -i "s/^\($1\s*=\s*\).*\$/\1$2/" $3
-}
-
-__remove_nexus3() {
-    oc delete --ignore-not-found -f ${RESOURCES_DIR}/nexus-nfs-local.yml
-}
-
-__remove_nexus3_nfs_share() {
-    if [[ -d ${NEXUS_DATA_NFS_DIR} ]]
-    then
-        echo
-        echo "Removing ${NEXUS_DATA_NFS_DIR} and delisting it as an NFS share"
-
-        sudo rm -rf ${NEXUS_DATA_NFS_DIR}
-        sudo sed -i "\|${NEXUS_DATA_NFS_DIR}|d" /etc/exports
-        sudo exportfs -a
-        sudo systemctl restart nfs-server.service
-    else
-        echo
-        echo "${NEXUS_DATA_NFS_DIR} not found.  Skipping..."
-    fi
-}
-
-__remove_existing_crc() {
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-
-    echo
-    echo 'Cleaning up old CRC install'
-    if [[ ! -z ${CRC_EXEC} ]]
-    then
-        ${CRC_EXEC} stop
-        ${CRC_EXEC} cleanup
-    fi
-
-    echo
-    echo 'Removing old CRC installation directories'
-    rm -rf ${EL_CICD_HOME}/crc*/
-    rm -rf ${HOME}/.crc
-}
-
-__remove_dev_environment() {
-    echo
-    echo 'This utility will remove the CRC and Nexus3 NFS share on your system.'
-
-    echo
-    _confirm_continue
-
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-    if [[ ! -z ${CRC_EXEC} ]]
-    then
-        __remove_existing_crc
-    fi
-
-    __remove_nexus3_nfs_share
 }

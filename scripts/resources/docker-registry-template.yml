@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry-%REGISTRY_NAME%
+  labels:
+    app: docker-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-registry-%REGISTRY_NAME%
+  template:
+    metadata:
+      labels:
+        app: docker-registry-%REGISTRY_NAME%
+    spec:
+      containers:
+      - image: registry:latest
+        imagePullPolicy: Always
+        name: docker-registry-%REGISTRY_NAME%
+        ports:
+        - containerPort: 5000
+        env:
+        - name: REGISTRY_AUTH
+          value: "htpasswd"
+        - name: REGISTRY_AUTH_HTPASSWD_REALM
+          value: "Registry Realm"
+        - name: REGISTRY_AUTH_HTPASSWD_PATH
+          value: "/auth/htpasswd"
+        - name: REGISTRY_HTTP_ADDR
+          value: 0.0.0.0:5000
+        volumeMounts:
+        - name: auth-vol
+          mountPath: "/auth"
+          readOnly: true
+        resources:
+          limits:
+            cpu: 500m
+            memory: 100Mi
+      volumes:
+      - name: auth-vol
+        secret:
+          secretName: %REGISTRY_NAME%-auth-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-registry-%REGISTRY_NAME%-service
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: docker-registry-%REGISTRY_NAME%
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docker-registry-%REGISTRY_NAME%-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: %REGISTRY_NAME%-docker-registry.%CLUSTER_WILDCARD_DOMAIN%
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: docker-registry-%REGISTRY_NAME%-service
+            port:
+              number: 5000
