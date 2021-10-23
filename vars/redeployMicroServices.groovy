@@ -96,7 +96,9 @@ def call(Map args) {
                 if (microService.redeploy) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
-                    if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} || :").trim()) {
+
+                    def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
+                    if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${imageRepoUserNamePwd} ${imageUrl} || :").trim()) {
                         errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
                     }
                 }
@@ -132,7 +134,11 @@ def call(Map args) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def fromImageUrl = "${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
                     def toImageUrl = "${imageRepo}/${microService.id}:${projectInfo.deployToEnv}"
-                    def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+
+
+                    def srcTlsVerify = "--src-tls-verify=${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+                    def destTlsVerify = "--dest-tls-verify=${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+                    def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
                     sh """
                         ${shellEcho '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
 

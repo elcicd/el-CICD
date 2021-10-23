@@ -56,8 +56,9 @@ def call(Map args) {
                 if (microService.releaseCandidateGitTag) {
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${imageTag}"
 
+                    def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
                     def imageFound =
-                        sh(returnStdout: true, script: "skopeo inspect --raw --creds ${imageRepoUserNamePwd} ${imageUrl} || :").trim()
+                        sh(returnStdout: true, script: "${skopeoInspectCmd} ${imageRepoUserNamePwd} ${imageUrl} || :").trim()
 
                     def msg
                     if (imageFound) {
@@ -152,7 +153,8 @@ def call(Map args) {
     }
 
     stage('Promote images') {
-        pipelineUtils.echoBanner("PROMOTE IMAGES TO PROD:", "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
+        pipelineUtils.echoBanner("PROMOTE IMAGES TO PROD:",
+                                 "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN'),
@@ -160,7 +162,10 @@ def call(Map args) {
             {
                 def fromUserNamePwd = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
                 def toUserNamePwd = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PROD_IMAGE_REPO_ACCESS_TOKEN}"
-                def skopeoCopyComd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+
+                def srcTlsVerify = "--src-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+                def destTlsVerify = "--dest-tls-verify=${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+                def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
 
                 def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
                 def prodImageRepo = el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -172,7 +177,7 @@ def call(Map args) {
 
                         sh """
                             ${shellEcho ''}
-                            ${skopeoCopyComd} docker://${preProdImageUrl} docker://${prodImageUrl}
+                            ${skopeoCopyCmd} docker://${preProdImageUrl} docker://${prodImageUrl}
 
                             ${shellEcho '',
                                         '******',

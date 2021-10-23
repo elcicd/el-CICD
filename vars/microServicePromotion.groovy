@@ -72,7 +72,9 @@ def call(Map args) {
                     if (microService.promote) {
                         def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
                         def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
-                        if (!sh(returnStdout: true, script: "skopeo inspect --raw --creds ${fromUserNamePwd} ${imageUrl} || :").trim()) {
+
+                        def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
+                        if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${fromUserNamePwd} ${imageUrl} || :").trim()) {
                             errorMsgs << "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                         }
                     }
@@ -158,17 +160,18 @@ def call(Map args) {
                         def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
                         def deployToImgUrl = "${toImageRepo}/${microService.id}"
 
-                        def skopeoPromoteCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+                        def srcTlsVerify = "--src-tls-verify=${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+                        def destTlsVerify = "--dest-tls-verify=${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
 
-                        def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+                        def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
 
                         def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
                         sh """
                             ${shellEcho ''}
-                            ${skopeoPromoteCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
+                            ${skopeoCopyCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
 
                             ${shellEcho ''}
-                            ${skopeoTagCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
+                            ${skopeoCopyCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
 
                             ${shellEcho ''}
                             ${shellEcho  "--> ${msg}"}

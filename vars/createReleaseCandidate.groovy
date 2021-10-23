@@ -29,8 +29,9 @@ def call(Map args) {
             imageExists = projectInfo.microServices.find { microService ->
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
+                def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
                 return sh(returnStdout: true, 
-                          script: "skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
+                          script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
             }
         }
 
@@ -86,8 +87,9 @@ def call(Map args) {
                 if (microService.promote) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
-                    return !sh(returnStdout: true, 
-                               script: "skopeo inspect --raw --creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
+                    def skopeoInspectCmd = "skopeo inspect --raw  --tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
+                    return !sh(returnStdout: true,
+                               script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
                 }
             }
         }
@@ -154,8 +156,8 @@ def call(Map args) {
                     def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
                     sh """
                         ${shellEcho ''}
-                        skopeo copy --src-tls-verify=false \
-                                    --dest-tls-verify=false \
+                        skopeo copy --src-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} \
+                                    --dest-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} \
                                     --src-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     ${preProdImageUrl} \

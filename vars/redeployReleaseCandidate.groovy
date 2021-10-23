@@ -34,13 +34,15 @@ def call(Map args) {
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
-                    def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.preProdEnv}"
+                    def srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
+                    def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
 
+                    def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
                     def imageFound = sh(returnStdout: true,
-                                        script: "skopeo inspect --raw --creds ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} || :").trim()
+                                        script: "${skopeoInspectCmd} ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} || :").trim()
 
                     def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
-                                           "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}"
+                                           "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
                     echo msg
 
                     allImagesExist = allImagesExist && imageFound
@@ -98,8 +100,10 @@ def call(Map args) {
                                 variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
             def userNamePwd =
                 el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
+            def srcTlsVerify = "--src-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
+            def destTlsVerify = "--dest-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"
             def skopeoCopyComd = 
-                "skopeo copy --src-creds ${userNamePwd} --dest-creds ${userNamePwd} --src-tls-verify=false --dest-tls-verify=false"
+                "skopeo copy --src-creds ${userNamePwd} --dest-creds ${userNamePwd} ${srcTlsVerify} ${destTlsVerify}"
 
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 

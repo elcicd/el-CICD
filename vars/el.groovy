@@ -29,34 +29,6 @@ def initMetaData(Map metaData) {
 
     cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
 
-    cicd.UNDEFINED = 'undefined'
-
-    cicd.IGNORE = ''
-    cicd.PROMOTE = 'PROMOTE'
-    cicd.REMOVE = 'REMOVE'
-
-    cicd.PRE = 'pre'
-    cicd.INIT = 'init'
-    cicd.ON_FAIL = 'on-fail'
-    cicd.ON_SUCCESS = 'on-success'
-    cicd.POST = 'post'
-
-    cicd.BUILDER = 'builder'
-    cicd.TESTER = 'tester'
-    cicd.SCANNER = 'scanner'
-    cicd.ASSEMBLER = 'assembler'
-    cicd.DEPLOYER = 'deployer'
-
-    cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
-
-    cicd.OKD_CLEANUP_RESOURCE_LIST = 'deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
-
-    cicd.OKD_DEPLOY_DEF_DIR = '.openshift'
-
-    cicd.DEPLOYMENT_BRANCH_PREFIX = 'deployment'
-
-    cicd.SANDBOX_NAMESPACE_BADGE = 'sandbox'
-
     cicd = cicd.asImmutable()
 }
 
