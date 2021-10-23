@@ -15,10 +15,13 @@ __tear_down_dev_environment() {
     elif [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
     then
         __remove_docker_registry
+        
         if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
         then
             __remove_docker_registry_nfs_share
         fi
+
+        __remove_whitelisted_docker_registry_host_names
     fi
 
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
@@ -110,6 +113,13 @@ _remove_existing_crc() {
 __remove_docker_registry() {
     _delete_namespace  ${DOCKER_REGISTRY_NAMESPACE}
 
+    if [[ ${REMOVE_INSECURE_REGISTRIES} == ${_YES} ]]
+    then
+        echo "Removing array for whitelisting insecure registries."
+        oc patch image.config.openshift.io/cluster --type json   -p='[{"op": "remove", "path": "/spec/registrySources/insecureRegistries"}]'
+        echo "ALL WHITELISTED INSECURE IMAGE REGISTRIES DELISTED FROM CLUSTER"
+    fi
+
     oc delete --ignore-not-found -f ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv.yml
 }
 
@@ -127,6 +137,26 @@ __remove_docker_registry_nfs_share() {
         echo
         echo "${DOCKER_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
     fi
+}
+
+__remove_whitelisted_docker_registry_host_names() {
+    local IMAGE_REPOS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
+    local IMAGE_REPOS=''
+    for REPO in ${IMAGE_REPOS_LIST[@]}
+    do
+        IMAGE_REPOS="${IMAGE_REPOS} $(eval echo \${${REPO}${IMAGE_REPO_USERNAME_POSTFIX}})"
+    done
+    IMAGE_REPOS=$(echo ${IMAGE_REPOS} | xargs -n1 | sort -u | xargs)
+
+    echo
+    local HOST_NAMES=''
+    for REGISTRY_NAME in ${IMAGE_REPOS}
+    do
+        HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+
+        echo "Removing whitelisted ${HOST_DOMAIN} as an insecure image registry."
+        oc get image.config.openshift.io/cluster -o yaml | grep -v ${HOST_DOMAIN} | oc apply -f -
+    done
 }
 
 __remove_git_repos() {

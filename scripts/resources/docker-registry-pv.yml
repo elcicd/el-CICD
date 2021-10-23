@@ -3,7 +3,7 @@ kind: PersistentVolume
 metadata:
   name: docker-registry-volume
   labels:
-    type: local
+    type: docker-registry
 spec:
   capacity:
     storage: 10Gi
@@ -14,8 +14,6 @@ spec:
   nfs:
     path: /mnt/docker-registry
     server: 192.168.1.70
-  claimRef:
-    name: docker-registry-pvc
   readOnly: false
 ---
 apiVersion: v1
@@ -23,10 +21,12 @@ kind: PersistentVolumeClaim
 metadata:
   name: docker-registry-pvc
   labels:
-    app: docker-registry
+    type: docker-registry
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
+  volumeName: docker-registry-volume
+  storageClassName: ""

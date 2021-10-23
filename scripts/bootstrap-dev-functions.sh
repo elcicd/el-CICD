@@ -151,15 +151,12 @@ __create_docker_registry_nfs_share() {
     if [[ ! -d ${DOCKER_REGISTRY_DATA_NFS_DIR} || -z $(sudo exportfs | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
     then
         echo "Creating NFS share on host for Nexus, if necessary: ${DOCKER_REGISTRY_DATA_NFS_DIR}"
-        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_DEV}
-        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_NON_PROD}
-        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}/${DOCKER_REGISTRY_PROD}
-
         if [[ -z $(cat /etc/exports | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
         then
             echo "${DOCKER_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports
         fi
 
+        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}
         sudo chown -R nobody:nobody ${DOCKER_REGISTRY_DATA_NFS_DIR}
         sudo chmod 777 ${DOCKER_REGISTRY_DATA_NFS_DIR}
         sudo exportfs -a
@@ -231,6 +228,32 @@ __generate_deployments() {
             -n ${DOCKER_REGISTRY_NAMESPACE} -o yaml >> ${TMP_FILE}
 
         mv ${TMP_FILE} ${OUTPUT_FILE}
+    done
+
+    echo
+    if [[ -z $(oc describe image.config.openshift.io/cluster | grep 'Insecure Registries') ]]
+    then
+        echo "Adding array for whitelisting insecure registries."
+        oc patch image.config.openshift.io/cluster --type=json \
+            -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries", "value": [] }]'
+    else
+        echo "Array for whitelisting insecure image registries already exists.  Skipping..."
+    fi
+
+    local HOST_NAMES=''
+    for REGISTRY_NAME in ${IMAGE_REPOS}
+    do
+        HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+
+        sed -e "s/%HOST_DOMAIN%/${HOST_DOMAIN}/g" ${SCRIPTS_RESOURCES_DIR}/cluster.patch > ${TMP_DIR}/cluster.patch.tmp
+        if [[ -z $(oc get image.config.openshift.io/cluster -o yaml | grep ${HOST_DOMAIN}) ]]
+        then
+            echo "Whitelisting ${HOST_DOMAIN} as an insecure image registry."
+            oc patch image.config.openshift.io/cluster --type=json \
+                -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries/-", "value": "'"${HOST_DOMAIN}"'" }]'
+        else
+            echo "${HOST_DOMAIN} already whitelisted as insecure registry.  Skipping..."
+        fi
     done
 }
 
