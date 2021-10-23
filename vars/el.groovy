@@ -29,6 +29,10 @@ def initMetaData(Map metaData) {
 
     cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
 
+    cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
+
+    cicd.OKD_CLEANUP_RESOURCE_LIST='deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
+
     cicd = cicd.asImmutable()
 }
 
