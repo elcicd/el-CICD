@@ -8,7 +8,7 @@ export _YES='Yes'
 export _NO='No'
 
 _bootstrap_el_cicd() {
-    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
+    EL_CICD_ONBOARDING_SERVER_TYPE=${1}
 
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
@@ -86,6 +86,25 @@ _create_el_cicd_meta_info_config_map() {
     echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
     local META_INFO_FILE_FINAL=${META_INFO_FILE}_FINAL
     cat ${META_INFO_FILE} | envsubst > ${META_INFO_FILE_FINAL}
+
+    local TLS_CICD_ENVIRONMENTS
+    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == ${SERVER_TYPE_NON_PROD} ]]
+    then
+        TLS_CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
+    else
+        TLS_CICD_ENVIRONMENTS="${PRE_PROD_ENV} ${PROD_ENV}"
+    fi
+
+    echo
+    for ENV in ${TLS_CICD_ENVIRONMENTS}
+    do
+        if [[ -z $(eval echo \${"${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"}) ]]
+        then
+            eval "${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"=true
+            echo "${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX} not set; defaults to '$(eval echo \${"${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"})'."
+        fi
+    done
+
     oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE_FINAL} -n ${ONBOARDING_MASTER_NAMESPACE}
 
     rm ${META_INFO_FILE} ${META_INFO_FILE_FINAL}

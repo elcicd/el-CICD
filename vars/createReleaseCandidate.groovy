@@ -29,7 +29,8 @@ def call(Map args) {
             imageExists = projectInfo.microServices.find { microService ->
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
-                def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
+                def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
                 return sh(returnStdout: true, 
                           script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
             }
@@ -87,7 +88,8 @@ def call(Map args) {
                 if (microService.promote) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
-                    def skopeoInspectCmd = "skopeo inspect --raw  --tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} --creds"
+                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def skopeoInspectCmd = "skopeo inspect --raw  --tls-verify=${tlsVerify} --creds"
                     return !sh(returnStdout: true,
                                script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
                 }
@@ -154,10 +156,12 @@ def call(Map args) {
                 if (microService.promote) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
                     def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
+
+                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
                     sh """
                         ${shellEcho ''}
-                        skopeo copy --src-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} \
-                                    --dest-tls-verify=${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX} \
+                        skopeo copy --src-tls-verify=${tlsVerify} \
+                                    --dest-tls-verify=${tlsVerify} \
                                     --src-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
                                     ${preProdImageUrl} \

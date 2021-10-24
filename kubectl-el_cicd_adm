@@ -111,6 +111,9 @@ case "${CLI_OPTION}" in
     ;;
 esac
 
+SERVER_TYPE_PROD=prod
+SERVER_TYPE_NON_PROD=non-prod
+
 echo "${WARNING_MSG}"
 sleep 2
 
@@ -154,13 +157,13 @@ case ${CLI_OPTION} in
     '--non-prod' | '-N')
         echo "BOOTSTRAPPING NON-PROD"
 
-        _bootstrap_el_cicd non-prod
+        _bootstrap_el_cicd ${SERVER_TYPE_NON_PROD}
     ;;
 
     '--prod' | '-P')
         echo "BOOTSTRAPPING PROD"
 
-        _bootstrap_el_cicd prod
+        _bootstrap_el_cicd ${SERVER_TYPE_PROD}
     ;;
 
     '--non-prod-creds' | '-n')
