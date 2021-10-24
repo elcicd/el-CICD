@@ -162,14 +162,15 @@ def call(Map args) {
                         def deployToImgUrl = "${toImageRepo}/${microService.id}"
 
                         def tlsVerify = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-                        def srcTlsVerify = "--src-tls-verify=${tlsVerify}"
+                        def srcCopyTlsVerify = "--src-tls-verify=${tlsVerify}"
 
                         tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                        def srcTagTlsVerify = "--src-tls-verify=${tlsVerify}"
                         def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
 
-                        def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
+                        def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcCopyTlsVerify} ${destTlsVerify}"
 
-                        def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} ${destTlsVerify} ${destTlsVerify}"
+                        def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTagTlsVerify} ${destTlsVerify}"
 
                         def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
                         sh """
