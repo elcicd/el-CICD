@@ -31,21 +31,34 @@ _check_sealed_secrets() {
 _install_sealed_secrets() {
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
+        local SEALED_SECRETS_DIR=/tmp/sealedsecrets
+        local SEALED_SECRETS_URL=https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}
+        mkdir ${SEALED_SECRETS_DIR}
         echo
+        echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
         sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
-        wget https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/kubeseal-linux-amd64 -O /tmp/kubeseal
-        sudo install -m 755 /tmp/kubeseal /usr/local/bin/kubeseal
+        wget -q --show-progress ${SEALED_SECRETS_URL}/kubeseal-linux-amd64 -O ${SEALED_SECRETS_DIR}/kubeseal
+        sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
         sudo rm -f /tmp/kubseal
 
         echo "kubeseal version ${SEALED_SECRET_RELEASE_VERSION} installed"
 
-        oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}/controller.yaml
+        echo
+        echo 'Deploying Sealed Secrets controller to cluster.'
+        wget -q --show-progress ${SEALED_SECRETS_URL}/controller.yaml -O ${SEALED_SECRETS_DIR}/controller.yaml
+        sed -i -e 's/v1beta1/v1/g' ${SEALED_SECRETS_DIR}/controller.yaml #TODO: REMOVE HACK FOR K8S >=1.22 (no more v1beta1 apiVersion supported)
+        oc apply -f ${SEALED_SECRETS_DIR}/controller.yaml
 
-        echo "Create custom cluster role for the management of sealedsecrets by Jenkins service accounts"
+        echo
+        echo "Create custom cluster role for the management of sealedsecrets resources by Jenkins service accounts"
+        echo "NOTE: Without custom cluster role, only cluster admins could manage sealedsecrets."
         oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
 
-        echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed!"
-    else 
+        echo
+        echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed."
+
+        rm -rf ${SEALED_SECRETS_DIR}
+    else
         echo 'ERROR: SEALED_SECRET_RELEASE_VERSION undefined.'
         exit 1
     fi

@@ -126,7 +126,7 @@ __additional_cluster_config() {
     echo
     for GROUP in ${CRC_TEST_RBAC_GROUPS}
     do
-        if [[ ! -z $(oc get groups ${GROUP} 2&> /dev/null) ]]
+        if [[ -z $(oc get groups ${GROUP} --no-headers --ignore-not-found) ]]
         then
             echo "Creating test RBAC group '${GROUP}'"
             oc adm groups new ${GROUP}
