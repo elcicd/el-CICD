@@ -169,13 +169,15 @@ def call(Map args) {
 
                         def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
 
+                        def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} ${destTlsVerify} ${destTlsVerify}"
+
                         def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
                         sh """
                             ${shellEcho ''}
                             ${skopeoCopyCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
 
                             ${shellEcho ''}
-                            ${skopeoCopyCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
+                            ${skopeoTagCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
 
                             ${shellEcho ''}
                             ${shellEcho  "--> ${msg}"}
