@@ -143,8 +143,7 @@ def call(Map args) {
             }
         }
 
-        def dynamicWorks = "dynamicWORKS!!!"
-        stage("promote images ${dynamicWorks}") {
+        stage("promote images") {
             pipelineUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                     projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
 
