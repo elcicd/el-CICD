@@ -32,7 +32,7 @@ Options:
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
     -D,   --setup-dev:       setup an environment for developing el-CICD
-    -T,   --tear-down-dev:      tear down an environment for developing el-CICD
+    -T,   --tear-down-dev:   tear down an environment for developing el-CICD
           --help:            display this help text and exit
 
 root-config-file:

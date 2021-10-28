@@ -30,8 +30,7 @@ _build_el_cicd_jenkins_image() {
     fi
 
     cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins-template > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-    sed -i -e "s|%OCP_IMAGE_REPO%|${OCP_IMAGE_REPO}|;" \
-           -e "s|%CONFIG_PATH%|${JENKINS_CONTAINER_CONFIG_DIR}|g;" \
+    sed -i -e "s|%CONFIG_PATH%|${JENKINS_CONTAINER_CONFIG_DIR}|g;" \
            -e "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
            -e "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
         ${TARGET_JENKINS_BUILD_DIR}/Dockerfile

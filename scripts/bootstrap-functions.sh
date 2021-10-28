@@ -25,13 +25,6 @@ _bootstrap_el_cicd() {
         _install_sealed_secrets
     fi
 
-    if [[ ${UPDATE_JENKINS} == ${_YES} ]]
-    then
-        echo
-        oc import-image jenkins -n openshift
-        sleep 2
-    fi
-
     if [[ -z ${UPDATE_EL_CICD_JENKINS} || ${UPDATE_EL_CICD_JENKINS} == ${_YES} ]]
     then
         _build_el_cicd_jenkins_image
@@ -128,16 +121,12 @@ __create_source_file() {
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
-    echo
-    UPDATE_JENKINS=$(_get_yes_no_answer 'Update cluster default Jenkins image? [Y/n] ')
-
-    echo
     if [[ ! -z $(oc get is --ignore-not-found ${JENKINS_IMAGE_STREAM} -n openshift) ]]
     then
+        echo
         UPDATE_EL_CICD_JENKINS=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
     fi
 
-    echo
     __summarize_and_confirm_bootstrap_run_with_user
 }
 
@@ -160,6 +149,8 @@ __bootstrap_el_cicd_onboarding_server() {
 
 __summarize_and_confirm_bootstrap_run_with_user() {
     echo
+    echo "SUMMARY:"
+    echo
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo 'Please read CAREFULLY and verify this information is correct before proceeding.'
     echo 
@@ -175,8 +166,6 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     else
         echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
     fi
-    echo
-    echo "Update cluster default Jenkins image? ${UPDATE_JENKINS}"
 
     if [[ ! -z ${UPDATE_EL_CICD_JENKINS} ]]
     then

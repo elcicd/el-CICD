@@ -234,8 +234,7 @@ __generate_deployments() {
     if [[ -z $(oc describe image.config.openshift.io/cluster | grep 'Insecure Registries') ]]
     then
         echo "Adding array for whitelisting insecure registries."
-        oc patch image.config.openshift.io/cluster --type=json \
-            -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries", "value": [] }]'
+        oc patch image.config.openshift.io/cluster --type=merge -p='{"spec":{"registrySources":{"insecureRegistries":[]}}}'
     else
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
@@ -245,7 +244,6 @@ __generate_deployments() {
     do
         HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
 
-        sed -e "s/%HOST_DOMAIN%/${HOST_DOMAIN}/g" ${SCRIPTS_RESOURCES_DIR}/cluster.patch > ${TMP_DIR}/cluster.patch.tmp
         if [[ -z $(oc get image.config.openshift.io/cluster -o yaml | grep ${HOST_DOMAIN}) ]]
         then
             echo "Whitelisting ${HOST_DOMAIN} as an insecure image registry."

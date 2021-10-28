@@ -56,7 +56,7 @@ def call(Map args) {
                 if (microService.releaseCandidateGitTag) {
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${imageTag}"
 
-                    def tlsVerify = el.cicd["${projectInfo.PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def tlsVerify = el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
                     def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
                     def imageFound =
                         sh(returnStdout: true, script: "${skopeoInspectCmd} ${imageRepoUserNamePwd} ${imageUrl} || :").trim()
