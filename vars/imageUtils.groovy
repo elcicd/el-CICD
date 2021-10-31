@@ -4,11 +4,18 @@
  * Image utilities
  */
 
-import groovy.transform.Field
+def inspectImageCmd(String env, String tokenVar, String image, String tag) {
+    def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
+    def imageUrl = "docker://${imageRepo}/${image}:${tag}"
 
-@Field
-//"${fromUserNamePwd} ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
-static def imageCopyCmd = 'skopeo copy --src-creds %s --dest-creds %s %s %s %s %s'
+    def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+    def tlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
+
+    def user = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+    def creds = "--creds ${user}:\${${tokenVar}}"
+
+    def skopeoInspectCmd = "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
+}
 
 def copyImageCmd(String fromEnv,
                  String fromTokenVar,
@@ -30,10 +37,13 @@ def copyImageCmd(String fromEnv,
     tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
     def destTlsVerify = tlsVerify? "--dest-tls-verify=${tlsVerify}" : ''
 
-    def fromUserNamePwd = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${${fromTokenVar}}"
-    def toUserNamePwd = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${${toTokenVar}}"
+    def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+    def srcCreds = "--creds ${user}:\${${fromTokenVar}}"
 
-    return String.format(imageCopyCmd, fromUserNamePwd, toUserNamePwd, srcTlsVerify, destTlsVerify, fromImageUrl, toImgUrl).toString()
+    def user = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+    def destCreds = "--creds ${user}:\${${toTokenVar}}"
+
+    return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
  }
 
  def tagImageCmd(String env,

@@ -62,22 +62,17 @@ def call(Map args) {
 
     if (projectInfo.microServicesToPromote) {
         stage('Verify image(s) exist for previous environment') {
-            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.microServices.findAll{ it.promote }.collect { it.name }.join(', '))
+            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.microServicesToPromote.collect { it.name }.join(', '))
 
-            def allImagesExist = true
-            def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
-                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${FROM_IMAGE_REPO_ACCESS_TOKEN}"
-                projectInfo.microServices.each { microService ->
-                    if (microService.promote) {
-                        def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                        def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
-
-                        def tlsVerify = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                        def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
-                        if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${fromUserNamePwd} ${imageUrl} || :").trim()) {
-                            errorMsgs << "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
-                        }
+            def credsId = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
+            withCredentials([string(credentialsId: credsId, variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
+                def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+                projectInfo.microServicesToPromote.each { microService ->
+                    def skopeoInspectCmd =
+                        imageUtils.inspectImageCmd(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
+                    if (!sh(returnStdout: true, script: skopeoInspectCmd).trim()) {
+                        def image = ${microService.id}:${projectInfo.deployFromEnv}
+                        errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                     }
                 }
             }
@@ -88,12 +83,13 @@ def call(Map args) {
         }
 
         stage('Verify images are deployed in previous environment, collect source commit hash') {
-            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}", projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
+            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
+                                     projectInfo.microServicesToPromote.collect { it.name }.join(', '))
 
             def jsonPathSingle = '''jsonpath='{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
             def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}{end}' '''
 
-            def msNames = projectInfo.microServices.findAll { it.promote }.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }
+            def msNames = projectInfo.microServicesToPromote.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }
             def jsonPath =  (msNames.size() > 1) ? jsonPathMulti : jsonPathSingle
             def script = "oc get cm --ignore-not-found ${msNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
 
@@ -119,7 +115,7 @@ def call(Map args) {
         }
 
         stage('Checkout all microservice repositories') {
-            pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
+            pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             projectInfo.microServices.each { microService ->
                 if (microService.promote) {
@@ -145,12 +141,12 @@ def call(Map args) {
 
         stage("promote images") {
             pipelineUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
-                                    projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
+                                    projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
                             string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                projectInfo.microServices.findAll { it.promote }.each { microService ->
+                projectInfo.microServicesToPromote.each { microService ->
                     def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
                     def copyImageCmd =
                         imageUtils.copyImageCmd(projectInfo.ENV_FROM,
@@ -186,7 +182,7 @@ def call(Map args) {
 
         stage('Create deployment branch if necessary') {
             pipelineUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",
-                                    projectInfo.microServices.findAll{ it.promote }.collect { it. name }.join(', '))
+                                     projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             projectInfo.microServices.each { microService ->
                 if (microService.promote && !microService.deployBranchExists) {
