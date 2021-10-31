@@ -38,10 +38,10 @@ def copyImageCmd(String fromEnv,
     def destTlsVerify = tlsVerify? "--dest-tls-verify=${tlsVerify}" : ''
 
     def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-    def srcCreds = "--creds ${user}:\${${fromTokenVar}}"
+    def srcCreds = "--src-creds ${user}:\${${fromTokenVar}}"
 
     user = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-    def destCreds = "--creds ${user}:\${${toTokenVar}}"
+    def destCreds = "--dest-creds ${user}:\${${toTokenVar}}"
 
     return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
  }
