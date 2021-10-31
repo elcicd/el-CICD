@@ -77,14 +77,16 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
         def envPatchFileName = envPatchFile.split('/').last()
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            echo "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}"
+            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
             cp ${envPatchFile} ${tempKustomizeDir}
 
             cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${envPatchFileName}|' > ${tempKustomizeDir}/kustomization.yml
+                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; \
+                s|%TEMPLATE_NAME%|${templateDef.templateName}|; \
+                s|%PATCH_FILE%|${envPatchFileName}|' > ${tempKustomizeDir}/kustomization.yml
 
             kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
