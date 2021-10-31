@@ -64,9 +64,10 @@ def call(Map args) {
         stage('Verify image(s) exist for previous environment') {
             pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.microServicesToPromote.collect { it.name }.join(', '))
 
-            def credsId = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
-            withCredentials([string(credentialsId: credsId, variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
-                def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+            def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+
+            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                             variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
                 projectInfo.microServicesToPromote.each { microService ->
                     def skopeoInspectCmd =
                         imageUtils.inspectImageCmd(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
