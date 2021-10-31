@@ -9,7 +9,7 @@ def inspectImageCmd(String env, String tokenVar, String image, String tag) {
     def imageUrl = "docker://${imageRepo}/${image}:${tag}"
 
     def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    tlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
+    tlsVerify = tlsVerify? "--tls-verify=${tlsVerify}" : ''
 
     def user = el.cicd["${env}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
