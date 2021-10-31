@@ -160,7 +160,6 @@ def call(Map args) {
                                                 projectInfo.ENV_TO,
                                                 'TO_IMAGE_REPO_ACCESS_TOKEN',
                                                 microService.id,
-                                                projectInfo.deployFromEnv,
                                                 promoteTag)
 
                     def tagImageCmd =

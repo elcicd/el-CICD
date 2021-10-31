@@ -10,14 +10,14 @@ import groovy.transform.Field
 //"${fromUserNamePwd} ${toUserNamePwd} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
 static def imageCopyCmd = 'skopeo copy --src-creds %s --dest-creds %s %s %s %s %s'
 
- def copyImageCmd(String fromEnv,
-                  String fromTokenVar,
-                  String fromImage,
-                  String fromTag,
-                  String toEnv,
-                  String toTokenVar,
-                  String toImage,
-                  String toTag) {
+def copyImageCmd(String fromEnv,
+                 String fromTokenVar,
+                 String fromImage,
+                 String fromTag,
+                 String toEnv,
+                 String toTokenVar,
+                 String toImage,
+                 String toTag) {
     def fromImageRepo = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def fromImageUrl = "docker://${fromImageRepo}/${fromImage}:${fromTag}"
 
