@@ -71,7 +71,7 @@ def call(Map args) {
                     def skopeoInspectCmd =
                         imageUtils.inspectImageCmd(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
                     if (!sh(returnStdout: true, script: skopeoInspectCmd).trim()) {
-                        def image = ${microService.id}:${projectInfo.deployFromEnv}
+                        def image = "${microService.id}:${projectInfo.deployFromEnv}"
                         errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                     }
                 }
