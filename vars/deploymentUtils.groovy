@@ -77,7 +77,7 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
         def envPatchFileName = envPatchFile.split('/').last()
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
+            echo "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}"
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 

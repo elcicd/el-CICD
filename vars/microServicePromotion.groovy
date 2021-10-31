@@ -75,6 +75,10 @@ def call(Map args) {
                         def image = "${microService.id}:${projectInfo.deployFromEnv}"
                         errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                     }
+                    else {
+                        def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
+                        echo "IMAGE FOUND IN ${imageRepo}: ${microService.id}:${projectInfo.deployFromEnv}"
+                    }
                 }
             }
 
