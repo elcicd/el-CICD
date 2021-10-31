@@ -83,10 +83,8 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
 
             cp ${envPatchFile} ${tempKustomizeDir}
 
-            cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
-                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; \
-                s|%TEMPLATE_NAME%|${templateDef.templateName}|; \
-                s|%PATCH_FILE%|${envPatchFileName}|' > ${tempKustomizeDir}/kustomization.yml
+            SED_EXPRS='s|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${envPatchFileName}|'
+            cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | sed -e \${SED_EXPRS} > ${tempKustomizeDir}/kustomization.yml
 
             kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
