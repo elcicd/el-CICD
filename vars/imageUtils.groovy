@@ -14,7 +14,7 @@ def inspectImageCmd(String env, String tokenVar, String image, String tag) {
     def user = el.cicd["${env}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
 
-    def skopeoInspectCmd = "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
+    return "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
 }
 
 def copyImageCmd(String fromEnv,
