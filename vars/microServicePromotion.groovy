@@ -150,7 +150,7 @@ def call(Map args) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
                             string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                projectInfo.microServices.collect { it.promote }.each {
+                projectInfo.microServices.collect { it.promote }.each { microService ->
                     def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
                     def copyImageCmd =
                         imageUtils.copyImageCmd(projectInfo.ENV_FROM,
