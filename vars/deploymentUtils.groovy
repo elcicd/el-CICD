@@ -63,7 +63,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
                 }
             }
             else {
-                ${shellEcho "No OpenShift templates found"}
+                ${shCmd.echo "No OpenShift templates found"}
             }
         }
     }
@@ -77,14 +77,16 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
         def envPatchFileName = envPatchFile.split('/').last()
         def tempKustomizeDir = './kustomize-tmp'
         sh """
-            ${shellEcho "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
+            ${shCmd.echo "Kustomizing ${templateDef.templateName} to ${templateDef.patchedFile} with patch: ${envPatchFile}" }
             mkdir -p ${tempKustomizeDir}
             cp "${templateFile}" ${tempKustomizeDir}
 
             cp ${envPatchFile} ${tempKustomizeDir}
 
-            SED_EXPRS='s|%TEMPLATE_FILE%|${templateFileName}|; s|%TEMPLATE_NAME%|${templateDef.templateName}|; s|%PATCH_FILE%|${envPatchFileName}|'
-            cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | sed -e \${SED_EXPRS} > ${tempKustomizeDir}/kustomization.yml
+            cat ${el.cicd.TEMPLATES_DIR}/kustomization-template.yml | \
+                sed -e 's|%TEMPLATE_FILE%|${templateFileName}|; \
+                        s|%TEMPLATE_NAME%|${templateDef.templateName}|; \
+                        s|%PATCH_FILE%|${envPatchFileName}|' > ${tempKustomizeDir}/kustomization.yml
 
             kustomize build ${tempKustomizeDir} > ${templateDef.patchedFile}
 
@@ -95,7 +97,7 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
     else {
         sh """
             echo
-            ${shellEcho "No kustomize patch defined for:",
+            ${shCmd.echo "No kustomize patch defined for:",
                         "  templateDef #${index}: ${templateFileName}",
                         "  appName: ${templateDef.appName}",
                         "  template file: ${templateFile}"}
@@ -139,7 +141,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
 
                     def fileName = templateDef.file ?: "${templateDef.templateName}.yml"
                     sh """
-                        ${shellEcho '******',
+                        ${shCmd.echo '******',
                                     'PROCESSED AND APPLYING OKD TEMPLATE ' + templateDef.patchedFile,
                                     'PARAMS: ' + paramsStr,
                                     '******' }
@@ -156,15 +158,15 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
                             -f ${templateDef.patchedFile} \
                             -o yaml > ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
 
-                        ${shellEcho '', '****** TEMPLATE PROCESSED RESULT ******', '' }
+                        ${shCmd.echo '', '****** TEMPLATE PROCESSED RESULT ******', '' }
                         cat ./${projectInfo.deployToEnv}/processed-${index}-${fileName}
-                        ${shellEcho '', '**** TEMPLATE PROCESSED RESULT END ****', '' }
+                        ${shCmd.echo '', '**** TEMPLATE PROCESSED RESULT END ****', '' }
                     """
                 }
             }
         }
         else {
-            ${shellEcho 'No OpenShift deployment resource(s) found'}
+            ${shCmd.echo 'No OpenShift deployment resource(s) found'}
         }
     }
 }
@@ -176,21 +178,21 @@ def applyResources(def projectInfo, def microServices) {
         dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p default
-                ${shellEcho ''}
-                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shellEcho "No default OKD resources found for ${projectInfo.deployToEnv}"}
+                ${shCmd.echo ''}
+                cp -n -v default/* ${projectInfo.deployToEnv} 2> /dev/null || ${shCmd.echo "No default OKD resources found for ${projectInfo.deployToEnv}"}
 
                 RELEASE_REGION=${projectInfo.releaseRegion}
                 if [[ ! -z \${RELEASE_REGION} ]]
                 then
-                    ${shellEcho ''}
+                    ${shCmd.echo ''}
                     cp -f -v ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}/* ${projectInfo.deployToEnv} 2> /dev/null || \
-                        ${shellEcho "No default OKD resources found for ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"}
+                        ${shCmd.echo "No default OKD resources found for ${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"}
                 fi
 
                 cd ${projectInfo.deployToEnv}
                 if [[ \$(ls *.{yml,yaml,json} 2> /dev/null | wc -l) -gt 0 ]]
                 then
-                    ${shellEcho '',
+                    ${shCmd.echo '',
                                 '******',
                                 "APPLYING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
                     COMPLETED_PODS=\$(oc get pods --no-headers \
@@ -203,9 +205,9 @@ def applyResources(def projectInfo, def microServices) {
 
                     oc delete --cascade=false --wait dc,deploy,cj -l microservice=${microService.name} -n ${projectInfo.deployToNamespace}
                     oc apply --overwrite --recursive -f . -n ${projectInfo.deployToNamespace}
-                    ${shellEcho '******'}
+                    ${shCmd.echo '******'}
 
-                    ${shellEcho '',
+                    ${shCmd.echo '',
                                 '******',
                                 "LABELING OKD RESOURCES FOR ${microService.name} IN PROJECT ${projectInfo.id}"}
                     oc label --overwrite --recursive -f . \
@@ -220,9 +222,9 @@ def applyResources(def projectInfo, def microServices) {
                         deploy-time=\$(date +%d.%m.%Y-%H.%M.%S%Z) \
                         build-number=${BUILD_NUMBER} \
                         -n ${projectInfo.deployToNamespace}
-                    ${shellEcho   '******'}
+                    ${shCmd.echo   '******'}
                 else
-                    ${shellEcho  'No OpenShift deployment resource(s) found'}
+                    ${shCmd.echo  'No OpenShift deployment resource(s) found'}
                 fi
             """
         }
@@ -264,7 +266,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
             for DC in \${DCS}
             do
-                ${shellEcho ''}
+                ${shCmd.echo ''}
                 set +x
                 oc rollout latest dc/\${DC} -n ${projectInfo.deployToNamespace} 2> /dev/null || echo "Confirmed \${DC} rolling out..."
                 sleep 1  # Just in case first one doesn't take (sometimes happens if there was no image change)
@@ -289,7 +291,7 @@ def confirmDeployments(def projectInfo, def microServices) {
                 DCS="\$(oc get \${RESOURCE} --ignore-not-found -l microservice=\${MICROSERVICE_NAME} -o 'custom-columns=:.metadata.name' -n ${projectInfo.deployToNamespace} | xargs)"
                 for DC in \${DCS}
                 do
-                    ${shellEcho ''}
+                    ${shCmd.echo ''}
                     oc rollout status \${RESOURCE}/\${DC} -n ${projectInfo.deployToNamespace}
                 done
             done
@@ -320,7 +322,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
 
             oc delete --ignore-not-found cm ${metaInfoCmName} -n ${projectInfo.deployToNamespace}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc create cm ${metaInfoCmName} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=microservice=${microService.name} \
@@ -334,7 +336,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.deployToNamespace}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc label cm ${metaInfoCmName} \
                 projectid=${projectInfo.id} \
                 microservice=${microService.name} \
@@ -395,7 +397,7 @@ def removeMicroservices(def projectInfo, def microServices) {
 
 def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
-        ${shellEcho '', 'Confirming microservice pods have finished terminating...'}
+        ${shCmd.echo '', 'Confirming microservice pods have finished terminating...'}
         set +x
         sleep 2
         COUNTER=1

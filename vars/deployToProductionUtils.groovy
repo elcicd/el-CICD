@@ -52,7 +52,7 @@ def updateProjectMetaInfo(def projectInfo) {
 
             oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc create cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
@@ -61,7 +61,7 @@ def updateProjectMetaInfo(def projectInfo) {
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.prodNamespace}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc label cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
                 projectid=${projectInfo.id} \
                 release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \

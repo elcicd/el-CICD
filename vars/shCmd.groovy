@@ -5,7 +5,7 @@
  */
 
 /* Generated command returns an empty String if image doesn't exist. */
-def inspectImageCmd(String env, String tokenVar, String image, String tag) {
+def skopeoInspect(String env, String tokenVar, String image, String tag) {
     def user = el.cicd["${env}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
 
@@ -18,7 +18,7 @@ def inspectImageCmd(String env, String tokenVar, String image, String tag) {
     return "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
 }
 
-def copyImageCmd(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
+def skopeoCopy(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
                  String toEnv, String toTokenVar, String toImage, String toTag)
 {
     def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
@@ -40,8 +40,13 @@ def copyImageCmd(String fromEnv, String fromTokenVar, String fromImage, String f
     def toImgUrl = "docker://${toImageRepo}/${toImage}:${toTag}"
 
     return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
- }
+}
 
- def tagImageCmd(String env, String tokenVar, String image, String fromTag, String toTag) {
-    return copyImageCmd(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
- }
+def skopeoTag(String env, String tokenVar, String image, String fromTag, String toTag) {
+    return skopeoCopy(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
+}
+
+def echo(Object... msgs) {
+    msgs = msgs ? msgs.collect { "echo \"${it.toString()}\";" }.join(' ') : 'echo;'
+    return "{ ${msgs} } 2> /dev/null"
+}

@@ -70,14 +70,14 @@ def call(Map args) {
                              variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
                 projectInfo.microServicesToPromote.each { microService ->
                     def skopeoInspectCmd =
-                        imageUtils.inspectImageCmd(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
+                        shCmd.skopeoInspect(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
                     if (!sh(returnStdout: true, script: skopeoInspectCmd).trim()) {
                         def image = "${microService.id}:${projectInfo.deployFromEnv}"
                         errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
                     }
                     else {
-                        def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                        echo "IMAGE FOUND IN ${imageRepo}: ${microService.id}:${projectInfo.deployFromEnv}"
+                        def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
+                        echo "${microService.id}:${projectInfo.deployFromEnv} FOUND IN ${imageRepo}"
                     }
                 }
             }
@@ -153,8 +153,8 @@ def call(Map args) {
             {
                 projectInfo.microServicesToPromote.each { microService ->
                     def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
-                    def copyImageCmd =
-                        imageUtils.copyImageCmd(projectInfo.ENV_FROM,
+                    def skopeoCopy =
+                        shCmd.skopeoCopy(projectInfo.ENV_FROM,
                                                 'FROM_IMAGE_REPO_ACCESS_TOKEN',
                                                 microService.id,
                                                 projectInfo.deployFromEnv,
@@ -163,8 +163,8 @@ def call(Map args) {
                                                 microService.id,
                                                 promoteTag)
 
-                    def tagImageCmd =
-                        imageUtils.tagImageCmd(projectInfo.ENV_TO,
+                    def skopeoTag =
+                        shCmd.skopeoTag(projectInfo.ENV_TO,
                                                'TO_IMAGE_REPO_ACCESS_TOKEN',
                                                microService.id,
                                                promoteTag,
@@ -172,14 +172,14 @@ def call(Map args) {
 
                     def msg = "${microService.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
                     sh """
-                        ${shellEcho ''}
-                        ${copyImageCmd}
+                        ${shCmd.echo ''}
+                        ${skopeoCopy}
 
-                        ${shellEcho ''}
-                        ${tagImageCmd}
+                        ${shCmd.echo ''}
+                        ${skopeoTag}
 
-                        ${shellEcho ''}
-                        ${shellEcho  "--> ${msg}"}
+                        ${shCmd.echo ''}
+                        ${shCmd.echo  "--> ${msg}"}
                     """
                 }
             }
@@ -194,7 +194,7 @@ def call(Map args) {
                     dir(microService.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shellEcho  "-> Creating Deployment Branch for the image ${microService.id}: ${microService.deploymentBranch}"}
+                                ${shCmd.echo  "-> Creating Deployment Branch for the image ${microService.id}: ${microService.deploymentBranch}"}
                                 ${sshAgentBash 'GITHUB_PRIVATE_KEY',
                                                "git branch ${microService.deploymentBranch}",
                                                "git push origin ${microService.deploymentBranch}:${microService.deploymentBranch}"}

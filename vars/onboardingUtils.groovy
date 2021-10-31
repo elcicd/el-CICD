@@ -63,7 +63,7 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
     sh """
         if [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespace}) ]]
         then
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc adm new-project ${namespace} ${nodeSelectors}
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${namespace}
@@ -80,7 +80,7 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
 
 def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
     sh """
-        ${shellEcho ''}
+        ${shCmd.echo ''}
         QUOTAS=\$(oc get quota --ignore-not-found -l=projectid=${projectInfo.id} -o jsonpath='{.items[*].metadata.name}' -n ${namespace})
         if [[ ! -z \${QUOTAS} ]]
         then
@@ -92,7 +92,7 @@ def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
     if (resourceQuotaFile) {
         dir(el.cicd.RESOURCE_QUOTA_DIR) {
             sh """
-                ${shellEcho ''}
+                ${shCmd.echo ''}
                 oc apply -f ${resourceQuotaFile} -n ${namespace}
                 oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
             """
@@ -123,14 +123,14 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 
     pipelineUtils.echoBanner("REMOVE UNNEEDED, AVAILABLE AND RELEASED ${projectInfo.id} NFS PERSISTENT VOLUMES, IF ANY")
     def releasedPvs = sh(returnStdout: true, script: """
-        ${shellEcho ''}
+        ${shCmd.echo ''}
         oc get pv -l projectid=${projectInfo.id} --ignore-not-found | egrep 'Released|Available' | awk '{ print \$1 }'
     """).split('\n').findAll { it.trim() }
 
     releasedPvs.each { pvName ->
         if (!pvNames[pvName]) {
             sh """
-                ${shellEcho ''}
+                ${shCmd.echo ''}
                 oc delete pv ${pvName}
             """
         }
@@ -139,7 +139,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
 
 def createNfsShare(def projectInfo, def namespace, def pvName, def nfsShare) {
     sh """
-        ${shellEcho ''}
+        ${shCmd.echo ''}
         oc process --local \
                    -f nfs-pv-template.yml \
                    -l projectid=${projectInfo.id}\

@@ -117,15 +117,15 @@ def call(Map args) {
                               "TAGGED AS ${projectInfo.preProdEnv} and ${projectInfo.preProdEnv}-${microService.srcCommitHash}"
 
                     sh """
-                        ${shellEcho ''}
+                        ${shCmd.echo ''}
                         ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
                                           docker://${preProdImageUrl}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
 
-                        ${shellEcho ''}
+                        ${shCmd.echo ''}
                         ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
                                           docker://${preProdImageUrl}:${projectInfo.preProdEnv}
 
-                        ${shellEcho '',
+                        ${shCmd.echo '',
                                     '******',
                                     msg,
                                     '******'}

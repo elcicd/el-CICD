@@ -21,7 +21,7 @@ void call(Map args) {
 
         dir (library.workDir) {
             sh """
-                ${shellEcho 'filesChanged:'}
+                ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
             """
         }

@@ -179,10 +179,10 @@ def call(Map args) {
                         def prodImageUrl = "${prodImageRepo}/${microService.id}:${projectInfo.releaseVersionTag}"
 
                         sh """
-                            ${shellEcho ''}
+                            ${shCmd.echo ''}
                             ${skopeoCopyCmd} docker://${preProdImageUrl} docker://${prodImageUrl}
 
-                            ${shellEcho '',
+                            ${shCmd.echo '',
                                         '******',
                                         "${microService.name}: ${projectInfo.releaseCandidateTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersionTag} in ${projectInfo.prodEnv}",
                                         '******'}
@@ -207,7 +207,7 @@ def call(Map args) {
                     dir(microService.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shellEcho '', "-> Creating deployment branch: ${microService.deploymentBranch}"}
+                                ${shCmd.echo '', "-> Creating deployment branch: ${microService.deploymentBranch}"}
                                 ${sshAgentBash 'GITHUB_PRIVATE_KEY',
                                                "git branch ${microService.deploymentBranch}",
                                                "git push origin ${microService.deploymentBranch}"}

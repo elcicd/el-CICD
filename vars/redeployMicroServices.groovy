@@ -142,7 +142,7 @@ def call(Map args) {
                     def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
                     def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
                     sh """
-                        ${shellEcho '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
+                        ${shCmd.echo '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
 
                         ${skopeoComd} docker://${fromImageUrl} docker://${toImageUrl}
                     """

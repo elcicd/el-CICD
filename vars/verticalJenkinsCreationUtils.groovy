@@ -48,7 +48,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                           -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
                                           -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
@@ -61,12 +61,12 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
 
-            ${shellEcho ''}
+            ${shCmd.echo ''}
             sleep 2
-            ${shellEcho 'Waiting for Jenkins to come up...'}
+            ${shCmd.echo 'Waiting for Jenkins to come up...'}
             oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
-            ${shellEcho ''}
-            ${shellEcho 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
+            ${shCmd.echo ''}
+            ${shCmd.echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
             sleep 5
         """
     }
@@ -86,7 +86,7 @@ def refreshSharedPipelines(def projectInfo, def pipelines) {
             sh """
                 for FILE in ${pipelines.join(' ')}
                 do
-                    ${shellEcho ''}
+                    ${shCmd.echo ''}
                     oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} -n ${projectInfo.cicdMasterNamespace} | \
                         oc apply -f - -n ${projectInfo.cicdMasterNamespace}
                 done

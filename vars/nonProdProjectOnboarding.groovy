@@ -53,7 +53,7 @@ def call(Map args) {
                                -n ${projectInfo.cicdMasterNamespace} \
                         | oc create -f - -n ${projectInfo.cicdMasterNamespace}
 
-                    ${shellEcho ''}
+                    ${shCmd.echo ''}
                 """
             }
         }
@@ -75,7 +75,7 @@ def call(Map args) {
                                -n ${projectInfo.cicdMasterNamespace} \
                         | oc create -f - -n ${projectInfo.cicdMasterNamespace}
 
-                    ${shellEcho ''}
+                    ${shCmd.echo ''}
                 """
             }
         }
@@ -136,7 +136,7 @@ def call(Map args) {
                 scriptToPushWebhookToScm =
                     scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
                 sh """
-                    ${shellEcho  "GIT REPO NAME: ${component.gitRepoName}"}
+                    ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
 
                     ${scriptToPushWebhookToScm}
                 """
