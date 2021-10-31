@@ -11,7 +11,7 @@ def inspectImageCmd(String env, String tokenVar, String image, String tag) {
     def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
     tlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
 
-    def user = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+    def user = el.cicd["${env}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
 
     def skopeoInspectCmd = "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
