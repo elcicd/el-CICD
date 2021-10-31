@@ -9,7 +9,7 @@ def inspectImageCmd(String env, String tokenVar, String image, String tag) {
     def imageUrl = "docker://${imageRepo}/${image}:${tag}"
 
     def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    def tlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
+    tlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
 
     def user = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
@@ -40,7 +40,7 @@ def copyImageCmd(String fromEnv,
     def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def srcCreds = "--creds ${user}:\${${fromTokenVar}}"
 
-    def user = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
+    user = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def destCreds = "--creds ${user}:\${${toTokenVar}}"
 
     return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
