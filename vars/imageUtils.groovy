@@ -27,8 +27,8 @@ static def imageCopyCmd = 'skopeo copy --src-creds %s --dest-creds %s %s %s %s %
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
     def srcTlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
 
-    def tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    def destTlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
+    tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+    def destTlsVerify = tlsVerify? "--dest-tls-verify=${tlsVerify}" : ''
 
     def fromUserNamePwd = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${${fromTokenVar}}"
     def toUserNamePwd = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${${toTokenVar}}"
