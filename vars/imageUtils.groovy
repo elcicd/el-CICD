@@ -22,7 +22,7 @@ def copyImageCmd(String fromEnv,
     def fromImageUrl = "docker://${fromImageRepo}/${fromImage}:${fromTag}"
 
     def toImageRepo = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_POSTFIX}"]
-    def toImgUrl = "docker://${toImageRepo}/${microService.id}:${toTag}"
+    def toImgUrl = "docker://${toImageRepo}/${toImage}:${toTag}"
 
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
     def srcTlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
