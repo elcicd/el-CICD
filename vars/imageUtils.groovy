@@ -41,5 +41,5 @@ def copyImageCmd(String fromEnv,
                  String image,
                  String fromTag,
                  String toTag) {
-    return copyImageCmd(env, tokenVar, image, fromTag, token, env, tokenVar, image, toTag)
+    return copyImageCmd(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
  }
