@@ -113,14 +113,19 @@ _remove_existing_crc() {
 __remove_docker_registry() {
     _delete_namespace  ${DOCKER_REGISTRY_NAMESPACE}
 
-    if [[ ${REMOVE_INSECURE_REGISTRIES} == ${_YES} ]]
-    then
-        echo "Removing array for whitelisting insecure registries."
-        oc patch image.config.openshift.io/cluster --type json   -p='[{"op": "remove", "path": "/spec/registrySources/insecureRegistries"}]'
-        echo "ALL WHITELISTED INSECURE IMAGE REGISTRIES DELISTED FROM CLUSTER"
-    fi
+    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
+    for REGISTRY_NAME in ${REGISTRY_NAMES}
+    do
+        local HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
 
-    oc delete --ignore-not-found -f ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv.yml
+        IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
+    done
+    echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
+
+    local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
+    sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv-template.yml | \
+        oc delete --ignore-not-found -f -
 }
 
 __remove_docker_registry_nfs_share() {
@@ -160,9 +165,11 @@ __remove_whitelisted_docker_registry_host_names() {
 }
 
 __remove_git_repos() {
+    echo
     echo 'TODO: implement __remove_git_repos'
 }
 
 __remove_git_deploy_keys() {
+    echo
     echo 'TODO: implement __remove_git_deploy_keys'
 }

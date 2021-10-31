@@ -29,7 +29,7 @@ def call(Map args) {
             imageExists = projectInfo.microServices.find { microService ->
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
-                def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                 def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
                 return sh(returnStdout: true, 
                           script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
@@ -88,7 +88,7 @@ def call(Map args) {
                 if (microService.promote) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
 
-                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                     def skopeoInspectCmd = "skopeo inspect --raw  --tls-verify=${tlsVerify} --creds"
                     return !sh(returnStdout: true,
                                script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
@@ -157,7 +157,7 @@ def call(Map args) {
                     def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
                     def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
-                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                     sh """
                         ${shellEcho ''}
                         skopeo copy --src-tls-verify=${tlsVerify} \

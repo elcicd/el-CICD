@@ -97,7 +97,7 @@ def call(Map args) {
                     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
                     def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
 
-                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                     def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
                     if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${imageRepoUserNamePwd} ${imageUrl} || :").trim()) {
                         errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
@@ -137,7 +137,7 @@ def call(Map args) {
                     def toImageUrl = "${imageRepo}/${microService.id}:${projectInfo.deployToEnv}"
 
 
-                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                     def srcTlsVerify = "--src-tls-verify=${tlsVerify}"
                     def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
                     def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"

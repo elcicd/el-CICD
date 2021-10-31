@@ -99,16 +99,6 @@ case "${CLI_OPTION}" in
         echo "${HELP_MSG}"
         exit 0
     ;;
-
-    *)
-        if [[ ! -f ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ]]
-        then
-            echo "ERROR: Uknown or missing [root-config-file]: ${ROOT_CONFIG_FILE}"
-            echo
-            echo "${HELP_MSG}"
-            exit 1
-        fi
-    ;;
 esac
 
 SERVER_TYPE_PROD=prod
@@ -142,9 +132,10 @@ do
     echo "Sourcing file: ${FILE}"
     source "${SCRIPTS_DIR}/${FILE}"
 done
-set +e
 
-_source_el_cicd_meta_info_files
+source ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}
+_source_el_cicd_config_files
+set +e
 
 echo
 echo 'el-CICD environment loaded'

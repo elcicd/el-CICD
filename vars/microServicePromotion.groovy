@@ -73,7 +73,7 @@ def call(Map args) {
                         def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
                         def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.deployFromEnv}"
 
-                        def tlsVerify = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
+                        def tlsVerify = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
                         def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
                         if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${fromUserNamePwd} ${imageUrl} || :").trim()) {
                             errorMsgs << "    ${microService.id}:${projectInfo.deployFromEnv} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
@@ -150,40 +150,37 @@ def call(Map args) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
                             string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                def fromUserNamePwd = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${FROM_IMAGE_REPO_ACCESS_TOKEN}"
-                def toUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
-                projectInfo.microServices.each { microService ->
-                    if (microService.promote) {
-                        def fromImageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                        def fromImageUrl = "${fromImageRepo}/${microService.id}"
+                projectInfo.microServices.collect { it.promote }.each {
+                    def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
+                    def copyImageCmd =
+                        imageUtils.copyImageCmd(projectInfo.ENV_FROM,
+                                                'FROM_IMAGE_REPO_ACCESS_TOKEN',
+                                                microService.id,
+                                                projectInfo.deployFromEnv,
+                                                projectInfo.ENV_TO,
+                                                'TO_IMAGE_REPO_ACCESS_TOKEN',
+                                                microService.id,
+                                                projectInfo.deployFromEnv,
+                                                promoteTag)
 
-                        def toImageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                        def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
-                        def deployToImgUrl = "${toImageRepo}/${microService.id}"
+                    def tagImageCmd =
+                        imageUtils.tagImageCmd(projectInfo.ENV_TO,
+                                               'TO_IMAGE_REPO_ACCESS_TOKEN',
+                                               microService.id,
+                                               promoteTag,
+                                               projectInfo.deployToEnv)
 
-                        def tlsVerify = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-                        def srcCopyTlsVerify = "--src-tls-verify=${tlsVerify}"
+                    def msg = "${microService.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
+                    sh """
+                        ${shellEcho ''}
+                        ${copyImageCmd}
 
-                        tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-                        def srcTagTlsVerify = "--src-tls-verify=${tlsVerify}"
-                        def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
+                        ${shellEcho ''}
+                        ${tagImageCmd}
 
-                        def skopeoCopyCmd = "skopeo copy --src-creds ${fromUserNamePwd} --dest-creds ${toUserNamePwd} ${srcCopyTlsVerify} ${destTlsVerify}"
-
-                        def skopeoTagCmd = "skopeo copy --src-creds ${toUserNamePwd} --dest-creds ${toUserNamePwd} ${srcTagTlsVerify} ${destTlsVerify}"
-
-                        def msg = "${fromImageUrl}:${projectInfo.deployFromEnv} promoted to ${deployToImgUrl}:${promoteTag} and ${deployToImgUrl}:${projectInfo.deployToEnv}"
-                        sh """
-                            ${shellEcho ''}
-                            ${skopeoCopyCmd} docker://${fromImageUrl}:${projectInfo.deployFromEnv} docker://${deployToImgUrl}:${promoteTag}
-
-                            ${shellEcho ''}
-                            ${skopeoTagCmd} docker://${deployToImgUrl}:${promoteTag} docker://${deployToImgUrl}:${projectInfo.deployToEnv}
-
-                            ${shellEcho ''}
-                            ${shellEcho  "--> ${msg}"}
-                        """
-                    }
+                        ${shellEcho ''}
+                        ${shellEcho  "--> ${msg}"}
+                    """
                 }
             }
         }

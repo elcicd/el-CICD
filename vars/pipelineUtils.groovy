@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * General pipeline utilities
- *
- * @see the projectid-onboard pipeline for example on how to use
  */
 
 def cloneGitRepo(def component, def gitReference) {

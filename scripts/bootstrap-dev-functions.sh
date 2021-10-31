@@ -18,6 +18,8 @@ __bootstrap_dev_environment() {
 
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
+        __remove_docker_registry
+
         __setup_docker_registry
     fi
 
@@ -107,7 +109,7 @@ __bootstrap_clean_crc() {
 
 
     echo
-    ${CRC_EXEC} setup
+    echo 'y' | ${CRC_EXEC} setup
 
     echo
     echo "Starting CRC with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
@@ -139,7 +141,7 @@ __additional_cluster_config() {
     if [[ -z $(oc get secrets -n kube-system | grep sealed-secrets-key) ]]
     then
         echo "Creating Sealed Secrets master key"
-        oc create -f ${SCRIPTS_RESOURCES_DIR}//master.key
+        oc create -f ${SCRIPTS_RESOURCES_DIR}/master.key
         oc delete pod --ignore-not-found -n kube-system -l name=sealed-secrets-controller
     else
         echo "Sealed Secrets master key found. Apply manually if still required.  Skipping..."
@@ -175,10 +177,13 @@ __setup_docker_registry() {
     then
         __create_docker_registry_nfs_share
 
-        oc create -f ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv.yml
+        local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
+        sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv-template.yml | oc create -f -
     fi
 
     __generate_deployments
+
+    __register_insecure_registries
 
     echo
     oc create -f ${TMP_DIR} -n ${DOCKER_REGISTRY_NAMESPACE}
@@ -198,15 +203,8 @@ __setup_docker_registry() {
 }
 
 __generate_deployments() {
-    local IMAGE_REPOS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
-    local IMAGE_REPOS=''
-    for REPO in ${IMAGE_REPOS_LIST[@]}
-    do
-        IMAGE_REPOS="${IMAGE_REPOS} $(eval echo \${${REPO}${IMAGE_REPO_USERNAME_POSTFIX}})"
-    done
-    IMAGE_REPOS=$(echo ${IMAGE_REPOS} | xargs -n1 | sort -u | xargs)
-
-    for REGISTRY_NAME in ${IMAGE_REPOS}
+    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
         local TMP_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}-tmp.yml
         local OUTPUT_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}.yml
@@ -229,7 +227,9 @@ __generate_deployments() {
 
         mv ${TMP_FILE} ${OUTPUT_FILE}
     done
+}
 
+__register_insecure_registries() {
     echo
     if [[ -z $(oc describe image.config.openshift.io/cluster | grep 'Insecure Registries') ]]
     then
@@ -239,19 +239,16 @@ __generate_deployments() {
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
 
-    local HOST_NAMES=''
-    for REGISTRY_NAME in ${IMAGE_REPOS}
+    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+        local HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
 
-        if [[ -z $(oc get image.config.openshift.io/cluster -o yaml | grep ${HOST_DOMAIN}) ]]
-        then
-            echo "Whitelisting ${HOST_DOMAIN} as an insecure image registry."
-            oc patch image.config.openshift.io/cluster --type=json \
-                -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries/-", "value": "'"${HOST_DOMAIN}"'" }]'
-        else
-            echo "${HOST_DOMAIN} already whitelisted as insecure registry.  Skipping..."
-        fi
+        oc get image.config.openshift.io/cluster -o yaml | grep -v "\- ${HOST_DOMAIN}" | oc apply -f -
+
+        echo "Whitelisting ${HOST_DOMAIN} as an insecure image registry."
+        oc patch image.config.openshift.io/cluster --type=json \
+            -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries/-", "value": "'"${HOST_DOMAIN}"'" }]'
     done
 }
 

@@ -13,7 +13,7 @@ _bootstrap_el_cicd() {
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
         echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
-        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} to and rerun."
+        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} and rerun."
         echo "Exiting."
         exit 1
     fi
@@ -47,77 +47,51 @@ _bootstrap_el_cicd() {
     echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete"
 }
 
-_source_el_cicd_meta_info_files() {
-    echo
-    echo 'WARNING: Each configuration file sourced will overwrite the last one in case of'
-    echo '         conflicting variable definitions.'
-    source ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}
+_source_el_cicd_config_files() {
+    set -e 
+    local META_INFO_FILE=/tmp/.el_cicd_config_file
 
-    local META_INFO_FILE=/tmp/.source_el_cicd_meta_info_files
+    __create_config_source_file ${META_INFO_FILE} ${INCLUDE_BOOTSTRAP_FILES}
 
-    local EXTRA_CONF_FILES=$(echo ${INCLUDE_SYSTEM_FILES}:${SYSTEM_DEFAULT_CONFIG_FILE}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')
-    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}  ${EXTRA_CONF_FILES}"
-    __create_source_file ${META_INFO_FILE} "${INCLUDE_FILES}"
-
-    # It's a hack, but ensures all files are read and realized properly if references to other variables are made later in file
-    echo "SOURCING CONFIG FILES: ${ROOT_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES}:${INCLUDE_BOOTSTRAP_FILES} | tr ':' ' ')"
     source ${META_INFO_FILE}
-    source ${META_INFO_FILE}
+    set +e +x
 }
 
 _create_el_cicd_meta_info_config_map() {
-    echo
-    echo "Create ${EL_CICD_META_INFO_NAME} ConfigMap from ${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
-    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
-    sleep 5
+    set -e
+    local META_INFO_FILE=/tmp/.el_cicd_meta_info_map_file
 
-    local META_INFO_FILE=/tmp/.create_el_cicd_meta_info_config_map
+    __create_config_source_file ${META_INFO_FILE}
 
-    INCLUDE_FILES="${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} $(echo ${INCLUDE_SYSTEM_FILES} | tr ':' ' ') ${SYSTEM_DEFAULT_CONFIG_FILE}"
-    __create_source_file ${META_INFO_FILE} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
-
-    echo "Source ${EL_CICD_META_INFO_NAME} ConfigMap Files: ${ROOT_CONFIG_FILE} ${INCLUDE_FILES}"
-    local META_INFO_FILE_FINAL=${META_INFO_FILE}_FINAL
-    cat ${META_INFO_FILE} | envsubst > ${META_INFO_FILE_FINAL}
-
-    local TLS_CICD_ENVIRONMENTS
-    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == ${SERVER_TYPE_NON_PROD} ]]
-    then
-        TLS_CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
-    else
-        TLS_CICD_ENVIRONMENTS="${PRE_PROD_ENV} ${PROD_ENV}"
-    fi
-
-    echo
-    for ENV in ${TLS_CICD_ENVIRONMENTS}
-    do
-        if [[ -z $(eval echo \${"${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"}) ]]
-        then
-            eval "${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"=true
-            echo "${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX} not set; defaults to '$(eval echo \${"${ENV}${IMAGE_REPO_ENABLE_TLS_POSTFIX}"})'."
-        fi
-    done
-
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE_FINAL} -n ${ONBOARDING_MASTER_NAMESPACE}
-
-    rm ${META_INFO_FILE} ${META_INFO_FILE_FINAL}
+    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
+    set +e
 }
 
-__create_source_file() {
+__create_config_source_file() {
     local META_INFO_FILE=${1}
-    local INCLUDE_FILES=${2}
+    local META_INFO_FILE_TMP=${1}_TMP
+    local ADDITIONAL_FILES=${2}
 
-    # iterates over each file an prints (default awk behavior) each unique line; thus, if second file contains the same first property
-    # value, it skips it in the second file, and all is output to the tmp file for creating the final ConfigMap below
-    local CURRENT_DIR=$(pwd)
-    cd ${CONFIG_REPOSITORY_BOOTSTRAP}
-    awk -F= '!line[$1]++' ../${ROOT_CONFIG_FILE} ${INCLUDE_FILES} > ${META_INFO_FILE}
-    cd ${CURRENT_DIR}
+    rm -f ${META_INFO_FILE} ${META_INFO_FILE_TMP}
 
-    echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE}
-    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE}
+    local EXTRA_CONF_FILES=$(echo ${INCLUDE_SYSTEM_FILES}:${ADDITIONAL_FILES} | tr ':' ' ')
+    for CONF_FILE in ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}
+    do
+        local FOUND_FILES="${FOUND_FILES} $(find ${CONFIG_REPOSITORY} ${CONFIG_REPOSITORY_BOOTSTRAP} -maxdepth 1 -name ${CONF_FILE})"
+    done
+    echo "Config processed: $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
+    awk -F= '!line[$1]++' ${SYSTEM_DEFAULT_CONFIG_FILE} ${FOUND_FILES} >> ${META_INFO_FILE_TMP}
+
+    echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE_TMP}
+    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
+
+    source ${META_INFO_FILE_TMP}
+    cat ${META_INFO_FILE_TMP} | envsubst > ${META_INFO_FILE}
+
+    sort -o ${META_INFO_FILE} ${META_INFO_FILE}
+
+    rm ${META_INFO_FILE_TMP}
 }
-
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
