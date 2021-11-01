@@ -24,6 +24,16 @@ def call(Map args) {
         }
     }
 
+    stage('Checkout all release candidate microservice repositories') {
+        pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
+
+        projectInfo.microServicesToRedeploy.each { microService ->
+            microService.srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
+            microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${microService.srcCommitHash}"
+            pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
+        }
+    }
+
     stage('Verify release candidate images exist for redeployment') {
         pipelineUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
                                  projectInfo.microServicesToRedeploy.collect { it.name }.join(', '))
@@ -35,13 +45,13 @@ def call(Map args) {
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
             projectInfo.microServicesToRedeploy.each { microService ->
-                def imageTag = "${projectInfo.preProdEnv}-${srcCommitHash}"
+                def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"
                 def verifyImageCmd =
                     shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
                 def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
-                                        "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
+                                        "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${microService.srcCommitHash}"
                 echo msg
 
                 allImagesExist = allImagesExist && imageFound
@@ -51,16 +61,6 @@ def call(Map args) {
         if (!allImagesExist) {
             def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseCandidateTag}"
             pipelineUtils.errorBanner(msg)
-        }
-    }
-
-    stage('Checkout all release candidate microservice repositories') {
-        pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
-
-        projectInfo.microServicesToRedeploy.each { microService ->
-            def srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
-            microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${srcCommitHash}"
-            pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
         }
     }
 
