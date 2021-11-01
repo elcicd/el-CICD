@@ -42,7 +42,7 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             dir(microService.workDir) {
                 microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
-                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
+                pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
 
                 def gitTagCheck = "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'"
                 versionTagExists = sh(returnStdout: true, script: gitTagCheck) != '0'
@@ -65,6 +65,12 @@ def call(Map args) {
             if (hashData) {
                 microService.releaseCandidateAvailable = true
                 microService.srcCommitHash = hashData.split(':')[1]
+
+                dir(microService.workDir) {
+                    sh """
+                        git checkout ${microService.deploymentBranch}
+                    """
+                }
             }
         }
 
