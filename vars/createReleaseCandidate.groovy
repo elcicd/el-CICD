@@ -143,7 +143,7 @@ def call(Map args) {
         pipelineUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')) {
+                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
             projectInfo.microServicesToTag.each { microService ->
                 def tagImageCmd =
                     shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
