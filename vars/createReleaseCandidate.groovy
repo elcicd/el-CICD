@@ -148,7 +148,7 @@ def call(Map args) {
                 def tagImageCmd =
                     shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
                 sh """
-                    ${shCmd.shellEcho '')}
+                    ${shCmd.shellEcho ''}
                     ${tagImageCmd}
                     ${shCmd.shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
                 """
