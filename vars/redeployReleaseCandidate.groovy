@@ -99,10 +99,10 @@ def call(Map args) {
                 def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
 
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, imageTag)
 
                 def tagImageEnvCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
 
                 sh """
                     ${shCmd.echo ''}
