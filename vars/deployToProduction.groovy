@@ -161,7 +161,7 @@ def call(Map args) {
                              string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                              variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
             {
-                microServicesInRelease.each { microService ->
+                projectInfo.microServicesInRelease.each { microService ->
                     def copyImageCmd =
                         shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag,
                                         projectInfo.PROD_ENV, 'PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseVersionTag)
