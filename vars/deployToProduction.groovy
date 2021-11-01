@@ -65,7 +65,7 @@ def call(Map args) {
                             "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}"
                     }
                     else {
-                        msg = "-> ERROR: no image found in image repo: ${imageUrl}"
+                        msg = "-> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]}"
                     }
 
                     echo msg
