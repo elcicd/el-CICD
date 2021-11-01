@@ -15,7 +15,7 @@ def verifyImage(String env, String tokenVar, String image, String tag) {
     def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def imageUrl = "docker://${imageRepo}/${image}:${tag}"
 
-    return "skopeo inspect --format "{{.Name}}({{.Digest}})" ${tlsVerify} ${creds} ${imageUrl} || :"
+    return "skopeo inspect --format '{{.Name}}({{.Digest}})' ${tlsVerify} ${creds} ${imageUrl} || :"
 }
 
 def copyImage(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
