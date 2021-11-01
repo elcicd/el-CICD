@@ -154,9 +154,9 @@ def call(Map args) {
                 def tagImageCmd =
                     shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
                 sh """
-                    ${sshCmd.echo ''}
+                    ${shCmd.echo ''}
                     ${tagImageCmd}
-                    ${sshCmd.echo "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                    ${shCmd.echo "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
                 """
             }
         }
@@ -172,7 +172,7 @@ def call(Map args) {
                         def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${microService.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-                            ${sshCmd.echo "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                            ${shCmd.echo "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
                             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                         """
                     }
