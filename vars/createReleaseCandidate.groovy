@@ -24,9 +24,8 @@ def call(Map args) {
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
             imageExists = projectInfo.microServices.find { microService ->
-                def imageTag = "${microService.id}:${projectInfo.releaseCandidateTag}"
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag)
                 return sh(returnStdout: true, script: verifyImageCmd)
             }
         }
