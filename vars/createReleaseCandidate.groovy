@@ -66,6 +66,7 @@ def call(Map args) {
             if (answer) {
                 microService.promote = true
             }
+            echo "${microService.name}/microService.promote: ${microService.name}"
             return microService.promote
         }
     }
