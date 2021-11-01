@@ -36,6 +36,23 @@ def call(Map args) {
         }
     }
 
+    stage('Clone microservice configuration repositories for microservices images') {
+        pipelineUtils.echoBanner("VERIFY VERSION TAG DOES NOT EXIST IN SCM")
+
+        projectInfo.microServices.each { microService ->
+            dir(microService.workDir) {
+                microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
+                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
+
+                def gitTagCheck = "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'"
+                versionTagExists = sh(returnStdout: true, script: gitTagCheck) != '0'
+                if (versionTagExists) {
+                    pipelineUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseCandidateTag} exists, and cannot be reused")
+                }
+            }
+        }
+    }
+
     stage ('Select microservices to tag as release candidate') {
         pipelineUtils.echoBanner("SELECT MICROSERVICES TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
 
@@ -70,6 +87,10 @@ def call(Map args) {
 
             return microService.promote
         }
+
+        if (!projectInfo.microServicesToTag) {
+            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED TO TAG!")
+        }
     }
 
     stage('Verify selected images exist in pre-prod for promotion') {
@@ -88,23 +109,6 @@ def call(Map args) {
 
         if (imageMissing) {
             pipelineUtils.errorBanner("IMAGE NOT FOUND: one or more images do not exist in ${projectInfo.preProdEnv} for tagging")
-        }
-    }
-
-    stage('Clone microservice configuration repositories for microservices images') {
-        pipelineUtils.echoBanner("CLONE ALL MICROSERVICE DEPLOYMENT REPOSITORIES, AND VERIFY VERSION TAG DOES NOT EXIST IN SCM:",
-                                 projectInfo.microServicesToTag.collect { it.name }.join(', '))
-
-        projectInfo.microServices.each { microService ->
-            dir(microService.workDir) {
-                microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
-                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
-
-                versionTagExists = sh(returnStdout: true, script: "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'") != '0'
-                if (versionTagExists) {
-                    pipelineUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseCandidateTag} exists, and cannot be reused")
-                }
-            }
         }
     }
 
