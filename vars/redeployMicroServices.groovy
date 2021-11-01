@@ -65,7 +65,7 @@ def call(Map args) {
                              parameters: inputs)
 
         def willRedeployOrRemove = false
-        projectInfo.microServices.each { microService ->
+        projectInfo.microServicesToRedeploy = projectInfo.microServices.findAll { microService ->
             def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
             microService.remove = (answer == el.cicd.REMOVE)
             microService.redeploy = (answer && answer != el.cicd.REMOVE)
@@ -77,6 +77,7 @@ def call(Map args) {
             }
 
             willRedeployOrRemove = willRedeployOrRemove || answer
+            return microService.redeploy
         }
 
         if (!willRedeployOrRemove) {
@@ -86,22 +87,19 @@ def call(Map args) {
 
     stage('Verify image(s) exist for previous environment') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) TO REDEPLOY EXIST IN IMAGE REPOSITORY:",
-                                 projectInfo.microServices.findAll{ it.redeploy }.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
+                                 projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                         variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
-            projectInfo.microServices.each { microService ->
-                if (microService.redeploy) {
-                    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                    def imageUrl = "docker://${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
+            projectInfo.microServicesToRedeploy.each { microService ->
+                def verifyImageCmd =
+                    shCmd.verifyImage(projectInfo.ENV_TO, 'TO_IMAGE_REPO_ACCESS_TOKEN', microService.id, microService.deploymentImageTag)
 
-                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                    def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
-                    if (!sh(returnStdout: true, script: "${skopeoInspectCmd} ${imageRepoUserNamePwd} ${imageUrl} || :").trim()) {
-                        errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
-                    }
+                if (!sh(returnStdout: true, script: verifyImageCmd).trim()) {
+                    errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
                 }
             }
         }
@@ -114,45 +112,35 @@ def call(Map args) {
     stage('Checkout all deployment branches') {
         pipelineUtils.echoBanner("CHECKOUT ALL DEPLOYMENT BRANCHES")
 
-        projectInfo.microServices.each { microService ->
-            if (microService.redeploy) {
-                dir(microService.workDir) {
-                    sh "git checkout ${microService.deploymentBranch}"
-                    microService.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-                }
+        projectInfo.microServicesToRedeploy.each { microService ->
+            dir(microService.workDir) {
+                sh "git checkout ${microService.deploymentBranch}"
+                microService.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
             }
         }
     }
 
     stage('tag images to redeploy for environment') {
         pipelineUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
-                                 projectInfo.microServices.findAll{ it.redeploy }.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
+                                 projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                         variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
-            projectInfo.microServices.each { microService ->
-                if (microService.redeploy) {
-                    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
-                    def fromImageUrl = "${imageRepo}/${microService.id}:${microService.deploymentImageTag}"
-                    def toImageUrl = "${imageRepo}/${microService.id}:${projectInfo.deployToEnv}"
+            projectInfo.microServicesToRedeploy.each { microService ->
+                def tagImageCmd =
+                    shCmd.tagImage(projectInfo.ENV_TO, 'TO_IMAGE_REPO_ACCESS_TOKEN', microService.id, microService.deploymentImageTag, projectInfo.deployToEnv)
+                sh """
+                    ${shCmd.echo '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
 
-
-                    def tlsVerify = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                    def srcTlsVerify = "--src-tls-verify=${tlsVerify}"
-                    def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
-                    def skopeoComd = "skopeo copy --src-creds ${imageRepoUserNamePwd} --dest-creds ${imageRepoUserNamePwd} ${srcTlsVerify} ${destTlsVerify}"
-                    sh """
-                        ${shCmd.echo '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
-
-                        ${skopeoComd} docker://${fromImageUrl} docker://${toImageUrl}
-                    """
-                }
+                    ${tagImageCmd}
+                """
             }
         }
     }
 
     deployMicroServices(projectInfo: projectInfo,
-                        microServices: projectInfo.microServices.findAll { it.redeploy },
+                        microServices: projectInfo.microServicesToRedeploy,
                         microServicesToRemove: projectInfo.microServices.findAll { it.remove },
                         imageTag: projectInfo.deployToEnv)
 }

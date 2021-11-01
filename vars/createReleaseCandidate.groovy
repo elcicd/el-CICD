@@ -30,7 +30,7 @@ def call(Map args) {
                 def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
 
                 def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
+                def skopeoInspectCmd = shCmd.
                 return sh(returnStdout: true, 
                           script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
             }
@@ -67,11 +67,12 @@ def call(Map args) {
 
         def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
 
-        projectInfo.microServices.each { microService ->
+        projectInfo.microServicesToTag = projectInfo.microServices.findAll { microService ->
             def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
             if (answer) {
                 microService.promote = true
             }
+            return microService.promote
         }
     }
 
@@ -81,18 +82,11 @@ def call(Map args) {
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
-            imageMissing = projectInfo.microServices.find { microService ->
-                if (microService.promote) {
-                    def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
-
-                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                    def skopeoInspectCmd = "skopeo inspect --raw  --tls-verify=${tlsVerify} --creds"
-                    return !sh(returnStdout: true,
-                               script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
-                }
+            imageMissing = projectInfo.microServicesToTag.find { microService ->
+                def verifyImageCmd =
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
+                return !sh(returnStdout: true, script: "${verifyImageCmd}")
             }
         }
 
@@ -103,7 +97,7 @@ def call(Map args) {
 
     stage('Clone microservice configuration repositories for microservices images') {
         pipelineUtils.echoBanner("CLONE ALL MICROSERVICE DEPLOYMENT REPOSITORIES, AND VERIFY VERSION TAG DOES NOT EXIST IN SCM:",
-                                 projectInfo.microServices.findAll { it.promote }.collect { it.name }.join(', '))
+                                 projectInfo.microServicesToTag.collect { it.name }.join(', '))
 
         projectInfo.microServices.each { microService ->
             dir(microService.workDir) {
@@ -119,7 +113,7 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.microServices.findAll{ it.promote }.collect { it.name }.join(' ')
+        def promotionNames = projectInfo.microServicesToTag.collect { it.name }.join(' ')
         def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
 
         def msg = pipelineUtils.createBanner(
@@ -148,27 +142,16 @@ def call(Map args) {
     stage('Tag all images') {
         pipelineUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-
-            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
-            projectInfo.microServices.find { microService ->
-                if (microService.promote) {
-                    def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.preProdEnv}"
-                    def preProdReleaseCandidateImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
-
-                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                    sh """
-                        ${shCmd.echo ''}
-                        skopeo copy --src-tls-verify=${tlsVerify} \
-                                    --dest-tls-verify=${tlsVerify} \
-                                    --src-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
-                                    --dest-creds ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} \
-                                    ${preProdImageUrl} \
-                                    ${preProdReleaseCandidateImageUrl}
-                        ${shCmd.echo "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
-                    """
-                }
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')) {
+            projectInfo.microServicesToTag.each { microService ->
+                def tagImageCmd =
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
+                sh """
+                    ${shCmd.shellEcho '')}
+                    ${tagImageCmd}
+                    ${shCmd.shellEcho "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                """
             }
         }
     }
@@ -183,8 +166,8 @@ def call(Map args) {
                         def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${microService.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-                            ${shCmd.echo "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
-                            ${sshAgentBash 'GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags"}
+                            ${shCmd.shellEcho "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                         """
                     }
                 }

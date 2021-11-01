@@ -17,14 +17,16 @@ def call(Map args) {
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
-        if (!projectInfo.microServices.find{ it.releaseCandidateGitTag })  {
+        projectInfo.microServicesToRedeploy = projectInfo.microServices.findAll { it.releaseCandidateGitTag }
+
+        if (!projectInfo.microServicesToRedeploy)  {
             pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
     }
 
     stage('Verify release candidate images exist for redeployment') {
         pipelineUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
-                                 projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', '))
+                                 projectInfo.microServicesToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
@@ -32,22 +34,17 @@ def call(Map args) {
             def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
-            projectInfo.microServices.each { microService ->
-                if (microService.releaseCandidateGitTag) {
-                    def srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
-                    def imageUrl = "docker://${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
+            projectInfo.microServicesToRedeploy.each { microService ->
+                def imageTag = "${projectInfo.preProdEnv}-${srcCommitHash}"
+                def verifyImageCmd =
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
-                    def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                    def skopeoInspectCmd = "skopeo inspect --raw --tls-verify=${tlsVerify} --creds"
-                    def imageFound = sh(returnStdout: true,
-                                        script: "${skopeoInspectCmd} ${imageRepoUserName}:\${IMAGE_REPO_ACCESS_TOKEN} ${imageUrl} || :").trim()
+                def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
+                                        "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
+                echo msg
 
-                    def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
-                                           "-> ERROR: no image found: ${imageRepo}/${microService.id}:${projectInfo.preProdEnv}-${srcCommitHash}"
-                    echo msg
-
-                    allImagesExist = allImagesExist && imageFound
-                }
+                allImagesExist = allImagesExist && imageFound
             }
         }
 
@@ -60,12 +57,10 @@ def call(Map args) {
     stage('Checkout all release candidate microservice repositories') {
         pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
-        projectInfo.microServices.each { microService ->
-            if (microService.releaseCandidateGitTag) {
-                def srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
-                microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${srcCommitHash}"
-                pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
-            }
+        projectInfo.microServicesToRedeploy.each { microService ->
+            def srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
+            microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${srcCommitHash}"
+            pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
         }
     }
 
@@ -78,7 +73,7 @@ def call(Map args) {
 
             *******
             -> Microservices included in this release candidate to be deployed:
-            ${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(', ')}
+            ${projectInfo.microServicesToRedeploy.collect { it.name }.join(', ')}
             *******
 
             *******
@@ -95,48 +90,37 @@ def call(Map args) {
 
     stage('Tag images') {
         pipelineUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
-                                 "${projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name } .join(', ')}")
+                                 "${projectInfo.microServicesToRedeploy.collect { it.name } .join(', ')}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                                variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def userNamePwd =
-                el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN}"
-            def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-            def srcTlsVerify = "--src-tls-verify=${tlsVerify}"
-            def destTlsVerify = "--dest-tls-verify=${tlsVerify}"
-            def skopeoCopyComd = 
-                "skopeo copy --src-creds ${userNamePwd} --dest-creds ${userNamePwd} ${srcTlsVerify} ${destTlsVerify}"
+                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+            projectInfo.microServicesToRedeploy.each { microService ->
+                def preProdImageUrl = "${preProdImageRepo}/${microService.id}"
 
-            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
+                def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"
+                def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
 
-            projectInfo.microServices.each { microService ->
-                if (microService.releaseCandidateGitTag) {
-                    def preProdImageUrl = "${preProdImageRepo}/${microService.id}"
+                def tagImageCmd =
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
 
-                    def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} " +
-                              "TAGGED AS ${projectInfo.preProdEnv} and ${projectInfo.preProdEnv}-${microService.srcCommitHash}"
+                def tagImageEnvCmd =
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
 
-                    sh """
-                        ${shCmd.echo ''}
-                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
-                                          docker://${preProdImageUrl}:${projectInfo.preProdEnv}-${microService.srcCommitHash}
+                sh """
+                    ${shCmd.echo ''}
+                    ${tagImageCmd}
 
-                        ${shCmd.echo ''}
-                        ${skopeoCopyComd} docker://${preProdImageUrl}:${projectInfo.releaseCandidateTag} \
-                                          docker://${preProdImageUrl}:${projectInfo.preProdEnv}
+                    ${shCmd.echo ''}
+                    ${tagImageEnvCmd}
 
-                        ${shCmd.echo '',
-                                    '******',
-                                    msg,
-                                    '******'}
-                    """
-                }
+                    ${shCmd.echo '', '******', msg, '******'}
+                """
             }
         }
     }
 
     deployMicroServices(projectInfo: projectInfo,
-                        microServices: projectInfo.microServices.findAll { it.releaseCandidateGitTag },
+                        microServices: projectInfo.microServicesToRedeploy,
                         imageTag: projectInfo.preProdEnv,
                         recreateAll: true)
 }

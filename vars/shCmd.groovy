@@ -4,8 +4,8 @@
  * Image utilities
  */
 
-/* Generated command returns an empty String if image doesn't exist. */
-def skopeoInspect(String env, String tokenVar, String image, String tag) {
+/* When executed, command will echo either the image name and sha, or null if image doesn't exist. */
+def verifyImage(String env, String tokenVar, String image, String tag) {
     def user = el.cicd["${env}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def creds = "--creds ${user}:\${${tokenVar}}"
 
@@ -15,11 +15,11 @@ def skopeoInspect(String env, String tokenVar, String image, String tag) {
     def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def imageUrl = "docker://${imageRepo}/${image}:${tag}"
 
-    return "skopeo inspect --raw ${tlsVerify} ${creds} ${imageUrl} || :"
+    return "skopeo inspect --format "{{.Name}}({{.Digest}})" ${tlsVerify} ${creds} ${imageUrl} || :"
 }
 
-def skopeoCopy(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
-                 String toEnv, String toTokenVar, String toImage, String toTag)
+def copyImage(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
+               String toEnv, String toTokenVar, String toImage, String toTag)
 {
     def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def srcCreds = "--src-creds ${user}:\${${fromTokenVar}}"
@@ -42,8 +42,12 @@ def skopeoCopy(String fromEnv, String fromTokenVar, String fromImage, String fro
     return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
 }
 
-def skopeoTag(String env, String tokenVar, String image, String fromTag, String toTag) {
-    return skopeoCopy(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
+def tagImage(String env, String tokenVar, String image, String fromTag, String toTag) {
+    return copyImage(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
+}
+
+def shCmd.sshAgentBash(def sshKeyId, def ... commands) {
+    return "ssh-agent bash -c 'ssh-add \${${sshKeyId}} ; ${commands.join('; ')}'"
 }
 
 def echo(Object... msgs) {
