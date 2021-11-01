@@ -23,16 +23,11 @@ def call(Map args) {
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def preProdUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-
-            def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
             imageExists = projectInfo.microServices.find { microService ->
-                def preProdImageUrl = "docker://${preProdImageRepo}/${microService.id}:${projectInfo.releaseCandidateTag}"
-
-                def tlsVerify = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"] ?: true
-                def skopeoInspectCmd = shCmd.
-                return sh(returnStdout: true, 
-                          script: "${skopeoInspectCmd} ${preProdUserName}:\${PRE_PROD_IMAGE_REPO_ACCESS_TOKEN} ${preProdImageUrl} || :")
+                def imageTag = "${microService.id}:${projectInfo.releaseCandidateTag}"
+                def verifyImageCmd =
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                return sh(returnStdout: true, script: verifyImageCmd)
             }
         }
 
