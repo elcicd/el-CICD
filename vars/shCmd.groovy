@@ -46,7 +46,7 @@ def tagImage(String env, String tokenVar, String image, String fromTag, String t
     return copyImage(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
 }
 
-def shCmd.sshAgentBash(def sshKeyId, def ... commands) {
+def sshAgentBash(def sshKeyId, def ... commands) {
     return "ssh-agent bash -c 'ssh-add \${${sshKeyId}} ; ${commands.join('; ')}'"
 }
 
