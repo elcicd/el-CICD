@@ -56,7 +56,7 @@ def call(Map args) {
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
                     def copyImageCmd =
-                        shCmd.verifyImage(PROMOTION_ENV_FROM, IMAGE_REPO_ACCESS_TOKEN, microService.id, imageTag)
+                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
                     def imageFound = sh(returnStdout: true, script: "${copyImageCmd}").trim()
 
                     def msg
