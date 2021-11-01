@@ -51,7 +51,8 @@ def call(Map args) {
             }
         }
 
-        def inputs = projectInfo.microServices.findAll {it.releaseCandidateAvailable }.collect { microService ->
+        def projectInfo.microServicesAvailable = projectInfo.microServices.findAll {it.releaseCandidateAvailable }
+        def inputs = projectInfo.microServicesAvailable.collect { microService ->
             booleanParam(name: microService.name, defaultValue: microService.status, description: "status: ${microService.status}")
         }
 
@@ -61,12 +62,12 @@ def call(Map args) {
 
         def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
 
-        projectInfo.microServicesToTag = projectInfo.microServices.findAll { microService ->
+        projectInfo.microServicesToTag = projectInfo.microServicesAvailable.findAll { microService ->
             def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
             if (answer) {
                 microService.promote = true
             }
-            echo "${microService.name}/microService.promote: ${microService.promote}"
+            
             return microService.promote
         }
     }
