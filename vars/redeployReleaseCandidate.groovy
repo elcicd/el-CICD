@@ -95,8 +95,6 @@ def call(Map args) {
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
             projectInfo.microServicesToRedeploy.each { microService ->
-                def preProdImageUrl = "${preProdImageRepo}/${microService.id}"
-
                 def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"
                 def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
 
