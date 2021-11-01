@@ -101,7 +101,7 @@ def call(Map args) {
         def metaInfoRegionShell =
             "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
         def metaInfoRegionChanged = sh(returnStdout: true, script: metaInfoRegionShell) != projectInfo.releaseRegion
-        def projectInfo.microServicesToDeploy = projectInfo.microServicesInRelease.findAll { microService ->
+        projectInfo.microServicesToDeploy = projectInfo.microServicesInRelease.findAll { microService ->
             dir(microService.workDir) {
                 def deploymentCommitHashChanged = false
                 if (!deployAll && !metaInfoRegionChanged && !metaInfoReleaseChanged) {
