@@ -2,8 +2,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Utility methods for apply deploying to production
- *
- * @see the autoid-onboard pipeline for example on how to use
  */
 
 def gatherAllVersionGitTagsAndBranches(def projectInfo) {

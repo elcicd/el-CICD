@@ -6,11 +6,7 @@ cd "$(dirname ${0})"
 read -r -d '' WARNING_MSG << EOM
 ===================================================================
 WARNING:
-SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED
-
-WHEN USING THIS IN YOUR OWN CLUSTER:
-    - FORK THE el-CICD AND el-CICD-config REPOSITORIES
-    - CREATE YOUR OWN PUBLIC/KEYS AND CREDENTIALS AS NEEDED
+SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED WHEN USING THIS UTILITY
 
 ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER ADMINS
 ===================================================================
@@ -41,23 +37,15 @@ EOM
 
 read -r -d '' DEV_SETUP_WELCOME_MSG << EOM
 Welcome to the el-CICD setup utility for developing with or on el-CICD.
-Before completing the setup, please make sure of the following:
-
-1) Log into an OKD cluster as cluster admin, or you can use Red Hat CodeReady Containers:
-   https://developers.redhat.com/products/codeready-containers/overview
-   NOTE: el-CICD can setup CodeReady Containers for you if requested.
-
-2) Have a GitHub account and a personal access token with repo and admin:repo_hook privileges ready for use.
-
-3) Have root priveleges on this machine. sudo password is required to complete setup.
 
 el-CICD will perform the necessary setup for running the tutorial or developing with el-CICD:
-    - Optionally setup CodeReady Containers, if downloaded to the el-CICD-dev directory and not currently installed.
-    - Optionally setup up a Nexus3 image repository to mimic an external repository, with or without an NFS share.
-    - Clone and push all el-CICD and demo project Git repositories into your GitHub account.
-    - Install the Sealed Secrets controller onto your cluster
+  - Optionally setup CodeReady Containers, if downloaded to the el-CICD home directory and not currently installed.
+  - Optionally setup up an image registry to mimic an external registry, with or without an NFS share.
+  - Clone and push all el-CICD and sample project Git repositories into your Git host (only GitHub is supported currently).
+  - Install the Sealed Secrets controller onto your cluster
 
-NOTE: This utility is idempotent and can be rerun mutliple times.
+NOTES: Red Hat CodeReady Containers may be downloaded from here:
+       https://developers.redhat.com/products/codeready-containers/overview
 EOM
 
 read -r -d '' DEV_TEAR_DOWN_WELCOME_MSG << EOM
@@ -73,6 +61,7 @@ Before beginning to tear down your environment, please make sure of the followin
 el-CICD will optionally tear down:
     - CodeReady Containers
     - The cluster docker registry
+    - The NFS registry directory
     - Remove el-CICD repositories pushed to your Git host
 EOM
 

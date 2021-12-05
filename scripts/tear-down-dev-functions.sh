@@ -12,23 +12,23 @@ __tear_down_dev_environment() {
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
         _remove_existing_crc
-    elif [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
+    fi
+
+    if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
     then
         __remove_docker_registry
-        
-        if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
-        then
-            __remove_docker_registry_nfs_share
-        fi
 
         __remove_whitelisted_docker_registry_host_names
     fi
 
+    if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+    then
+        __remove_docker_registry_nfs_share
+    fi
+
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
     then
-        __remove_git_repos
-    else
-        __remove_git_deploy_keys
+        __delete_remote_el_cicd_git_repos
     fi
 }
 
@@ -41,19 +41,24 @@ __gather_dev_tear_down_info() {
         echo 'CRC installation not found.  Skipping...'
     fi
 
-    if [[ ${REMOVE_CRC} != ${_YES} && ! -d $(oc get project --ignore-not-found ${DOCKER_REGISTRY_NAMESPACE}) ]]
+    if [[ ${REMOVE_CRC} != ${_YES} && ! -z $(oc get project --ignore-not-found ${DOCKER_REGISTRY_NAMESPACE}) ]]
     then
         echo
-        REMOVE_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development Docker Registry? [Y/n] ')
+        REMOVE_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
     fi
 
-    if [[ -d ${DOCKER_REGISTRY_DATA_NFS_DIR} ]]
+    if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} && -d ${DOCKER_REGISTRY_DATA_NFS_DIR} ]]
     then
-        REMOVE_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the Docker Registry NFS share? [Y/n] ')
+        REMOVE_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
 
     echo
     REMOVE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to remove the el-CICD Git repositories? [Y/n] ')
+    if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
+    then
+        echo
+        read -p "Enter GitHub user name: " GITHUB_USER
+    fi
 }
 
 __summarize_and_confirm_dev_tear_down() {
@@ -63,17 +68,19 @@ __summarize_and_confirm_dev_tear_down() {
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
-        echo "CRC WILL be torn down.  The Docker Registry will also be torn down as a result."
+        echo "CRC WILL be torn down.  The image registry WILL also be torn down as a result."
     else 
         echo "CRC will NOT be torn down."
 
         if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
         then
-            echo "The Docker Registry will be torn down."
+            echo "The image registry WILL be torn down."
+        else
+            echo "The image registry will NOT be torn down."
         fi
     fi
 
-    echo -n "The Docker Registry NFS share "
+    echo -n "The image registry NFS share "
     if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
     then
         echo -n "WILL"
@@ -82,13 +89,14 @@ __summarize_and_confirm_dev_tear_down() {
     fi
     echo " be deleted and removed."
 
-    echo -n "All el-CICD Git repositories will "
+    echo -n "All el-CICD Git repositories "
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
     then
-        echo "be removed."
+        echo -n "WILL"
     else
-        echo "be preserved, but deployment keys will be removed."
+        echo -n "will NOT"
     fi
+    echo " be removed from the Git host."
 
     _confirm_continue
 }
@@ -100,6 +108,7 @@ _remove_existing_crc() {
     then
         echo
         echo 'Cleaning up old CRC install'
+        ${CRC_EXEC} stop
         ${CRC_EXEC} delete
         ${CRC_EXEC} cleanup
     fi
@@ -164,12 +173,26 @@ __remove_whitelisted_docker_registry_host_names() {
     done
 }
 
-__remove_git_repos() {
-    echo
-    echo 'TODO: implement __remove_git_repos'
+__delete_remote_el_cicd_git_repos() {
+    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
+    for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
+    do
+        __remove_git_repo ${EL_CICD_DIR}
+    done
 }
 
-__remove_git_deploy_keys() {
-    echo
-    echo 'TODO: implement __remove_git_deploy_keys'
+__remove_git_repo() {
+    GIT_REPO_DIR=${1}
+
+    local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}) \
+        -H "Accept: application/vnd.github.v3+json"  \
+        https://${EL_CICD_GIT_API_URL}/repos/${GITHUB_USER}/${GIT_REPO_DIR})
+    if [[ ${REMOTE_GIT_DIR_EXISTS} == 200 ]]
+    then
+        curl -X DELETE -sI -o /dev/null -u :$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}) \
+            -H "Accept: application/vnd.github.v3+json"  https://${EL_CICD_GIT_API_URL}/repos/${GITHUB_USER}/${GIT_REPO_DIR}
+        echo "${GIT_REPO_DIR} deleted on Git host"
+    else
+        echo "${GIT_REPO_DIR} NOT FOUND on Git host. Skipping..."
+    fi
 }

@@ -27,6 +27,11 @@ __bootstrap_dev_environment() {
     then
         __create_credentials
     fi
+
+    if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
+    then
+        __init_el_cicd_repos
+    fi
 }
 
 __gather_dev_setup_info() {
@@ -34,34 +39,60 @@ __gather_dev_setup_info() {
     CRC_TAR_XZ=$(ls ${EL_CICD_HOME}/crc-*.tar.xz 2>/dev/null | wc -l)
     if [[ ${CRC_TAR_XZ} == '1' && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
     then
-        echo "CRC needs a minimum of 8 vCPUs, 48GB of RAM, and 128GB of disk space."
-        echo
-        echo "WARNING: el-CICD will completely remove any old CRC installs."
         SETUP_CRC=$(_get_yes_no_answer 'Do you wish to setup CRC? [Y/n] ')
     else
         echo 'WARNING: CRC tar.xz and/or pull-secret.txt not found in el-CICD home directory.  Skipping...'
     fi
 
     echo
-    INSTALL_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development Docker Registry on your cluster? [Y/n] ')
+    INSTALL_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
-        SETUP_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your Docker Registry (for developers)? [Y/n] ')
+        SETUP_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
+
+        if [[ ${SETUP_DOCKER_REGISTRY_NFS} != ${_YES} ]]
+        then
+            read -s -p "Sudo credentials required: " SUDO_PWD
+        fi
     fi
 
     echo
     GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you to (re)generate the credential files? [Y/n] ')
-    if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
+
+    echo
+    CREATE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to create and push the el-CICD Git repositories? [Y/n] ')
+
+    if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
         echo
-        echo
-        read -p "Enter GitHub user/organization: " GITHUB_USER
-        echo -n "Enter GitHub personal access token:"
+        local HOST_DOMAIN='github.com'
+        echo 'NOTE: Only GitHub is supported as a remote host.'
+        read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' left blank): " GIT_HOST_DOMAIN
+        GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${HOST_DOMAIN}}
 
-        stty -echo
-        read GITHUB_ACCESS_TOKEN
-        stty echo
-        read -p "Enter GitHub REST URL (leave blank if using public GitHub site): " GITHUB_URL
+        read -p "Enter Git user/organization: " GIT_USER
+        if [[ -z ${GIT_USER} ]]
+        then
+            echo "ERROR: MUST ENTER A GIT USER"
+            exit 1
+        fi
+        read -p "Enter Git user/organization email: " GIT_USER_EMAIL
+
+        local API_DOMAIN='api.github.com'
+        read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' left blank): " GIT_API_DOMAIN
+        GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
+    fi
+
+    if [[ ${GENERATE_CRED_FILES} == ${_YES} || ${CREATE_GIT_REPOS} == ${_YES} ]]
+    then
+        read -s -p "Enter Git host personal access token:" GIT_REPO_ACCESS_TOKEN
+
+        if [[ -z ${GIT_REPO_ACCESS_TOKEN} ]]
+        then
+            echo "ERROR: MUST ENTER A GIT PERSONAL ACCESS TOKEN"
+            exit 1
+        fi
+        echo
     fi
 }
 
@@ -72,27 +103,40 @@ __summarize_and_confirm_dev_setup_info() {
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
-        echo "CRC will be setup.  Login to kubeadmin will be automated."
+        echo "CRC WILL be setup.  Login to kubeadmin will be automated."
     else
-        echo "CRC will NOT be setup.  You should already be logged into a cluster as a cluster admin."
+        echo "CRC will NOT be setup."
     fi
 
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
-        echo -n "Docker Registry will be installed on your cluster WITH"
+        echo -n "An image registry WILL be installed on your cluster WITH"
         if [[ ${SETUP_DOCKER_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
         fi
         echo " an NFS share."
+
+        if [[ ${SETUP_CRC} != ${_YES} ]]
+        then
+            echo "You MUST be currently logged into a cluster as a cluster admin."
+        fi
+    else
+        echo "An image registry will NOT be installed on your cluster."
     fi
-    echo "Two el-CICD functional and six demo project Git repositories will be pushed to the ${GITHUB_USER} GitHub account."
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
     then
         echo 'Credential files WILL be (re)generated.'
     else
         echo 'Credential files will NOT be (re)generated.'
+    fi
+
+    if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
+    then
+        echo "el-CICD Git repositories WILL be intialized and pushed to ${GIT_API_DOMAIN}, if necessary"
+    else
+        echo "el-CICD Git repositories will NOT be intialized."
     fi
 
     _confirm_continue
@@ -109,7 +153,7 @@ __bootstrap_clean_crc() {
 
 
     echo
-    echo 'y' | ${CRC_EXEC} setup
+    ${CRC_EXEC} setup <<< 'y'
 
     echo
     echo "Starting CRC with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
@@ -150,19 +194,19 @@ __additional_cluster_config() {
 
 __create_docker_registry_nfs_share() {
     echo
-    if [[ ! -d ${DOCKER_REGISTRY_DATA_NFS_DIR} || -z $(sudo exportfs | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
+    if [[ ! -d ${DOCKER_REGISTRY_DATA_NFS_DIR} || -z $(printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
     then
         echo "Creating NFS share on host for Nexus, if necessary: ${DOCKER_REGISTRY_DATA_NFS_DIR}"
         if [[ -z $(cat /etc/exports | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
         then
-            echo "${DOCKER_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports
+            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c 'echo "${DOCKER_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports'
         fi
 
-        sudo mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        sudo chown -R nobody:nobody ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        sudo chmod 777 ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        sudo exportfs -a
-        sudo systemctl restart nfs-server.service
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DOCKER_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DOCKER_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs -a
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin systemctl restart nfs-server.service
     else
         echo 'Nexus NFS Share found.  Skipping...'
     fi
@@ -268,8 +312,8 @@ __create_credentials() {
     ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
 
     echo
-    echo "Creating ${GITHUB_USER} access token file"
-    echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
+    echo "Creating ${GIT_USER} access token file"
+    echo ${GIT_REPO_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
 
     echo
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
@@ -280,6 +324,59 @@ __create_credentials() {
     done
 }
 
+__init_el_cicd_repos() {
+    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
+    for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
+    do
+        __create_git_repo ${EL_CICD_DIR}
+    done
+}
+
+__create_git_repo() {
+    local GIT_REPO_DIR=${1}
+    local GIT_COMMAND="git -C ${EL_CICD_HOME}/${GIT_REPO_DIR}"
+    if [[ ! -d ${EL_CICD_HOME}/${GIT_REPO_DIR}/.git ]]
+    then
+        git init ${EL_CICD_HOME}/${GIT_REPO_DIR}
+        ${GIT_COMMAND} add -A 
+        ${GIT_COMMAND} commit -am 'Initial commit of el-CICD repositories by bootstrap script'
+        ${GIT_COMMAND} config --global user.name ${GIT_USER}
+        ${GIT_COMMAND} config --global user.email ${GIT_USER_EMAIL}
+    else
+        echo "Repo ${GIT_REPO_DIR} already initialized.  Skipping..."
+    fi
+
+    __create_remote_github_repo ${GIT_REPO_DIR}
+
+    ${GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${GIT_USER}/${GIT_REPO_DIR}.git
+    ${GIT_COMMAND} branch ${EL_CICD_BRANCH_NAME}
+
+    ${GIT_COMMAND} \
+        -c credential.helper="!creds() { echo username=${GIT_USER}; echo password=${GIT_REPO_ACCESS_TOKEN}; }; creds" \
+        push -u origin ${EL_CICD_BRANCH_NAME}
+}
+
+__create_remote_github_repo() {
+    local GIT_REPO_DIR=${1}
+
+    echo "Creating remote ${GIT_REPO_DIR} repository"
+    local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
+
+    REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+        -u :${GIT_REPO_ACCESS_TOKEN} \
+        -H "Accept: application/vnd.github.v3+json"  \
+        https://${GIT_API_DOMAIN}/user/repos \
+        -d "${GIT_JSON_POST}")
+    if [[ ${REMOTE_GIT_DIR_EXISTS} == 201 ]]
+    then
+        echo "Created ${GIT_USER}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+    else
+        echo "ERROR: DID NOT create ${GIT_USER}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+        echo "Check your Git credentials and whether the repo already exists."
+    fi
+}
+
+
 __set_config(){
-    sudo sed -i "s/^\($1\s*=\s*\).*\$/\1$2/" $3
+    printf "%s\n" "${SUDO_PWD}" | sudo --stdin sed -i "s/^\($1\s*=\s*\).*\$/\1$2/" $3
 }
