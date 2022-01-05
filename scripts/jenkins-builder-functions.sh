@@ -51,15 +51,22 @@ _build_el_cicd_jenkins_agent_images_image() {
 
         for AGENT_NAME in ${AGENT_NAMES}
         do
+            echo
+            echo '==========================================='
+            echo
+            echo "STARTING JENKINS AGENT BUILD: ${AGENT_NAME}"
+            echo
+            echo '==========================================='
+
+            set -e
             if [[ ! -n $(oc get bc ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --ignore-not-found -n openshift) ]]
             then
                 oc new-build --name ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --binary=true --strategy=docker -n openshift
             fi
-            echo
-            echo "Starting Agent Build: ${AGENT_NAME}"
 
             cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
             oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --no-cache=true --wait --follow -n openshift
+            set +e
         done
 
         rm -rf ${TARGET_JENKINS_BUILD_DIR}

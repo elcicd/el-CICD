@@ -174,7 +174,7 @@ case ${CLI_OPTION} in
         echo "INSTALL SEALED SECRETS"
         _check_sealed_secrets
 
-        if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
+        if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
         then
             _install_sealed_secrets
         fi

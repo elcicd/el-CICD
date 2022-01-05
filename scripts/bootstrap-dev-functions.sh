@@ -9,18 +9,20 @@ __bootstrap_dev_environment() {
 
     __summarize_and_confirm_dev_setup_info
 
+    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
         __bootstrap_clean_crc
-    fi
 
-    __additional_cluster_config
+        __additional_cluster_config
+    fi
 
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
         __remove_docker_registry
 
-        __setup_docker_registry
+        __setup_docker_registries
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
@@ -32,6 +34,9 @@ __bootstrap_dev_environment() {
     then
         __init_el_cicd_repos
     fi
+
+    echo
+    echo "el-CICD Development environment setup complete."
 }
 
 __gather_dev_setup_info() {
@@ -44,20 +49,32 @@ __gather_dev_setup_info() {
         echo 'WARNING: CRC tar.xz and/or pull-secret.txt not found in el-CICD home directory.  Skipping...'
     fi
 
+    if [[ ${SETUP_CRC} != ${_YES} ]]
+    then
+        read -p 'Enter Cluster wildcard domain (leave blank if using a currently running CRC instance): ' TEMP_CLUSTER_WILDCARD_DOMAIN
+        CLUSTER_WILDCARD_DOMAIN=${TEMP_CLUSTER_WILDCARD_DOMAIN:-${CLUSTER_WILDCARD_DOMAIN}}
+    fi
+
     echo
     INSTALL_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
         SETUP_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
 
-        if [[ ${SETUP_DOCKER_REGISTRY_NFS} != ${_YES} ]]
+        if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
+            set -e
+            printf "%s\n" "${SUDO_PWD}" | sudo -k -p '' -S echo 'verified'
+            set +e
         fi
+    else
+        echo 'IF NOT ALREADY DONE, proper values for your chosen image registry must be set in the el-CICD configuration files.'
+        echo 'See el-CICD operational documentation for information on how to configure the image registry values per SDLC environment.'
     fi
 
     echo
-    GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you to (re)generate the credential files? [Y/n] ')
+    GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you wish to (re)generate the credential files? [Y/n] ')
 
     echo
     CREATE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to create and push the el-CICD Git repositories? [Y/n] ')
@@ -67,32 +84,42 @@ __gather_dev_setup_info() {
         echo
         local HOST_DOMAIN='github.com'
         echo 'NOTE: Only GitHub is supported as a remote host.'
-        read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' left blank): " GIT_HOST_DOMAIN
+        read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' if left blank): " GIT_HOST_DOMAIN
         GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${HOST_DOMAIN}}
 
-        read -p "Enter Git user/organization: " GIT_USER
-        if [[ -z ${GIT_USER} ]]
+        local API_DOMAIN='api.github.com'
+        read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' if left blank): " GIT_API_DOMAIN
+        GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
+
+        read -p "Enter Git user/organization: " EL_CICD_ORGANIZATION
+        if [[ -z ${EL_CICD_ORGANIZATION} ]]
         then
             echo "ERROR: MUST ENTER A GIT USER"
             exit 1
         fi
-        read -p "Enter Git user/organization email: " GIT_USER_EMAIL
-
-        local API_DOMAIN='api.github.com'
-        read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' left blank): " GIT_API_DOMAIN
-        GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
+        read -p "Enter Git user/organization email: " EL_CICD_ORGANIZATION_EMAIL
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} || ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
-        read -s -p "Enter Git host personal access token:" GIT_REPO_ACCESS_TOKEN
-
-        if [[ -z ${GIT_REPO_ACCESS_TOKEN} ]]
+        if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
         then
-            echo "ERROR: MUST ENTER A GIT PERSONAL ACCESS TOKEN"
-            exit 1
+            read -s -p "Enter Git host personal access token:" GIT_REPO_ACCESS_TOKEN
+            echo
+        else
+            GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
         fi
-        echo
+
+        local TOKEN_TEST_RESULT=$(curl -s -u :${GIT_REPO_ACCESS_TOKEN} https://api.github.com/user | jq -r '.login')
+        if [[ ${TOKEN_TEST_RESULT} != ${EL_CICD_ORGANIZATION} ]]
+        then
+            echo "ERROR: INVALID GIT TOKEN"
+            echo "A valid git personal access token for [${el_cicd_organization}] must be provided when generating credentials and/or Git repositories"
+            echo "EXITING..."
+            exit 1
+        else
+            echo "Git token verified."
+        fi
     fi
 }
 
@@ -105,8 +132,9 @@ __summarize_and_confirm_dev_setup_info() {
     then
         echo "CRC WILL be setup.  Login to kubeadmin will be automated."
     else
-        echo "CRC will NOT be setup."
+        echo 'CRC will NOT be setup.'
     fi
+    echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
     if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
     then
@@ -134,7 +162,7 @@ __summarize_and_confirm_dev_setup_info() {
 
     if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
-        echo "el-CICD Git repositories WILL be intialized and pushed to ${GIT_API_DOMAIN}, if necessary"
+        echo "el-CICD Git repositories WILL be intialized and pushed to ${EL_CICD_ORGANIZATION} at ${GIT_API_DOMAIN} if necessary."
     else
         echo "el-CICD Git repositories will NOT be intialized."
     fi
@@ -212,9 +240,7 @@ __create_docker_registry_nfs_share() {
     fi
 }
 
-__setup_docker_registry() {
-    mkdir -p ${TMP_DIR}
-
+__setup_docker_registries() {
     oc new-project ${DOCKER_REGISTRY_NAMESPACE}
 
     if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
@@ -225,21 +251,9 @@ __setup_docker_registry() {
         sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv-template.yml | oc create -f -
     fi
 
-    __generate_deployments
-
     __register_insecure_registries
 
-    echo
-    oc create -f ${TMP_DIR} -n ${DOCKER_REGISTRY_NAMESPACE}
-    # rm -rf ${TMP_DIR}
-
-    echo
-    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DOCKER_REGISTRY_NAMESPACE} | xargs)"
-    for DC in ${DCS}
-    do
-        echo
-        oc rollout status deploy/${DC} -n ${DOCKER_REGISTRY_NAMESPACE}
-    done
+    __generate_deployments
 
     echo
     echo 'Docker Registry is up!'
@@ -247,6 +261,9 @@ __setup_docker_registry() {
 }
 
 __generate_deployments() {
+    local TMP_DIR=/tmp/docker-registry
+    mkdir -p ${TMP_DIR}
+
     local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
@@ -264,12 +281,24 @@ __generate_deployments() {
             awk '/^apiVersion:.*/ { print "---" } 1' ${OUTPUT_FILE} > ${TMP_FILE}
         fi
 
-        local HTPASSWD=$(htpasswd -Bbn ${REGISTRY_NAME} ${DOCKER_REGISTRY_USER_PWD})
+        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DOCKER_REGISTRY_USER_PWD})
         echo '---' >> ${TMP_FILE}
         oc create secret generic ${REGISTRY_NAME}-auth-secret --dry-run=client --from-literal=htpasswd=${HTPASSWD} \
             -n ${DOCKER_REGISTRY_NAMESPACE} -o yaml >> ${TMP_FILE}
 
         mv ${TMP_FILE} ${OUTPUT_FILE}
+    done
+
+    echo
+    oc create -f ${TMP_DIR} -n ${DOCKER_REGISTRY_NAMESPACE}
+    rm -rf ${TMP_DIR}
+
+    echo
+    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DOCKER_REGISTRY_NAMESPACE} | xargs)"
+    for DC in ${DCS}
+    do
+        echo
+        oc rollout status deploy/${DC} -n ${DOCKER_REGISTRY_NAMESPACE}
     done
 }
 
@@ -312,19 +341,28 @@ __create_credentials() {
     ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
 
     echo
-    echo "Creating ${GIT_USER} access token file"
+    echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}"
     echo ${GIT_REPO_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
 
-    echo
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        echo "Creating the image repository access token file for ${ENV} environment"
-        echo ${DOCKER_REGISTRY_ADMIN} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        echo
+        echo "Creating the image repository access token file for ${ENV} environment:"
+        echo "$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})"
+        echo ${DOCKER_REGISTRY_USER_PWD} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
     done
 }
 
 __init_el_cicd_repos() {
+    __set_config_value EL_CICD_ORGANIZATION ${EL_CICD_ORGANIZATION} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+
+    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
+    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
+    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
+
     local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
     for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
     do
@@ -334,32 +372,35 @@ __init_el_cicd_repos() {
 
 __create_git_repo() {
     local GIT_REPO_DIR=${1}
+
+    echo
+    echo "CREATING REMOTE REPOSITORY: ${GIT_REPO_DIR}"
+
     local GIT_COMMAND="git -C ${EL_CICD_HOME}/${GIT_REPO_DIR}"
     if [[ ! -d ${EL_CICD_HOME}/${GIT_REPO_DIR}/.git ]]
     then
         git init ${EL_CICD_HOME}/${GIT_REPO_DIR}
         ${GIT_COMMAND} add -A 
         ${GIT_COMMAND} commit -am 'Initial commit of el-CICD repositories by bootstrap script'
-        ${GIT_COMMAND} config --global user.name ${GIT_USER}
-        ${GIT_COMMAND} config --global user.email ${GIT_USER_EMAIL}
+        ${GIT_COMMAND} config --global user.name ${EL_CICD_ORGANIZATION}
+        ${GIT_COMMAND} config --global user.email ${EL_CICD_ORGANIZATION_EMAIL}
     else
         echo "Repo ${GIT_REPO_DIR} already initialized.  Skipping..."
     fi
 
     __create_remote_github_repo ${GIT_REPO_DIR}
 
-    ${GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${GIT_USER}/${GIT_REPO_DIR}.git
-    ${GIT_COMMAND} branch ${EL_CICD_BRANCH_NAME}
+    ${GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}.git
+    ${GIT_COMMAND} checkout -b  ${EL_CICD_BRANCH_NAME}
 
     ${GIT_COMMAND} \
-        -c credential.helper="!creds() { echo username=${GIT_USER}; echo password=${GIT_REPO_ACCESS_TOKEN}; }; creds" \
+        -c credential.helper="!creds() { echo password=${GIT_REPO_ACCESS_TOKEN}; }; creds" \
         push -u origin ${EL_CICD_BRANCH_NAME}
 }
 
 __create_remote_github_repo() {
     local GIT_REPO_DIR=${1}
 
-    echo "Creating remote ${GIT_REPO_DIR} repository"
     local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
 
     REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
@@ -369,14 +410,18 @@ __create_remote_github_repo() {
         -d "${GIT_JSON_POST}")
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 201 ]]
     then
-        echo "Created ${GIT_USER}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+        echo "Created ${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
     else
-        echo "ERROR: DID NOT create ${GIT_USER}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+        echo "ERROR: DID NOT create ${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
         echo "Check your Git credentials and whether the repo already exists."
     fi
 }
 
 
-__set_config(){
-    printf "%s\n" "${SUDO_PWD}" | sudo --stdin sed -i "s/^\($1\s*=\s*\).*\$/\1$2/" $3
+__set_config_value(){
+    local KEY=${1}
+    local NEW_VALUE=${2}
+    local FILE=${3}
+
+    sed -i -e "/${KEY}=/ s/=.*/=${NEW_VALUE}/" ${FILE}
 }

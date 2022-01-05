@@ -10,21 +10,11 @@ _check_sealed_secrets() {
         then
             local OLD_VERSION=$(kubeseal --version)
             echo
-            echo "Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller?"
-            echo -n "${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
+            local MSG="Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller from  ${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
         else
-            echo -n "Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
+            local MSG="Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
         fi
-
-        read -n 1 INSTALL_KUBESEAL
-        echo
-
-        if [[ ${INSTALL_KUBESEAL} == 'Y' ]]
-        then
-            INSTALL_KUBESEAL=${_TRUE}
-        else
-            INSTALL_KUBESEAL=${_FALSE}
-        fi
+        INSTALL_KUBESEAL=$(_get_yes_no_answer "${MSG}")
     fi
 }
 
@@ -33,19 +23,21 @@ _install_sealed_secrets() {
     then
         local SEALED_SECRETS_DIR=/tmp/sealedsecrets
         local SEALED_SECRETS_URL=https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}
-        mkdir ${SEALED_SECRETS_DIR}
+        mkdir -p ${SEALED_SECRETS_DIR}
         echo
         echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
         sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
-        wget -q --show-progress ${SEALED_SECRETS_URL}/kubeseal-linux-amd64 -O ${SEALED_SECRETS_DIR}/kubeseal
+        wget -q --show-progress ${SEALED_SECRETS_URL}/kubeseal-${SEALED_SECRET_RELEASE_VERSION#v}-linux-amd64.tar.gz -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
+        tar xvfz ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
         sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
-        sudo rm -f /tmp/kubseal
 
         echo "kubeseal version ${SEALED_SECRET_RELEASE_VERSION} installed"
 
         echo
         echo 'Deploying Sealed Secrets controller to cluster.'
         wget -q --show-progress ${SEALED_SECRETS_URL}/controller.yaml -O ${SEALED_SECRETS_DIR}/controller.yaml
+
+        #HACK: REMOVE v1beta1 FOR K8S >=1.22 (v1beta1 apiVersion NOT supported; will remove when assured everyone is on later version)
         sed -i -e 's/v1beta1/v1/g' ${SEALED_SECRETS_DIR}/controller.yaml #TODO: REMOVE HACK FOR K8S >=1.22 (no more v1beta1 apiVersion supported)
         oc apply -f ${SEALED_SECRETS_DIR}/controller.yaml
 

@@ -47,7 +47,7 @@ __gather_dev_tear_down_info() {
         REMOVE_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
     fi
 
-    if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} && -d ${DOCKER_REGISTRY_DATA_NFS_DIR} ]]
+    if [[ -d ${DOCKER_REGISTRY_DATA_NFS_DIR} && (${REMOVE_DOCKER_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES})  ]]
     then
         REMOVE_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
@@ -57,7 +57,10 @@ __gather_dev_tear_down_info() {
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
     then
         echo
-        read -p "Enter GitHub user name: " GITHUB_USER
+        read -p "Enter GitHub user name (leave blank to leave as ${EL_CICD_ORGANIZATION}): " EL_CICD_ORGANIZATION_TEMP
+        EL_CICD_ORGANIZATION=${EL_CICD_ORGANIZATION_TEMP:-${EL_CICD_ORGANIZATION}}
+
+        read -s -p "Enter GitHub Personal Access Token (leave blank to use credential file): " EL_CICD_GIT_REPO_ACCESS_TOKEN
     fi
 }
 
@@ -96,7 +99,7 @@ __summarize_and_confirm_dev_tear_down() {
     else
         echo -n "will NOT"
     fi
-    echo " be removed from the Git host."
+    echo " be removed from ${EL_CICD_ORGANIZATION} on the Git host."
 
     _confirm_continue
 }
@@ -174,6 +177,7 @@ __remove_whitelisted_docker_registry_host_names() {
 }
 
 __delete_remote_el_cicd_git_repos() {
+    echo
     local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
     for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
     do
@@ -184,15 +188,17 @@ __delete_remote_el_cicd_git_repos() {
 __remove_git_repo() {
     GIT_REPO_DIR=${1}
 
-    local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}) \
+    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})}
+
+    local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${__PAT} \
         -H "Accept: application/vnd.github.v3+json"  \
-        https://${EL_CICD_GIT_API_URL}/repos/${GITHUB_USER}/${GIT_REPO_DIR})
+        https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR})
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 200 ]]
     then
-        curl -X DELETE -sI -o /dev/null -u :$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}) \
-            -H "Accept: application/vnd.github.v3+json"  https://${EL_CICD_GIT_API_URL}/repos/${GITHUB_USER}/${GIT_REPO_DIR}
-        echo "${GIT_REPO_DIR} deleted on Git host"
+        curl -X DELETE -sI -o /dev/null -u :${__PAT} \
+            -H "Accept: application/vnd.github.v3+json"  https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}
+        echo "${GIT_REPO_DIR} deleted from Git host ${EL_CICD_GIT_DOMAIN}/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}"
     else
-        echo "${GIT_REPO_DIR} NOT FOUND on Git host. Skipping..."
+        echo "${GIT_REPO_DIR} NOT FOUND on Git host, or the Access Token has expired. Skipping..."
     fi
 }

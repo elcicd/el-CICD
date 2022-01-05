@@ -20,7 +20,7 @@ _bootstrap_el_cicd() {
 
     __gather_and_confirm_bootstrap_info_with_user
 
-    if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
+    if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
     then
         _install_sealed_secrets
     fi
@@ -63,6 +63,8 @@ _create_el_cicd_meta_info_config_map() {
 
     __create_config_source_file ${META_INFO_FILE}
 
+    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
+    sleep 3
     oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
     set +e
 }
@@ -130,13 +132,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo 
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
-         echo -n "Install Sealed Secrets version ${SEALED_SECRET_RELEASE_VERSION}? "
-        if [[ $(_is_true ${INSTALL_KUBESEAL})  == ${_TRUE} ]]
-        then
-            echo ${_YES}
-        else
-            echo ${_NO}
-        fi
+         echo "Install Sealed Secrets version ${SEALED_SECRET_RELEASE_VERSION}? ${INSTALL_KUBESEAL}"
     else
         echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
     fi
