@@ -74,31 +74,36 @@ void call(Map args) {
 
         dir(microService.workDir) {
             sh """
-                HAS_BC=\$(oc get bc --no-headers -o custom-columns=:.metadata.name --ignore-not-found ${buildConfigName} -n ${projectInfo.cicdMasterNamespace})
-                if [[ -z \${HAS_BC} ]]
-                then
-                    oc new-build --name ${buildConfigName} \
-                                 --labels projectid=${projectInfo.id} \
-                                 --binary=true \
-                                 --strategy=docker \
-                                 --to-docker \
-                                 --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
-                                 --push-secret=${pullSecretName} \
-                                 --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}:${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
-                                 -n ${projectInfo.cicdMasterNamespace}
+                # HAS_BC=\$(oc get bc --no-headers -o custom-columns=:.metadata.name --ignore-not-found ${buildConfigName} -n ${projectInfo.cicdMasterNamespace})
+                # if [[ -z \${HAS_BC} ]]
+                # then
+                #     oc new-build --name ${buildConfigName} \
+                #                  --labels projectid=${projectInfo.id} \
+                #                  --binary=true \
+                #                  --strategy=docker \
+                #                  --to-docker \
+                #                  --to=${imageRepo}/${microService.id}:${projectInfo.imageTag} \
+                #                  --push-secret=${pullSecretName} \
+                #                  --build-secret=${el.cicd.EL_CICD_BUILD_SECRETS_NAME}:${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
+                #                  -n ${projectInfo.cicdMasterNamespace}
 
-                    oc set build-secret --pull bc/${buildConfigName} ${pullSecretName} -n ${projectInfo.cicdMasterNamespace}
-                fi
+                #     oc set build-secret --pull bc/${buildConfigName} ${pullSecretName} -n ${projectInfo.cicdMasterNamespace}
+                # fi
 
                 chmod 777 Dockerfile
-                sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME}' Dockerfile
+                # sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME}' Dockerfile
 
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.cicdMasterNamespace}
+                podman build ${buildConfigName} \
+                    --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
+                    -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
+                    .
+
+                # oc start-build ${buildConfigName} --from-dir=. --wait --follow -n ${projectInfo.cicdMasterNamespace}
             """
         }
     }
