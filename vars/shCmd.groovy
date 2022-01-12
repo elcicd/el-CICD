@@ -10,7 +10,7 @@ def verifyImage(String env, String tokenVar, String image, String tag) {
     def creds = "--creds ${user}:\${${tokenVar}}"
 
     def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    tlsVerify = tlsVerify? "--tls-verify=${tlsVerify}" : ''
+    tlsVerify = tlsVerify ? "--tls-verify=${tlsVerify}" : ''
 
     def imageRepo = el.cicd["${env}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def imageUrl = "docker://${imageRepo}/${image}:${tag}"
@@ -28,10 +28,10 @@ def copyImage(String fromEnv, String fromTokenVar, String fromImage, String from
     def destCreds = "--dest-creds ${user}:\${${toTokenVar}}"
 
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    def srcTlsVerify = tlsVerify? "--src-tls-verify=${tlsVerify}" : ''
+    def srcTlsVerify = tlsVerify ? "--src-tls-verify=${tlsVerify}" : ''
 
     tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-    def destTlsVerify = tlsVerify? "--dest-tls-verify=${tlsVerify}" : ''
+    def destTlsVerify = tlsVerify ? "--dest-tls-verify=${tlsVerify}" : ''
 
     def fromImageRepo = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def fromImageUrl = "docker://${fromImageRepo}/${fromImage}:${fromTag}"

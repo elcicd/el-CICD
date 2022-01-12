@@ -104,17 +104,17 @@ __gather_dev_setup_info() {
     then
         if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
         then
-            read -s -p "Enter Git host personal access token:" GIT_REPO_ACCESS_TOKEN
+            read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GIT_REPO_ACCESS_TOKEN
             echo
         else
             GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
         fi
 
-        local TOKEN_TEST_RESULT=$(curl -s -u :${GIT_REPO_ACCESS_TOKEN} https://api.github.com/user | jq -r '.login')
+        local TOKEN_TEST_RESULT=$(curl -s -u :${GIT_REPO_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
         if [[ ${TOKEN_TEST_RESULT} != ${EL_CICD_ORGANIZATION} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
-            echo "A valid git personal access token for [${el_cicd_organization}] must be provided when generating credentials and/or Git repositories"
+            echo "A valid git personal access token for [${EL_CICD_ORGANIZATION}] must be provided when generating credentials and/or Git repositories"
             echo "EXITING..."
             exit 1
         else
@@ -166,6 +166,8 @@ __summarize_and_confirm_dev_setup_info() {
     else
         echo "el-CICD Git repositories will NOT be intialized."
     fi
+    
+    echo "Git token verified against ${EL_CICD_GIT_API_URL}/${EL_CICD_ORGANIZATION}."
 
     _confirm_continue
 }
