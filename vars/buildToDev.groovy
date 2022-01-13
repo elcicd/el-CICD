@@ -100,8 +100,8 @@ void call(Map args) {
 
                 echo
 
-                buildah unshare buildah bud -f ./Dockerfile \
-                    --no-cache --log-level='debug' \
+                buildah bud \
+                    --no-cache --log-level='debug' \g
                     --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                     -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
 
