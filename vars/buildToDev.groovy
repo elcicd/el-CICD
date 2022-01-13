@@ -100,7 +100,7 @@ void call(Map args) {
 
                 podman unshare buildah bud -f ./Dockerfile \
                     --no-cache --log-level='debug' \
-                    --storage-opt 'overlay.ignore_chown_errors=true' \
+                    --storage-opt 'overlayfs.ignore_chown_errors=true' \
                     --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                     -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
 
