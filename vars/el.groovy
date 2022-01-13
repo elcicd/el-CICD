@@ -60,6 +60,7 @@ def node(Map args, Closure body) {
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
+                runAsUser: 'jenkins'
             )
         ],
         volumes: secretVolume
