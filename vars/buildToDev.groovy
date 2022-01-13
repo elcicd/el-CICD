@@ -100,8 +100,7 @@ void call(Map args) {
 
                 echo
 
-                buildah bud \
-                    --no-cache --log-level='debug' \g
+                buildah bud --no-cache --log-level='debug' \
                     --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                     -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
 
