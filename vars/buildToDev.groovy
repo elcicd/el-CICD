@@ -93,25 +93,17 @@ void call(Map args) {
                 chmod 777 Dockerfile
                 # sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME}' Dockerfile
 
-                echo "\$(id -un):2000000:65536" > /etc/subuid
-                echo "0:2100000:65536" >> /etc/subuid
-                echo "\$(id -un):2000000:65536" > /etc/subgid
-                echo "0:2100000:65536" >> /etc/subgid
-                echo
-                echo '================'
-                echo "cat /etc/subuid:\n\$(cat /etc/subuid)"
-                echo "cat /etc/subgid:\n\$(cat /etc/subgid)"
-                echo
-                id
-                echo '================'
-                echo
+                echo "\$(id -un):1100000:65536" > /etc/subuid
+                echo "0:1200000:65536" >> /etc/subuid
+                echo "\$(id -un):1100000:65536" > /etc/subgid
+                echo "0:1200000:65536" >> /etc/subgid
 
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                buildah unshare buildah bud --log-level='debug' \
+                buildah unshare buildah bud --log-level='debug' --userns-uid-map 0:100000:65536 --userns-gid-map 0:100000:65536 \
                     --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                     -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
 
