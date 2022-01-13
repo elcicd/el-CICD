@@ -94,7 +94,7 @@ void call(Map args) {
                 # sed -i '/^FROM.*/a ARG EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME}' Dockerfile
 
                 echo "\$(id -un):2000000:65536" >> /etc/subuid
-                echo "\$(id -un):2000000:65536" >> /etc/subgid
+                echo "0:2000000:65536" >> /etc/subgid
                 echo
                 echo '================'
                 echo "cat /etc/subuid:\n\$(cat /etc/subuid)"
