@@ -55,6 +55,7 @@ def node(Map args, Closure body) {
                 name: 'jnlp',
                 image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
+                privileged: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
