@@ -98,7 +98,7 @@ void call(Map args) {
                 echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
                 echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                buildah bud --isolation=chroot --no-cache --log-level='debug' \
+                buildah bud --storage-driver=vfs --no-cache --log-level='debug' \
                     --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
                     -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
 
