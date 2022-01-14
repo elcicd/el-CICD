@@ -50,6 +50,7 @@ def node(Map args, Closure body) {
         serviceAccount: 'jenkins',
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        runAsUser: 'jenkins'
         containers: [
             containerTemplate(
                 name: 'jnlp',
@@ -60,7 +61,7 @@ def node(Map args, Closure body) {
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}",
-                runAsUser: 'jenkins',
+                runAsUser: 'jenkins'
             )
         ],
         volumes: secretVolume
