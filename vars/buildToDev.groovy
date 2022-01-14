@@ -97,6 +97,10 @@ void call(Map args) {
                 ${shCmd.echo '==============================='}
                 id
                 ${shCmd.echo '==============================='}
+                ${shCmd.echo 'cat /etc/subuid:'}
+                cat /etc/subuid
+                ${shCmd.echo 'cat /etc/subgid:'}
+                cat /etc/subgid
                 ${shCmd.echo ''}
 
                 echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
