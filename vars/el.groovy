@@ -62,8 +62,8 @@ def node(Map args, Closure body) {
                 resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
-        ],
-        volumes: secretVolume
+        ]//,
+        //volumes: secretVolume
     ]) {
         node(podLabel) {
             try {
