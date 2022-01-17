@@ -60,7 +60,7 @@ def node(Map args, Closure body) {
                 add:
                 - SETGID
                 - SETUID
-        '''
+        ''',
         containers: [
             containerTemplate(
                 name: 'jnlp',
