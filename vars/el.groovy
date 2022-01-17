@@ -54,7 +54,7 @@ def node(Map args, Closure body) {
         runAsGroup: '0',
         yaml:'''
         spec:
-          conatainers:
+          containers:
           - securityContext:
               capabilities:
                 add:
