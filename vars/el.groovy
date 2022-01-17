@@ -72,8 +72,8 @@ def node(Map args, Closure body) {
                   runAsGroup: 0
                   capabilities:
                     add:
-                    - CAP_SET_UID
-                    - CAP_SET_GID
+                    - SET_UID
+                    - SET_GID
         """
         // containers: [
         //     containerTemplate(
