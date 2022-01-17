@@ -51,19 +51,30 @@ def node(Map args, Closure body) {
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         runAsUser: '1001',
-        runAsGroup: '1001',
-        containers: [
-            containerTemplate(
-                name: 'jnlp',
-                image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
-                alwaysPullImage: true,
-                args: '${computer.jnlpmac} ${computer.name}',
-                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
-                resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
-            )
-        ]//,
+        runAsGroup: '0',
+        yaml:"""
+            spec:
+              containers:
+              - name: jnlp
+                image: ${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest
+                args:
+                - ${computer.jnlpmac} ${computer.name}
+                imagePullPolicy: Always
+                resources:
+                limits:
+                    cpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
+                    memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
+                requests:
+                    cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST}
+                    memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
+                securityContext:
+                  runAsUser: 1001
+                  runAsGroup: 0
+                  capabilities:
+                    add:
+                    - CAP_SET_UID
+                    - CAP_SET_GID
+        """//,
         //volumes: secretVolume
     ]) {
         node(podLabel) {
