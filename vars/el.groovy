@@ -52,6 +52,15 @@ def node(Map args, Closure body) {
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         runAsUser: '1001',
         runAsGroup: '0',
+        yaml:'''
+        spec:
+          conatainers:
+          - securityContext:
+              capabilities:
+                add:
+                - SETGID
+                - SETUID
+        '''
         containers: [
             containerTemplate(
                 name: 'jnlp',
