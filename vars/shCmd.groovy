@@ -19,7 +19,7 @@ def verifyImage(String env, String tokenVar, String image, String tag) {
 }
 
 def copyImage(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
-               String toEnv, String toTokenVar, String toImage, String toTag)
+              String toEnv, String toTokenVar, String toImage, String toTag)
 {
     def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
     def srcCreds = "--src-creds ${user}:\${${fromTokenVar}}"
