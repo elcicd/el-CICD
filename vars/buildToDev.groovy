@@ -72,8 +72,7 @@ void call(Map args) {
         def pullSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
         def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
-        def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REPO_ENABLE_TLS_POSTFIX}"]
-        tlsVerify = tlsVerify ? "--tls-verify=${tlsVerify}" : ''
+        def tlsVerify = el.cicd.DEV_IMAGE_REPO_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REPO_ENABLE_TLS}" : ''
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'DEV_IMAGE_REPO_ACCESS_TOKEN')]) {
