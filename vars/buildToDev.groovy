@@ -88,7 +88,7 @@ void call(Map args) {
 
                     podman build --creds ${el.cicd.DEV_IMAGE_REPO_USERNAME}:\${DEV_IMAGE_REPO_ACCESS_TOKEN} \
                                  --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
-                                 -t ${imageRepo}/${microService.id}:${projectInfo.imageTag}
+                                 -t ${imageRepo}/${microService.id}:${projectInfo.imageTag} -f ./Dockerfile
 
                     podman push ${tlsVerify} --creds ${el.cicd.DEV_IMAGE_REPO_USERNAME}:\${DEV_IMAGE_REPO_ACCESS_TOKEN} \
                                 ${imageRepo}/${microService.id}:${projectInfo.imageTag}
