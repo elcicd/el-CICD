@@ -45,15 +45,14 @@ def node(Map args, Closure body) {
         [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")] :
         []
 
-    def runAs = args.isBuild ? "runAsUser: '1001', runAsGroup: '0'," : ''
-
     podTemplate([
         label: "${podLabel}",
         cloud: 'openshift',
         serviceAccount: 'jenkins',
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        ${runAs}
+        runAsUser: args.isBuild && false ? '1001', '',
+        runAsGroup: args.isBuild && false ? '0', '',
         containers: [
             containerTemplate(
                 name: 'jnlp',
