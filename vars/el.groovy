@@ -41,10 +41,8 @@ def node(Map args, Closure body) {
 
     def podLabel = args.agentName ?: args.agent
 
-    def devSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     def secretVolume = args.isBuild ?
-        [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/"),
-         secretVolume(secretName: devSecretName, mountPath: "${el.cicd.DOCKER_CONFIG_JSON_DIR}")] :
+        [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")] :
         []
 
     def runAs = args.isBuild ? "runAsUser: '1001', runAsGroup: '0'," : ''
