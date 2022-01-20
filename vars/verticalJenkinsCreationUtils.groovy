@@ -66,6 +66,10 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             ${shCmd.echo 'Waiting for Jenkins to come up...'}
             oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
             ${shCmd.echo ''}
+            ${shCmd.echo 'Creating nonrootbuilder SCC if necessary and applying to jenkins ServiceAccount'}
+            oc apply -f ./resources/buildSecurityContext.yml
+            oc adm policy add-scc-to-user nonrootbuilder -z jenkins
+            ${shCmd.echo ''}
             ${shCmd.echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
             sleep 5
         """
