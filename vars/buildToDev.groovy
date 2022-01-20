@@ -63,8 +63,8 @@ void call(Map args) {
         }
     }
 
-    stage('build image and push to repository') {
-        pipelineUtils.echoBanner("BUILD IMAGE")
+    stage('build, scan, and push image to repository') {
+        pipelineUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
 
         projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
 
@@ -91,14 +91,14 @@ void call(Map args) {
                                  -t ${imageRepo}/${microService.id}:${projectInfo.imageTag} -f ./Dockerfile
                 """
 
-                pipelineUtils.echoBanner("SCAN IMAGE")
+                pipelineUtils.echoBanner("SCAN ${microService.id}:${projectInfo.imageTag} IMAGE")
 
                 def imageScanner = load "${el.cicd.BUILDER_STEPS_DIR}/imageScanner.groovy"
                 imageScanner.scanImage(projectInfo, microService.name)
 
-                pipelineUtils.echoBanner("PUSH IMAGE")
+                pipelineUtils.echoBanner("PUSH ${microService.id}:${projectInfo.imageTag} IMAGE")
 
-                sh"""
+                sh """
                     podman push ${tlsVerify} ${imageRepo}/${microService.id}:${projectInfo.imageTag}
                 """
             }
