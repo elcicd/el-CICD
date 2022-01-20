@@ -86,7 +86,7 @@ void call(Map args) {
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
                     podman build --creds ${el.cicd.DEV_IMAGE_REPO_USERNAME}:\${DEV_IMAGE_REPO_ACCESS_TOKEN} \
-                                 --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \ --squash
+                                 --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} --squash \
                                  -t ${imageRepo}/${microService.id}:${projectInfo.imageTag} -f ./Dockerfile
                 """
 
