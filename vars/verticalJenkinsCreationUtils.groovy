@@ -58,17 +58,19 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                                           -e TRY_UPGRADE_IF_NO_MARKER=true \
                                           -e CASC_JENKINS_CONFIG=${el.cicd.JENKINS_CONTAINER_CONFIG_DIR}/${el.cicd.JENKINS_CASC_FILE} \
                                           -n ${projectInfo.cicdMasterNamespace}
+            ${shCmd.echo ''}
+            ${shCmd.echo 'Creating nonrootbuilder SCC if necessary and applying to jenkins ServiceAccount'}
+            oc apply -f ${el.cicd.JENKINS_CONFIG_DIR}/jenkinsServiceAccountSecurityContext.yml
+            oc adm policy add-scc-to-user nonrootbuilder -z jenkins
 
-            oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
+            ${shCmd.echo ''}
+            ${shCmd.echo 'Adding edit privileges for the rbacGroup to their CICD Automation Namespace'}
+            oc policy add-role-to-group edit ${projectInfo.rbacGroup} -n ${projectInfo.cicdMasterNamespace}
 
             ${shCmd.echo ''}
             sleep 2
             ${shCmd.echo 'Waiting for Jenkins to come up...'}
             oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
-            ${shCmd.echo ''}
-            ${shCmd.echo 'Creating nonrootbuilder SCC if necessary and applying to jenkins ServiceAccount'}
-            oc apply -f ./resources/buildSecurityContext.yml
-            oc adm policy add-scc-to-user nonrootbuilder -z jenkins
             ${shCmd.echo ''}
             ${shCmd.echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
             sleep 5
