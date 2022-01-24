@@ -156,8 +156,8 @@ def initializeStage() {
 
         dir (el.cicd.CONFIG_DIR) {
             git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
-            branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
-            credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+                branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
+                credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
     }
 }
