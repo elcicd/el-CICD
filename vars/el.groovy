@@ -128,24 +128,27 @@ def initializeStage() {
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
+        el.cicd.DEPLOYMENT_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/deployment-test-runners"
         el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/managed-okd-templates"
         el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
-        sh """
-            rm -rf ${WORKSPACE}
-            mkdir -p ${WORKSPACE}
-            mkdir -p ${el.cicd.TEMP_DIR}
-            oc version
-        """
-
         el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
         el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
         sh """
-            mkdir -p ${el.cicd.BUILDCONFIGS_DIR}
-            mkdir -p ${el.cicd.TEMPLATES_DIR}
+            rm -rf '${WORKSPACE}'
+            mkdir -p '${WORKSPACE}'
+
+            mkdir -p '${el.cicd.TEMP_DIR}'
+            mkdir -p '${el.cicd.BUILDCONFIGS_DIR}'
+            mkdir -p '${el.cicd.TEMPLATES_DIR}'
+
+            ${shCmd.echo "\n======================="}
+            ${shCmd.echo 'OCP version information'}
+            oc version
+            ${shCmd.echo "\n======================="}
         """
 
         el.cicd.CM_META_INFO_POSTFIX = 'meta-info'

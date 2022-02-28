@@ -26,7 +26,7 @@ __tear_down_dev_environment() {
         __remove_docker_registry_nfs_share
     fi
 
-    if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
+    if [[ ${REMOVE_GIT_REPOS} == ${_YES} && ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
     then
         __delete_remote_el_cicd_git_repos
     fi
@@ -52,15 +52,18 @@ __gather_dev_tear_down_info() {
         REMOVE_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
 
-    echo
-    REMOVE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to remove the el-CICD Git repositories? [Y/n] ')
-    if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
+    if [[ ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
     then
         echo
-        read -p "Enter GitHub user name (leave blank to leave as ${EL_CICD_ORGANIZATION}): " EL_CICD_ORGANIZATION_TEMP
-        EL_CICD_ORGANIZATION=${EL_CICD_ORGANIZATION_TEMP:-${EL_CICD_ORGANIZATION}}
+        REMOVE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to remove the el-CICD Git repositories? [Y/n] ')
+        if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
+        then
+            echo
+            read -p "Enter GitHub user name (leave blank to leave as ${EL_CICD_ORGANIZATION}): " EL_CICD_ORGANIZATION_TEMP
+            EL_CICD_ORGANIZATION=${EL_CICD_ORGANIZATION_TEMP:-${EL_CICD_ORGANIZATION}}
 
-        read -s -p "Enter GitHub Personal Access Token (leave blank to use credential file): " EL_CICD_GIT_REPO_ACCESS_TOKEN
+            read -s -p "Enter GitHub Personal Access Token (leave blank to use credential file): " EL_CICD_GIT_REPO_ACCESS_TOKEN
+        fi
     fi
 }
 

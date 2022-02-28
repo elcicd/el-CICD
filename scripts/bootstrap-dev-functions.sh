@@ -30,7 +30,7 @@ __bootstrap_dev_environment() {
         __create_credentials
     fi
 
-    if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
+    if [[ ${CREATE_GIT_REPOS} == ${_YES} && ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
     then
         __init_el_cicd_repos
     fi
@@ -76,28 +76,31 @@ __gather_dev_setup_info() {
     echo
     GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you wish to (re)generate the credential files? [Y/n] ')
 
-    echo
-    CREATE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to create and push the el-CICD Git repositories? [Y/n] ')
-
-    if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
+    if [[ ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
     then
         echo
-        local HOST_DOMAIN='github.com'
-        echo 'NOTE: Only GitHub is supported as a remote host.'
-        read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' if left blank): " GIT_HOST_DOMAIN
-        GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${HOST_DOMAIN}}
+        CREATE_GIT_REPOS=$(_get_yes_no_answer 'Do you wish to create and push the el-CICD Git repositories? [Y/n] ')
 
-        local API_DOMAIN='api.github.com'
-        read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' if left blank): " GIT_API_DOMAIN
-        GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
-
-        read -p "Enter Git user/organization: " EL_CICD_ORGANIZATION
-        if [[ -z ${EL_CICD_ORGANIZATION} ]]
+        if [[ ${CREATE_GIT_REPOS} == ${_YES} && ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
         then
-            echo "ERROR: MUST ENTER A GIT USER"
-            exit 1
+            echo
+            local HOST_DOMAIN='github.com'
+            echo 'NOTE: Only GitHub is supported as a remote host.'
+            read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' if left blank): " GIT_HOST_DOMAIN
+            GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${HOST_DOMAIN}}
+
+            local API_DOMAIN='api.github.com'
+            read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' if left blank): " GIT_API_DOMAIN
+            GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
+
+            read -p "Enter Git user/organization: " EL_CICD_ORGANIZATION
+            if [[ -z ${EL_CICD_ORGANIZATION} ]]
+            then
+                echo "ERROR: MUST ENTER A GIT USER"
+                exit 1
+            fi
+            read -p "Enter Git user/organization email: " EL_CICD_ORGANIZATION_EMAIL
         fi
-        read -p "Enter Git user/organization email: " EL_CICD_ORGANIZATION_EMAIL
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} || ${CREATE_GIT_REPOS} == ${_YES} ]]
