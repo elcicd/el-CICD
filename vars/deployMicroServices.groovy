@@ -107,10 +107,10 @@ def call(Map args) {
         }
     }
 
-    def validator = microService[validator] ?: el.cicd.VALIDATOR
+    def validator = microServices[validator] ?: el.cicd.VALIDATOR
     def validatorModule = load "${el.cicd.DEPLOYMENT_TEST_RUNNERS_DIR}/${projectInfo.deployToEnv}/${validator}.groovy"
 
     if (fileExists(validatorModule)) {
-        
+
     }
 }
