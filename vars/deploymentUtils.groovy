@@ -45,9 +45,10 @@ def processTemplateDefs(def projectInfo, def microServices) {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
     microServices.each { microService ->
-        def deployDir = sh(script: "test -d ${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR} && echo '1' || echo ''", returnStdout: true) ?
+        def deployDir = sh(script: "test -d ${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR} && echo '1'", returnStdout: true) ?
             "${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}" :
             "${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}"
+        echo "deployDir: ${deployDir}"
         dir("${microService.workDir}") {
             dir("${deployDir}") {
                 sh "mkdir -p ${projectInfo.deployToEnv}"
