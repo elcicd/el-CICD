@@ -64,13 +64,10 @@ void call(Map args) {
     }
 
     stage('build, scan, and push image to repository') {
+        projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}"
         pipelineUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
 
-        projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
-
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
-        def pullSecretName = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
-        def buildConfigName = "${microService.id}-${projectInfo.imageTag}"
 
         def tlsVerify = el.cicd.DEV_IMAGE_REPO_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REPO_ENABLE_TLS}" : ''
 
