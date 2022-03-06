@@ -31,7 +31,7 @@ def readTemplateDefs() {
         }
     }
     else {
-        errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.json/yaml/yml and be legitimate JSON or YAML")
+       pipelineUtils.errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.json/yaml/yml and be legitimate JSON or YAML")
     }
 
     return templateDefs
