@@ -61,7 +61,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             ${shCmd.echo ''}
             ${shCmd.echo 'Creating nonrootbuilder SCC if necessary and applying to jenkins ServiceAccount'}
             oc apply -f ${el.cicd.JENKINS_CONFIG_DIR}/jenkinsServiceAccountSecurityContext.yml
-            oc adm policy add-scc-to-user nonrootbuilder -z jenkins
+            oc adm policy add-scc-to-user nonrootbuilder -z jenkins -n ${projectInfo.cicdMasterNamespace}
 
             ${shCmd.echo ''}
             ${shCmd.echo 'Adding edit privileges for the rbacGroup to their CICD Automation Namespace'}

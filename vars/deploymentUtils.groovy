@@ -45,25 +45,29 @@ def processTemplateDefs(def projectInfo, def microServices) {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
-            sh "mkdir -p ${projectInfo.deployToEnv}"
+        dir("${microService.workDir}") {
+            def deployDir = sh(script: "test -d ${el.cicd.EL_CICD_DEPLOY_DEF_DIR} && echo '1' || echo '')", returnStdOut: true) ?
+                el.cicd.EL_CICD_DEPLOY_DEF_DIR : el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR
+            dir("${deployDir}") {
+                sh "mkdir -p ${projectInfo.deployToEnv}"
 
-            microService.templateDefs = readTemplateDefs()
+                microService.templateDefs = readTemplateDefs()
 
-            if (microService.templateDefs.templates) {
+                if (microService.templateDefs.templates) {
 
-                microService.templateDefs.templates.eachWithIndex { templateDef, index ->
-                    templateDef.appName = templateDef.appName ?: microService.name
-                    templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
+                    microService.templateDefs.templates.eachWithIndex { templateDef, index ->
+                        templateDef.appName = templateDef.appName ?: microService.name
+                        templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
-                    kustomizeTemplate(projectInfo, templateDef, index)
+                        kustomizeTemplate(projectInfo, templateDef, index)
 
-                    templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
-                    templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToRegion]?.params)
+                        templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
+                        templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToRegion]?.params)
+                    }
                 }
-            }
-            else {
-                ${shCmd.echo "No OpenShift templates found"}
+                else {
+                    ${shCmd.echo "No OpenShift templates found"}
+                }
             }
         }
     }
@@ -113,7 +117,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
 
     microServices.each { microService ->
         if (microService.templateDefs) {
-            dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
+            dir("${microService.workDir}/${el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def paramMap = [:]
                     if (templateDef.params) {
@@ -175,7 +179,7 @@ def applyResources(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${el.cicd.OKD_DEPLOY_DEF_DIR}") {
+        dir("${microService.workDir}/${el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p default
                 ${shCmd.echo ''}

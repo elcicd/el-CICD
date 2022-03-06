@@ -145,7 +145,7 @@ def initializeStage() {
             mkdir -p '${el.cicd.BUILDCONFIGS_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
-            ${shCmd.echo "\n======================="}
+            ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP version information'}
             oc version
             ${shCmd.echo "\n======================="}
