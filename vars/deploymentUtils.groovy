@@ -46,7 +46,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
 
     microServices.each { microService ->
         dir("${microService.workDir}") {
-            def deployDir = sh(script: "test -d ${el.cicd.EL_CICD_DEPLOY_DEF_DIR} && echo '1' || echo '')", returnStdout: true) ?
+            def deployDir = sh(script: "test -d ${el.cicd.EL_CICD_DEPLOY_DEF_DIR} && echo '1' || echo ''", returnStdout: true) ?
                 el.cicd.EL_CICD_DEPLOY_DEF_DIR : el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR
             dir("${deployDir}") {
                 sh "mkdir -p ${projectInfo.deployToEnv}"
