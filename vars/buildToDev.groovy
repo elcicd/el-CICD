@@ -64,7 +64,7 @@ void call(Map args) {
     }
 
     stage('build, scan, and push image to repository') {
-        projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}"
+        projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
         pipelineUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
