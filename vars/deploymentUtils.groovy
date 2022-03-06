@@ -49,27 +49,25 @@ def processTemplateDefs(def projectInfo, def microServices) {
             "${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}" :
             "${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}"
         echo "deployDir: ${deployDir}"
-        dir("${microService.workDir}") {
-            dir("${deployDir}") {
-                sh "mkdir -p ${projectInfo.deployToEnv}"
+        dir("${deployDir}") {
+            sh "mkdir -p ${projectInfo.deployToEnv}"
 
-                microService.templateDefs = readTemplateDefs()
+            microService.templateDefs = readTemplateDefs()
 
-                if (microService.templateDefs.templates) {
+            if (microService.templateDefs.templates) {
 
-                    microService.templateDefs.templates.eachWithIndex { templateDef, index ->
-                        templateDef.appName = templateDef.appName ?: microService.name
-                        templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
+                microService.templateDefs.templates.eachWithIndex { templateDef, index ->
+                    templateDef.appName = templateDef.appName ?: microService.name
+                    templateDef.patchedFile = "patched-${templateDef.appName}-${index}.yml".toString()
 
-                        kustomizeTemplate(projectInfo, templateDef, index)
+                    kustomizeTemplate(projectInfo, templateDef, index)
 
-                        templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
-                        templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToRegion]?.params)
-                    }
+                    templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToEnv]?.params)
+                    templateDef.params = mergeMaps(templateDef.params, templateDef[projectInfo.deployToRegion]?.params)
                 }
-                else {
-                    ${shCmd.echo "No OpenShift templates found"}
-                }
+            }
+            else {
+                ${shCmd.echo "No OpenShift templates found"}
             }
         }
     }
