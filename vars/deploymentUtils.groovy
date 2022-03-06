@@ -48,8 +48,7 @@ def processTemplateDefs(def projectInfo, def microServices) {
         def deployDir = sh(script: "test -d ${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR} && echo '1'", returnStdout: true) ?
             "${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}" :
             "${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}"
-        echo "deployDir: ${deployDir}"
-        dir("${deployDir}") {
+        dir(deployDir) {
             sh "mkdir -p ${projectInfo.deployToEnv}"
 
             microService.templateDefs = readTemplateDefs()
