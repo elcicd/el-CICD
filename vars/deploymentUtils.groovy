@@ -31,7 +31,7 @@ def readTemplateDefs() {
         }
     }
     else {
-       pipelineUtils.errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.json/yaml/yml and be legitimate JSON or YAML")
+       pipelineUtils.errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.[json|yaml/|yml] and be legitimate JSON or YAML")
     }
 
     return templateDefs
@@ -45,9 +45,10 @@ def processTemplateDefs(def projectInfo, def microServices) {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
     microServices.each { microService ->
+        def deployDir = sh(script: "test -d ${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR} && echo '1' || echo ''", returnStdout: true) ?
+            "${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}" :
+            "${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}"
         dir("${microService.workDir}") {
-            def deployDir = sh(script: "test -d ${el.cicd.EL_CICD_DEPLOY_DEF_DIR} && echo '1' || echo ''", returnStdout: true) ?
-                el.cicd.EL_CICD_DEPLOY_DEF_DIR : el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR
             dir("${deployDir}") {
                 sh "mkdir -p ${projectInfo.deployToEnv}"
 
@@ -117,7 +118,7 @@ def processTemplates(def projectInfo, def microServices, def imageTag) {
 
     microServices.each { microService ->
         if (microService.templateDefs) {
-            dir("${microService.workDir}/${el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR}") {
+            dir("${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}") {
                 microService.templateDefs.templates.eachWithIndex { templateDef, index ->
                     def paramMap = [:]
                     if (templateDef.params) {
@@ -179,7 +180,7 @@ def applyResources(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
     microServices.each { microService ->
-        dir("${microService.workDir}/${el.cicd.LEGACY_OKD_DEPLOY_DEF_DIR}") {
+        dir("${microService.workDir}/${el.cicd.LEGACY_MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p default
                 ${shCmd.echo ''}
