@@ -106,11 +106,4 @@ def call(Map args) {
             pipelineUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${args.projectInfo.deployToNamespace}:", checkoutMsgs)
         }
     }
-
-    def validator = microServices[validator] ?: el.cicd.VALIDATOR
-    def validatorModule = load "${el.cicd.DEPLOYMENT_TEST_RUNNERS_DIR}/${projectInfo.deployToEnv}/${validator}.groovy"
-
-    if (fileExists(validatorModule)) {
-
-    }
 }
