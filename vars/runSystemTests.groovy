@@ -50,13 +50,27 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
             node(codeBase) {
                 try {
                     stage ('Pull test code') {
-                        pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
+                        def msgs = ["CLONING SYSTEM TEST REPOS:"] + 
+                                   microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
+                        pipelineUtils.echoBanner(msgs)
+
+                        microServicesToTest.each { micrmicroServiceToTestoService ->
+                            if (!fileExists.("${microService.testWorkDir}/.git"}) {
+                                dir(microService.testWorkDir) {
+                                    pipelineUtils.cloneGitRepo(microService.systemTests.gitRepoName, projectInfo.gitTestBranch)
+                                }
+                            }
+                        }
                     }
 
                     stage ('Run tests') {
-                        pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
-                        def testModule = load "${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
-                        builderModule.build(projectInfo, microService)
+                        def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
+                        microServicesToTest.each { microService ->
+                            pipelineUtils.echoBanner("TESTING ${microService.name}")
+                            dir(microService.testWorkDir) {
+                                testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
+                            }
+                        }
                     }
                 }
                 catch (Exception | AssertionError exception) {

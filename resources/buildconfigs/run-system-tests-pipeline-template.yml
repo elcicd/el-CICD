@@ -51,5 +51,5 @@ objects:
                       projectId: params.PROJECT_ID]
           el.node(args)
           {
-              runSystemTests(args)
+              runManualSystemTests(args)
           }
