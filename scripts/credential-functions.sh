@@ -92,7 +92,7 @@ _push_github_public_ssh_deploy_key() {
     rm -f ${SECRET_FILE}
 }
 
-_create_env_docker_registry_secret() {
+_create_env_image_registry_secret() {
     local ENV=${1}
     local NAMESPACE_NAME=${2}
 

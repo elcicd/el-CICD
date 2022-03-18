@@ -60,7 +60,7 @@ Before beginning to tear down your environment, please make sure of the followin
 
 el-CICD will optionally tear down:
     - CodeReady Containers
-    - The cluster docker registry
+    - The cluster image registry
     - The NFS registry directory
     - Remove el-CICD repositories pushed to your Git host
 EOM
