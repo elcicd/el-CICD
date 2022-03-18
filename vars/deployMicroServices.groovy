@@ -95,10 +95,6 @@ def call(Map args) {
         }
     }
 
-    projectInfo.systemTesting.each { systemTests ->
-        if (systemTests.microServices
-    }
-
     if (microServices.find { it.deploymentBranch}) {
         stage('Inform users of success') {
             def checkoutMsgs = []
