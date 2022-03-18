@@ -52,7 +52,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                           -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
                                           -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.JENKINS_IMAGE_STREAM}:latest \
+                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_STREAM}:latest \
                                           -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                           -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                           -e TRY_UPGRADE_IF_NO_MARKER=true \

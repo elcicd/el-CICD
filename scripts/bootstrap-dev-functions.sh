@@ -18,11 +18,11 @@ __bootstrap_dev_environment() {
         __additional_cluster_config
     fi
 
-    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
+    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
-        __remove_docker_registry
+        _remove_image_registry
 
-        __setup_docker_registries
+        __setup_image_registries
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
@@ -56,12 +56,12 @@ __gather_dev_setup_info() {
     fi
 
     echo
-    INSTALL_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
-    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
+    INSTALL_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
+    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
-        SETUP_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
+        SETUP_IMAGE_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
 
-        if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+        if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
             set -e
@@ -139,10 +139,10 @@ __summarize_and_confirm_dev_setup_info() {
     fi
     echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
-    if [[ ${INSTALL_DOCKER_REGISTRY} == ${_YES} ]]
+    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
         echo -n "An image registry WILL be installed on your cluster WITH"
-        if [[ ${SETUP_DOCKER_REGISTRY_NFS} != ${_YES} ]]
+        if [[ ${SETUP_IMAGE_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
         fi
@@ -169,7 +169,7 @@ __summarize_and_confirm_dev_setup_info() {
     else
         echo "el-CICD Git repositories will NOT be intialized."
     fi
-    
+
     echo "Git token verified against ${EL_CICD_GIT_API_URL}/${EL_CICD_ORGANIZATION}."
 
     _confirm_continue
@@ -225,40 +225,44 @@ __additional_cluster_config() {
     fi
 }
 
-__create_docker_registry_nfs_share() {
+__create_image_registry_nfs_share() {
     echo
-    if [[ ! -d ${DOCKER_REGISTRY_DATA_NFS_DIR} || -z $(printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
+    if [[ ! -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} || -z $(printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
     then
-        echo "Creating NFS share on host for Nexus, if necessary: ${DOCKER_REGISTRY_DATA_NFS_DIR}"
-        if [[ -z $(cat /etc/exports | grep ${DOCKER_REGISTRY_DATA_NFS_DIR}) ]]
+        echo "Creating NFS share on host for developer image registries, if necessary: ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}"
+        if [[ -z $(cat /etc/exports | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
         then
-            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c 'echo "${DOCKER_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)" | sudo tee -a /etc/exports'
+            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c "echo '${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)' | sudo tee -a /etc/exports"
         fi
 
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DOCKER_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs -a
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin systemctl restart nfs-server.service
     else
-        echo 'Nexus NFS Share found.  Skipping...'
+        echo "Developer image registries' NFS Share found.  Skipping..."
     fi
 }
 
-__setup_docker_registries() {
-    oc new-project ${DOCKER_REGISTRY_NAMESPACE}
+__setup_image_registries() {
+    set -e
+    oc new-project ${DEMO_IMAGE_REGISTRY}
 
-    if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
-        __create_docker_registry_nfs_share
+        __create_image_registry_nfs_share
 
         local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
-        sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv-template.yml | oc create -f -
+        sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" \
+            -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/" \
+            ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-pv-template.yml | oc create -f -
     fi
 
     __register_insecure_registries
 
     __generate_deployments
+    set +e
 
     echo
     echo 'Docker Registry is up!'
@@ -266,44 +270,47 @@ __setup_docker_registries() {
 }
 
 __generate_deployments() {
-    local TMP_DIR=/tmp/docker-registry
+    local TMP_DIR=/tmp/${DEMO_IMAGE_REGISTRY}
     mkdir -p ${TMP_DIR}
 
-    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local TMP_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}-tmp.yml
-        local OUTPUT_FILE=${TMP_DIR}/docker-registry-${REGISTRY_NAME}.yml
+        local TMP_FILE=${TMP_DIR}/${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}-tmp.yml
+        local OUTPUT_FILE=${TMP_DIR}/${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}.yml
 
-        sed -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g"  \
+        sed -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/g"  \
+            -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g"  \
             -e "s/%CLUSTER_WILDCARD_DOMAIN%/${CLUSTER_WILDCARD_DOMAIN}/g" \
-            ${SCRIPTS_RESOURCES_DIR}/docker-registry-template.yml > ${TMP_FILE}
+            ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-template.yml > ${TMP_FILE}
 
-        if [[ ${SETUP_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+        if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
         then
-            local PATCH=$(sed -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g" ${SCRIPTS_RESOURCES_DIR}/nfs-deployment.patch)
+            local PATCH=$(sed -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/g" \
+                              -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g" \
+                              ${SCRIPTS_RESOURCES_DIR}/demo-nfs-deployment.patch)
             oc patch --local -f "${TMP_FILE}" -p "${PATCH}" -o yaml > ${OUTPUT_FILE}
             awk '/^apiVersion:.*/ { print "---" } 1' ${OUTPUT_FILE} > ${TMP_FILE}
         fi
 
-        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DOCKER_REGISTRY_USER_PWD})
+        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_IMAGE_REGISTRY_USER_PWD})
         echo '---' >> ${TMP_FILE}
         oc create secret generic ${REGISTRY_NAME}-auth-secret --dry-run=client --from-literal=htpasswd=${HTPASSWD} \
-            -n ${DOCKER_REGISTRY_NAMESPACE} -o yaml >> ${TMP_FILE}
+            -n ${DEMO_IMAGE_REGISTRY} -o yaml >> ${TMP_FILE}
 
         mv ${TMP_FILE} ${OUTPUT_FILE}
     done
 
     echo
-    oc create -f ${TMP_DIR} -n ${DOCKER_REGISTRY_NAMESPACE}
+    oc create -f ${TMP_DIR} -n ${DEMO_IMAGE_REGISTRY}
     rm -rf ${TMP_DIR}
 
     echo
-    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DOCKER_REGISTRY_NAMESPACE} | xargs)"
+    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DEMO_IMAGE_REGISTRY} | xargs)"
     for DC in ${DCS}
     do
         echo
-        oc rollout status deploy/${DC} -n ${DOCKER_REGISTRY_NAMESPACE}
+        oc rollout status deploy/${DC} -n ${DEMO_IMAGE_REGISTRY}
     done
 }
 
@@ -317,10 +324,10 @@ __register_insecure_registries() {
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
 
-    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
         oc get image.config.openshift.io/cluster -o yaml | grep -v "\- ${HOST_DOMAIN}" | oc apply -f -
 
@@ -355,7 +362,7 @@ __create_credentials() {
         echo
         echo "Creating the image repository access token file for ${ENV} environment:"
         echo "$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})"
-        echo ${DOCKER_REGISTRY_USER_PWD} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        echo ${DEMO_IMAGE_REGISTRY_USER_PWD} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
     done
 }
 

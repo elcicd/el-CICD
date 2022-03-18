@@ -85,7 +85,7 @@ def call(Map args) {
         }
     }
 
-    stage('Verify image(s) exist for previous environment') {
+    stage('Verify image(s) exist for environment') {
         pipelineUtils.echoBanner("VERIFY IMAGE(S) TO REDEPLOY EXIST IN IMAGE REPOSITORY:",
                                  projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 

@@ -33,7 +33,7 @@ _refresh_prod_credentials() {
     echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        _create_env_docker_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
+        _create_env_image_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
     done
 
     echo

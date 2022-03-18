@@ -39,14 +39,12 @@ def initMetaData(Map metaData) {
 def node(Map args, Closure body) {
     assert args.agent
 
-    def podLabel = args.agentName ?: args.agent
-
     def secretVolume = args.isBuild ?
         [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")] :
         []
 
     podTemplate([
-        label: "${podLabel}",
+        label: "${args.agent}",
         cloud: 'openshift',
         serviceAccount: 'jenkins',
         podRetention: onFailure(),
@@ -54,7 +52,7 @@ def node(Map args, Closure body) {
         containers: [
             containerTemplate(
                 name: 'jnlp',
-                image: "${el.cicd.OCP_IMAGE_REPO}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
@@ -65,9 +63,9 @@ def node(Map args, Closure body) {
         ],
         volumes: secretVolume
     ]) {
-        node(podLabel) {
+        node(args.agent) {
             try {
-                initializeStage()
+                initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
 
@@ -121,7 +119,7 @@ def runHookScript(def prefix, def args, def exception) {
     }
 }
 
-def initializeStage() {
+def initializePipeline() {
     stage('Initializing') {
         pipelineUtils.echoBanner("INITIALIZING...")
 
@@ -165,21 +163,13 @@ def initializeStage() {
     }
 }
 
-def getDevPipelines() {
-    return ['build-and-deploy-microservices-pipeline-template.yml']
-}
-
-def getTestPipelines() {
-    return ['create-release-candidate-pipeline-template.yml',
+def getNonProdPipelines() {
+    return ['build-and-deploy-microservices-pipeline-template.yml',
+            'create-release-candidate-pipeline-template.yml',
             'microservice-promotion-removal-pipeline-template.yml',
             'microservice-redeploy-removal-pipeline-template.yml',
-            'redeploy-release-candidate-pipeline-template.yml']
-}
-
-def getNonProdPipelines() {
-    def pipelines = getDevPipelines()
-    pipelines.addAll(getTestPipelines())
-    return pipelines
+            'redeploy-release-candidate-pipeline-template.yml',
+            'run-system-tests-pipeline-template.yml']
 }
 
 def getProdPipelines() {

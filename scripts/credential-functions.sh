@@ -168,8 +168,8 @@ __push_creds_file_to_jenkins() {
     local CONTENT_TYPE_XML="content-type:application/xml"
 
     # Create and update to make sure it takes
-    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/createCredentials"
-    curl -k -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
+    curl -ksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/createCredentials"
+    curl -ksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
 }
 
 _run_custom_credentials_script() {

@@ -1,4 +1,5 @@
-
+#!/usr/bin/bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
 
 __init_jenkins_build() {
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
@@ -21,21 +22,21 @@ _build_el_cicd_jenkins_image() {
     echo
     echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
     echo
-
     __init_jenkins_build
 
-    if [[ ! -n $(oc get bc ${JENKINS_IMAGE_STREAM} --ignore-not-found -n openshift) ]]
-    then
-        oc new-build --name ${JENKINS_IMAGE_STREAM} --binary=true --strategy=docker -n openshift
-    fi
-
+    set -e
     cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins-template > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
     sed -i -e "s|%CONFIG_PATH%|${JENKINS_CONTAINER_CONFIG_DIR}|g;" \
            -e "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
            -e "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
         ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
 
-    oc start-build ${JENKINS_IMAGE_STREAM} --from-dir=${TARGET_JENKINS_BUILD_DIR} --no-cache=true --wait --follow -n openshift
+    echo -n 'Podman: '
+    ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
+    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
+    podman build --squash -t ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_STREAM} -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
+    podman push --tls-verify=false ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_STREAM}
+    set +e
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
 }
@@ -57,15 +58,14 @@ _build_el_cicd_jenkins_agent_images_image() {
             echo "STARTING JENKINS AGENT BUILD: ${AGENT_NAME}"
             echo
             echo '==========================================='
+            echo
 
             set -e
-            if [[ ! -n $(oc get bc ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --ignore-not-found -n openshift) ]]
-            then
-                oc new-build --name ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --binary=true --strategy=docker -n openshift
-            fi
-
-            cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-            oc start-build ${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} --from-dir=${TARGET_JENKINS_BUILD_DIR} --no-cache=true --wait --follow -n openshift
+            echo -n 'Podman: '
+            ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
+            podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
+            podman build --squash -t ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
+            podman push --tls-verify=false ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
             set +e
         done
 

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: docker-registry-%REGISTRY_NAME%
+  name: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%
   labels:
-    app: docker-registry
+    app: %DEMO_IMAGE_REGISTRY%
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: docker-registry-%REGISTRY_NAME%
+      app: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%
   template:
     metadata:
       labels:
-        app: docker-registry-%REGISTRY_NAME%
+        app: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%
     spec:
       containers:
       - image: registry:latest
         imagePullPolicy: Always
-        name: docker-registry-%REGISTRY_NAME%
+        name: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%
         ports:
         - containerPort: 5000
         env:
@@ -30,50 +30,44 @@ spec:
         - name: REGISTRY_HTTP_ADDR
           value: 0.0.0.0:5000
         volumeMounts:
-          - name: docker-registry
-            mountPath: /var/lib/registry
-            subPath: %REGISTRY_NAME%
-          - name: auth-vol
-            mountPath: "/auth"
-            readOnly: true
+        - name: auth-vol
+          mountPath: "/auth"
+          readOnly: true
         resources:
           limits:
             cpu: 500m
             memory: 100Mi
       volumes:
-        - name: docker-registry
-          persistentVolumeClaim:
-            claimName: docker-registry-pvc
-        - name: auth-vol
-          secret:
-            secretName: auth-secret
+      - name: auth-vol
+        secret:
+          secretName: %REGISTRY_NAME%-auth-secret
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: docker-registry-%REGISTRY_NAME%-service
+  name: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%-service
 spec:
   ports:
   - port: 5000
     targetPort: 5000
   selector:
-    app: docker-registry-%REGISTRY_NAME%
+    app: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: docker-registry-%REGISTRY_NAME%-ingress
+  name: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%-ingress
   annotations:
     kubernetes.io/ingress.allow-http: "false"
 spec:
   rules:
-  - host: elcicd%REGISTRY_NAME%-docker-registry.apps-crc.testing
+  - host: %REGISTRY_NAME%-%DEMO_IMAGE_REGISTRY%.%CLUSTER_WILDCARD_DOMAIN%
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: docker-registry-%REGISTRY_NAME%-service
+            name: %DEMO_IMAGE_REGISTRY%-%REGISTRY_NAME%-service
             port:
               number: 5000

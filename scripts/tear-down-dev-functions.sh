@@ -14,16 +14,16 @@ __tear_down_dev_environment() {
         _remove_existing_crc
     fi
 
-    if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
+    if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
     then
-        __remove_docker_registry
+        _remove_image_registry
 
-        __remove_whitelisted_docker_registry_host_names
+        __remove_whitelisted_image_registry_host_names
     fi
 
-    if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${REMOVE_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
-        __remove_docker_registry_nfs_share
+        __remove_image_registry_nfs_share
     fi
 
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} && ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
@@ -41,15 +41,15 @@ __gather_dev_tear_down_info() {
         echo 'CRC installation not found.  Skipping...'
     fi
 
-    if [[ ${REMOVE_CRC} != ${_YES} && ! -z $(oc get project --ignore-not-found ${DOCKER_REGISTRY_NAMESPACE}) ]]
+    if [[ ${REMOVE_CRC} != ${_YES} && ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
     then
         echo
-        REMOVE_DOCKER_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
+        REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
     fi
 
-    if [[ -d ${DOCKER_REGISTRY_DATA_NFS_DIR} && (${REMOVE_DOCKER_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES})  ]]
+    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} && (${REMOVE_IMAGE_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES})  ]]
     then
-        REMOVE_DOCKER_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
+        REMOVE_IMAGE_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
 
     if [[ ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
@@ -78,7 +78,7 @@ __summarize_and_confirm_dev_tear_down() {
     else 
         echo "CRC will NOT be torn down."
 
-        if [[ ${REMOVE_DOCKER_REGISTRY} == ${_YES} ]]
+        if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
         then
             echo "The image registry WILL be torn down."
         else
@@ -87,7 +87,7 @@ __summarize_and_confirm_dev_tear_down() {
     fi
 
     echo -n "The image registry NFS share "
-    if [[ ${REMOVE_DOCKER_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${REMOVE_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
         echo -n "WILL"
     else
@@ -122,44 +122,45 @@ _remove_existing_crc() {
     echo
     echo 'Removing old CRC installation directories'
     rm -rfv ${EL_CICD_HOME}/crc*/
-    rm -rfv ${HOME}/.crc
 }
 
-__remove_docker_registry() {
-    _delete_namespace  ${DOCKER_REGISTRY_NAMESPACE}
+_remove_image_registry() {
+    _delete_namespace ${DEMO_IMAGE_REGISTRY}
 
-    local REGISTRY_NAMES=$(echo ${DOCKER_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
     local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
         IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
     done
     echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
 
     local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
-    sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" ${SCRIPTS_RESOURCES_DIR}/docker-registry-pv-template.yml | \
+    sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" \
+        -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/" \
+        ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-pv-template.yml | \
         oc delete --ignore-not-found -f -
 }
 
-__remove_docker_registry_nfs_share() {
-    if [[ -d ${DOCKER_REGISTRY_DATA_NFS_DIR} ]]
+__remove_image_registry_nfs_share() {
+    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} ]]
     then
         echo
-        echo "Removing ${DOCKER_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
+        echo "Removing ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
 
-        sudo rm -rf ${DOCKER_REGISTRY_DATA_NFS_DIR}
-        sudo sed -i "\|${DOCKER_REGISTRY_DATA_NFS_DIR}|d" /etc/exports
+        sudo rm -rf ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
+        sudo sed -i "\|${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}|d" /etc/exports
         sudo exportfs -a
         sudo systemctl restart nfs-server.service
     else
         echo
-        echo "${DOCKER_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
+        echo "${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
     fi
 }
 
-__remove_whitelisted_docker_registry_host_names() {
+__remove_whitelisted_image_registry_host_names() {
     local IMAGE_REPOS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
     local IMAGE_REPOS=''
     for REPO in ${IMAGE_REPOS_LIST[@]}
@@ -172,7 +173,7 @@ __remove_whitelisted_docker_registry_host_names() {
     local HOST_NAMES=''
     for REGISTRY_NAME in ${IMAGE_REPOS}
     do
-        HOST_DOMAIN=${REGISTRY_NAME}-docker-registry.${CLUSTER_WILDCARD_DOMAIN}
+        HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
         echo "Removing whitelisted ${HOST_DOMAIN} as an insecure image registry."
         oc get image.config.openshift.io/cluster -o yaml | grep -v ${HOST_DOMAIN} | oc apply -f -
