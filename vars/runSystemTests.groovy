@@ -58,8 +58,9 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                         pipelineUtils.echoBanner(msgs)
 
                         microServicesToTest.each { microService ->
-                            dir(microService.testWorkDir) {
-                                pipelineUtils.cloneGitRepo(microService.systemTests.gitRepoName, projectInfo.gitTestBranch)
+                            dir(microService.systemTests.workDir) {
+                                git branch: projectInfo.gitTestBranch
+                                    url: component.systemTests.gitRepoUrl
                             }
                         }
                     }
@@ -68,7 +69,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                         def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
                         microServicesToTest.each { microService ->
                             pipelineUtils.echoBanner("TESTING ${microService.name}")
-                            dir(microService.testWorkDir) {
+                            dir(microService.systemTests.workDir) {
                                 testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
                             }
                         }

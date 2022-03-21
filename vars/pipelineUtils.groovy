@@ -67,10 +67,14 @@ def gatherProjectInfoStage(def projectId) {
             component.id = "${projectInfo.id}-${component.name}"
 
             component.workDir = "${WORKSPACE}/${component.gitRepoName}"
-            component.testWorkDir = component.systemTests ? "${WORKSPACE}/${component.systemTests.gitRepoName}" : null
 
             component.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.gitRepoName}.git"
             component.gitSshPrivateKeyName = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+
+            if (component.systemTests) {
+                component.systemTests.workDir = "${WORKSPACE}/${component.systemTests.gitRepoName}" : null
+                component.systemTests.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.systemTests.gitRepoName}.git"
+            }
         }
 
         projectInfo.devEnv = el.cicd.devEnv
