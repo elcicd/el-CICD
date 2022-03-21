@@ -67,11 +67,10 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                     }
 
                     stage ('Pull test code') {
-                        def msgs = ["CLONING SYSTEM TEST REPOS:"] +
-                                   microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
+                        def msgs = ["CLONING SYSTEM TEST REPOS:"]
+                        msgs.addAll(microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" })
                         pipelineUtils.echoBanner(msgs)
                         microServicesToTest.each { microService ->
-
                             sh """
                                 git clone --branch ${projectInfo.gitTestBranch} ${microService.systemTests.gitRepoUrl}
                             """
