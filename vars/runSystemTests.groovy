@@ -36,7 +36,6 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
             serviceAccount: 'jenkins',
             podRetention: onFailure(),
             idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-            namespace: "${projectInfo.systemTestNamespace}",
             containers: [
                 containerTemplate(
                     name: 'jnlp',
