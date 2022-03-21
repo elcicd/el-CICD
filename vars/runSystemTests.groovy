@@ -13,6 +13,9 @@ def call(Map args) {
 
     def codeBasesToMicroServices = [:]
     microServicesToTest.each { microService ->
+        echo '!!!!!!!!!!!!!!!!!!! SYSTEM TEST CODEBASE CHECK !!!!!!!!!!!!!!!!!!!!'
+        echo microService.systemTests
+        echo '!!!!!!!!!!!!!!!!!!! SYSTEM TEST CODEBASE CHECK !!!!!!!!!!!!!!!!!!!!'
         codeBasesToMicroServices["${microService.systemTests.codeBase}"] = codeBasesToMicroServices["${microService.systemTests.codeBase}"] ?: []
         codeBasesToMicroServices["${microService.systemTests.codeBase}"].add(microService)
     }
