@@ -19,8 +19,8 @@ def call(Map args) {
 
     echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
 
-    codeBasesToMicroServices.each { codeBase ->
-        createTestNode(codeBase, projectInfo, codeBasesToMicroServices[codeBase])
+    codeBasesToMicroServices.each { codeBase, microServicesToTest ->
+        createTestNode(codeBase, projectInfo, microServicesToTest)
     }
 
     echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
@@ -36,6 +36,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
             serviceAccount: 'jenkins',
             podRetention: onFailure(),
             idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+            namespace: "${projectInfo.systemTestNamespace}",
             containers: [
                 containerTemplate(
                     name: 'jnlp',
