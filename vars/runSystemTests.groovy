@@ -57,14 +57,21 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                             rm -rf '${WORKSPACE}'
                             mkdir -p '${WORKSPACE}'
                         """
+
+                        dir (el.cicd.CONFIG_DIR) {
+                            git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
+                                branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
+                                credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+                        }
+
                     }
 
                     stage ('Pull test code') {
                         def msgs = ["CLONING SYSTEM TEST REPOS:"] +
                                    microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
                         pipelineUtils.echoBanner(msgs)
-
                         microServicesToTest.each { microService ->
+
                             sh """
                                 git clone --branch ${projectInfo.gitTestBranch} ${microService.systemTests.gitRepoUrl}
                             """
