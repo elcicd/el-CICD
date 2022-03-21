@@ -11,20 +11,18 @@ def call(Map args) {
     def projectInfo = args.projectInfo
     def microServicesToTest = args.microServicesToTest
 
-    def codeBases = microServicesToTest.unique { microServiceA, microServiceB ->
-        return microServiceA.systemTests.codeBase <=> microServiceA.systemTests.codeBase
+    def codeBasesToMicroServices = [:]
+    microServicesToTest.each { microService ->
+        codeBasesToMicroServices["${microService.systemTests.codeBase}"] = codeBasesToMicroServices["${microService.systemTests.codeBase}"] ?: []
+        codeBasesToMicroServices["${microService.systemTests.codeBase}"].add(microService)
     }
 
     echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
 
-    // def codeBasesToNodes = [:]
-    // codeBases.each { codeBase ->
-        codeBaseMicroServicesToTest = microServicesToTest.collect { microService ->
-            microService.codeBase == codeBases[0]
-        }
-        // codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
-        createTestNode(codeBases[0], projectInfo, codeBaseMicroServicesToTest)
-    // }
+    codeBasesToMicroServices.each { codeBase ->
+        createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+    }
+    
     echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
 
     // parallel(codeBasesToNodes)
