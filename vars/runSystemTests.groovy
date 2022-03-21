@@ -20,7 +20,7 @@ def call(Map args) {
     echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
 
     codeBasesToMicroServices.each { codeBase ->
-        createTestNode(codeBase, projectInfo, codeBasesToMicroServices[codebase])
+        createTestNode(codeBase, projectInfo, codeBasesToMicroServices[codeBase])
     }
 
     echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
