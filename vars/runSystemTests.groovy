@@ -39,7 +39,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
             containers: [
                 containerTemplate(
                     name: 'jnlp',
-                    image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                    image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${codeBase}:latest",
                     alwaysPullImage: true,
                     args: '${computer.jnlpmac} ${computer.name}',
                     resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
@@ -73,19 +73,12 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                         }
                     }
                 }
-                catch (Exception | AssertionError exception) {
-                    (exception instanceof Exception) ?
-                        pipelineUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
-                        pipelineUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
-
-                    runHookScript(el.cicd.ON_FAIL, args, exception)
-
-                    throw exception
-                }
-                finally {
-                    runHookScript(el.cicd.POST, args)
+                catch (Exception exception) {
+                    pipelineUtils.errorBanner("!!!! TEST(S) FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
                 }
             }
+
+            pipelineUtils.echoBanner("SYSTEM TESTS SUCCEEDED")
         }
     //}
 }
