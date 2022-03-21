@@ -15,14 +15,17 @@ def call(Map args) {
         return microServiceA.systemTests.codeBase <=> microServiceA.systemTests.codeBase
     }
 
-    def codeBasesToNodes = [:]
-    codeBases.each { codeBase ->
+    echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
+
+    // def codeBasesToNodes = [:]
+    // codeBases.each { codeBase ->
         codeBaseMicroServicesToTest = microServicesToTest.collect { microService ->
             microService.codeBase == codeBase
         }
         // codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
-        createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
-    }
+        createTestNode(codeBases[0], projectInfo, codeBaseMicroServicesToTest)
+    // }
+    echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
 
     // parallel(codeBasesToNodes)
 }
