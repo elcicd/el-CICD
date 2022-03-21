@@ -20,7 +20,7 @@ def call(Map args) {
     // def codeBasesToNodes = [:]
     // codeBases.each { codeBase ->
         codeBaseMicroServicesToTest = microServicesToTest.collect { microService ->
-            microService.codeBase == codeBase
+            microService.codeBase == codeBases[0]
         }
         // codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
         createTestNode(codeBases[0], projectInfo, codeBaseMicroServicesToTest)
