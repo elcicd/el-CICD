@@ -50,8 +50,6 @@ def gatherProjectInfoStage(def projectId) {
             }
         }
 
-        validateProjectInfoFile(projectInfo)
-
         projectInfo.id = projectId
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
@@ -114,7 +112,6 @@ def gatherProjectInfoStage(def projectId) {
         }
         projectInfo.nonProdNamespaces[(projectInfo.preProdEnv)] = projectInfo.preProdNamespace
 
-        assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
         def sandboxes = projectInfo.sandboxEnvs ?: 0
         projectInfo.sandboxEnvs = []
         projectInfo.sandboxNamespaces = []
@@ -135,10 +132,12 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
     }
 
+    validateProjectInfo(projectInfo)
+
     return projectInfo
 }
 
-def validateProjectInfoFile(def projectInfo) {
+def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroup : 'missing rbacGroup'
 
     assert projectInfo.scmHost ==~
@@ -149,15 +148,9 @@ def validateProjectInfoFile(def projectInfo) {
         "bad or missing scmRestApiHost '${projectInfo.scmHost}"
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
-    assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
-    assert (projectInfo.microServices?.size() > 0 || projectInfo.microServices?.size() > 0) : "No microservices or libraries defined"
+    assert (projectInfo.components.size() > 0) : "No microservices or libraries defined"
 
-    projectInfo.microServices?.each { component ->
-        assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
-        assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
-    }
-
-    projectInfo.libraries?.each { component ->
+    projectInfo.components.each { component ->
         assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
         assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
     }
