@@ -26,7 +26,7 @@ def call(Map args) {
 
         def jsonPath = '{range .items[?(@.data.microservice)]}{.data.microservice}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
-        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ').toUnique()
+        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ').toUnique { a, b -> a <=> b }
 
         def inputs = []
         projectInfo.microServices.each { microService ->
