@@ -15,7 +15,7 @@ def call(Map args) {
 
         def cicdInfo = input(message: "Select environment test microservices in:", parameters: inputs)
 
-        projectInfo.systemTestEnv = cicdInfo.testEnv
+        projectInfo.systemTestEnv = cicdInfo
         projectInfo.systemTestNamespace = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
             projectInfo.systemTestEnv : projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
         projectInfo.systemTestEnv = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
