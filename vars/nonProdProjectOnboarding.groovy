@@ -11,7 +11,7 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
-    def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
+    def pipelines = el.getNonProdPipelines()
     refreshSharedPipelines(projectInfo, pipelines)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
