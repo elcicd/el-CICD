@@ -52,6 +52,13 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
         ]) {
             node(codeBase) {
                 try {
+                    stage('Initializing') {
+                        sh """
+                            rm -rf '${WORKSPACE}'
+                            mkdir -p '${WORKSPACE}'
+                        """
+                    }
+
                     stage ('Pull test code') {
                         def msgs = ["CLONING SYSTEM TEST REPOS:"] +
                                    microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
