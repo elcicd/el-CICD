@@ -58,14 +58,11 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                         pipelineUtils.echoBanner(msgs)
 
                         microServicesToTest.each { microService ->
-                            dir(microService.systemTests.workDir) {
-                                echo "microService.systemTests.gitRepoUrl: ${microService.systemTests.gitRepoUrl.toString()}"
-                                echo "projectInfo.gitTestBranch: ${projectInfo.gitTestBranch.toString()}"
-                                checkout([$class: 'GitSCM',
-                                        branches: [[ name: projectInfo.gitTestBranch ]],
-                                        userRemoteConfigs: [[ url: microService.systemTests.gitRepoUrl ]]
-                                    ])
-                            }
+                            sh """
+                                git clone --branch ${projectInfo.gitTestBranch} git@${microService.systemTests.gitRepoUrl}
+                                echo "pwd \$(pwd)"
+                                ls -al
+                            """
                         }
                     }
 
