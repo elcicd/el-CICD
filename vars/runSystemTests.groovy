@@ -55,10 +55,8 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                         pipelineUtils.echoBanner(msgs)
 
                         microServicesToTest.each { micrmicroServiceToTestoService ->
-                            if (!fileExists.("${microService.testWorkDir}/.git}") {
-                                dir(microService.testWorkDir) {
-                                    pipelineUtils.cloneGitRepo(microService.systemTests.gitRepoName, projectInfo.gitTestBranch)
-                                }
+                            dir(microService.testWorkDir) {
+                                pipelineUtils.cloneGitRepo(microService.systemTests.gitRepoName, projectInfo.gitTestBranch)
                             }
                         }
                     }

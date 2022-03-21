@@ -30,7 +30,7 @@ def call(Map args) {
 
         def inputs = []
         projectInfo.microServices.each { microService ->
-            if (msNames.contains(microService.name)) {
+            if (msNames.contains(microService.name) && microService.systemTests.gitRepoName) {
                 inputs += booleanParam(name: microService.name)
             }
         }
