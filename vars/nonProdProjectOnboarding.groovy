@@ -12,7 +12,7 @@ def call(Map args) {
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
     def pipelines = el.getNonProdPipelines()
-    refreshSharedPipelines(projectInfo, pipelines)
+    verticalJenkinsCreationUtils.refreshSharedPipelines(projectInfo, pipelines)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
