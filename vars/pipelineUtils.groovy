@@ -148,7 +148,7 @@ def validateProjectInfoFile(def projectInfo) {
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
     assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
-    assert projectInfo.components.size() > 0 : "No microservices or libraries defined"
+    assert (projectInfo.microServices.size() > 0 || projectInfo.libraries > 0) : "No microservices or libraries defined"
 
     projectInfo.microServices.each { component ->
         assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
