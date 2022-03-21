@@ -73,7 +73,7 @@ def gatherProjectInfoStage(def projectId) {
 
             if (component.systemTests) {
                 component.systemTests.workDir = "${WORKSPACE}/${component.systemTests.gitRepoName}"
-                component.systemTests.gitRepoUrl = "https://{projectInfo.scmHost}/${projectInfo.scmOrganization}/${component.systemTests.gitRepoName}.git"
+                component.systemTests.gitRepoUrl = "git@${projectInfo.scmHost}/${projectInfo.scmOrganization}/${component.systemTests.gitRepoName}.git"
             }
         }
 

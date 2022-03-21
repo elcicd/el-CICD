@@ -66,11 +66,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
 
                         microServicesToTest.each { microService ->
                             sh """
-                                echo "pwd \$(pwd)"
-                                ls -al
-                                git clone --branch ${projectInfo.gitTestBranch} git@${microService.systemTests.gitRepoUrl}
-                                echo "pwd \$(pwd)"
-                                ls -al
+                                git clone --branch ${projectInfo.gitTestBranch} ${microService.systemTests.gitRepoUrl}
                             """
                         }
                     }
