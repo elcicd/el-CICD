@@ -10,18 +10,15 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select the environment to run tests in') {
-        def allEnvs = "${projectInfo.sandboxNamespaces.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
+        def allEnvs = "${projectInfo.sandboxEnvs.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
         def inputs = [choice(name: 'testEnv', description: '', choices: allEnvs)]
 
         def cicdInfo = input(message: "Select environment test microservices in:", parameters: inputs)
 
         projectInfo.systemTestEnv = cicdInfo
-        projectInfo.systemTestNamespace = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
-            projectInfo.systemTestEnv : projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
-        projectInfo.systemTestEnv = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
-            el.cicd.SANDBOX_NAMESPACE_BADGE : projectInfo.systemTestEnv
-
         projectInfo.SYSTEM_TEST_ENV = projectInfo.systemTestEnv.toUpperCase()
+        projectInfo.systemTestNamespace = projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
+        projectInfo.systemTestNamespace = projectInfo.systemTestNamespace ?: projectInfo.sandboxNamespaces[projectInfo.systemTestEnv]
     }
 
     stage ('Select microservices to test') {

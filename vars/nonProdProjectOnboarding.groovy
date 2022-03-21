@@ -107,7 +107,7 @@ def call(Map args) {
     }
 
     stage('Setup OKD sandbox environment(s)') {
-        if (projectInfo.microServices && (projectInfo.sandboxEnvs > 0 || projectInfo.hotfixNamespace)) {
+        if (projectInfo.microServices && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
             pipelineUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.join(', '))
 
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''

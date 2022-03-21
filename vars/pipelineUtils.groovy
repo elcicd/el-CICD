@@ -50,6 +50,8 @@ def gatherProjectInfoStage(def projectId) {
             }
         }
 
+        validateProjectInfoFile(projectInfo)
+
         projectInfo.id = projectId
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
@@ -111,13 +113,13 @@ def gatherProjectInfoStage(def projectId) {
             projectInfo.nonProdNamespaces[(env)] = "${projectInfo.id}-${env}"
         }
         projectInfo.nonProdNamespaces[(projectInfo.preProdEnv)] = projectInfo.preProdNamespace
-
-        def sandboxNamespacePrefix = "${projectInfo.id}-${el.cicd.SANDBOX_NAMESPACE_BADGE}"
+        def sandboxes = projectInfo.sandboxEnvs ?: 0
+        projectInfo.sandboxEnvs = []
         projectInfo.sandboxNamespaces = []
-        projectInfo.sandboxEnvs = projectInfo.sandboxEnvs ?: 0
-        if (projectInfo.sandboxEnvs >= 1) {
-            (1..projectInfo.sandboxEnvs).each { i ->
-                projectInfo.sandboxNamespaces << "${sandboxNamespacePrefix}-${i}"
+        if (sandboxes) {
+            (1..sandboxEnvs).each { i ->
+                projectInfo.sandboxEnvs << "${el.cicd.SANDBOX_NAMESPACE_BADGE}-${i}"
+                projectInfo.sandboxNamespaces << "${projectInfo.id}-${projectInfo.sandboxEnvs[i]}"
             }
         }
 
@@ -131,12 +133,10 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
     }
 
-    validateProjectInfo(projectInfo)
-
     return projectInfo
 }
 
-def validateProjectInfo(def projectInfo) {
+def validateProjectInfoFile(def projectInfo) {
     assert projectInfo.rbacGroup : 'missing rbacGroup'
 
     assert projectInfo.scmHost ==~
