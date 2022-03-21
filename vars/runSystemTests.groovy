@@ -57,7 +57,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                                    microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
                         pipelineUtils.echoBanner(msgs)
 
-                        microServicesToTest.each { micrmicroServiceToTestoService ->
+                        microServicesToTest.each { microService ->
                             dir(microService.testWorkDir) {
                                 pipelineUtils.cloneGitRepo(microService.systemTests.gitRepoName, projectInfo.gitTestBranch)
                             }
