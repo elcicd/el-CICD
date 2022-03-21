@@ -9,6 +9,7 @@ def call(Map args) {
     assert args.microServicesToTest
 
     def projectInfo = args.projectInfo
+    def microServicesToTest = args.microServicesToTest
 
     def codeBases = microServicesToTest.unique { microServiceA, microServiceB ->
         return microServiceA.systemTests.codeBase <=> microServiceA.systemTests.codeBase
