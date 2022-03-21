@@ -20,14 +20,15 @@ def call(Map args) {
         codeBaseMicroServicesToTest = microServicesToTest.collect { microService ->
             microService.codeBase == codeBase
         }
-        codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+        // codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+        createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
     }
 
-    parallel(codeBasesToNodes)
+    // parallel(codeBasesToNodes)
 }
 
 def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
-    return {
+    //return {
         podTemplate([
             label: "${codeBase}",
             cloud: 'openshift',
@@ -86,5 +87,5 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                 }
             }
         }
-    }
+    //}
 }
