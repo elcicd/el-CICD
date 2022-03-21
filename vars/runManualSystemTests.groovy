@@ -43,7 +43,7 @@ def call(Map args) {
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
-            return (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
+            return (inputs.size() > 1) ? cicdInfo[microService.name] : (cicdInfo.name == microService.name)
         }
 
         echo "projectInfo.microServicesToTest: ${projectInfo.microServicesToTest}"
