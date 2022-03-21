@@ -50,14 +50,14 @@ def gatherProjectInfoStage(def projectId) {
             }
         }
 
+        projectInfo.microServices = projectInfo.microServices ?: []
+        projectInfo.libraries = projectInfo.libraries ?: []
+
         validateProjectInfoFile(projectInfo)
 
         projectInfo.id = projectId
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
-
-        projectInfo.microServices = projectInfo.microServices ?: []
-        projectInfo.libraries = projectInfo.libraries ?: []
 
         projectInfo.components = []
         projectInfo.components.addAll(projectInfo.microServices)
@@ -150,7 +150,12 @@ def validateProjectInfoFile(def projectInfo) {
     assert projectInfo.sandboxEnvs ==~ /\d{0,2}/ : "sandboxEnvs must be an integer >= 0"
     assert projectInfo.components.size() > 0 : "No microservices or libraries defined"
 
-    projectInfo.components.each { component ->
+    projectInfo.microServices.each { component ->
+        assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
+        assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
+    }
+
+    projectInfo.libraries.each { component ->
         assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
         assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
     }
