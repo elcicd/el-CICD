@@ -80,7 +80,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
 def refreshSharedPipelines(def projectInfo, def pipelines) {
     stage('Refreshing shared pipelines') {
-        def msg = ['CREATING SHARED PIPELINES:']
+        def msg = ['CREATING/UPDATING SHARED PIPELINES:']
         msg.addAll(pipelines)
         pipelineUtils.echoBanner(msg)
 

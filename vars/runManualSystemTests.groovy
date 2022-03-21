@@ -36,9 +36,7 @@ def call(Map args) {
                 microService.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
                 microService.deploymentImageTag = microService.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
-                inputs += projectInfo.microServices.collect { microService ->
-                    booleanParam(name: microService.name)
-                }
+                inputs += booleanParam(name: microService.name)
             }
         }
 
