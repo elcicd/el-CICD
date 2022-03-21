@@ -14,7 +14,7 @@ def call(Map args) {
     def codeBasesToMicroServices = [:]
     microServicesToTest.each { microService ->
         echo microService.systemTests.toString()
-        echo microService.systemTests.getClass()
+        echo microService.systemTests.getClass().toString()
         codeBasesToMicroServices[microService.systemTests.codeBase] = codeBasesToMicroServices[microService.systemTests.codeBase] ?: []
         codeBasesToMicroServices[microService.systemTests.codeBase].add(microService)
     }
