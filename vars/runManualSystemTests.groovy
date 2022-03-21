@@ -26,17 +26,11 @@ def call(Map args) {
 
         def jsonPath = '{range .items[?(@.data.microservice)]}{.data.microservice}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
-        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ').toUnique { a, b -> a <=> b }
+        def msNames = sh(returnStdout: true, script: script).split(' ')
 
         def inputs = []
         projectInfo.microServices.each { microService ->
-            def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.systemTestEnv}-"
-            def msToBranch = msNameDepBranch.find { it.startsWith("${microService.name}:${branchPrefix}") }
-
-            if (msToBranch) {
-                microService.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
-                microService.deploymentImageTag = microService.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
-
+            if (msNames.contains(microService.name)) {
                 inputs += booleanParam(name: microService.name)
             }
         }
@@ -49,15 +43,7 @@ def call(Map args) {
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
-            microService.runTests = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
-
-            if (microService.runTests) {
-                microService.deploymentImageTag = (answer =~ "${projectInfo.systemTestEnv}-[0-9a-z]{7}")[0]
-                microService.srcCommitHash = microService.deploymentImageTag.split('-')[1]
-                microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${microService.deploymentImageTag}"
-            }
-
-            return microService.runTests
+            return (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
         }
 
         if (!projectInfo.microServicesToTest) {
