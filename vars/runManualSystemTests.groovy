@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select the environment to run tests in') {
-        def allEnvs = "${projectInfo.sandboxEnvs.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
+        def allEnvs = "${projectInfo.sandboxNamespaces.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
         def inputs = [choice(name: 'testEnv', description: '', choices: allEnvs)]
 
         def cicdInfo = input(message: "Select environment test microservices in:", parameters: inputs)
