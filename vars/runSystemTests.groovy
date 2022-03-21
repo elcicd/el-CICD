@@ -59,10 +59,8 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
 
                         microServicesToTest.each { microService ->
                             dir(microService.systemTests.workDir) {
-                                checkout([$class: 'GitSCM',
-                                        branches: [[ name: projectInfo.gitTestBranch ]],
-                                        userRemoteConfigs: [[ url: component.systemTests.gitRepoUrl ]]
-                                    ])
+                               git branch: projectInfo.gitTestBranch
+                                   url: microService.systemTests.gitRepoUrl
                             }
                         }
                     }
