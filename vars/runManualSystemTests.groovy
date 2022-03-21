@@ -24,9 +24,9 @@ def call(Map args) {
     stage ('Select microservices to test') {
         pipelineUtils.echoBanner("SELECT WHICH MICROSERVICE TESTS TO RUN")
 
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.deployment-branch}{" "}'
+        def jsonPath = '{range .items[?(@.data.microservice)]}{.data.microservice}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
-        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
+        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ').unique()
 
         def inputs = []
         projectInfo.microServices.each { microService ->
