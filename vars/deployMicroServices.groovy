@@ -8,6 +8,7 @@
 def call(Map args) {
     def projectInfo = args.projectInfo
     def microServices = args.microServices
+    def microServicesToRemove = args.microServicesToRemove
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
 
