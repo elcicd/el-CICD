@@ -13,12 +13,8 @@ def call(Map args) {
 
     def codeBasesToMicroServices = [:]
     microServicesToTest.each { microService ->
-        echo '!!!!!!!!!!!!!!!!!!! SYSTEM TEST CODEBASE CHECK !!!!!!!!!!!!!!!!!!!!'
-        echo microService.systemTests.codeBase
-        echo microService.systemTests
-        echo '!!!!!!!!!!!!!!!!!!! SYSTEM TEST CODEBASE CHECK !!!!!!!!!!!!!!!!!!!!'
-        codeBasesToMicroServices["${microService.systemTests.codeBase}"] = codeBasesToMicroServices["${microService.systemTests.codeBase}"] ?: []
-        codeBasesToMicroServices["${microService.systemTests.codeBase}"].add(microService)
+        codeBasesToMicroServices[microService.systemTests.codeBase] = codeBasesToMicroServices[microService.systemTests.codeBase] ?: []
+        codeBasesToMicroServices[microService.systemTests.codeBase].add(microService)
     }
 
     echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
@@ -26,7 +22,7 @@ def call(Map args) {
     codeBasesToMicroServices.each { codeBase ->
         createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
     }
-    
+
     echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
 
     // parallel(codeBasesToNodes)
