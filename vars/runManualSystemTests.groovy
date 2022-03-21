@@ -15,21 +15,25 @@ def call(Map args) {
 
         def cicdInfo = input(message: "Select environment test microservices in:", parameters: inputs)
 
-        projectInfo.systemTestEnv = cicdInfo
+        projectInfo.systemTestEnv = cicdInfo.testEnv
+        projectInfo.systemTestNamespace = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
+            projectInfo.systemTestEnv : projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
+        projectInfo.systemTestEnv = cicdInfo.testEnv.contains(el.cicd.SANDBOX_NAMESPACE_BADGE) ?
+            el.cicd.SANDBOX_NAMESPACE_BADGE : projectInfo.systemTestEnv
+
         projectInfo.SYSTEM_TEST_ENV = projectInfo.systemTestEnv.toUpperCase()
-        projectInfo.systemTestNamespace = projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
     }
 
     stage ('Select microservices to test') {
         pipelineUtils.echoBanner("SELECT WHICH MICROSERVICE TESTS TO RUN")
 
         def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.deployment-branch}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
         def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
 
         def inputs = []
         projectInfo.microServices.each { microService ->
-            def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
+            def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.systemTestEnv}-"
             def msToBranch = msNameDepBranch.find { it.startsWith("${microService.name}:${branchPrefix}") }
 
             if (msToBranch) {
@@ -41,17 +45,17 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.deployToEnv}")
+            pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
 
-        def cicdInfo = input(message: "Select microservices to test in ${projectInfo.deployToEnv}",
+        def cicdInfo = input(message: "Select microservices to test in ${projectInfo.systemTestEnv}",
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
             microService.runTests = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
 
             if (microService.runTests) {
-                microService.deploymentImageTag = (answer =~ "${projectInfo.deployToEnv}-[0-9a-z]{7}")[0]
+                microService.deploymentImageTag = (answer =~ "${projectInfo.systemTestEnv}-[0-9a-z]{7}")[0]
                 microService.srcCommitHash = microService.deploymentImageTag.split('-')[1]
                 microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${microService.deploymentImageTag}"
             }
@@ -60,7 +64,7 @@ def call(Map args) {
         }
 
         if (!projectInfo.microServicesToTest) {
-            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.deployToEnv}")
+            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
     }
 
