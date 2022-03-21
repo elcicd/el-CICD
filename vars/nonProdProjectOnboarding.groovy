@@ -11,6 +11,9 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
+    def pipelines = isNonProd ? el.getNonProdPipelines() : el.getProdPipelines()
+    refreshSharedPipelines(projectInfo, pipelines)
+
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments if requested') {
