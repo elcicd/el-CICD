@@ -53,7 +53,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
             node(codeBase) {
                 try {
                     stage ('Pull test code') {
-                        def msgs = ["CLONING SYSTEM TEST REPOS:"] + 
+                        def msgs = ["CLONING SYSTEM TEST REPOS:"] +
                                    microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" }.unique()
                         pipelineUtils.echoBanner(msgs)
 
@@ -75,7 +75,9 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                     }
                 }
                 catch (Exception exception) {
-                    pipelineUtils.errorBanner("!!!! TEST(S) FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
+                    pipelineUtils.echoBanner("!!!! TEST(S) FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
+
+                    throw exception
                 }
             }
 
