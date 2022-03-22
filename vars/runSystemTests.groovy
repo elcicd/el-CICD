@@ -17,19 +17,16 @@ def call(Map args) {
         codeBasesToMicroServices[microService.systemTests.codeBase].add(microService)
     }
 
-    echo '!!!!!!!!!!!!!!!!!!! HOWDY !!!!!!!!!!!!!!!!!!!!'
-
-    codeBasesToMicroServices.each { codeBase, codeBaseMicroServicesToTest->
-        createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+    def codeBasesToNodes = [:]
+    codeBasesToMicroServices.each { codeBase, codeBaseMicroServicesToTest ->
+        codeBasesToNodes[codebase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
     }
 
-    echo '!!!!!!!!!!!!!!!!!!! HOWDY END !!!!!!!!!!!!!!!!!!!!'
-
-    // parallel(codeBasesToNodes)
+    parallel(codeBasesToNodes)
 }
 
 def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
-    //return {
+    return {
         podTemplate([
             label: "${codeBase}",
             cloud: 'openshift',
@@ -96,5 +93,5 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
 
             pipelineUtils.echoBanner("SYSTEM TESTS SUCCEEDED")
         }
-    //}
+    }
 }
