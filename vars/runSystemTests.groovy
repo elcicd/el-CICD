@@ -19,7 +19,7 @@ def call(Map args) {
 
     def codeBasesToNodes = [:]
     codeBasesToMicroServices.each { codeBase, codeBaseMicroServicesToTest ->
-        codeBasesToNodes[codebase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+        codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
     }
 
     parallel(codeBasesToNodes)
