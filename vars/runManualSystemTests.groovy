@@ -28,14 +28,15 @@ def call(Map args) {
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
         def msNames = sh(returnStdout: true, script: script).split(' ')
 
-        def inputs = []
+        def TEST_ALL_MICROSERVICES = "Test All Microservices"
+        def inputs = [booleanParam(name: "Test All Microservices")]
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && microService.systemTests.gitRepoName) {
                 inputs += booleanParam(name: microService.name)
             }
         }
 
-        if (!inputs) {
+        if (inputs.size() < 2) {
             pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
 
@@ -43,7 +44,7 @@ def call(Map args) {
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
-            return (inputs.size() > 1) ? cicdInfo[microService.name] : (cicdInfo && msNames.contains(microService.name))
+            return cicdInfo[TEST_ALL_MICROSERVICES] || cicdInfo[microService.name]
         }
 
         echo "projectInfo.microServicesToTest: ${projectInfo.microServicesToTest}"

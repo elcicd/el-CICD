@@ -77,7 +77,7 @@ def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
                     stage ('Run tests') {
                         def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
                         microServicesToTest.each { microService ->
-                            pipelineUtils.echoBanner("TESTING ${microService.name}")
+                            pipelineUtils.echoBanner("TESTING ${microService.name} IN ${projectInfo.systemTestNamespace} WITH ${codeBase}")
                             dir(microService.systemTests.workDir) {
                                 testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
                             }
