@@ -72,7 +72,7 @@ _push_github_public_ssh_deploy_key() {
     local EL_CICD_GITHUB_URL="https://${GIT_REPO_ACCESS_TOKEN}@${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${1}/keys"
 
     # DELETE old key, if any
-    local KEY_ID=$(curl -ksS -X GET ${EL_CICD_GITHUB_URL} | jq ".[] | select(.title  == \"${2}\") | .id")
+    local KEY_ID=$(curl -ksS -X GET ${EL_CICD_GITHUB_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id")
     if [[ ! -z ${KEY_ID} ]]
     then
         echo "Deleting old GitHub key ${2} with ID: ${KEY_ID}"
@@ -82,7 +82,7 @@ _push_github_public_ssh_deploy_key() {
     fi
 
     local SECRET_FILE="${SECRET_FILE_TEMP_DIR}/sshKeyFile.json"
-    cat ${TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed "s/%DEPLOY_KEY_NAME%/${2}/" > ${SECRET_FILE}
+    cat ${TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed "s/%DEPLOY_KEY_NAME%/${DEPLOY_KEY_TITLE}/" > ${SECRET_FILE}
     cat ${3}.pub >> ${SECRET_FILE}
     cat ${TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${SECRET_FILE}
     sed -i -e "s/%READ_ONLY%/${READ_ONLY}/" ${SECRET_FILE}
