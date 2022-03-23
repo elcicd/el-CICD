@@ -22,12 +22,12 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 @Field
 def APPLICATION_JSON_HDR = '-H application:json'
 
-def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def component, def ACCESS_TOKEN) {
+def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def gitRepoName, def ACCESS_TOKEN) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${gitRepoName}/keys"
         def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
 
         curlCommand = "${CURL_GET} ${url} | ${jqIdFilter}"
@@ -42,11 +42,11 @@ def getCurlCommandGetDeployKeyIdFromScm(def projectInfo, def component, def ACCE
     return curlCommand
 }
 
-def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def component, def ACCESS_TOKEN) {
+def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def gitRepoName, def ACCESS_TOKEN) {
     def curlCommand
 
     if (projectInfo.scmHost.contains('github')) {
-        curlCommand = "curl -ksS -X DELETE https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+        curlCommand = "curl -ksS -X DELETE https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${gitRepoName}/keys"
     }
     else if (projectInfo.scmHost.contains('gitlab')) {
         pipelineUtils.errorBanner("GitLab is not supported yet")
@@ -58,17 +58,17 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def component, d
     return curlCommand
 }
 
-def getScriptToPushDeployKeyToScm(def projectInfo, def component, def ACCESS_TOKEN, def readOnly) {
+def getScriptToPushDeployKeyToScm(def projectInfo, def gitRepoName, def gitSshPrivateKeyName, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
     def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
     readOnly = readOnly ? 'true' : 'false'
     if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${gitRepoName}/keys"
         curlCommand = """
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
-            cat ${component.gitSshPrivateKeyName}.pub >> ${secretFile}
+            cat ${gitSshPrivateKeyName}.pub >> ${secretFile}
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
             sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
 

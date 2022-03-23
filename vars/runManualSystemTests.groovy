@@ -47,8 +47,6 @@ def call(Map args) {
             return cicdInfo[TEST_ALL_MICROSERVICES] || cicdInfo[microService.name]
         }
 
-        echo "projectInfo.microServicesToTest: ${projectInfo.microServicesToTest}"
-
         if (!projectInfo.microServicesToTest) {
             pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
