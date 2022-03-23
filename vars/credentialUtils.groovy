@@ -155,7 +155,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         projectInfo.components.each { component ->
-            createAndPushPublicPrivateGithubRepoKey(projectInfo, component.gitRepoName, component.gitSshPrivateKeyName, component.name)
+            createAndPushPublicPrivateGithubRepoKey(projectInfo, component.gitRepoName, component.gitSshPrivateKeyName)
 
             if (component.systemTests) {
                 createAndPushPublicPrivateGithubRepoKey(projectInfo, 
