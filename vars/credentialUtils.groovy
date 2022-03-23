@@ -181,7 +181,7 @@ def createAndPushPublicPrivateGithubRepoKey(def projectInfo, def gitRepoName, de
 
         ${pushDeployKeyIdCurlCommand}
 
-        ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${gitRepoName}"}
+        ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${gitSshPrivateKeyName}"}
         cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${gitSshPrivateKeyName}/g" > ${credsFileName}
         cat ${gitSshPrivateKeyName} >> ${credsFileName}
         cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}

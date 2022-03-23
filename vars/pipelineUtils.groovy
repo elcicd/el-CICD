@@ -74,7 +74,8 @@ def gatherProjectInfoStage(def projectId) {
             if (component.systemTests) {
                 component.systemTests.workDir = "${WORKSPACE}/${component.systemTests.gitRepoName}"
                 component.systemTests.gitRepoUrl = "https://${projectInfo.scmHost}/${projectInfo.scmOrganization}/${component.systemTests.gitRepoName}.git"
-                component.systemTests.gitSshPrivateKeyName = "${component.id}-${el.cicd.GIT_SYSTEM_TESTS_CREDS_POSTFIX}"
+                def testRepoId = component.systemTests.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+                component.systemTests.gitSshPrivateKeyName = "${component.id}-${testRepoId}-${el.cicd.GIT_CREDS_POSTFIX}"
             }
         }
 
