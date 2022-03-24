@@ -135,14 +135,20 @@ def call(Map args) {
         pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
         withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-            projectInfo.components.each { component ->
-                scriptToPushWebhookToScm =
-                    scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
-                sh """
-                    ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
+            def buildComponents = []
+            buildComponents.addAll(projectInfo.microServices)
+            buildComponents.addAll(projectInfo.libraries)
+            
+            buildComponents.each { component ->
+                if (!component.gitMicroServiceRepos) {
+                    scriptToPushWebhookToScm =
+                        scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
+                    sh """
+                        ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
 
-                    ${scriptToPushWebhookToScm}
-                """
+                        ${scriptToPushWebhookToScm}
+                    """
+                }
             }
         }
     }
