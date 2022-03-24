@@ -134,10 +134,10 @@ def call(Map args) {
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
-        withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: el.cicd.GITHUB_ACCESS_TOKEN_VAR)]) {
+        withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             projectInfo.components.each { component ->
                 scriptToPushWebhookToScm =
-                    scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, el.cicd.GITHUB_ACCESS_TOKEN_VAR)
+                    scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
                 sh """
                     ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
 
