@@ -17,6 +17,8 @@ def call(Map args) {
         [microServicesToTest.gitRepoName, it]
     }
 
+    echo "gitRepoToMsMap: ${gitRepoToMsMap}"
+
     def codeBasesToNodes = [:]
     systemTestsToRun.each { systemTest ->
         def msCodeBaseList = []
