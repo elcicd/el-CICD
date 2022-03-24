@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select the environment and test types to run') {
-        def allEnvs = "${projectInfo.sandboxEnvs.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
+        def allEnvs = "${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}\n${projectInfo.sandboxEnvs.join('\n')}"
         def TEST_ENV = 'Test Environment:'
         def TEST_CODE_BASE = 'Test Type:'
         def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
@@ -49,8 +49,6 @@ def call(Map args) {
             testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
         }
 
-        echo "testMicroServiceReposSet: ${testMicroServiceReposSet}"
-        echo "msNames: ${msNames}"
         def inputs = []
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
