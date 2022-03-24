@@ -110,11 +110,11 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
 def deleteDeployKeysFromGithub(def projectInfo) {
     pipelineUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM GIT REPOS")
 
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: el.cicd.GITHUB_ACCESS_TOKEN_VAR)]) {
         projectInfo.components.each { component ->
-            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
+            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, component, el.cicd.GITHUB_ACCESS_TOKEN_VAR)
             def curlCommandToDeleteDeployKeyByIdFromScm =
-                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
+                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, el.cicd.GITHUB_ACCESS_TOKEN_VAR)
             try {
                 sh """
                     KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
@@ -152,13 +152,13 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: el.cicd.GITHUB_ACCESS_TOKEN_VAR)]) {
         def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand =
             """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
         projectInfo.components.each { component ->
-            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
+            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, el.cicd.GITHUB_ACCESS_TOKEN_VAR, false)
 
             def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
             sh """

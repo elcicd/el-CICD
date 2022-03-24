@@ -58,7 +58,7 @@ def getCurlCommandToDeleteDeployKeyByIdFromScm(def projectInfo, def gitRepoName,
     return curlCommand
 }
 
-def getScriptToPushDeployKeyToScm(def projectInfo, def component, def gitSshPrivateKeyName, def ACCESS_TOKEN, def readOnly) {
+def getScriptToPushDeployKeyToScm(def projectInfo, def component, def ACCESS_TOKEN, def readOnly) {
     def curlCommand
 
     def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
@@ -68,7 +68,7 @@ def getScriptToPushDeployKeyToScm(def projectInfo, def component, def gitSshPriv
         def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
         curlCommand = """
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
-            cat ${gitSshPrivateKeyName}.pub >> ${secretFile}
+            cat ${component.gitSshPrivateKeyName}.pub >> ${secretFile}
             cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
             sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
 
