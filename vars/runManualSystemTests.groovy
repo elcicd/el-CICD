@@ -44,21 +44,24 @@ def call(Map args) {
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
         def msNames = sh(returnStdout: true, script: script).split(' ')
 
-        def TEST_ALL = "Test all"
-        def inputs = [booleanParam(name: TEST_ALL)]
-
         def testMicroServiceReposSet = [] as Set
         projectInfo.systemTestsToRun.each { systemTest ->
             testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
         }
-
+        
+        def inputs = []
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
                 inputs += booleanParam(name: microService.name)
             }
         }
 
-        if (inputs.size() < 2) {
+        def TEST_ALL = "Test all"
+        if (inputs.size() > 1) {
+            inputs.add(0, booleanParam(name: TEST_ALL))
+        }
+
+        if (inputs) {
             pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
 
