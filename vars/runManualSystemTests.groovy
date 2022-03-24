@@ -27,7 +27,7 @@ def call(Map args) {
         projectInfo.systemTestsToRun = [] as Set
         cicdInfo.each { name, answer ->
             if (answer)
-                def systemTest = projectInfo.systemTests.find { it.codeBase == name })
+                def systemTest = projectInfo.systemTests.find { it.codeBase == name }
                 if (systemTest) {
                     projectInfo.systemTestsToRun += systemTest
                 }
