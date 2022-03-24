@@ -21,7 +21,7 @@ def call(Map args) {
     systemTestsToRun.each { systemTest ->
         def msCodeBaseList = []
         systemTest.microServiceRepos.each { gitRepoName ->
-            if (gitRepoToMsMap.contains(gitRepoName)) {
+            if (gitRepoToMsMap[gitRepoName]) {
                 msCodeBaseList.add(gitRepoToMsMap[gitRepoName])
             }
         }
