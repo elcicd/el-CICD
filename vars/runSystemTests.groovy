@@ -14,7 +14,7 @@ def call(Map args) {
     def microServicesToTest = args.microServicesToTest
 
     def gitRepoToMsMap = microServicesToTest.collectEntries {
-        [microServicesToTest.gitRepoName, it]
+        [(microServicesToTest.gitRepoName), it]
     }
 
     echo "gitRepoToMsMap: ${gitRepoToMsMap}"
