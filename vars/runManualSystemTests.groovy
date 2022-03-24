@@ -48,10 +48,8 @@ def call(Map args) {
         def inputs = [booleanParam(name: TEST_ALL)]
 
         def testMicroServiceReposSet = [] as Set
-        projectInfo.systemTests.each { systemTest ->
-            if (projectInfo.systemTestsToRun.contains(it)) {
-                testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
-            }
+        projectInfo.systemTestsToRun.each { systemTest ->
+            testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
         }
 
         projectInfo.microServices.each { microService ->
