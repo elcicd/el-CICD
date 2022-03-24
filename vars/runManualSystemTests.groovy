@@ -15,7 +15,7 @@ def call(Map args) {
         def TEST_CODE_BASE = 'Test Type:'
         def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
 
-        inputs.addAll(projectInfo.systemTests.collect { booleanParam(name: it.name) } )
+        inputs.addAll(projectInfo.systemTests.collect { booleanParam(name: "${it.gitRepoName}/${it.codeBase}") } )
 
         def cicdInfo = input(message: "Select environment and test types to run:", parameters: inputs)
 
@@ -26,8 +26,7 @@ def call(Map args) {
 
         projectInfo.systemTestsToRun = [] as Set
         cicdInfo.each { name, answer ->
-            echo "name: ${name}"
-            def systemTest = projectInfo.systemTests.find { echo "it.codeBase: ${it.codeBase}"; it.codeBase == name }
+            def systemTest = projectInfo.systemTests.find { "${it.gitRepoName}/${it.codeBase}" == name }
             if (systemTest) {
                 projectInfo.systemTestsToRun += systemTest
             }
