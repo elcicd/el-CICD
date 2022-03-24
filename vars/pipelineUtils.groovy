@@ -158,7 +158,7 @@ def validateProjectInfo(def projectInfo) {
 
     projectInfo.systemTests.each { systemTest ->
         systemTest.microServiceRepos.each { gitRepoName ->
-            assert projectInfo.microServiceRepos.find { microService.gitRepoName == gitRepoName }  : "System test has undefined microservice repo ${gitRepoName}"
+            assert projectInfo.microServices.find { it.gitRepoName == gitRepoName }  : "System test has undefined microservice repo ${gitRepoName}"
         }
     }
 
