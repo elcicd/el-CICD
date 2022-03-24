@@ -117,11 +117,14 @@ def deleteDeployKeysFromGithub(def projectInfo) {
                 scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             try {
                 sh """
-                    KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
-                    if [[ ! -z \${KEY_ID} ]]
+                    KEY_IDS=\$(${fetchDeployKeyIdCurlCommand})
+                    if [[ ! -z \${KEY_IDS} ]]
                     then
-                        ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
-                        ${curlCommandToDeleteDeployKeyByIdFromScm}/\${KEY_ID}
+                        for KEY_ID in \${KEY_IDS}
+                        do
+                            ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
+                            ${curlCommandToDeleteDeployKeyByIdFromScm}/\${KEY_ID}
+                        done
                     else
                         ${shCmd.echo  '', "OLD DEPLOY KEY NOT FOUND: ${component.gitRepoName}"}
                     fi
