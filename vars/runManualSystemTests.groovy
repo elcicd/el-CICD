@@ -19,16 +19,24 @@ def call(Map args) {
 
         def cicdInfo = input(message: "Select environment and test types to run:", parameters: inputs)
 
+        echo 'howdy1'
         projectInfo.systemTestEnv = cicdInfo[TEST_ENV]
+        echo 'howdy2'
         projectInfo.SYSTEM_TEST_ENV = projectInfo.systemTestEnv.toUpperCase()
+        echo 'howdy3'
         projectInfo.systemTestNamespace = projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
+        echo 'howdy4'
         projectInfo.systemTestNamespace = projectInfo.systemTestNamespace ?: projectInfo.sandboxNamespaces[projectInfo.systemTestEnv]
+        echo 'howdy5'
 
         projectInfo.systemTestsToRun = [] as Set
         cicdInfo.each { name, answer ->
-            def systemTest = projectInfo.systemTests.find { "${it.gitRepoName}/${it.codeBase}" == name }
-            if (systemTest) {
-                projectInfo.systemTestsToRun += systemTest
+            echo 'howdy6'
+            if (name != TEST_ENV) {
+                def systemTest = projectInfo.systemTests.find { "${it.gitRepoName}/${it.codeBase}" == name }
+                if (systemTest) {
+                    projectInfo.systemTestsToRun += systemTest
+                }
             }
         }
 
