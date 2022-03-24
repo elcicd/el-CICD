@@ -59,6 +59,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.components = []
         [projectInfo.microServices, projectInfo.libraries, projectInfo.systemTests].each {
+            echo "it: ${it}"
             if (it) {
                 projectInfo.components.addAll(projectInfo.systemTests)
             }
