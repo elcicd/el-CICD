@@ -25,6 +25,7 @@ def call(Map args) {
         projectInfo.systemTestNamespace = projectInfo.systemTestNamespace ?: projectInfo.sandboxNamespaces[projectInfo.systemTestEnv]
 
         projectInfo.systemTestsToRun = [] as Set
+        echo "cicdInfo ${cicdInfo}"
         cicdInfo.each { name, answer ->
             if (answer) {
                 def systemTest = projectInfo.systemTests.find { it.codeBase == name }
