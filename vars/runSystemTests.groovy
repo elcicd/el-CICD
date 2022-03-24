@@ -14,17 +14,13 @@ def call(Map args) {
     def microServicesToTest = args.microServicesToTest
 
     def gitRepoToMsMap = microServicesToTest.collectEntries {
-        [(microServicesToTest.gitRepoName), it]
+        [it.gitRepoName, it]
     }
-
-    echo "gitRepoToMsMap: ${gitRepoToMsMap}"
 
     def codeBasesToNodes = [:]
     systemTestsToRun.each { systemTest ->
         def msCodeBaseList = []
         systemTest.microServiceRepos.each { gitRepoName ->
-            echo "gitRepoName: ${gitRepoName}"
-            echo "gitRepoToMsMap[gitRepoName]: ${gitRepoToMsMap[gitRepoName]}"
             if (gitRepoToMsMap[gitRepoName]) {
                 msCodeBaseList.add(gitRepoToMsMap[gitRepoName])
             }
