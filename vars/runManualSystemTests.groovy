@@ -69,7 +69,7 @@ def call(Map args) {
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
-            return cicdInfo[TEST_ALL] || cicdInfo[microService.name]
+            return (cicdInfo.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[microService.name]) : cicdInfo
         }
 
         if (!projectInfo.microServicesToTest) {
