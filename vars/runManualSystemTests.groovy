@@ -9,29 +9,53 @@
 def call(Map args) {
     def projectInfo = args.projectInfo
 
-    stage ('Select the environment to run tests in') {
+    stage ('Select the environment and test types to run') {
         def allEnvs = "${projectInfo.sandboxEnvs.join('\n')}\n${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}"
-        def inputs = [choice(name: 'testEnv', description: '', choices: allEnvs)]
+        def TEST_ENV = 'Test Environment:'
+        def TEST_CODE_BASE = 'Test Type:'
+        def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
 
-        def cicdInfo = input(message: "Select environment test microservices in:", parameters: inputs)
+        inputs.addAll(projectInfo.systemTests.collect { booleanParam(name: it.name) } )
 
-        projectInfo.systemTestEnv = cicdInfo
+        def cicdInfo = input(message: "Select environment and test types to run:", parameters: inputs)
+
+        projectInfo.systemTestEnv = cicdInfo[TEST_ENV]
         projectInfo.SYSTEM_TEST_ENV = projectInfo.systemTestEnv.toUpperCase()
         projectInfo.systemTestNamespace = projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
         projectInfo.systemTestNamespace = projectInfo.systemTestNamespace ?: projectInfo.sandboxNamespaces[projectInfo.systemTestEnv]
+
+        projectInfo.systemTestsToRun = [] as Set
+        cicdInfo.each { name, answer ->
+            if (answer)
+                def systemTest = projectInfo.systemTests.find { it.codeBase == name })
+                if (systemTest) {
+                    projectInfo.systemTestsToRun += systemTest
+                }
+            }
+        }
+
+        if (!projectInfo.systemTestsToRun) {
+            pipelineUtils.errorBanner("NO TEST TYPES SELECTED TO RUN")
+        }
     }
 
     stage ('Select microservices to test') {
-        pipelineUtils.echoBanner("SELECT WHICH MICROSERVICE TESTS TO RUN")
-
         def jsonPath = '{range .items[?(@.data.microservice)]}{.data.microservice}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
         def msNames = sh(returnStdout: true, script: script).split(' ')
 
-        def TEST_ALL_MICROSERVICES = "Test All Microservices"
-        def inputs = [booleanParam(name: "Test All Microservices")]
+        def TEST_ALL = "Test all"
+        def inputs = [booleanParam(name: TEST_ALL)]
+
+        def testMicroServiceReposSet = [] as Set
+        projectInfo.systemTests.each { systemTest ->
+            if (projectInfo.systemTestsToRun.contains(it)) {
+                testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
+            }
+        }
+
         projectInfo.microServices.each { microService ->
-            if (msNames.contains(microService.name) && microService.systemTests.gitRepoName) {
+            if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
                 inputs += booleanParam(name: microService.name)
             }
         }
@@ -44,7 +68,7 @@ def call(Map args) {
                              parameters: inputs)
 
         projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
-            return cicdInfo[TEST_ALL_MICROSERVICES] || cicdInfo[microService.name]
+            return cicdInfo[TEST_ALL] || cicdInfo[microService.name]
         }
 
         if (!projectInfo.microServicesToTest) {
@@ -52,5 +76,5 @@ def call(Map args) {
         }
     }
 
-    runSystemTests(projectInfo: projectInfo, microServicesToTest: projectInfo.microServicesToTest)
+    runSystemTests(projectInfo: projectInfo, systemTestsToRun: projectInfo.systemTestsToRun, microServicesToTest: projectInfo.microServicesToTest)
 }

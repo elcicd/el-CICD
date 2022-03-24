@@ -60,6 +60,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.components = []
         projectInfo.components.addAll(projectInfo.microServices)
         projectInfo.components.addAll(projectInfo.libraries)
+        projectInfo.components.addAll(projectInfo.systemTests)
 
         projectInfo.components.each { component ->
             component.projectId = projectInfo.id
@@ -70,13 +71,6 @@ def gatherProjectInfoStage(def projectId) {
 
             component.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.gitRepoName}.git"
             component.gitSshPrivateKeyName = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
-
-            if (component.systemTests) {
-                component.systemTests.workDir = "${WORKSPACE}/${component.systemTests.gitRepoName}"
-                component.systemTests.gitRepoUrl = "https://${projectInfo.scmHost}/${projectInfo.scmOrganization}/${component.systemTests.gitRepoName}.git"
-                def testRepoId = component.systemTests.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
-                component.systemTests.gitSshPrivateKeyName = "${component.id}-${testRepoId}-${el.cicd.GIT_CREDS_POSTFIX}"
-            }
         }
 
         projectInfo.devEnv = el.cicd.devEnv
@@ -155,11 +149,17 @@ def validateProjectInfo(def projectInfo) {
         "bad or missing scmRestApiHost '${projectInfo.scmHost}"
     assert projectInfo.scmOrganization : "missing scmOrganization"
     assert projectInfo.gitBranch : "missing git branch"
-    assert (projectInfo.components.size() > 0) : "No microservices or libraries defined"
+    assert ((projectInfo.components.size() - projectInfo.systemTests.size()) > 0) : "No microservices or libraries defined"
 
     projectInfo.components.each { component ->
         assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
         assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
+    }
+
+    projectInfo.systemTests.each { systemTest ->
+        systemTest.microServiceRepos.each { gitRepoName ->
+            assert projectInfo.microServiceRepos.find { microService.gitRepoName == gitRepoName }
+        }
     }
 
     projectInfo.enabledTestEnvs.each { env ->

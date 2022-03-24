@@ -6,26 +6,35 @@
 
 def call(Map args) {
     assert args.projectInfo
+    assert args.systemTestsToRun
     assert args.microServicesToTest
 
     def projectInfo = args.projectInfo
+    def systemTestsToRun = args.systemTestsToRun
     def microServicesToTest = args.microServicesToTest
 
-    def codeBasesToMicroServices = [:]
-    microServicesToTest.each { microService ->
-        codeBasesToMicroServices[microService.systemTests.codeBase] = codeBasesToMicroServices[microService.systemTests.codeBase] ?: []
-        codeBasesToMicroServices[microService.systemTests.codeBase].add(microService)
+    def gitRepoToMsMap = microServicesToTest.collectEntries {
+        [microServicesToTest.gitRepoName, microService]
     }
 
     def codeBasesToNodes = [:]
-    codeBasesToMicroServices.each { codeBase, codeBaseMicroServicesToTest ->
-        codeBasesToNodes[codeBase] = createTestNode(codeBase, projectInfo, codeBaseMicroServicesToTest)
+    systemTestsToRun.each { systemTest ->
+        def msCodeBaseList = []
+        systemTest.microServiceRepos.each { gitRepoName ->
+            if (gitRepoToMsMap.contains(gitRepoName)) {
+                msCodeBaseList.add(gitRepoToMsMap[gitRepoName])
+            }
+        }
+        
+        if (msCodeBaseList) {
+            codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
+        }
     }
 
     parallel(codeBasesToNodes)
 }
 
-def createTestNode(def codeBase, def projectInfo, def microServicesToTest) {
+def createTestNode(def codeBase, def projectInfo, def systemTest, def microServicesToTest) {
     return {
         podTemplate([
             label: "${codeBase}",

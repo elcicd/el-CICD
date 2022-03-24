@@ -26,7 +26,6 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
 
     def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
     def copyBuildSecrets = ENVS.contains(projectInfo.DEV_ENV)
-    echo "envs: ${ENVS}"
 
     sh """
         ${shCmd.echo ''}
@@ -113,9 +112,9 @@ def deleteDeployKeysFromGithub(def projectInfo) {
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         projectInfo.components.each { component ->
-            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, component.gitRepoName, 'GITHUB_ACCESS_TOKEN')
+            def fetchDeployKeyIdCurlCommand = scmScriptHelper.getCurlCommandGetDeployKeyIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             def curlCommandToDeleteDeployKeyByIdFromScm =
-                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component.gitRepoName, 'GITHUB_ACCESS_TOKEN')
+                scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             try {
                 sh """
                     KEY_ID=\$(${fetchDeployKeyIdCurlCommand})
@@ -154,43 +153,32 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
                              "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
 
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        projectInfo.components.each { component ->
-            createAndPushPublicPrivateGithubRepoKey(projectInfo, component.gitRepoName, component.gitSshPrivateKeyName)
+        def credsFileName = 'scmSshCredentials.xml'
+        def jenkinsCurlCommand =
+            """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-            if (component.systemTests) {
-                createAndPushPublicPrivateGithubRepoKey(projectInfo, 
-                                                        component.systemTests.gitRepoName,
-                                                        component.systemTests.gitSshPrivateKeyName)
-            }
+        projectInfo.components.each { component ->
+            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
+
+            def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
+            sh """
+                ${shCmd.echo  '', "ADDING PUBLIC KEY TO GIT REPO: ${component.gitRepoName}"}
+                ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+
+                ${pushDeployKeyIdCurlCommand}
+
+                ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
+                cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
+                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
+
+                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
+                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
+
+                rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
+            """
         }
     }
-}
-
-def createAndPushPublicPrivateGithubRepoKey(def projectInfo, def gitRepoName, def gitSshPrivateKeyName) {
-    def credsFileName = 'scmSshCredentials.xml'
-    def jenkinsCurlCommand =
-        """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
-
-    def pushDeployKeyIdCurlCommand =
-        scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, gitRepoName, gitSshPrivateKeyName, 'GITHUB_ACCESS_TOKEN', false)
-
-    def jenkinsUrls = getJenkinsCredsUrls(projectInfo, gitSshPrivateKeyName)
-    sh """
-        ${shCmd.echo  '', "ADDING PUBLIC KEY TO GIT REPO: ${gitRepoName}"}
-        ssh-keygen -b 2048 -t rsa -f '${gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
-
-        ${pushDeployKeyIdCurlCommand}
-
-        ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${gitSshPrivateKeyName}"}
-        cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${gitSshPrivateKeyName}/g" > ${credsFileName}
-        cat ${gitSshPrivateKeyName} >> ${credsFileName}
-        cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
-
-        ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
-        ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
-
-        rm -f ${credsFileName} ${gitSshPrivateKeyName} ${gitSshPrivateKeyName}.pub
-    """
 }
 
 def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
