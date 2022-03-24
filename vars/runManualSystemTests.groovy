@@ -49,6 +49,8 @@ def call(Map args) {
             testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
         }
 
+        echo "testMicroServiceReposSet: ${testMicroServiceReposSet}"
+        echo "msNames: ${msNames}"
         def inputs = []
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
