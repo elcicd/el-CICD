@@ -25,7 +25,7 @@ def call(Map args) {
                 msCodeBaseList.add(gitRepoToMsMap[gitRepoName])
             }
         }
-        
+
         if (msCodeBaseList) {
             codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
         }

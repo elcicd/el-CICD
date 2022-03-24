@@ -48,7 +48,7 @@ def call(Map args) {
         projectInfo.systemTestsToRun.each { systemTest ->
             testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
         }
-        
+
         def inputs = []
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
@@ -61,7 +61,7 @@ def call(Map args) {
             inputs.add(0, booleanParam(name: TEST_ALL))
         }
 
-        if (inputs) {
+        if (!inputs) {
             pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
 
