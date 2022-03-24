@@ -58,9 +58,11 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.libraries = projectInfo.libraries ?: []
 
         projectInfo.components = []
-        projectInfo.components.addAll(projectInfo.microServices)
-        projectInfo.components.addAll(projectInfo.libraries)
-        projectInfo.components.addAll(projectInfo.systemTests)
+        [projectInfo.microServices, projectInfo.libraries, projectInfo.systemTests].each {
+            if (it) {
+                projectInfo.components.addAll(projectInfo.systemTests)
+            }
+        }
 
         projectInfo.components.each { component ->
             component.projectId = projectInfo.id
