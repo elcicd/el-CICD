@@ -61,7 +61,7 @@ def call(Map args) {
                                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
                             }
 
-                            projectInfo.sandboxNamespaces.each { namespace -> 
+                            projectInfo.sandboxNamespaces.each { env, namespace -> 
                                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
                             }
                         }

@@ -108,12 +108,12 @@ def call(Map args) {
 
     stage('Setup OKD sandbox environment(s)') {
         if (projectInfo.microServices && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
-            pipelineUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.join(', '))
+            pipelineUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.values().join(', '))
 
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
 
-            projectInfo.sandboxNamespaces.each { namespace ->
+            projectInfo.sandboxNamespaces.each { env, namespace ->
                 onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
 
                 credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)

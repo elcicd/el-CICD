@@ -125,7 +125,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.builderNamespaces = [projectInfo.devNamespace]
         projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
-        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces)
+        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
 
         projectInfo.releaseRegions = projectInfo.releaseRegions ?: []
 

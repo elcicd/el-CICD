@@ -11,7 +11,7 @@ def call(Map args) {
         def namespacesToDelete = []
         if (args.isNonProd) {
             namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
-            namespacesToDelete.addAll(projectInfo.sandboxNamespaces)
+            namespacesToDelete.addAll(projectInfo.sandboxNamespaces.values())
             projectInfo.allowsHotfixes && namespacesToDelete.add(projectInfo.hotfixNamespace)
         }
         else {

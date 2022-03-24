@@ -26,7 +26,6 @@ def call(Map args) {
 
         projectInfo.systemTestsToRun = [] as Set
         cicdInfo.each { name, answer ->
-            echo 'howdy6'
             if (name != TEST_ENV) {
                 def systemTest = projectInfo.systemTests.find { "${it.gitRepoName}/${it.codeBase}" == name }
                 if (systemTest) {
