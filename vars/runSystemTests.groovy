@@ -73,15 +73,11 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     }
 
                     stage ('Pull test code') {
-                        def msgs = ["CLONING SYSTEM TEST REPOS:"]
-                        msgs.addAll(microServicesToTest.collect { "${it.systemTests.gitRepoName}:${projectInfo.gitTestBranch}" })
-                        pipelineUtils.echoBanner(msgs)
-                        microServicesToTest.each { microService ->
-                            dir(microService.systemTests.workDir) {
-                                git url: microService.systemTests.gitRepoUrl
-                                    branch: projectInfo.gitTestBranch
-                                    credentialsId: microService.systemTests.gitSshPrivateKeyName
-                            }
+                        pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+                        dir(systemTest.workDir) {
+                            git url: systemTest.gitRepoUrl
+                                branch: projectInfo.gitTestBranch
+                                credentialsId: systemTest.gitSshPrivateKeyName
                         }
                     }
 
@@ -89,7 +85,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                         def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
                         microServicesToTest.each { microService ->
                             pipelineUtils.echoBanner("TESTING ${microService.name} IN ${projectInfo.systemTestNamespace} WITH ${codeBase}")
-                            dir(microService.systemTests.workDir) {
+                            dir(systemTest.workDir) {
                                 testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
                             }
                         }
