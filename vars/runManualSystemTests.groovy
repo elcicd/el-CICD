@@ -50,8 +50,10 @@ def call(Map args) {
         }
 
         def inputs = []
+        def msTestPossibilities = [] as Set
         projectInfo.microServices.each { microService ->
             if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
+                msTestPossibilities += microService
                 inputs += booleanParam(name: microService.name)
             }
         }
@@ -68,18 +70,15 @@ def call(Map args) {
         def cicdInfo = input(message: "Select microservices to test in ${projectInfo.systemTestEnv}",
                              parameters: inputs)
 
-        projectInfo.microServicesToTest = projectInfo.microServices.findAll { microService ->
+        projectInfo.microServicesToTest = msTestPossibilities.findAll { microService ->
             return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[microService.name]) : cicdInfo
         }
 
         projectInfo.systemTestsToRun = [] as Set
         projectInfo.microServicesToTest.each { microService ->
-            echo "microService.gitRepoName: ${microService.gitRepoName}"
-            echo "projectInfo.systemTestsToRun: ${projectInfo.systemTestsToRun}"
             def sts = projectInfo.systemTests.findAll { systemTest -> 
                 systemTest.microServiceRepos.find { it == microService.gitRepoName }
             }
-            echo "sts: ${sts}"
             projectInfo.systemTestsToRun.addAll(sts)
         }
 
