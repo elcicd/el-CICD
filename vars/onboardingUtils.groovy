@@ -75,7 +75,7 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
             oc adm policy add-cluster-role-to-user secrets-unsealer \
                 system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
 
-            oc create new sa jenkins-tester -n ${namespace}
+            oc create sa jenkins-tester -n ${namespace}
         fi
     """
 }
