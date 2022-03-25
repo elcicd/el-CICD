@@ -29,12 +29,13 @@ def call(Map args) {
         if (msCodeBaseList) {
             codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
         }
-    }
-    pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
-    dir(systemTest.workDir) {
-        git url: systemTest.gitRepoUrl
-            branch: projectInfo.gitTestBranch
-            credentialsId: systemTest.gitSshPrivateKeyName
+        
+        pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+        dir(systemTest.workDir) {
+            git url: systemTest.gitRepoUrl
+                branch: projectInfo.gitTestBranch
+                credentialsId: systemTest.gitSshPrivateKeyName
+        }
     }
 
     parallel(codeBasesToNodes)
