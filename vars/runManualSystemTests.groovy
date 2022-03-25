@@ -72,15 +72,13 @@ def call(Map args) {
             return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[microService.name]) : cicdInfo
         }
 
-        def systemTestsToRun = [] as Set
+        projectInfo.systemTestsToRun = [] as Set
         projectInfo.microServicesToTest.each { microService ->
             def sts = projectInfo.systemTests.findAll { systemTest -> 
                 systemTest.microServiceRepos.find { it == microService.gitRepoName }
             }
-            systemTestsToRun.addAll(sts)
+            projectInfo.systemTestsToRun.addAll(sts)
         }
-        projectInfo.systemTestsToRun.removeAll()
-        projectInfo.systemTestsToRun.addAll(systemTestsToRun)
 
         if (!projectInfo.microServicesToTest) {
             pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
