@@ -79,7 +79,8 @@ def call(Map args) {
             }
             systemTestsToRun.addAll(sts)
         }
-        projectInfo.systemTestsToRun = [].addAll(systemTestsToRun)
+        projectInfo.systemTestsToRun.removeAll()
+        projectInfo.systemTestsToRun.addAll(systemTestsToRun)
 
         if (!projectInfo.microServicesToTest) {
             pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")

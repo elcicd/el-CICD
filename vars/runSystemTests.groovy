@@ -19,7 +19,6 @@ def call(Map args) {
 
     def codeBasesToNodes = [:]
     systemTestsToRun.each { systemTest ->
-        echo "systemTest: ${systemTest}"    
         def msCodeBaseList = []
         systemTest.microServiceRepos.each { gitRepoName ->
             if (gitRepoToMsMap[gitRepoName]) {
