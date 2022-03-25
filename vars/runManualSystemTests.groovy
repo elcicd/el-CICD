@@ -74,12 +74,13 @@ def call(Map args) {
 
         projectInfo.systemTestsToRun = [] as Set
         projectInfo.microServicesToTest.each { microService ->
+            echo "microService.gitRepoName: ${microService.gitRepoName}"
             echo "projectInfo.systemTestsToRun: ${projectInfo.systemTestsToRun}"
             def sts = projectInfo.systemTests.findAll { systemTest -> 
                 systemTest.microServiceRepos.find { it == microService.gitRepoName }
             }
+            echo "sts: ${sts}"
             projectInfo.systemTestsToRun.addAll(sts)
-            echo "projectInfo.systemTestsToRun 2: ${projectInfo.systemTestsToRun}"
         }
 
         if (!projectInfo.microServicesToTest) {
