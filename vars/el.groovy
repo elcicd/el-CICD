@@ -55,7 +55,7 @@ def node(Map args, Closure body) {
                 image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
-                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
+                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
                 resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
