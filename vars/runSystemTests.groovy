@@ -39,7 +39,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
         podTemplate([
             label: "${codeBase}",
             cloud: 'openshift',
-            serviceAccount: 'jenkins',
+            serviceAccount: "${el.cicd.JENKINS_TESTER_SERVICE_ACCOUNT}",
             podRetention: onFailure(),
             idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
             namespace: "${projectInfo.systemTestNamespace}",
