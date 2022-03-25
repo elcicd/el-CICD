@@ -74,8 +74,10 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
 
                     stage ('Pull test code') {
                         pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
-                        echo "systemTest.gitSshPrivateKeyName: ${systemTest.gitSshPrivateKeyName}"
                         dir(systemTest.workDir) {
+                            echo "systemTest.gitRepoUrl: ${systemTest.gitRepoUrl}"
+                            echo "projectInfo.gitTestBranch: ${projectInfo.gitTestBranch}"
+                            echo "systemTest.gitSshPrivateKeyName: ${systemTest.gitSshPrivateKeyName}"
                             git url: systemTest.gitRepoUrl
                                 branch: projectInfo.gitTestBranch
                                 credentialsId: systemTest.gitSshPrivateKeyName
