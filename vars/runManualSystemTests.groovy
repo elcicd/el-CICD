@@ -74,7 +74,9 @@ def call(Map args) {
 
         def systemTestsToRun = [] as Set
         projectInfo.microServicesToTest.each { microService ->
-            def sts = projectInfo.systemTests.findAll { systemTest -> st.microServiceRepos.find { it == microService.gitRepoName } }
+            def sts = projectInfo.systemTests.findAll { systemTest -> 
+                systemTest.microServiceRepos.find { it == microService.gitRepoName }
+            }
             systemTestsToRun.addAll(sts)
         }
         projectInfo.systemTestsToRun = [].addAll(systemTestsToRun)
