@@ -46,7 +46,7 @@ def node(Map args, Closure body) {
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
-        serviceAccount: 'jenkins',
+        serviceAccount: 'jenkins-tester',
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         containers: [

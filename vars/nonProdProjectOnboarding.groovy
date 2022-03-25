@@ -86,7 +86,8 @@ def call(Map args) {
 
     stage('Setup OKD namespace environments') {
         if (projectInfo.microServices) {
-            pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.nonProdNamespaces.values().join(', '))
+            pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:",
+                                      projectInfo.nonProdNamespaces.values().join(', '))
 
             def nodeSelectors = projectInfo.NON_PROD_ENVS.collectEntries { ENV ->
                 [ENV.toLowerCase(), el.cicd["${ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: '']
