@@ -117,6 +117,7 @@ def deleteDeployKeysFromGithub(def projectInfo) {
                 scmScriptHelper.getCurlCommandToDeleteDeployKeyByIdFromScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
             try {
                 sh """
+                    ${shCmd.echo ''}
                     KEY_IDS=\$(${fetchDeployKeyIdCurlCommand})
                     if [[ ! -z \${KEY_IDS} ]]
                     then
