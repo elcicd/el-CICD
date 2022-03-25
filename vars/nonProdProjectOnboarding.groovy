@@ -139,7 +139,7 @@ def call(Map args) {
             def buildComponents = []
             buildComponents.addAll(projectInfo.microServices)
             buildComponents.addAll(projectInfo.libraries)
-            
+
             buildComponents.each { component ->
                 if (!component.gitMicroServiceRepos) {
                     scriptToPushWebhookToScm =

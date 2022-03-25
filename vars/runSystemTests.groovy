@@ -30,6 +30,12 @@ def call(Map args) {
             codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
         }
     }
+    pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+    dir(systemTest.workDir) {
+        git url: systemTest.gitRepoUrl
+            branch: projectInfo.gitTestBranch
+            credentialsId: systemTest.gitSshPrivateKeyName
+    }
 
     parallel(codeBasesToNodes)
 }
@@ -75,9 +81,6 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     stage ('Pull test code') {
                         pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
                         dir(systemTest.workDir) {
-                            echo "systemTest.gitRepoUrl: ${systemTest.gitRepoUrl}"
-                            echo "projectInfo.gitTestBranch: ${projectInfo.gitTestBranch}"
-                            echo "systemTest.gitSshPrivateKeyName: ${systemTest.gitSshPrivateKeyName}"
                             git url: systemTest.gitRepoUrl
                                 branch: projectInfo.gitTestBranch
                                 credentialsId: systemTest.gitSshPrivateKeyName
