@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select the environment and test types to run') {
-        def allEnvs = "${projectInfo.devEnv}\n${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}\n${projectInfo.sandboxEnvs.join('\n')}"
+        def allEnvs = "${projectInfo.nonProdEnvs.join('\n')}\n${projectInfo.sandboxEnvs.join('\n')}"
         def TEST_ENV = 'Test Environment:'
         def TEST_CODE_BASE = 'Test Type:'
         def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
