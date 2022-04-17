@@ -105,7 +105,7 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
 
-        projectInfo.nonProdNamespaces[projectInfo.devEnv] = projectInfo.devNamespace
+        projectInfo.nonProdNamespaces = [(projectInfo.devEnv): projectInfo.devNamespace]
         if (projectInfo.allowsHotfixes) {
             projectInfo.nonProdNamespaces[projectInfo.hotfixEnv] = projectInfo.hotfixNamespace
         }
