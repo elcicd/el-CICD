@@ -11,6 +11,10 @@ spec:
   accessModes:
   - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain
+  storageClassName: %DEMO_IMAGE_REGISTRY%-nfs
+  mountOptions:
+    - hard
+    - nfsvers=4.1
   nfs:
     path: /mnt/%DEMO_IMAGE_REGISTRY%
     server: %LOCAL_NFS_IP%
@@ -28,5 +32,5 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  volumeName: %DEMO_IMAGE_REGISTRY%-volume
-  storageClassName: ""
+  volumeMode: Filesystem
+  storageClassName: %DEMO_IMAGE_REGISTRY%-nfs

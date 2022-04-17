@@ -16,6 +16,8 @@ __bootstrap_dev_environment() {
         __bootstrap_clean_crc
 
         __additional_cluster_config
+    else
+        _start_crc
     fi
 
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
@@ -182,23 +184,27 @@ __bootstrap_clean_crc() {
     echo "Extracting CRC tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
 
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-
-
     echo
     ${CRC_EXEC} setup <<< 'y'
 
-    echo
-    echo "Starting CRC with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
-    ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
+   _start_crc
+}
 
-    eval $(${CRC_EXEC} oc-env)
-    source <(oc completion ${CRC_SHELL})
+_start_crc() {
+    if [[ -z $(${CRC_EXEC} status | grep Started) ]]
+    then    
+        echo
+        echo "Starting CRC with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
+        ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
 
-    echo
-    echo "crc login as kubeadmin"
-    local CRC_LOGIN=$(${CRC_EXEC} console --credentials | sed -n 2p | sed -e "s/.*'\(.*\)'/\1/")
-    eval ${CRC_LOGIN} --insecure-skip-tls-verify
+        eval $(${CRC_EXEC} oc-env)
+        source <(oc completion ${CRC_SHELL})
+
+        echo
+        echo "crc login as kubeadmin"
+        local CRC_LOGIN=$(${CRC_EXEC} console --credentials | sed -n 2p | sed -e "s/.*'\(.*\)'/\1/")
+        eval ${CRC_LOGIN} --insecure-skip-tls-verify
+    fi
 }
 
 __additional_cluster_config() {
