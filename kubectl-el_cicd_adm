@@ -66,12 +66,14 @@ el-CICD will optionally tear down:
     - Remove el-CICD repositories pushed to your Git host
 EOM
 
+_BOLD=$(tput bold)
+_REGULAR=$(tput sgr0)
+
 set -o allexport
 
 BOOTSTRAP_DIR=$(pwd)
 
 EL_CICD_HOME=$(dirname ${BOOTSTRAP_DIR})
-CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
 CLI_OPTION=${1}
 
@@ -111,7 +113,11 @@ CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=${BOOTSTRAP_DIR}/../jenkins-target
 
-CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+if [[ ! -z $(command -v crc) ]]
+then
+    CRC_EXEC=$(which crc)
+    CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+fi
 
 echo
 echo 'Loading el-CICD environment...'

@@ -116,7 +116,7 @@ __gather_dev_setup_info() {
         fi
 
         local TOKEN_TEST_RESULT=$(curl -s -u :${GIT_REPO_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
-        if [[ ${TOKEN_TEST_RESULT} != ${EL_CICD_ORGANIZATION} ]]
+        if [[ -z ${TOKEN_TEST_RESULT} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
             echo "A valid git personal access token for [${EL_CICD_ORGANIZATION}] must be provided when generating credentials and/or Git repositories"
@@ -135,15 +135,15 @@ __summarize_and_confirm_dev_setup_info() {
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
-        echo "CRC WILL be setup.  Login to kubeadmin will be automated."
+        echo "CRC ${_BOLD}WILL${_REGULAR} be setup.  Login to kubeadmin will be automated."
     else
-        echo 'CRC will NOT be setup.'
+        echo 'CRC will ${_BOLD}NOT${_REGULAR} be setup.'
     fi
     echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
-        echo -n "An image registry WILL be installed on your cluster WITH"
+        echo -n "An image registry ${_BOLD}WILL${_REGULAR} be installed on your cluster WITH"
         if [[ ${SETUP_IMAGE_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
@@ -155,21 +155,21 @@ __summarize_and_confirm_dev_setup_info() {
             echo "You MUST be currently logged into a cluster as a cluster admin."
         fi
     else
-        echo "An image registry will NOT be installed on your cluster."
+        echo "An image registry will ${_BOLD}NOT${_REGULAR} be installed on your cluster."
     fi
 
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
     then
-        echo 'Credential files WILL be (re)generated.'
+        echo "Credential files ${_BOLD}WILL${_REGULAR} be (re)generated."
     else
-        echo 'Credential files will NOT be (re)generated.'
+        echo "Credential files will ${_BOLD}NOT${_REGULAR} be (re)generaed."
     fi
 
     if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
-        echo "el-CICD Git repositories WILL be intialized and pushed to ${EL_CICD_ORGANIZATION} at ${GIT_API_DOMAIN} if necessary."
+        echo "el-CICD Git repositories ${_BOLD}WILL${_REGULAR} be intialized and pushed to ${EL_CICD_ORGANIZATION} at ${GIT_API_DOMAIN} if necessary."
     else
-        echo "el-CICD Git repositories will NOT be intialized."
+        echo "el-CICD Git repositories will ${_BOLD}NOT${_REGULAR} be intialized."
     fi
 
     echo "Git token verified against ${EL_CICD_GIT_API_URL}/${EL_CICD_ORGANIZATION}."
@@ -183,6 +183,8 @@ __bootstrap_clean_crc() {
     echo
     echo "Extracting CRC tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
+    
+    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
     echo
     ${CRC_EXEC} setup <<< 'y'
@@ -244,6 +246,10 @@ __create_image_registry_nfs_share() {
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=nfs --zone=libvirt
+        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=mountd --zone=libvirt
+        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=rpc-bind --zone=libvirt
+        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --reload
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs -a
         printf "%s\n" "${SUDO_PWD}" | sudo --stdin systemctl restart nfs-server.service
     else

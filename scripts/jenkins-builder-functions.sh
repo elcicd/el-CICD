@@ -31,6 +31,7 @@ _build_el_cicd_jenkins_image() {
            -e "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
         ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
 
+    echo
     echo -n 'Podman: '
     ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
     podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}

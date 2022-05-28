@@ -101,13 +101,6 @@ _create_env_image_registry_secret() {
     local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
     local DOMAIN=$(eval echo \${${ENV}${IMAGE_REPO_POSTFIX}})
 
-    local DRY_RUN=client
-    if [[ ${OCP_VERSION} == 3 ]]
-    then
-        # option values changed in future versions of kubectl/oc cli
-        DRY_RUN=true
-    fi
-
     echo
     echo "Creating secret ${SECRET_NAME} for SDLC environment ${ENV}"
     local SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SECRET_NAME}
@@ -115,8 +108,7 @@ _create_env_image_registry_secret() {
         --docker-username=${USER_NAME} \
         --docker-password=$(cat ${TKN_FILE}) \
         --docker-server=${DOMAIN} \
-        --dry-run=${DRY_RUN} \
-        -n ${NAMESPACE_NAME} \
+        --dry-run=client \
         -o yaml > ${SECRET_FILE_IN}
 
     oc apply -f ${SECRET_FILE_IN} --overwrite -n ${NAMESPACE_NAME}

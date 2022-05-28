@@ -36,12 +36,11 @@ def deleteNamespaces(def namespaces) {
     """
 }
 
-def cleanStalePipelines(def projectInfo) {
+def cleanStaleBuildToDevPipelines(def projectInfo) {
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVING STALE BUILD PIPELINES FOR ${projectInfo.id}, IF ANY")}
+        ${pipelineUtils.shellEchoBanner("REMOVING ALL BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
-        set +x
-        BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} | awk '{print \$1}' | tr '\n' ' ')
+        BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} -o custom-columns=:.metadata.name)
         for BC in \${BCS}
         do
             echo "Removing \${BC}..."
@@ -54,7 +53,6 @@ def cleanStalePipelines(def projectInfo) {
                 let COUNTER+=1
             done
         done 
-        set -x
     """
 }
 

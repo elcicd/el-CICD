@@ -74,33 +74,33 @@ __summarize_and_confirm_dev_tear_down() {
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
-        echo "CRC WILL be torn down.  The image registry WILL also be torn down as a result."
+        echo "CRC ${_BOLD}WILL${_REGULAR} be torn down.  The image registry ${_BOLD}WILL${_REGULAR} also be torn down as a result."
     else 
-        echo "CRC will NOT be torn down."
+        echo "CRC will ${_BOLD}NOT${_REGULAR} be torn down."
 
         if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
         then
-            echo "The image registry WILL be torn down."
+            echo "The image registry ${_BOLD}WILL${_REGULAR} be torn down."
         else
-            echo "The image registry will NOT be torn down."
+            echo "The image registry will ${_BOLD}NOT${_REGULAR} be torn down."
         fi
     fi
 
     echo -n "The image registry NFS share "
     if [[ ${REMOVE_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
-        echo -n "WILL"
+        echo -n "${_BOLD}WILL${_REGULAR}"
     else
-        echo -n "will NOT"
+        echo -n "will ${_BOLD}NOT${_REGULAR}"
     fi
     echo " be deleted and removed."
 
     echo -n "All el-CICD Git repositories "
     if [[ ${REMOVE_GIT_REPOS} == ${_YES} ]]
     then
-        echo -n "WILL"
+        echo -n "${_BOLD}WILL${_REGULAR}"
     else
-        echo -n "will NOT"
+        echo -n "will ${_BOLD}NOT${_REGULAR}"
     fi
     echo " be removed from ${EL_CICD_ORGANIZATION} on the Git host."
 
@@ -122,6 +122,7 @@ _remove_existing_crc() {
     echo
     echo 'Removing old CRC installation directories'
     rm -rfv ${EL_CICD_HOME}/crc*/
+    rm -rfv ${HOME}/.crc
 }
 
 _remove_image_registry() {

@@ -31,8 +31,8 @@ def call(Map args) {
         }
     }
 
-    stage('Clean stale pipelines') {
-        onboardingUtils.cleanStalePipelines(projectInfo)
+    stage('Clean stale build-to-dev pipelines') {
+        onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
     }
 
     stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {

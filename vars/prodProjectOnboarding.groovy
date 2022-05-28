@@ -11,11 +11,10 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
-    onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
+    def pipelines = el.getProdPipelines()
+    verticalJenkinsCreationUtils.refreshSharedPipelines(projectInfo, pipelines)
 
-    stage('Remove stale namespace environments and pipelines if necessary') {
-        onboardingUtils.cleanStalePipelines(projectInfo)
-    }
+    onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
 
     stage('Setup openshift namespace environments') {
         pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.prodNamespace)
