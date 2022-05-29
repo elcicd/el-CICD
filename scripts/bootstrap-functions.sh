@@ -270,8 +270,7 @@ _delete_namespace() {
         echo
         oc delete project ${NAMESPACE}
         echo -n "Deleting ${NAMESPACE} namespace"
-        until
-            !(oc project ${NAMESPACE} > /dev/null 2>&1)
+        until [[ !(oc project ${NAMESPACE} > /dev/null 2>&1) ]]
         do
             echo -n '.'
             sleep 1
