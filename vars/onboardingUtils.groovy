@@ -23,6 +23,7 @@ def deleteNamespaces(def namespaces) {
     sh """
         oc delete project --ignore-not-found ${namespaces}
 
+        set +x
         COUNTER=1
         until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespaces}) ]]
         do
@@ -31,6 +32,7 @@ def deleteNamespaces(def namespaces) {
             sleep 2
             let COUNTER+=1
         done
+        set -x
     """
 }
 
@@ -38,6 +40,7 @@ def cleanStaleBuildToDevPipelines(def projectInfo) {
     sh """
         ${pipelineUtils.shellEchoBanner("REMOVING ALL BUILD-TO-DEV PIPELINES FOR ${projectInfo.id}, IF ANY")}
 
+        set +x
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} -o custom-columns=:.metadata.name)
         for BC in \${BCS}
         do
@@ -50,7 +53,8 @@ def cleanStaleBuildToDevPipelines(def projectInfo) {
                 sleep 2
                 let COUNTER+=1
             done
-        done 
+        done
+        set -x
     """
 }
 
