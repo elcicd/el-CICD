@@ -27,7 +27,7 @@ def deleteNamespaces(def namespaces) {
         until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespaces}) ]]
         do
             printf -- '-%.0s' {1..\${COUNTER}}
-            echo
+            ${shCmd.echo ''}
             sleep 2
             let COUNTER+=1
         done
@@ -41,12 +41,12 @@ def cleanStaleBuildToDevPipelines(def projectInfo) {
         BCS=\$(oc get bc --no-headers --ignore-not-found -l projectid=${projectInfo.id} -n ${projectInfo.cicdMasterNamespace} -o custom-columns=:.metadata.name)
         for BC in \${BCS}
         do
-            echo "Removing \${BC}..."
+            ${shCmd.echo "Removing \${BC}..."}
             COUNTER=1
             until [[ -z \$(oc delete bc --ignore-not-found \${BC} -n ${projectInfo.cicdMasterNamespace}) ]]
             do
                 printf -- '-%.0s' {1..\${COUNTER}}
-                echo
+                ${shCmd.echo ''}
                 sleep 2
                 let COUNTER+=1
             done
