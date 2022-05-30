@@ -89,16 +89,14 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         msg.addAll(pipelineFiles)
         pipelineUtils.echoBanner(msg)
         
-        
-        def jenkinsUrl =
-            "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-            
         def curlCommand = "curl -kSs -o /dev/null -H \"Authorization: Bearer \$(oc whoami -t)\" -w '%{http_code}' -X"
         def xmlContent = "-H 'Content-Type:text/xml'"
+        def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+        def folderXml = "@${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
             
         def curlDeletePipelineFolder = "${curlCommand} DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
         def curlCreatePipelineFolder =
-            "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
+            "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${folderXml}"
         
         def curlPipeline = 
             "${curlCommand} POST ${xmlContent} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
@@ -111,6 +109,8 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
 
             for FILE in ${pipelineFiles.join(' ')}
             do
+                ${shCmd.echo ''}
+                ${shCmd.echo 'Creating ${FILE} pipeline'}
                 ${maskCommand(curlPipeline)}
             done
         """
