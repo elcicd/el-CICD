@@ -1,0 +1,58 @@
+<flow-definition plugin="workflow-job">
+    <displayName>deploy-to-production</displayName>
+    <keepDependencies>false</keepDependencies>
+    <properties>
+        <hudson.model.ParametersDefinitionProperty>
+            <parameterDefinitions>
+                <hudson.model.StringParameterDefinition>
+                    <name>PROJECT_ID</name>
+                    <description>Project ID</description>
+                    <trim>true</trim>
+                </hudson.model.StringParameterDefinition>
+                <hudson.model.StringParameterDefinition>
+                    <name>RELEASE_CANDIDATE_TAG</name>
+                    <description>Release candidate tag used to create the production manifest</description>
+                    <trim>true</trim>
+                </hudson.model.StringParameterDefinition>
+                <hudson.model.StringParameterDefinition>
+                    <name>RELEASE_REGION</name>
+                    <description>Release region used to create the production manifest</description>
+                    <trim>true</trim>
+                </hudson.model.StringParameterDefinition>
+                <hudson.model.BooleanParameterDefinition>
+                    <name>DEPLOY_ALL</name>
+                    <description>Deploy everything regardless of change status?</description>
+                    <defaultValue>false</defaultValue>
+                </hudson.model.BooleanParameterDefinition>
+            </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+    </properties>
+    <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+        <script>
+            node() {
+                def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+  
+                def scmMap = [$class: 'GitSCMSource',
+                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                library identifier: "el-CICD", retriever: modernSCM(scmMap)
+  
+                el.initMetaData(cicdMetaData.data)
+            }
+  
+            def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                        pipelineName: '${PIPELINE_TEMPLATE_NAME}',
+                        projectId: params.PROJECT_ID,
+                        releaseCandidateTag: params.RELEASE_CANDIDATE_TAG,
+                        releaseRegion: params.RELEASE_REGION,
+                        deployAll: params.DEPLOY_ALL?.toString() == 'true']
+            el.node(args) {
+                deployToProduction(args)
+            }
+        </script>
+        <sandbox>true</sandbox>
+    </definition>
+    <triggers />
+    <disabled>false</disabled>
+</flow-definition>

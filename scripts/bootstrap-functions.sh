@@ -223,9 +223,6 @@ __create_onboarding_automation_server() {
                                   -e CASC_JENKINS_CONFIG=${JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
                                   -n ${ONBOARDING_MASTER_NAMESPACE}
 
-
-    local IS_NON_PROD=$([ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ] && echo 'true' || echo 'false')
-
     sleep 2
     echo
     echo 'Waiting for Jenkins to come up...'
@@ -234,18 +231,6 @@ __create_onboarding_automation_server() {
     echo
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
     sleep 5
-
-    echo
-    echo "Creating the Onboarding Automation Server pipelines:"
-    for PIPELINE_TEMPLATE in refresh-credentials delete-project ${EL_CICD_ONBOARDING_SERVER_TYPE}-project-onboarding
-    do
-        oc process --ignore-unknown-parameters \
-                   -f ${BUILD_CONFIGS_DIR}/${PIPELINE_TEMPLATE}-pipeline-template.yml \
-                   -p EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
-                   -p IS_NON_PROD=${IS_NON_PROD} \
-                   -n ${ONBOARDING_MASTER_NAMESPACE} | \
-            oc apply -f - -n ${ONBOARDING_MASTER_NAMESPACE}
-    done
 
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
@@ -258,6 +243,38 @@ __create_onboarding_automation_server() {
     oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    
+    __create_onboarding_pipelines
+}
+
+__create_onboarding_pipelines() {
+    echo
+    echo "Creating the ${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Automation Server pipelines:"
+    
+    local ONBOARDING_PIPELINES_DIR=$([ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ] && \
+                                     echo ${NON_PROD_ONBOARDING_PIPELINES_DIR} || echo ${PROD_ONBOARDING_PIPELINES_DIR})
+
+    PIPELINES_FILES=$(find ${ONBOARDING_PIPELINES_DIR} -name '*.xml')
+    JENKINS_ONBOARDING_SERVER_URL=$(oc get route --no-headers -o custom-columns=:.spec.host)
+    for PIPELINE_FILE in ${PIPELINES_FILES}
+    do
+        PIPELINE_NAME=$(basename ${PIPELINE_FILE})
+        echo "Creating ${PIPELINE_NAME%.*}..."
+        local RESULT=$(curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $(oc whoami -t)" -H 'Content-Type:text/xml' \
+                       "https://${JENKINS_ONBOARDING_SERVER_URL}/createItem?name=${PIPELINE_NAME%.*}" \
+                       --data-binary @${PIPELINE_FILE})
+        if [[ ${RESULT} != '200' ]]
+        then
+            echo '================= ERROR: PIPELINE CREATION ==================='
+            echo "UNABLE TO CREATE PIPELINE: ${PIPELINE_NAME}"
+            echo "HTTP CODE: ${RESULT}"
+            echo 'EXITING...'
+            echo '================= ERROR: PIPELINE CREATION ==================='
+            exit 1
+        fi
+    done
+    curl -kSs -X POST -H "Authorization: Bearer $(oc whoami -t)" -o /dev/null "https://${JENKINS_ONBOARDING_SERVER_URL}/reload"
+    sleep 5
 }
 
 _delete_namespace() {
@@ -270,7 +287,7 @@ _delete_namespace() {
         echo
         oc delete project ${NAMESPACE}
         echo -n "Deleting ${NAMESPACE} namespace"
-        until [[ !(oc project ${NAMESPACE} > /dev/null 2>&1) ]]
+        until !(oc project ${NAMESPACE} > /dev/null 2>&1)
         do
             echo -n '.'
             sleep 1

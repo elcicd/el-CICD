@@ -1,0 +1,59 @@
+<flow-definition plugin="workflow-job">
+    <displayName>%PROJECT_ID%-%LIBRARY_NAME%-build-library</displayName>
+    <keepDependencies>false</keepDependencies>
+    <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+        <hudson.model.ParametersDefinitionProperty>
+            <parameterDefinitions>
+                <hudson.model.StringParameterDefinition>
+                    <name>GIT_BRANCH</name>
+                    <description>Git branch to build</description>
+                    <defaultValue>%GIT_BRANCH%</defaultValue>
+                    <trim>true</trim>
+                </hudson.model.StringParameterDefinition>
+                <hudson.model.BooleanParameterDefinition>
+                    <name>IS_SNAPSHOT</name>
+                    <description>Is this a snapshot build?</description>
+                    <defaultValue>true</defaultValue>
+                </hudson.model.BooleanParameterDefinition>
+            </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+    </properties>
+    <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+        <script>
+            properties([
+                parameters(
+                    [
+                        string(name: 'GIT_BRANCH',  defaultValue: "${GIT_BRANCH}", description: 'Git repo branch name', trim: true),
+                        booleanParam(name: 'IS_SNAPSHOT', defaultValue: true, description: "If true, the build is a snapshot build for the library")
+                    ]
+                )
+            ])
+  
+            node() {
+                def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
+  
+                def scmMap = [$class: 'GitSCMSource',
+                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                library identifier: "el-CICD@${cicdMetaData.data.EL_CICD_BRANCH_NAME}", retriever: modernSCM(scmMap)
+  
+                el.initMetaData(cicdMetaData.data)
+            }
+  
+            def args = [agent: '%CODE_BASE%',
+                        isBuild: true,
+                        pipelineName: 'build-library',
+                        projectId: '%PROJECT_ID%',
+                        libraryName: '%LIBRARY_NAME%',
+                        gitBranch: params.GIT_BRANCH,
+                        isSnapshot: params.IS_SNAPSHOT]
+            el.node(args) {
+                buildLibrary(args)
+            }
+        </script>
+        <sandbox>true</sandbox>
+    </definition>
+    <triggers />
+    <disabled>false</disabled>
+</flow-definition>

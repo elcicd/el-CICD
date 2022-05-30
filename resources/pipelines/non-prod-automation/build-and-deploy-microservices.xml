@@ -1,0 +1,48 @@
+<flow-definition plugin="workflow-job">
+    <displayName>build-and-deploy-microservices</displayName>
+    <keepDependencies>false</keepDependencies>
+    <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+        <hudson.model.ParametersDefinitionProperty>
+            <parameterDefinitions>
+                <hudson.model.StringParameterDefinition>
+                    <name>PROJECT_ID</name>
+                    <description>Project ID</description>
+                    <trim>true</trim>
+                </hudson.model.StringParameterDefinition>
+            </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+    </properties>
+    <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+        <script>
+            properties([
+                parameters(
+                    [
+                        string(name: 'PROJECT_ID', description: 'Project ID', trim: true)
+                    ]
+                )
+            ])
+  
+            node() {
+                def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+  
+                def scmMap = [$class: 'GitSCMSource',
+                              remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                library identifier: "el-CICD", retriever: modernSCM(scmMap)
+  
+                el.initMetaData(cicdMetaData.data)
+            }
+  
+            def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                        pipelineName: 'build-and-deploy-microservices',
+                        projectId: params.PROJECT_ID]
+            el.node(args) {
+                buildAndDeployMicroServices(args)
+            }
+        </script>
+        <sandbox>true</sandbox>
+    </definition>
+    <triggers />
+    <disabled>false</disabled>
+</flow-definition>

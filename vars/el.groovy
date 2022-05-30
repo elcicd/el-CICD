@@ -100,21 +100,21 @@ def runHookScript(def prefix, def args) {
 }
 
 def runHookScript(def prefix, def args, def exception) {
-    pipelineUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineTemplateName}.groovy...")
+    pipelineUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineName}.groovy...")
 
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
-        def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineTemplateName}.groovy")
+        def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
         if (hookScriptFile) {
             def hookScript = load hookScriptFile[0].path
 
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy found: RUNNING...")
+            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING...")
 
             exception ?  hookScript(exception, args) : hookScript(args)
 
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy COMPLETE")
+            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE")
         }
         else {
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineTemplateName}.groovy NOT found...")
+            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy NOT found...")
         }
     }
 }

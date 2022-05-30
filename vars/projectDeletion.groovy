@@ -9,18 +9,13 @@ def call(Map args) {
 
     stage('Remove project namespace environments') {
         def namespacesToDelete = []
-        if (args.isNonProd) {
-            namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
-            namespacesToDelete.addAll(projectInfo.sandboxNamespaces.values())
-            projectInfo.allowsHotfixes && namespacesToDelete.add(projectInfo.hotfixNamespace)
-        }
-        else {
-            namespacesToDelete.add(projectInfo.prodNamespace)
-        }
+        namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
+        namespacesToDelete.addAll(projectInfo.sandboxNamespaces.values())
+        projectInfo.allowsHotfixes && namespacesToDelete.add(projectInfo.hotfixNamespace)
 
-        namespacesToDelete += args.deleteRbacGroupJenkins ? " ${projectInfo.cicdMasterNamespace}" : ''
+        namespacesToDelete += args.deleteJenkinsCicdServer ? " ${projectInfo.cicdMasterNamespace}" : ''
 
-        def msg = args.deleteRbacGroupJenkins ?
+        def msg = args.deleteJenkinsCicdServer ?
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
             "REMOVING ${projectInfo.id} ENVIRONMENT(S):"
 
@@ -32,19 +27,17 @@ def call(Map args) {
     stage('Delete GitHub deploy keys') {
         credentialUtils.deleteDeployKeysFromGithub(projectInfo)
 
-        if (!args.deleteRbacGroupJenkins) {
+        if (!args.deleteJenkinsCicdServer) {
             credentialUtils.deleteDeployKeysFromJenkins(projectInfo)
         }
     }
 
-    if (args.isNonProd) {
-        stage('Remove project build-to-dev pipelines from Jenkins') {
-            if (!args.deleteRbacGroupJenkins) {
-                onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
-            }
-            else {
-                pipelineUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
-            }
+    stage('Remove project build-to-dev pipelines from Jenkins') {
+        if (!args.deleteJenkinsCicdServer) {
+            onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
+        }
+        else {
+            pipelineUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
         }
     }
 }
