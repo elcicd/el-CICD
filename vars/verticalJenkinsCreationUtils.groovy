@@ -122,7 +122,6 @@ def createJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
 
 def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFile) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def pipelineDir = pipelineFile.getD
         sh """
             ${shCmd.echo ''}
             PIPELINE_FILE=${pipelineFile.name}
