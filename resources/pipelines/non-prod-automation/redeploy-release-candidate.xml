@@ -1,5 +1,4 @@
-    
-</flow-definition>
+<flow-definition>
     <displayName>redeploy-release-candidate</displayName>
     <keepDependencies>false</keepDependencies>
     <properties>
