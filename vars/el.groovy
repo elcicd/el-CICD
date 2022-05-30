@@ -123,6 +123,12 @@ def initializePipeline() {
     stage('Initializing') {
         pipelineUtils.echoBanner("INITIALIZING...")
 
+        el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
+        el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/pipelines"
+        el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.PIPELINES_DIR}/pipelines/non-prod-automation"
+        el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.PIPELINES_DIR}/pipelines/prod-automation"
+        
+        
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
@@ -134,7 +140,6 @@ def initializePipeline() {
 
         el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
         el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
-        el.cicd.BUILDCONFIGS_DIR = "${el.cicd.TEMP_DIR}/buildconfigs"
         sh """
             rm -rf '${WORKSPACE}'
             mkdir -p '${WORKSPACE}'
@@ -156,22 +161,22 @@ def initializePipeline() {
         el.cicd = el.cicd.asImmutable()
 
         dir (el.cicd.CONFIG_DIR) {
-            git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
-                branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
-                credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+            git url: el.cicd.EL_CICD_CONFIG_GIT_REPO,
+                branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
+                credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
     }
 }
 
 def getNonProdPipelines() {
-    return ['build-and-deploy-microservices-pipeline-template.yml',
-            'create-release-candidate-pipeline-template.yml',
-            'microservice-promotion-removal-pipeline-template.yml',
-            'microservice-redeploy-removal-pipeline-template.yml',
-            'redeploy-release-candidate-pipeline-template.yml',
-            'run-system-tests-pipeline-template.yml']
+    return ['build-and-deploy-microservices.xml',
+            'create-release-candidate.xml',
+            'microservice-promotion-removal.xml',
+            'microservice-redeploy-removal.xml',
+            'redeploy-release-candidate.xml',
+            'run-system-tests.xml']
 }
 
 def getProdPipelines() {
-    return ['deploy-to-production-pipeline-template.yml']
+    return ['deploy-to-production.xml']
 }

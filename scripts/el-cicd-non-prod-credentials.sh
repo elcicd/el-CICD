@@ -23,11 +23,11 @@ _refresh_non_prod_credentials() {
 
     echo
     echo 'Pushing el-CICD git READ ONLY private key to Jenkins'
-    _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}
+    _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
     echo
     echo 'Pushing el-CICD-config git READ ONLY private key to Jenkins'
-    _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
+    _push_ssh_creds_to_jenkins ${JENKINS_URL} ${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
     echo
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"

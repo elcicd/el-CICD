@@ -64,7 +64,7 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 }
 
 def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
-    def keyId = el.cicd.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pipelineUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
@@ -76,7 +76,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     }
     pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
-    keyId = el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     pipelineUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {

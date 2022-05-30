@@ -11,8 +11,12 @@ def call(Map args) {
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
-    def pipelines = el.getProdPipelines()
-    verticalJenkinsCreationUtils.refreshSharedPipelines(projectInfo, pipelines)
+    dir (el.cicd.EL_CICD_DIR) {
+        git url: el.cicd.EL_CICD_GIT_REPO,
+            branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
+            credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    }
+    verticalJenkinsCreationUtils.refreshAutomationPipelines(projectInfo, false)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
 

@@ -75,25 +75,33 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     }
 }
 
-def refreshSharedPipelines(def projectInfo, def pipelines) {
+def refreshAutomationPipelines(def projectInfo, def isNonProd) {
     stage('Refreshing shared pipelines') {
-        def msg = ['CREATING/UPDATING SHARED PIPELINES:']
-        msg.addAll(pipelines)
+        def PIPELINE_DIR = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
+        def PIPELINE_FOLDER= = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
+        
+        def pipelineFiles = findFiles(glob: "${PIPELINE_DIR}/**/*.xml").collect { it.name }
+                
+        def msg = ['CREATING/UPDATING AUTOMATION PIPELINES:']
+        msg.addAll(pipelineFiles)
         pipelineUtils.echoBanner(msg)
+        
+        
+        sh """
+            curl -kSs -o /dev/null -w '%{http_code}' -X DELETE  -H "Authorization: Bearer \$(oc whoami -t)"
+                    'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/job/${PIPELINE_FOLDER}/'
+                    
+            curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H 'Content-Type:text/xml' \
+                    'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/createItem?name=${PIPELINE_FOLDER}' \
+                    --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
 
-        pipelines.each {
-            writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/${it}", text: libraryResource("buildconfigs/${it}")
-        }
-
-        dir (el.cicd.BUILDCONFIGS_DIR) {
-            sh """
-                for FILE in ${pipelines.join(' ')}
-                do
-                    ${shCmd.echo ''}
-                    oc process -f \${FILE} -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} -n ${projectInfo.cicdMasterNamespace} | \
-                        oc apply -f - -n ${projectInfo.cicdMasterNamespace}
-                done
-            """
-        }
+            for FILE in ${pipelineFiles.join(' ')}
+            do
+                ${shCmd.echo ''}
+                curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H 'Content-Type:text/xml' \
+                     'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/createItem?name=${PIPELINE_FOLDER}' \
+                     --data-binary @${PIPELINE_DIR}/\${FILE}
+            done
+        """
     }
 }

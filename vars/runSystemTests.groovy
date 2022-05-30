@@ -67,9 +67,9 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                         """
 
                         dir (el.cicd.CONFIG_DIR) {
-                            git url: el.cicd.EL_CICD_CONFIG_REPOSITORY,
-                                branch: el.cicd.EL_CICD_CONFIG_REPOSITORY_BRANCH_NAME,
-                                credentialsId: el.cicd.EL_CICD_CONFIG_REPOSITORY_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+                            git url: el.cicd.EL_CICD_CONFIG_GIT_REPO,
+                                branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
+                                credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
                         }
 
                     }

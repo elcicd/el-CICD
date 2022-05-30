@@ -415,11 +415,11 @@ __create_git_repo() {
     __create_remote_github_repo ${GIT_REPO_DIR}
 
     ${GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}.git
-    ${GIT_COMMAND} checkout -b  ${EL_CICD_BRANCH_NAME}
+    ${GIT_COMMAND} checkout -b  ${EL_CICD_GIT_REPO_BRANCH_NAME}
 
     ${GIT_COMMAND} \
         -c credential.helper="!creds() { echo password=${GIT_REPO_ACCESS_TOKEN}; }; creds" \
-        push -u origin ${EL_CICD_BRANCH_NAME}
+        push -u origin ${EL_CICD_GIT_REPO_BRANCH_NAME}
 }
 
 __create_remote_github_repo() {

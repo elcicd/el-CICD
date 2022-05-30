@@ -26,8 +26,8 @@
   
                 def scmMap = [$class: 'GitSCMSource',
                               remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                              credentialsId: cicdMetaData.data.EL_CICD_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                library identifier: "el-CICD", retriever: modernSCM(scmMap)
+                              credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                library(identifier: "el-CICD", retriever: modernSCM(scmMap))
   
                 el.initMetaData(cicdMetaData.data)
             }
