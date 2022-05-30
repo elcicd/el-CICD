@@ -102,7 +102,7 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         def curlPipeline = 
             "${curlCreateCommand} ${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*} --data-binary @${PIPELINE_DIR}/\${FILE}"
         
-        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
             sh """
                 ${shCmd.echo ''}
                 ${curlDeletePipelineFolder}

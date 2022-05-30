@@ -142,7 +142,7 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         projectInfo.components.each { component ->
             sh """
                 ${shCmd.echo ''}
@@ -162,7 +162,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
         def jenkinsCurlCommand =
             """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
             projectInfo.components.each { component ->
                 def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
@@ -191,7 +191,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
 def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
     def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE"),
-                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]
+                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]
     def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         def httpCode = 
@@ -213,7 +213,7 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
 
 def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tokenId) {
     def credsArray = [string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN',
-                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN'))]
+                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN'))]
                       
     withCredentials(credsArray) {
         def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
