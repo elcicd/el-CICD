@@ -107,11 +107,12 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
             ${shCmd.echo ''}
             ${maskCommand(curlCreatePipelineFolder)}
 
+            ${shCmd.echo ''}
             for FILE in ${pipelineFiles.join(' ')}
             do
-                ${shCmd.echo ''}
-                ${shCmd.echo 'Creating ${FILE} pipeline'}
+                ${shCmd.echo 'Creating ${FILE%.*} pipeline'}
                 ${maskCommand(curlPipeline)}
+                ${shCmd.echo ''}
             done
         """
     }
