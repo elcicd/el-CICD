@@ -96,6 +96,8 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         createJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
         
         pipelineFiles.each { pipelineFile ->
+            echo "pipelineFile: ${pipelineFile}"
+            echo "pipelineFile: ${pipelineFile.toString()}"
             createJenkinsPipeline(jenkinsUrl, pipelineFolder, pipelineFile)
         }
     }
