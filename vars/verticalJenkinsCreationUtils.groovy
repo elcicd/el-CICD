@@ -92,14 +92,16 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         def curlCommand = "curl -kSs -o /dev/null -H \"Authorization: Bearer \$(oc whoami -t)\" -w '%{http_code}' -X"
         def xmlContent = "-H 'Content-Type:text/xml'"
         def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-        def folderXml = "@${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
             
         def curlDeletePipelineFolder = "${curlCommand} DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
+        
+        def curlCreateCommand = "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/"
+        
         def curlCreatePipelineFolder =
-            "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${folderXml}"
+            "${curlCreateCommand}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
         
         def curlPipeline = 
-            "${curlCommand} POST ${xmlContent} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
+            "${curlCreateCommand}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
         
         sh """
             ${shCmd.echo ''}
