@@ -95,10 +95,10 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         
         createJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
         
-        pipelineFiles.each { pipelineFile ->
-            echo "pipelineFile: ${pipelineFile.getClass()}"
-            echo "pipelineFile: ${pipelineFile.toString()}"
-            createJenkinsPipeline(jenkinsUrl, pipelineFolder, pipelineFile)
+        dir(pipelineDir) {
+            pipelineFiles.each { pipelineFile ->
+                createJenkinsPipeline(jenkinsUrl, pipelineFolder, pipelineFile)
+            }
         }
     }
 }
@@ -129,7 +129,7 @@ def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFile) {
             PIPELINE_FILE=${pipelineFile.name}
             ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
             ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
-                ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.directory}/${pipelineFile.path}
+                ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.path}
         """
     }
 }
