@@ -111,7 +111,7 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
 
             for FILE in ${pipelineFiles.join(' ')}
             do
-                ${maskCommand(curlCreatePipelineFolder)}
+                ${maskCommand(curlPipeline)}
             done
         """
     }
