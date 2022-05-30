@@ -101,7 +101,7 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
             "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
         
         def curlPipeline = 
-            "${curlCommand} POST ${xmlContent} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name='\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
+            "${curlCommand} POST ${xmlContent} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
         
         sh """
             ${shCmd.echo ''}
