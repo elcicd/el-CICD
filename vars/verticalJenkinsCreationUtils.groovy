@@ -77,46 +77,58 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
 def refreshAutomationPipelines(def projectInfo, def isNonProd) {
     stage('Refreshing shared pipelines') {
-        def PIPELINE_DIR = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
-        def PIPELINE_FOLDER = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
+        def pipelineDir = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
+        def pipelineFolder = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
         
         def pipelineFiles
-        dir(PIPELINE_DIR) {
-            pipelineFiles = findFiles(glob: "**/*.xml").collect { it.name }
+        dir(pipelineDir) {
+            pipelineFiles = findFiles(glob: "**/*.xml")
         }
                 
         def msg = ['CREATING/UPDATING AUTOMATION PIPELINES:']
-        msg.addAll(pipelineFiles)
+        msg.addAll(pipelineFiles.collect { it.name })
         pipelineUtils.echoBanner(msg)
         
-        def curlCommand = credentialUtils.getCurlCommand()
         def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
             
-        def curlDeletePipelineFolder = "${curlCommand} -X DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
+        cleanJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
         
-        def curlCreateCommand = "${curlCommand} -X POST -H 'Content-Type:text/xml'"
+        createJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
         
-        def curlCreatePipelineFolder =
-            "${curlCreateCommand} ${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
-        
-        def curlPipeline = 
-            "${curlCreateCommand} ${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*} --data-binary @${PIPELINE_DIR}/\${FILE}"
-        
-        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-            sh """
-                ${shCmd.echo ''}
-                ${curlDeletePipelineFolder}
-                ${shCmd.echo ''}
-                ${curlCreatePipelineFolder}
-
-                for FILE in ${pipelineFiles.join(' ')}
-                do
-                    ${shCmd.echo ''}
-                    ${shCmd.echo 'Creating ${FILE%.*} pipeline'}
-                    ${curlPipeline}
-                    ${shCmd.echo ''}
-                done
-            """
+        pipelineFiles.each { pipelineFile ->
+            createJenkinsPipeline(jenkinsUrl, pipelineFolder, pipelineFile)
         }
+    }
+}
+
+def cleanJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        sh """
+            ${shCmd.echo ''}
+            ${credentialUtils.getCurlCommand()} -X DELETE '${jenkinsUrl}/job/${folderName}/'"
+        """
+    }
+}
+
+def createJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        sh """
+            ${shCmd.echo ''}
+            ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
+                ${jenkinsUrl}/createItem?name=${folderName} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
+        """
+    }
+}
+
+def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFile) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        def pipelineDir = pipelineFile.getD
+        sh """
+            ${shCmd.echo ''}
+            PIPELINE_FILE=${pipelineFile.name}
+            ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
+            ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
+                ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.path}
+        """
     }
 }
