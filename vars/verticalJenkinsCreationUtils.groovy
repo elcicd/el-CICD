@@ -103,19 +103,20 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
             "${curlCreateCommand} ${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*} --data-binary @${PIPELINE_DIR}/\${FILE}"
         
         withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${shCmd.echo ''}
-            ${curlDeletePipelineFolder}
-            ${shCmd.echo ''}
-            ${curlCreatePipelineFolder}
+            sh """
+                ${shCmd.echo ''}
+                ${curlDeletePipelineFolder}
+                ${shCmd.echo ''}
+                ${curlCreatePipelineFolder}
 
-            for FILE in ${pipelineFiles.join(' ')}
-            do
-                ${shCmd.echo ''}
-                ${shCmd.echo 'Creating ${FILE%.*} pipeline'}
-                ${curlPipeline}
-                ${shCmd.echo ''}
-            done
-        """
+                for FILE in ${pipelineFiles.join(' ')}
+                do
+                    ${shCmd.echo ''}
+                    ${shCmd.echo 'Creating ${FILE%.*} pipeline'}
+                    ${curlPipeline}
+                    ${shCmd.echo ''}
+                done
+            """
+        }
     }
 }
