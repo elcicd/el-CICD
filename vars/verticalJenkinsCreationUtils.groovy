@@ -105,7 +105,7 @@ def cleanJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo ''}
-            ${credentialUtils.getCurlCommand()} -X DELETE '${jenkinsUrl}/job/${folderName}/'"
+            ${credentialUtils.getCurlCommand()} -X DELETE ${jenkinsUrl}/job/${folderName}/
         """
     }
 }
