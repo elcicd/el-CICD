@@ -87,20 +87,27 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         pipelineUtils.echoBanner(msg)
         
         
+        def jenkinsUrl =
+            "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/"
+            
+        def curlCommand = "curl -kSs -o /dev/null -H \"Authorization: Bearer \$(oc whoami -t)\" -w '%{http_code}' -X"
+            
+        def curlDeletePipelineFolder = "${curlCommand} DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
+        def curlCreatePipelineFolder =
+            "${curlCommand} POST '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
+        
+        def curlPipeline = 
+            "${curlCommand} POST -H 'Content-Type:text/xml' \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name='\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
+        
         sh """
-            curl -kSs -o /dev/null -w '%{http_code}' -X DELETE  -H "Authorization: Bearer \$(oc whoami -t)"
-                    'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/job/${PIPELINE_FOLDER}/'
-                    
-            curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H 'Content-Type:text/xml' \
-                    'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/createItem?name=${PIPELINE_FOLDER}' \
-                    --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
+            ${shCmd.echo ''}
+            ${maskCommand(curlDeletePipelineFolder)}
+            ${shCmd.echo ''}
+            ${maskCommand(curlCreatePipelineFolder)}
 
             for FILE in ${pipelineFiles.join(' ')}
             do
-                ${shCmd.echo ''}
-                curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer \$(oc whoami -t)" -H 'Content-Type:text/xml' \
-                     'https://jenkins-el-cicd-non-prod-onboarding-master.apps-crc.testing/createItem?name=${PIPELINE_FOLDER}' \
-                     --data-binary @${PIPELINE_DIR}/\${FILE}
+                ${maskCommand(curlCreatePipelineFolder)}
             done
         """
     }
