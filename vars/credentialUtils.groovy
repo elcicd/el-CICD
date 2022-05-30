@@ -4,8 +4,10 @@
  * Utility methods for pushing credentials to servers and external tools.
  */
 
-def getCurlCommand() {
-    return 'curl -ksS -o /dev/null -X POST -w "%{http_code}" -H "Authorization: Bearer ${JENKINS_ACCESS_TOKEN}"'
+def getCurlCommand(def httpVerb) {
+    return """
+        curl -ksS -o /dev/null -X ${httpVerb} -w '%{http_code}' -H "Authorization: Bearer \${JENKINS_ACCESS_TOKEN}"
+    """
 }
 
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
@@ -146,7 +148,7 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
         projectInfo.components.each { component ->
             sh """
                 ${shCmd.echo ''}
-                ${getCurlCommand()} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete
+                ${getCurlCommand('POST')} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete
             """
         }
     }
@@ -160,7 +162,7 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def credsFileName = 'scmSshCredentials.xml'
         def jenkinsCurlCommand =
-            """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
+            """${getCurlCommand('POST')} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
         withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
             projectInfo.components.each { component ->
@@ -192,7 +194,7 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
     def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE"),
                       string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]
-    def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
+    def curlCommand = """${getCurlCommand('POST')} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         def httpCode = 
             sh(returnStdout: true, script: """
@@ -216,7 +218,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                       string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN'))]
                       
     withCredentials(credsArray) {
-        def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
+        def curlCommand = """${getCurlCommand('POST')} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         def httpCode = 
             sh(returnStdout: true, script: """
                 ${shCmd.echo ''}

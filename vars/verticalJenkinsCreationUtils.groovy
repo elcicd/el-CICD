@@ -103,18 +103,14 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
 
 def cleanJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${shCmd.echo ''}
-            ${credentialUtils.getCurlCommand()} -X DELETE ${jenkinsUrl}/job/${folderName}/
-        """
+        sh "${credentialUtils.getCurlCommand('DELETE')} ${jenkinsUrl}/job/${folderName}/"
     }
 }
 
 def createJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${shCmd.echo ''}
-            ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
+            ${credentialUtils.getCurlCommand('POST')} -H 'Content-Type:text/xml' \
                 ${jenkinsUrl}/createItem?name=${folderName} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
         """
     }
@@ -124,10 +120,9 @@ def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFileDir, d
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         dir(pipelineFileDir) {
             sh """
-                ${shCmd.echo ''}
                 PIPELINE_FILE=${pipelineFile.name}
                 ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
-                ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
+                ${credentialUtils.getCurlCommand('POST')} -H 'Content-Type:text/xml' \
                     ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.name}
             """
         }
