@@ -80,7 +80,10 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         def PIPELINE_DIR = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
         def PIPELINE_FOLDER = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
         
-        def pipelineFiles = findFiles(glob: "${PIPELINE_DIR}/**/*.xml").collect { it.name }
+        def pipelineFiles
+        dir(PIPELINE_DIR) {
+            pipelineFiles = findFiles(glob: "**/*.xml").collect { it.name }
+        }
                 
         def msg = ['CREATING/UPDATING AUTOMATION PIPELINES:']
         msg.addAll(pipelineFiles)
