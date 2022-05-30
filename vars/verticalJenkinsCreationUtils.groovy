@@ -95,13 +95,13 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
             
         def curlDeletePipelineFolder = "${curlCommand} DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
         
-        def curlCreateCommand = "${curlCommand} POST ${xmlContent} '${jenkinsUrl}/"
+        def curlCreateCommand = "${curlCommand} POST ${xmlContent} "
         
         def curlCreatePipelineFolder =
-            "${curlCreateCommand}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
+            "${curlCreateCommand} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
         
         def curlPipeline = 
-            "${curlCreateCommand}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
+            "${curlCreateCommand} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
         
         sh """
             ${shCmd.echo ''}
