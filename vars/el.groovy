@@ -124,9 +124,9 @@ def initializePipeline() {
         pipelineUtils.echoBanner("INITIALIZING...")
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
-        el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/pipelines"
-        el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.PIPELINES_DIR}/pipelines/non-prod-automation"
-        el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.PIPELINES_DIR}/pipelines/prod-automation"
+        el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
+        el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
+        el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
         
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
