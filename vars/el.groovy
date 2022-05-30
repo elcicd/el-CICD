@@ -145,7 +145,6 @@ def initializePipeline() {
             mkdir -p '${WORKSPACE}'
 
             mkdir -p '${el.cicd.TEMP_DIR}'
-            mkdir -p '${el.cicd.BUILDCONFIGS_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
             ${shCmd.echo "\n=======================\n"}
