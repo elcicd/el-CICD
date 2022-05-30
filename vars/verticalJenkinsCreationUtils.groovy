@@ -94,7 +94,7 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
             
         def curlDeletePipelineFolder = "${curlCommand} -X DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
         
-        def curlCreateCommand = "${curlCommand} -X POST -H 'Content-Type:text/xml' ${xmlContent}"
+        def curlCreateCommand = "${curlCommand} -X POST -H 'Content-Type:text/xml'"
         
         def curlCreatePipelineFolder =
             "${curlCreateCommand} ${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
