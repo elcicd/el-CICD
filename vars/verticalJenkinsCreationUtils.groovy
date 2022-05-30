@@ -78,7 +78,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 def refreshAutomationPipelines(def projectInfo, def isNonProd) {
     stage('Refreshing shared pipelines') {
         def PIPELINE_DIR = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
-        def PIPELINE_FOLDER= = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
+        def PIPELINE_FOLDER = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
         
         def pipelineFiles = findFiles(glob: "${PIPELINE_DIR}/**/*.xml").collect { it.name }
                 
