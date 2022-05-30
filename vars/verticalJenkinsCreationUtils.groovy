@@ -127,7 +127,7 @@ def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFile) {
             PIPELINE_FILE=${pipelineFile.name}
             ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
             ${credentialUtils.getCurlCommand()} -X POST -H 'Content-Type:text/xml' \
-                ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.path}
+                ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.directory}/${pipelineFile.path}
         """
     }
 }
