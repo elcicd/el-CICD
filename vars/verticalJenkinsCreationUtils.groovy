@@ -89,31 +89,31 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
         msg.addAll(pipelineFiles)
         pipelineUtils.echoBanner(msg)
         
-        def curlCommand = "curl -kSs -o /dev/null -H \"Authorization: Bearer \$(oc whoami -t)\" -w '%{http_code}' -X"
-        def xmlContent = "-H 'Content-Type:text/xml'"
+        def curlCommand = credentialUtils.getCurlCommand()
         def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
             
-        def curlDeletePipelineFolder = "${curlCommand} DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
+        def curlDeletePipelineFolder = "${curlCommand} -X DELETE '${jenkinsUrl}/job/${PIPELINE_FOLDER}/'"
         
-        def curlCreateCommand = "${curlCommand} POST ${xmlContent} "
+        def curlCreateCommand = "${curlCommand} -X POST -H 'Content-Type:text/xml' ${xmlContent}"
         
         def curlCreatePipelineFolder =
-            "${curlCreateCommand} '${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER}' --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
+            "${curlCreateCommand} ${jenkinsUrl}/createItem?name=${PIPELINE_FOLDER} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml"
         
         def curlPipeline = 
-            "${curlCreateCommand} \"${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*}\" --data-binary @${PIPELINE_DIR}/\${FILE}"
+            "${curlCreateCommand} ${jenkinsUrl}/job/${PIPELINE_FOLDER}/createItem?name=\${FILE%.*} --data-binary @${PIPELINE_DIR}/\${FILE}"
         
+        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo ''}
-            ${maskCommand(curlDeletePipelineFolder)}
+            ${curlDeletePipelineFolder}
             ${shCmd.echo ''}
-            ${maskCommand(curlCreatePipelineFolder)}
+            ${curlCreatePipelineFolder}
 
             for FILE in ${pipelineFiles.join(' ')}
             do
                 ${shCmd.echo ''}
                 ${shCmd.echo 'Creating ${FILE%.*} pipeline'}
-                ${maskCommand(curlPipeline)}
+                ${curlPipeline}
                 ${shCmd.echo ''}
             done
         """

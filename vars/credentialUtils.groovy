@@ -5,7 +5,7 @@
  */
 
 def getCurlCommand() {
-    return 'curl -ksS -o /dev/null -X POST -w "%{http_code}" -H "Authorization: Bearer \$(oc whoami -t)"'
+    return 'curl -ksS -o /dev/null -X POST -w "%{http_code}" -H "Authorization: Bearer ${JENKINS_ACCESS_TOKEN}"'
 }
 
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
@@ -142,12 +142,13 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
-    projectInfo.components.each { component ->
-        def doDelete = "${getCurlCommand()} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete "
-        sh """
-            ${shCmd.echo ''}
-            ${maskCommand(doDelete)}
-        """
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        projectInfo.components.each { component ->
+            sh """
+                ${shCmd.echo ''}
+                ${getCurlCommand()} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete
+            """
+        }
     }
 }
 
@@ -161,33 +162,36 @@ def createAndPushPublicPrivateGithubRepoKeys(def projectInfo) {
         def jenkinsCurlCommand =
             """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${credsFileName}"""
 
-        projectInfo.components.each { component ->
-            def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
+        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]) {
+            projectInfo.components.each { component ->
+                def pushDeployKeyIdCurlCommand = scmScriptHelper.getScriptToPushDeployKeyToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
-            def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
-            sh """
-                ${shCmd.echo  '', "ADDING PUBLIC KEY TO GIT REPO: ${component.gitRepoName}"}
-                ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+                def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
+                sh """
+                    ${shCmd.echo  '', "ADDING PUBLIC KEY TO GIT REPO: ${component.gitRepoName}"}
+                    ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
 
-                ${pushDeployKeyIdCurlCommand}
+                    ${pushDeployKeyIdCurlCommand}
 
-                ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
-                cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
+                    ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
+                    cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
 
-                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}")}
-                ${maskCommand("${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}")}
+                    ${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}
+                    ${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}
 
-                rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
-            """
+                    rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
+                """
+            }
         }
     }
 }
 
 def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
-    def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE")]
+    def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE"),
+                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN')]
     def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
     withCredentials(credsArray) {
         def httpCode = 
@@ -197,7 +201,7 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
                 cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
 
-                ${maskCommand(curlCommand)}
+                ${curlCommand}
 
                 rm -f ${SECRET_FILE_NAME}
             """).replaceAll(/[\s]/, '')
@@ -208,7 +212,10 @@ def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
 }
 
 def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tokenId) {
-    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+    def credsArray = [string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN',
+                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN, variable: 'JENKINS_ACCESS_TOKEN'))]
+                      
+    withCredentials(credsArray) {
         def curlCommand = """${getCurlCommand()} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         def httpCode = 
             sh(returnStdout: true, script: """
@@ -216,7 +223,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                 cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
                 cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
 
-                ${maskCommand(curlCommand)}
+                ${curlCommand}
 
                 rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
             """).replaceAll(/[\s]/, '')

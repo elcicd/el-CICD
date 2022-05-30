@@ -11,11 +11,16 @@ _refresh_non_prod_credentials() {
 
     echo
     echo "Adding read only deploy key for el-CICD-config"
-    _push_github_public_ssh_deploy_key el-CICD-config \
-                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
-                                    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
+    _push_github_public_ssh_deploy_key el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
     JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
+    
+    echo
+    echo 'Pushing OCP TOKEN to Jenkins for masking purposes'
+    local SA_SECRET_NAME=$(oc get secrets -o custom-columns=:.metadata.name -n ${ONBOARDING_MASTER_NAMESPACE} | grep -m 1 jenkins-token)
+    local SA_TOKEN="$(oc get secrets ${SA_SECRET_NAME} -o custom-columns=:.data.token -n ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')"
+    echo ${SA_TOKEN} | base64 -d > ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}
+    _push_access_token_to_jenkins ${JENKINS_URL} ${JENKINS_ACCESS_TOKEN_ID} ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}
 
     echo
     echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'
