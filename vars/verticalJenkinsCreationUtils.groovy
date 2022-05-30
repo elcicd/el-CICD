@@ -103,6 +103,7 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
 
 def cleanJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        echo 'howdy'
         sh "${credentialUtils.getCurlCommand('DELETE')} ${jenkinsUrl}/job/${folderName}/"
     }
 }

@@ -5,9 +5,7 @@
  */
 
 def getCurlCommand(def httpVerb) {
-    return """
-        curl -ksS -o /dev/null -X ${httpVerb} -w '%{http_code}' -H \"Authorization: Bearer \${JENKINS_ACCESS_TOKEN}\"
-    """
+    return "curl -ksS -o /dev/null -X ${httpVerb} -w '%{http_code}' -H \"Authorization: Bearer \${JENKINS_ACCESS_TOKEN}\" "
 }
 
 def getJenkinsCredsUrls(def projectInfo, def tokenId) {
