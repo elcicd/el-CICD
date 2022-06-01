@@ -188,7 +188,7 @@ def generateBuildPipelineFiles(def projectInfo) {
         projectInfo.microServices.each { microService ->
             sh """
                 cp build-to-dev.xml.template ${microService.name}-build-to-dev.xml
-                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}|g" \
+                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                        -e "s/%MICROSERVICE_NAME%/${microService.name}/g" \
                        -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
                        -e "s/%CODE_BASE%/${microService.codeBase}/g" \
@@ -200,7 +200,7 @@ def generateBuildPipelineFiles(def projectInfo) {
         projectInfo.libraries.each { library ->
             sh """
                 cp build-library.xml.template ${library.name}-build-library.xml
-                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}|g" \
+                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                     -e "s/%LIBRARY_NAME%/${library.name}/g" \
                     -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
                     -e "s/%CODE_BASE%/${library.codeBase}/g" \
