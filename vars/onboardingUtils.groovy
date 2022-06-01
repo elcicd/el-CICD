@@ -150,7 +150,7 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
             projectInfo.components.each { component ->
                 sh """
                     ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' \
-                        -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null"
+                        -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
                     
                     ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
                     cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
