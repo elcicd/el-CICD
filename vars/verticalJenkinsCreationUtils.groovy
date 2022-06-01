@@ -90,6 +90,7 @@ def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
         loggingUtils.echoBanner(msg)
                     
         def oldAutomationPipelines = jenkinsUtils.listPipelinesInFolder(projectInfo, pipelineFolder)
+        println "oldAutomationPipelines: ${oldAutomationPipelines}"
                 
         jenkinsUtils.createPipelinesFolder(projectInfo, pipelineFolder)
         
