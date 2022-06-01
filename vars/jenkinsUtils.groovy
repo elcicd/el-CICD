@@ -65,7 +65,7 @@ def createPipelinesFolder(def projectInfo, def folderName) {
  
 def deletePipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/"
+        sh "${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
     }
 }
 
