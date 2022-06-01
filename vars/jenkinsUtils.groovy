@@ -272,6 +272,6 @@ def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelin
     }
     
     oldAutomationPipelines.each { pipelineName ->
-        deletePipeline(projectInfo, folderName, pipelineName)
+        deletePipeline(projectInfo, pipelineFolderName, pipelineName)
     }
 }
