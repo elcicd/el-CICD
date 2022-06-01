@@ -51,7 +51,7 @@ def getJenkinsCurlCommand(def httpVerb, def headerType, def output = '-o /dev/nu
             header = "-H 'Content-Type:text/xml'"
     }
     
-    return """ curl -ksS ${output ?: ''} -X ${httpVerb} -w '%{http_code}' ${header} -H "Authorization: Bearer \${JENKINS_ACCESS_TOKEN}" """
+    return """ curl -ksS ${output ?: ''} -X ${httpVerb} ${header} -H "Authorization: Bearer \${JENKINS_ACCESS_TOKEN}" """
 }
 
 def createPipelinesFolder(def projectInfo, def folderName) {
@@ -73,7 +73,7 @@ def listPipelinesInFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def listOfPipelines =
             sh(returnStdout: true, script: """
-                ${getJenkinsCurlCommand('GET', null, null)} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs.name'
+                ${getJenkinsCurlCommand('GET', null, null)} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs[].name'
             """).split(/\s/)
     }
 }
