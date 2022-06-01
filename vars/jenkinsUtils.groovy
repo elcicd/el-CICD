@@ -71,25 +71,22 @@ def deletePipelinesFolder(def projectInfo, def folderName) {
 
 def listPipelinesInFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        dir(pipelineFileDir) {
-            def listOfPipelines =
-                sh(returnStdout: true, script: """
-                    ${getJenkinsCurlCommand('GET', null, null)} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs.name'
-                """).split(/\s/)
-        }
+        def listOfPipelines =
+            sh(returnStdout: true, script: """
+                ${getJenkinsCurlCommand('GET', null, null)} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs.name'
+            """).split(/\s/)
     }
 }
 
 def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pipelineFile) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        dir(pipelineFileDir) {
-            sh """
-                PIPELINE_FILE=${pipelineFile.name}
-                ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
-                ${getJenkinsCurlCommand('POST', 'XML')} \
-                    ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.name}
-            """
-        }
+        sh """
+            PIPELINE_FILE=${pipelineFile.name}
+            ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
+            ${getJenkinsCurlCommand('POST', 'XML')} \
+                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} \
+                --data-binary @${pipelineFileDir}/${pipelineFile.name}
+        """
     }
 }
 
