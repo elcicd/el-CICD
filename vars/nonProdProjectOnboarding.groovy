@@ -55,8 +55,6 @@ def call(Map args) {
             buildPipelineFiles = findFiles(glob: "**/*-build-*.xml")
         }
         
-        onboardingUtils.generateJenkinsBuildPipelineFiles(projectInfo)
-        
         jenkinsUtils.createOrUpdatePipelines(projectInfo, projectInfo.id, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, buildPipelineFiles)
         
         dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
