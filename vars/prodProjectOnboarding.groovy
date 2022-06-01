@@ -8,24 +8,25 @@ def call(Map args) {
     onboardingUtils.init()
 
     def projectInfo = args.projectInfo
-    
-    jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
 
-    stage('refresh automation pipelines') {
-        def pipelineFiles
-        dir(el.cicd.PROD_AUTOMATION_PIPELINES_DIR) {
-            pipelineFiles = findFiles(glob: "**/*.xml")
-        }
-        
-        jenkinsUtils.createOrUpdatePipelines(el.cicd.PROD_AUTOMATION, pipelineFiles)
-    }
+    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
     dir (el.cicd.EL_CICD_DIR) {
         git url: el.cicd.EL_CICD_GIT_REPO,
             branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
             credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     }
-    verticalJenkinsCreationUtils.refreshGeneralAutomationPipelines(projectInfo, false)
+
+    stage('refresh automation pipelines') {
+        jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
+        
+        def pipelineFiles
+        dir(el.cicd.PROD_AUTOMATION_PIPELINES_DIR) {
+            pipelineFiles = findFiles(glob: "**/*.xml")
+        }
+        
+        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.PROD_AUTOMATION, el.cicd.PROD_AUTOMATION_PIPELINES_DIR, pipelineFiles)
+    }
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
 

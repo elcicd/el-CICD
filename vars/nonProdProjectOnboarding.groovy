@@ -8,8 +8,6 @@ def call(Map args) {
     onboardingUtils.init()
 
     def projectInfo = args.projectInfo
-    
-    jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
@@ -20,6 +18,8 @@ def call(Map args) {
     }
 
     stage('refresh automation pipelines') {
+        jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
+        
         def pipelineFiles
         dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
             pipelineFiles = findFiles(glob: "**/*.xml")
