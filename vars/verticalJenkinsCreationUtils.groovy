@@ -94,10 +94,8 @@ def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
         jenkinsUtils.createPipelinesFolder(projectInfo, pipelineFolder)
         
         pipelineFiles.each { pipelineFile ->
-            echo "pipelineFile.name: ${pipelineFile.name}"
-            echo "pipelineName: ${pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.'))}"
-            sleep 3
-            oldAutomationPipelines.remove(pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.')))
+            def pipelineName = pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.'))
+            oldAutomationPipelines.remove(pipelineName)
             jenkinsUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
         }
         
