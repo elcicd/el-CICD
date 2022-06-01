@@ -115,7 +115,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
-    def jenkinsUrls = `(projectInfo, keyId)
+    def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
         pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     }

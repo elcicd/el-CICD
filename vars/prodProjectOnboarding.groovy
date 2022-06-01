@@ -38,6 +38,6 @@ def call(Map args) {
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        githubUtils.createAndPushPublicPrivateSshKeys(projectInfo)
+        onboardingUtils.createAndPushPublicPrivateSshKeys(projectInfo)
     }
 }

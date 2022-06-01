@@ -50,7 +50,7 @@ def call(Map args) {
 
                 if (sldcNamespacesExist) {
                     stage('Create and push public key for each github repo to github with curl') {
-                        githubUtils.createAndPushPublicPrivateSshKeys(projectInfo)
+                        onboardingUtils.createAndPushPublicPrivateSshKeys(projectInfo)
                     }
 
                     stage('Refresh pull secrets per build environment') {
