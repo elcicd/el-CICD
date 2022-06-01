@@ -78,7 +78,9 @@ def listPipelinesInFolder(def projectInfo, def folderName) {
                 ${getJenkinsCurlCommand('GET')} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs[].name'
             """)
         echo "listOfPipelines: ${listOfPipelines}"
-        return listOfPipelines.split(/\s/)
+        listOfPipelines = listOfPipelines.split(/\s+/)
+        echo "listOfPipelines: ${listOfPipelines}"
+        return 
     }
 }
 
