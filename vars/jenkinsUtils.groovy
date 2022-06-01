@@ -93,7 +93,7 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
     }
 }
 
-def deletePipeline(def projectInfo, def pipelineFileDir, def pipelineName) {
+def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo "Removing pipeline: ${pipelineName}"}

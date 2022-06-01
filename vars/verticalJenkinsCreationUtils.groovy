@@ -89,12 +89,17 @@ def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
         msg.addAll(pipelineFiles.collect { it.name })
         loggingUtils.echoBanner(msg)
                     
-        jenkinsUtils.deletePipelinesFolder(projectInfo, pipelineFolder)
-        
+        def oldAutomationPipelines = jenkinsUtils.listPipelinesInFolder(pipelineFolder)
+                
         jenkinsUtils.createPipelinesFolder(projectInfo, pipelineFolder)
         
         pipelineFiles.each { pipelineFile ->
+            oldAutomationPipelines.remove(pipelineFile.substring(0, pipelineFile.lastIndexOf('.'))
             jenkinsUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
+        }
+        
+        oldAutomationPipelines.each { pipelineName ->
+            jenkinsUtils.deletePipeline(projectInfo, folderName, pipelineName)
         }
     }
 }
