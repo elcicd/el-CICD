@@ -49,9 +49,10 @@ def deletePipelinesFolder(def projectInfo, def folderName) {
 def listPipelinesInFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         dir(pipelineFileDir) {
-            sh(returnStdout: true, script: """
-               ${getJenkinsCurlCommand('GET')} -f ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/api/json | jq -r '.jobs.name'
-            """
+            def listOfPipelines =
+                sh(returnStdout: true, script: """
+                    ${getJenkinsCurlCommand('GET')} -f ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/api/json | jq -r '.jobs.name'
+                """).split(/\s/)
         }
     }
 }
