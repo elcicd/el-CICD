@@ -256,12 +256,12 @@ def pushPrivateSshKey() {
     """
 }
 
-def createOrUpdatePipelines(def pipelineFolderName, def pipelineFiles) {
+def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelineFiles) {
     def msg = ["CREATING/UPDATING PIPELINES FROM THE FOLLOWING FILES IN THE JENKINS ${pipelineFolderName} FOLDER:"]
     msg.addAll(pipelineFiles.collect { it.name })
     loggingUtils.echoBanner(msg)
                 
-    def oldAutomationPipelines = jenkinsUtils.listPipelinesInFolder(projectInfo, pipelineFolderName)
+    def oldAutomationPipelines = listPipelinesInFolder(projectInfo, pipelineFolderName)
             
     createPipelinesFolder(projectInfo, pipelineFolderName)
     

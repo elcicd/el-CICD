@@ -25,11 +25,9 @@ def call(Map args) {
             pipelineFiles = findFiles(glob: "**/*.xml")
         }
         
-        jenkinsUtils.createOrUpdatePipelines(el.cicd.NON_PROD_AUTOMATION, pipelineFiles)
+        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.NON_PROD_AUTOMATION, pipelineFiles)
     }
     
-    jenkinsUtils.createOrUpdatePipelines
-
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments if requested') {
