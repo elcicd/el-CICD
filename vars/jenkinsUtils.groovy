@@ -37,7 +37,7 @@ def configureTeamJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls.UDPATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/"
     projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/doDelete"
     
-    projectInfo.jenkinsUrls.ACCESS_FOLDER = "${projectInfo.jenkinsUrls.HOST}/${JOB}/"
+    projectInfo.jenkinsUrls.ACCESS_FOLDER = "${projectInfo.jenkinsUrls.HOST}/${JOB}"
  }
 
 def getJenkinsCurlCommand(def httpVerb) {
