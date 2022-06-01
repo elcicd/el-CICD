@@ -8,7 +8,7 @@
 def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
     stage("Check if group's prod or non-prod CICD Jenkins exist") {
         def prodOrNonProd  = "${isNonProd ? 'NON-' : ''}PROD"
-        pipelineUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
+        loggingUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
 
         sh """
             echo 'Verify group '${projectInfo.rbacGroup}' exists'
@@ -24,10 +24,10 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
             createCicdNamespaceAndJenkins(projectInfo, envs)
 
-            credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
+            jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
 
             stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
-                credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+                jenkinsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
             }
         }
         else {
@@ -41,7 +41,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
         def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${el.cicd.CICD_MASTER_NODE_SELECTORS }'" : ''
 
         sh """
-            ${pipelineUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
+            ${loggingUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
 
@@ -75,7 +75,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     }
 }
 
-def refreshAutomationPipelines(def projectInfo, def isNonProd) {
+def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
     stage('Refreshing shared pipelines') {
         def pipelineDir = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
         def pipelineFolder = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
@@ -87,44 +87,14 @@ def refreshAutomationPipelines(def projectInfo, def isNonProd) {
                 
         def msg = ['CREATING/UPDATING AUTOMATION PIPELINES:']
         msg.addAll(pipelineFiles.collect { it.name })
-        pipelineUtils.echoBanner(msg)
+        loggingUtils.echoBanner(msg)
+                    
+        pipelineUtils.deletePipelinesFolder(projectInfo, pipelineFolder)
         
-        def jenkinsUrl = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-            
-        cleanJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
-        
-        createJenkinsPipelineFolder(jenkinsUrl, pipelineFolder)
+        pipelineUtils.createPipelinesFolder(projectInfo, pipelineFolder)
         
         pipelineFiles.each { pipelineFile ->
-            createJenkinsPipeline(jenkinsUrl, pipelineFolder, pipelineDir, pipelineFile)
-        }
-    }
-}
-
-def cleanJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${credentialUtils.getCurlCommand('DELETE')} ${jenkinsUrl}/job/${folderName}/"
-    }
-}
-
-def createJenkinsPipelineFolder(def jenkinsUrl, def folderName) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${credentialUtils.getCurlCommand('POST')} -H 'Content-Type:text/xml' \
-                ${jenkinsUrl}/createItem?name=${folderName} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
-        """
-    }
-}
-
-def createJenkinsPipeline(def jenkinsUrl, def folderName, def pipelineFileDir, def pipelineFile) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        dir(pipelineFileDir) {
-            sh """
-                PIPELINE_FILE=${pipelineFile.name}
-                ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
-                ${credentialUtils.getCurlCommand('POST')} -H 'Content-Type:text/xml' \
-                    ${jenkinsUrl}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.name}
-            """
+            pipelineUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
         }
     }
 }

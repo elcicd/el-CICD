@@ -10,10 +10,10 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage('Checkout all microservice repositories') {
-        pipelineUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
+        loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
         projectInfo.microServices.each { microService ->
-            pipelineUtils.cloneGitRepo(microService, projectInfo.gitBranch)
+            projectUtils.cloneGitRepo(microService, projectInfo.gitBranch)
         }
     }
 
@@ -28,7 +28,7 @@ def call(Map args) {
     }
 
     stage ('Select microservices and environment to redeploy to or remove from') {
-        pipelineUtils.echoBanner("SELECT WHICH MICROSERVICES TO REDEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT WHICH MICROSERVICES TO REDEPLOY OR REMOVE")
 
         def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.deployment-branch}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
@@ -81,12 +81,12 @@ def call(Map args) {
         }
 
         if (!willRedeployOrRemove) {
-            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
+            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
         }
     }
 
     stage('Verify image(s) exist for environment') {
-        pipelineUtils.echoBanner("VERIFY IMAGE(S) TO REDEPLOY EXIST IN IMAGE REPOSITORY:",
+        loggingUtils.echoBanner("VERIFY IMAGE(S) TO REDEPLOY EXIST IN IMAGE REPOSITORY:",
                                  projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
         def allImagesExist = true
@@ -105,12 +105,12 @@ def call(Map args) {
         }
 
         if (errorMsgs.size() > 1) {
-            pipelineUtils.errorBanner(errorMsgs)
+            loggingUtils.errorBanner(errorMsgs)
         }
     }
 
     stage('Checkout all deployment branches') {
-        pipelineUtils.echoBanner("CHECKOUT ALL DEPLOYMENT BRANCHES")
+        loggingUtils.echoBanner("CHECKOUT ALL DEPLOYMENT BRANCHES")
 
         projectInfo.microServicesToRedeploy.each { microService ->
             dir(microService.workDir) {
@@ -121,7 +121,7 @@ def call(Map args) {
     }
 
     stage('tag images to redeploy for environment') {
-        pipelineUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
+        loggingUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],

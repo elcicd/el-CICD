@@ -19,24 +19,24 @@ def call(Map args) {
         projectInfo.deployToRegion = "${projectInfo.deployToEnv}-${projectInfo.releaseRegion}"
 
         if (!projectInfo.releaseRegions.find { it == projectInfo.releaseRegion }) {
-            pipelineUtils.errorBanner("REGION ${projectInfo.releaseRegion} IS NOT ONE OF ${projectInfo.releaseRegions}")
+            loggingUtils.errorBanner("REGION ${projectInfo.releaseRegion} IS NOT ONE OF ${projectInfo.releaseRegions}")
         }
     }
     projectInfo.deployToNamespace = projectInfo.prodNamespace
 
 
     stage('Gather all git branches, tags, and source commit hashes') {
-        pipelineUtils.echoBanner("GATHER ALL GIT BRANCHES, TAGS, AND SOURCE COMMIT HASHES")
+        loggingUtils.echoBanner("GATHER ALL GIT BRANCHES, TAGS, AND SOURCE COMMIT HASHES")
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
         projectInfo.microServicesInRelease = projectInfo.microServices.findAll { it.releaseCandidateGitTag }
 
         if (!projectInfo.microServicesInRelease)  {
-            pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
+            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
         else if (projectInfo.microServices.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
-            pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD SCM STATE FOR RELEASE",
+            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
                                       "Release Tags: ${projectInfo.microServices.collect{ it.releaseCandidateGitTag }}",
                                       "Release Branches: ${projectInfo.microServices.collect{ it.deploymentBranch }}")
@@ -44,7 +44,7 @@ def call(Map args) {
     }
 
     stage('Verify images are ready for deployment') {
-        pipelineUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.releaseCandidateTag}:",
+        loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.releaseCandidateTag}:",
                                  projectInfo.microServicesInRelease.collect { it.name }.join(', '))
 
         def allImagesExist = true
@@ -76,23 +76,23 @@ def call(Map args) {
         }
 
         if (!allImagesExist) {
-            pipelineUtils.errorBanner("BUILD FAILED: Missing image(s) to deploy in PROD")
+            loggingUtils.errorBanner("BUILD FAILED: Missing image(s) to deploy in PROD")
         }
     }
 
     stage('Checkout all microservice repositories') {
-        pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
+        loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
         projectInfo.microServices.each { microService ->
             def refName = microService.deploymentBranch ?: microService.releaseCandidateGitTag
             if (refName) {
-                pipelineUtils.cloneGitRepo(microService, refName)
+                projectUtils.cloneGitRepo(microService, refName)
             }
         }
     }
 
     stage('Collect deployment hashes; prune unchanged microservices from deployment') {
-        pipelineUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
+        loggingUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
 
         def metaInfoReleaseShell =
             "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
@@ -126,7 +126,7 @@ def call(Map args) {
             '-> YOU HAVE ELECTED TO REDEPLOY ALL MICROSERVICES:' :
             '-> Microservices to be deployed:'
 
-        def msg = pipelineUtils.createBanner(
+        def msg = loggingUtils.createBanner(
             "${promotionOrDeploymentMsg} TO PRODUCTION",
             "REGION: ${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
             '',
@@ -152,7 +152,7 @@ def call(Map args) {
     }
 
     stage('Promote images') {
-        pipelineUtils.echoBanner("PROMOTE IMAGES TO PROD:",
+        loggingUtils.echoBanner("PROMOTE IMAGES TO PROD:",
                                  "${projectInfo.microServicesInRelease.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
@@ -183,7 +183,7 @@ def call(Map args) {
     }
 
     stage('Create release branch(es) to synchronize with production image(s)') {
-        pipelineUtils.echoBanner("CREATE RELEASE DEPLOYMENT BRANCH(ES) FOR PRODUCTION:",
+        loggingUtils.echoBanner("CREATE RELEASE DEPLOYMENT BRANCH(ES) FOR PRODUCTION:",
                                  projectInfo.microServicesToDeploy.collect { it.name }.join(', '))
 
         if (!projectInfo.hasBeenReleased) {

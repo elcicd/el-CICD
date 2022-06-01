@@ -19,16 +19,16 @@ def call(Map args) {
             "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
             "REMOVING ${projectInfo.id} ENVIRONMENT(S):"
 
-        pipelineUtils.echoBanner(msg, namespacesToDelete.join(' '))
+        loggingUtils.echoBanner(msg, namespacesToDelete.join(' '))
 
         onboardingUtils.deleteNamespaces(namespacesToDelete)
     }
 
     stage('Delete GitHub deploy keys') {
-        credentialUtils.deleteDeployKeysFromGithub(projectInfo)
+        githubUtils.deleteSshKeys(projectInfo)
 
         if (!args.deleteJenkinsCicdServer) {
-            credentialUtils.deleteDeployKeysFromJenkins(projectInfo)
+            jenkinsUtils.deleteDeployKeysFromJenkins(projectInfo)
         }
     }
 
@@ -37,7 +37,7 @@ def call(Map args) {
             onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
         }
         else {
-            pipelineUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
+            loggingUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
         }
     }
 }

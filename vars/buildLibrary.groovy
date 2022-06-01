@@ -15,9 +15,9 @@ void call(Map args) {
     library.isSnapshot = args.isSnapshot
 
     stage('Checkout code from repository') {
-        pipelineUtils.echoBanner("CLONING ${library.gitRepoName} REPO, REFERENCE: ${library.gitBranch}")
+        loggingUtils.echoBanner("CLONING ${library.gitRepoName} REPO, REFERENCE: ${library.gitBranch}")
 
-        pipelineUtils.cloneGitRepo(library, library.gitBranch)
+        projectUtils.cloneGitRepo(library, library.gitBranch)
 
         dir (library.workDir) {
             sh """
@@ -30,7 +30,7 @@ void call(Map args) {
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.DEPLOYER]
     buildSteps.each { buildStep ->
         stage("build step: run ${buildStep} for ${library.name}") {
-            pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR library: ${library.name}")
+            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR library: ${library.name}")
 
             dir(library.workDir) {
                 def moduleName = library[buildStep] ?: buildStep

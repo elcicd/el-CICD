@@ -17,16 +17,16 @@ void call(Map args) {
 
     if (!projectInfo.builderNamespaces.find{ it == projectInfo.deployToNamespace})
     {
-        pipelineUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
+        loggingUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
                                   '',
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
                                   projectInfo.builderNamespaces.join(' '))
     }
 
     stage('Checkout code from repository') {
-        pipelineUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
+        loggingUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
 
-        pipelineUtils.cloneGitRepo(microService, microService.gitBranch)
+        projectUtils.cloneGitRepo(microService, microService.gitBranch)
 
         dir (microService.workDir) {
             sh """
@@ -39,7 +39,7 @@ void call(Map args) {
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.ASSEMBLER]
     buildSteps.each { buildStep ->
         stage("build step: run ${buildStep} for ${microService.name}") {
-            pipelineUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
+            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
 
             dir(microService.workDir) {
                 def moduleName = microService[buildStep] ?: buildStep
@@ -65,7 +65,7 @@ void call(Map args) {
 
     stage('build, scan, and push image to repository') {
         projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
-        pipelineUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
+        loggingUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
 
@@ -88,12 +88,12 @@ void call(Map args) {
                                  -t ${imageRepo}/${microService.id}:${projectInfo.imageTag} -f ./Dockerfile
                 """
 
-                pipelineUtils.echoBanner("SCAN ${microService.id}:${projectInfo.imageTag} IMAGE")
+                loggingUtils.echoBanner("SCAN ${microService.id}:${projectInfo.imageTag} IMAGE")
 
                 def imageScanner = load "${el.cicd.BUILDER_STEPS_DIR}/imageScanner.groovy"
                 imageScanner.scanImage(projectInfo, microService.name)
 
-                pipelineUtils.echoBanner("PUSH ${microService.id}:${projectInfo.imageTag} IMAGE")
+                loggingUtils.echoBanner("PUSH ${microService.id}:${projectInfo.imageTag} IMAGE")
 
                 sh """
                     podman push ${tlsVerify} ${imageRepo}/${microService.id}:${projectInfo.imageTag}

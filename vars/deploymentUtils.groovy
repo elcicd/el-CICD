@@ -31,7 +31,7 @@ def readTemplateDefs() {
         }
     }
     else {
-       pipelineUtils.errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.[json|yaml/|yml] and be legitimate JSON or YAML")
+       loggingUtils.errorBanner("TEMPLATE-DEFS NOT FOUND: must be named templateDefs.[json|yaml/|yml] and be legitimate JSON or YAML")
     }
 
     return templateDefs
@@ -40,7 +40,7 @@ def readTemplateDefs() {
 def processTemplateDefs(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
 
-    pipelineUtils.echoBanner("BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS")
+    loggingUtils.echoBanner("BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS")
 
     writeFile file:"${el.cicd.TEMPLATES_DIR}/kustomization-template.yml", text: libraryResource('templates/kustomization-template.yml')
 
@@ -112,7 +112,7 @@ def kustomizeTemplate(def projectInfo, def templateDef, def index) {
 def processTemplates(def projectInfo, def microServices, def imageTag) {
     assert projectInfo; assert microServices; assert imageTag
 
-    pipelineUtils.echoBanner("APPLY OKD TEMPLATES AND RESOURCES")
+    loggingUtils.echoBanner("APPLY OKD TEMPLATES AND RESOURCES")
 
     microServices.each { microService ->
         if (microService.templateDefs) {
@@ -239,7 +239,7 @@ def rolloutLatest(def projectInfo, def microServices) {
 
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
     sh """
-        ${pipelineUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
+        ${loggingUtils.shellEchoBanner("CLEANUP EXISTING DEPLOYMENTS FOR MICROSERVICES ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
@@ -261,7 +261,7 @@ def rolloutLatest(def projectInfo, def microServices) {
     waitingForPodsToTerminate(projectInfo.deployToNamespace)
 
     sh """
-        ${pipelineUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
+        ${loggingUtils.shellEchoBanner("ROLLOUT LATEST IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
@@ -285,7 +285,7 @@ def confirmDeployments(def projectInfo, def microServices) {
 
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
     sh """
-        ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
+        ${loggingUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do
@@ -312,7 +312,7 @@ def updateMicroServiceMetaInfo(def projectInfo, def microServices) {
 
         sh """
             DEPLOY_TIME=\$(date +%d.%m.%Y-%H.%M.%S%Z)
-            ${pipelineUtils.shellEchoBanner("UPDATE LABELS AND ${metaInfoCmName}:",
+            ${loggingUtils.shellEchoBanner("UPDATE LABELS AND ${metaInfoCmName}:",
                                             "  projectid = ${projectInfo.id}",
                                             "  microservice = ${microService.name}",
                                             "  git-repo = ${microService.gitRepoName}",
@@ -361,7 +361,7 @@ def cleanupOrphanedResources(def projectInfo, def microServices) {
 
     microServices.each { microService ->
         sh """
-            ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${microService.name} THAT ARE NOT PART OF DEPLOYMENT COMMIT ${microService.deploymentCommitHash}")}
+            ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${microService.name} THAT ARE NOT PART OF DEPLOYMENT COMMIT ${microService.deploymentCommitHash}")}
 
             oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l microservice=${microService.name},deployment-commit-hash!=${microService.deploymentCommitHash} \
                 -n ${projectInfo.deployToNamespace}
@@ -373,7 +373,7 @@ def removeAllMicroservices(def projectInfo) {
     assert projectInfo
 
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
+        ${loggingUtils.shellEchoBanner("REMOVING ALL MICROSERVICES AND RESOURCES FROM ${projectInfo.deployToNamespace} FOR PROJECT ${projectInfo.id}")}
 
         oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l microservice -n ${projectInfo.deployToNamespace}
     """
@@ -387,7 +387,7 @@ def removeMicroservices(def projectInfo, def microServices) {
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
 
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVE SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
+        ${loggingUtils.shellEchoBanner("REMOVE SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")}
 
         for MICROSERVICE_NAME in ${microServiceNames}
         do

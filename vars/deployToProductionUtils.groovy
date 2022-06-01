@@ -46,7 +46,7 @@ def updateProjectMetaInfo(def projectInfo) {
         def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """
-            ${pipelineUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX}")}
+            ${loggingUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX}")}
 
             oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
 
@@ -74,7 +74,7 @@ def cleanupPreviousRelease(def projectInfo) {
     assert projectInfo.id ; assert projectInfo.releaseVersionTag  =~ /[\w][\w.-]*/
 
     sh """
-        ${pipelineUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
+        ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
 
         oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersionTag} -n ${projectInfo.prodNamespace}
     """

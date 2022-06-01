@@ -16,28 +16,28 @@ def call(Map args) {
             branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
             credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     }
-    verticalJenkinsCreationUtils.refreshAutomationPipelines(projectInfo, false)
+    verticalJenkinsCreationUtils.refreshGeneralAutomationPipelines(projectInfo, false)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, false)
 
     stage('Setup openshift namespace environments') {
-        pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.prodNamespace)
+        loggingUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:", projectInfo.prodNamespace)
 
         def nodeSelectors = el.cicd["${el.cicd.PROD_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]
 
         onboardingUtils.createNamepace(projectInfo, projectInfo.prodNamespace, projectInfo.prodEnv, nodeSelectors)
 
-        credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
+        onboardingUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
 
         def resourceQuotaFile = projectInfo.resourceQuotas[projectInfo.prodEnv] ?: projectInfo.resourceQuotas.default
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
     stage('Delete old github public keys with curl') {
-        credentialUtils.deleteDeployKeysFromGithub(projectInfo)
+        githubUtils.deleteSshKeys(projectInfo)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+        githubUtils.createAndPushPublicPrivateSshKeys(projectInfo)
     }
 }

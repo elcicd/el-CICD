@@ -16,12 +16,12 @@ def call(Map args) {
             branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
             credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     }
-    verticalJenkinsCreationUtils.refreshAutomationPipelines(projectInfo, true)
+    verticalJenkinsCreationUtils.refreshGeneralAutomationPipelines(projectInfo, true)
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
     stage('Remove stale namespace environments if requested') {
-        pipelineUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
+        loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
 
         if (args.rebuildNonProd || args.rebuildSandboxes) {
             def namespacesToDelete = []
@@ -40,7 +40,7 @@ def call(Map args) {
     }
 
     stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {
-        pipelineUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
+        loggingUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
 
         writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
                   text: libraryResource("buildconfigs/build-to-dev-pipeline-template.yml")
@@ -90,7 +90,7 @@ def call(Map args) {
 
     stage('Setup OKD namespace environments') {
         if (projectInfo.microServices) {
-            pipelineUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:",
+            loggingUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:",
                                       projectInfo.nonProdNamespaces.values().join(', '))
 
             def nodeSelectors = projectInfo.NON_PROD_ENVS.collectEntries { ENV ->
@@ -100,20 +100,20 @@ def call(Map args) {
             projectInfo.nonProdNamespaces.each { env, namespace ->
                 onboardingUtils.createNamepace(projectInfo, namespace, env, nodeSelectors[env])
 
-                credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, env)
 
                 def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
                 onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
             }
         }
         else {
-            pipelineUtils.echoBanner("NO MICROSERVICES DEFINED IN PROJECT: NO PROJECT NAMESPACES TO SETUP")
+            loggingUtils.echoBanner("NO MICROSERVICES DEFINED IN PROJECT: NO PROJECT NAMESPACES TO SETUP")
         }
     }
 
     stage('Setup OKD sandbox environment(s)') {
         if (projectInfo.microServices && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
-            pipelineUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.values().join(', '))
+            loggingUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.values().join(', '))
 
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
             def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
@@ -121,7 +121,7 @@ def call(Map args) {
             projectInfo.sandboxNamespaces.each { env, namespace ->
                 onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
 
-                credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
 
                 onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
             }
@@ -129,32 +129,16 @@ def call(Map args) {
     }
 
     stage('Delete old github public keys with curl') {
-        credentialUtils.deleteDeployKeysFromGithub(projectInfo)
+        githubUtils.deleteSshKeys(projectInfo)
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+        githubUtils.createAndPushPublicPrivateSshKeys(projectInfo)
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
-        pipelineUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
+        loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
-        withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-            def buildComponents = []
-            buildComponents.addAll(projectInfo.microServices)
-            buildComponents.addAll(projectInfo.libraries)
-
-            buildComponents.each { component ->
-                if (!component.gitMicroServiceRepos) {
-                    scriptToPushWebhookToScm =
-                        scmScriptHelper.getScriptToPushWebhookToScm(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
-                    sh """
-                        ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
-
-                        ${scriptToPushWebhookToScm}
-                    """
-                }
-            }
-        }
+        githubUtils.createBuildWebhooks(projectInfo)
     }
 }

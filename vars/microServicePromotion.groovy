@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select microservices to promote and remove') {
-        pipelineUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
 
         def ENV_DELIMITER = ' to '
         def fromEnv = projectInfo.devEnv
@@ -53,7 +53,7 @@ def call(Map args) {
         }
 
         if (!promoteOrRemove) {
-            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
+            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
         }
 
         projectInfo.microServicesToPromote = projectInfo.microServices.findAll{ it.promote }
@@ -62,7 +62,7 @@ def call(Map args) {
 
     if (projectInfo.microServicesToPromote) {
         stage('Verify image(s) exist for previous environment') {
-            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.microServicesToPromote.collect { it.name }.join(', '))
+            loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.microServicesToPromote.collect { it.name }.join(', '))
 
             def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
 
@@ -83,12 +83,12 @@ def call(Map args) {
             }
 
             if (errorMsgs.size() > 1) {
-                pipelineUtils.errorBanner(errorMsgs)
+                loggingUtils.errorBanner(errorMsgs)
             }
         }
 
         stage('Verify images are deployed in previous environment, collect source commit hash') {
-            pipelineUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
+            loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
                                      projectInfo.microServicesToPromote.collect { it.name }.join(', '))
 
             def jsonPathSingle = '''jsonpath='{.data.microservice}{":"}{.data.src-commit-hash}{" "}' '''
@@ -115,20 +115,20 @@ def call(Map args) {
             }
 
             if (microServicesMissingMsg.size() > 1) {
-                pipelineUtils.errorBanner(microServicesMissingMsg)
+                loggingUtils.errorBanner(microServicesMissingMsg)
             }
         }
 
         stage('Checkout all microservice repositories') {
-            pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.microServicesToPromote.collect { it. name }.join(', '))
+            loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             projectInfo.microServices.each { microService ->
                 if (microService.promote) {
                     dir(microService.workDir) {
-                        pipelineUtils.cloneGitRepo(microService, microService.srcCommitHash)
+                        projectUtils.cloneGitRepo(microService, microService.srcCommitHash)
 
-                        microService.previousDeploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployFromEnv)
-                        microService.deploymentBranch = pipelineUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployToEnv)
+                        microService.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployFromEnv)
+                        microService.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.deployToEnv)
 
                         microService.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${microService.deploymentBranch} || : | tr -d '[:space:]'")
                         microService.deployBranchExists = !microService.deployBranchExists.isEmpty()
@@ -145,7 +145,7 @@ def call(Map args) {
         }
 
         stage("promote images") {
-            pipelineUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
+            loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                     projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
@@ -186,7 +186,7 @@ def call(Map args) {
         }
 
         stage('Create deployment branch if necessary') {
-            pipelineUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",
+            loggingUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",
                                      projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
             projectInfo.microServices.each { microService ->

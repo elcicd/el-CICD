@@ -35,7 +35,7 @@ def call(Map args) {
         }
 
         if (!projectInfo.systemTestsToRun) {
-            pipelineUtils.errorBanner("NO TEST TYPES SELECTED TO RUN")
+            loggingUtils.errorBanner("NO TEST TYPES SELECTED TO RUN")
         }
     }
 
@@ -64,7 +64,7 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            pipelineUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
+            loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
 
         def cicdInfo = input(message: "Select microservices to test in ${projectInfo.systemTestEnv}",
@@ -83,7 +83,7 @@ def call(Map args) {
         }
 
         if (!projectInfo.microServicesToTest) {
-            pipelineUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
+            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
         }
     }
 

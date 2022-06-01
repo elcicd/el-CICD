@@ -30,7 +30,7 @@ def call(Map args) {
             codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
         }
     
-        pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
     }
 
     parallel(codeBasesToNodes)
@@ -75,7 +75,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     }
 
                     stage ('Pull test code') {
-                        pipelineUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+                        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
                         dir(systemTest.workDir) {
                             git url: systemTest.gitRepoUrl,
                                 branch: projectInfo.gitTestBranch,
@@ -86,7 +86,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     stage ('Run tests') {
                         def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
                         microServicesToTest.each { microService ->
-                            pipelineUtils.echoBanner("TESTING ${microService.name} IN ${projectInfo.systemTestNamespace} WITH ${codeBase}")
+                            loggingUtils.echoBanner("TESTING ${microService.name} IN ${projectInfo.systemTestNamespace} WITH ${codeBase}")
                             dir(systemTest.workDir) {
                                 testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
                             }
@@ -94,13 +94,13 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     }
                 }
                 catch (Exception exception) {
-                    pipelineUtils.echoBanner("!!!! TEST(S) FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
+                    loggingUtils.echoBanner("!!!! TEST(S) FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}")
 
                     throw exception
                 }
             }
 
-            pipelineUtils.echoBanner("SYSTEM TESTS SUCCEEDED")
+            loggingUtils.echoBanner("SYSTEM TESTS SUCCEEDED")
         }
     }
 }

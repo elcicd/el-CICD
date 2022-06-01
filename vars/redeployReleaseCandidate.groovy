@@ -13,29 +13,29 @@ def call(Map args) {
     projectInfo.deployToNamespace = projectInfo.preProdNamespace
 
     stage('Gather all git branches, tags, and source commit hashes') {
-        pipelineUtils.echoBanner("GATHER ALL GIT BRANCHES, TAGS, AND SOURCE COMMIT HASHES")
+        loggingUtils.echoBanner("GATHER ALL GIT BRANCHES, TAGS, AND SOURCE COMMIT HASHES")
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
         projectInfo.microServicesToRedeploy = projectInfo.microServices.findAll { it.releaseCandidateGitTag }
 
         if (!projectInfo.microServicesToRedeploy)  {
-            pipelineUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
+            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
     }
 
     stage('Checkout all release candidate microservice repositories') {
-        pipelineUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
+        loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
         projectInfo.microServicesToRedeploy.each { microService ->
             microService.srcCommitHash = microService.releaseCandidateGitTag.split('-').last()
             microService.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${microService.srcCommitHash}"
-            pipelineUtils.cloneGitRepo(microService, microService.deploymentBranch)
+            projectUtils.cloneGitRepo(microService, microService.deploymentBranch)
         }
     }
 
     stage('Verify release candidate images exist for redeployment') {
-        pipelineUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
+        loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
                                  projectInfo.microServicesToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
@@ -60,7 +60,7 @@ def call(Map args) {
 
         if (!allImagesExist) {
             def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseCandidateTag}"
-            pipelineUtils.errorBanner(msg)
+            loggingUtils.errorBanner(msg)
         }
     }
 
@@ -89,7 +89,7 @@ def call(Map args) {
     }
 
     stage('Tag images') {
-        pipelineUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
+        loggingUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
                                  "${projectInfo.microServicesToRedeploy.collect { it.name } .join(', ')}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],

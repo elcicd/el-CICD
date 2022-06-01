@@ -19,7 +19,7 @@ def call(Map args) {
         def rbacGroups = [:]
         allProjectFiles.each { projectFile ->
             def projectId = projectFile.name.split('[.]')[0]
-            def projectInfo = pipelineUtils.gatherProjectInfoStage(projectId)
+            def projectInfo = projectUtils.gatherProjectInfoStage(projectId)
 
             def cicdProjectsExist =
                 sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.cicdMasterNamespace}")
@@ -30,19 +30,19 @@ def call(Map args) {
                     rbacGroups[(projectInfo.rbacGroup)] = true
 
                     stage('Copy el-CICD meta-info pull secrets to rbacGroup Jenkins') {
-                        credentialUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, ENVS)
+                        jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, ENVS)
                     }
 
                     stage('Push el-CICD credentials') {
-                        credentialUtils.pushElCicdCredentialsToCicdServer(projectInfo, ENVS)
+                        jenkinsUtils.pushElCicdCredentialsToCicdServer(projectInfo, ENVS)
                     }
                 }
                 else {
-                    pipelineUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
+                    loggingUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating microservice credentials")
                 }
 
                 stage('Delete old github public keys with curl') {
-                    credentialUtils.deleteDeployKeysFromGithub(projectInfo)
+                    githubUtils.deleteSshKeys(projectInfo)
                 }
 
                 def sdlcNamespace = args.isNonProd ? projectInfo.devNamespace : projectInfo.prodNamespace
@@ -50,32 +50,32 @@ def call(Map args) {
 
                 if (sldcNamespacesExist) {
                     stage('Create and push public key for each github repo to github with curl') {
-                        credentialUtils.createAndPushPublicPrivateGithubRepoKeys(projectInfo)
+                        githubUtils.createAndPushPublicPrivateSshKeys(projectInfo)
                     }
 
                     stage('Refresh pull secrets per build environment') {
-                        pipelineUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
+                        loggingUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
 
                         if (args.isNonProd) {
                             projectInfo.nonProdNamespaces.each { env, namespace -> 
-                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, env)
+                                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, env)
                             }
 
                             projectInfo.sandboxNamespaces.each { env, namespace -> 
-                                credentialUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
+                                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
                             }
                         }
                         else {
-                            credentialUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
+                            onboardingUtils.copyPullSecretsToEnvNamespace(projectInfo.prodNamespace, projectInfo.prodEnv)
                         }
                     }
                 }
                 else {
-                    pipelineUtils.echoBanner("WARNING [${projectInfo.id}]: SDLC namespace ${sdlcNamespace} NOT FOUND; skipping")
+                    loggingUtils.echoBanner("WARNING [${projectInfo.id}]: SDLC namespace ${sdlcNamespace} NOT FOUND; skipping")
                 }
             }
             else {
-                pipelineUtils.echoBanner("WARNING [${projectInfo.id}]: ${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
+                loggingUtils.echoBanner("WARNING [${projectInfo.id}]: ${projectInfo.cicdMasterNamespace} NOT FOUND; skipping")
             }
         }
     }

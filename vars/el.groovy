@@ -70,7 +70,7 @@ def node(Map args, Closure body) {
                 runHookScript(el.cicd.PRE, args)
 
                 if (args.projectId) {
-                    args.projectInfo = pipelineUtils.gatherProjectInfoStage(args.projectId)
+                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.projectId)
                 }
 
                 runHookScript(el.cicd.INIT, args)
@@ -81,8 +81,8 @@ def node(Map args, Closure body) {
             }
             catch (Exception | AssertionError exception) {
                 (exception instanceof Exception) ?
-                    pipelineUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
-                    pipelineUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
+                    loggingUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
+                    loggingUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
 
                 runHookScript(el.cicd.ON_FAIL, args, exception)
 
@@ -100,28 +100,28 @@ def runHookScript(def prefix, def args) {
 }
 
 def runHookScript(def prefix, def args, def exception) {
-    pipelineUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineName}.groovy...")
+    loggingUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineName}.groovy...")
 
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
         if (hookScriptFile) {
             def hookScript = load hookScriptFile[0].path
 
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING...")
+            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING...")
 
             exception ?  hookScript(exception, args) : hookScript(args)
 
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE")
+            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE")
         }
         else {
-            pipelineUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy NOT found...")
+            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy NOT found...")
         }
     }
 }
 
 def initializePipeline() {
     stage('Initializing') {
-        pipelineUtils.echoBanner("INITIALIZING...")
+        loggingUtils.echoBanner("INITIALIZING...")
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
         el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"

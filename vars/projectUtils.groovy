@@ -4,26 +4,6 @@
  * General pipeline utilities
  */
 
-def cloneGitRepo(def component, def gitReference) {
-   assert component ; assert gitReference
-
-    dir (component.workDir) {
-        checkout([$class: 'GitSCM',
-                  branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: component.gitSshPrivateKeyName, url: component.gitRepoUrl ]]
-               ])
-
-        def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-        component.srcCommitHash = component.srcCommitHash ?: currentHash
-        component.deploymentCommitHash = currentHash
-    }
-}
-
-def getNonProdDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
-    return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
-        "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}" : null
-}
-
 def gatherProjectInfoStage(def projectId) {
     assert projectId
 
@@ -53,7 +33,7 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.id = projectId
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
-
+        
         projectInfo.microServices = projectInfo.microServices ?: []
         projectInfo.libraries = projectInfo.libraries ?: []
         projectInfo.systemTests = projectInfo.systemTests ?: []
@@ -199,42 +179,22 @@ def validateNfsShare(def projectInfo, def nfsShare) {
     assert nfsShare.claimName: "missing nfsShare.claimName"
 }
 
-def spacedEcho(def msg) {
-    echo "\n${msg}\n"
-}
+def cloneGitRepo(def component, def gitReference) {
+   assert component ; assert gitReference
 
-def echoBanner(def ... msgs) {
-    echo createBanner(msgs)
-}
+    dir (component.workDir) {
+        checkout([$class: 'GitSCM',
+                  branches: [[ name: gitReference ]],
+                  userRemoteConfigs: [[ credentialsId: component.gitSshPrivateKeyName, url: component.gitRepoUrl ]]
+               ])
 
-def shellEchoBanner(def ... msgs) {
-    return "{ echo '${createBanner(msgs)}'; } 2> /dev/null"
-}
-
-def errorBanner(def ... msgs) {
-    error(createBanner(msgs))
-}
-
-def createBanner(def ... msgs) {
-    return """
-        ===========================================
-
-        ${msgFlatten(null, msgs).join("\n        ")}
-
-        ===========================================
-    """
-}
-
-def msgFlatten(def list, def msgs) {
-    list = list ?: []
-    if (!(msgs instanceof String) && !(msgs instanceof GString)) {
-        msgs.each { msg ->
-            list = msgFlatten(list, msg)
-        }
+        def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+        component.srcCommitHash = component.srcCommitHash ?: currentHash
+        component.deploymentCommitHash = currentHash
     }
-    else {
-        list += msgs
-    }
+}
 
-    return  list
+def getNonProdDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
+    return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
+        "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}" : null
 }
