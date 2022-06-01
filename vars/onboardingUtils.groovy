@@ -158,13 +158,13 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
                     cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
                 """
                 
-                githubUtils.pushDeployKey(component)
+                // githubUtils.pushDeployKey(component)
                 
-                jenkinsUtils.pushDeployKey(component)
+                // jenkinsUtils.pushDeployKey(component)
             
                 def pushDeployKeyIdCurlCommand = createScriptToPushDeployKey(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
-                def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
+                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
                 sh "rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub"
             }
         }
