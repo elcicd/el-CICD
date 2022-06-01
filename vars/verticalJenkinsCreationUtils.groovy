@@ -89,12 +89,12 @@ def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
         msg.addAll(pipelineFiles.collect { it.name })
         loggingUtils.echoBanner(msg)
                     
-        pipelineUtils.deletePipelinesFolder(projectInfo, pipelineFolder)
+        jenkinsUtils.deletePipelinesFolder(projectInfo, pipelineFolder)
         
-        pipelineUtils.createPipelinesFolder(projectInfo, pipelineFolder)
+        jenkinsUtils.createPipelinesFolder(projectInfo, pipelineFolder)
         
         pipelineFiles.each { pipelineFile ->
-            pipelineUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
+            jenkinsUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
         }
     }
 }
