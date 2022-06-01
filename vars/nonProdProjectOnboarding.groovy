@@ -48,7 +48,7 @@ def call(Map args) {
     stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {
         loggingUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
 
-        jenkinsUtils.generateJenkinsBuildPipelineFiles(projectInfo)
+        onboardingUtils.generateBuildPipelineFiles(projectInfo)
         
         def buildPipelineFiles
         dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
