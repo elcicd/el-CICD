@@ -11,7 +11,14 @@ def call(Map args) {
     
     jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
 
-    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
+    stage('refresh automation pipelines') {
+        def pipelineFiles
+        dir(el.cicd.PROD_AUTOMATION_PIPELINES_DIR) {
+            pipelineFiles = findFiles(glob: "**/*.xml")
+        }
+        
+        jenkinsUtils.createOrUpdatePipelines(el.cicd.PROD_AUTOMATION, pipelineFiles)
+    }
 
     dir (el.cicd.EL_CICD_DIR) {
         git url: el.cicd.EL_CICD_GIT_REPO,

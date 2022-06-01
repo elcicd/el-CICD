@@ -74,33 +74,3 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
         """
     }
 }
-
-def refreshGeneralAutomationPipelines(def projectInfo, def isNonProd) {
-    stage('Refreshing shared pipelines') {
-        def pipelineDir = isNonProd ? el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR : el.cicd.PROD_AUTOMATION_PIPELINES_DIR
-        def pipelineFolder = isNonProd ? el.cicd.NON_PROD_AUTOMATION : el.cicd.PROD_AUTOMATION
-        
-        def pipelineFiles
-        dir(pipelineDir) {
-            pipelineFiles = findFiles(glob: "**/*.xml")
-        }
-                
-        def msg = ['CREATING/UPDATING AUTOMATION PIPELINES:']
-        msg.addAll(pipelineFiles.collect { it.name })
-        loggingUtils.echoBanner(msg)
-                    
-        def oldAutomationPipelines = jenkinsUtils.listPipelinesInFolder(projectInfo, pipelineFolder)
-                
-        jenkinsUtils.createPipelinesFolder(projectInfo, pipelineFolder)
-        
-        pipelineFiles.each { pipelineFile ->
-            def pipelineName = pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.'))
-            oldAutomationPipelines.remove(pipelineName)
-            jenkinsUtils.createPipeline(projectInfo, pipelineFolder, pipelineDir, pipelineFile)
-        }
-        
-        oldAutomationPipelines.each { pipelineName ->
-            jenkinsUtils.deletePipeline(projectInfo, folderName, pipelineName)
-        }
-    }
-}

@@ -255,3 +255,23 @@ def pushPrivateSshKey() {
         rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
     """
 }
+
+def createOrUpdatePipelines(def pipelineFolderName, def pipelineFiles) {
+    def msg = ["CREATING/UPDATING PIPELINES FROM THE FOLLOWING FILES IN THE JENKINS ${pipelineFolderName} FOLDER:"]
+    msg.addAll(pipelineFiles.collect { it.name })
+    loggingUtils.echoBanner(msg)
+                
+    def oldAutomationPipelines = jenkinsUtils.listPipelinesInFolder(projectInfo, pipelineFolderName)
+            
+    createPipelinesFolder(projectInfo, pipelineFolderName)
+    
+    pipelineFiles.each { pipelineFile ->
+        def pipelineName = pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.'))
+        oldAutomationPipelines.remove(pipelineName)
+        createPipeline(projectInfo, pipelineFolderName, pipelineDir, pipelineFile)
+    }
+    
+    oldAutomationPipelines.each { pipelineName ->
+        deletePipeline(projectInfo, folderName, pipelineName)
+    }
+}

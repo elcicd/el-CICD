@@ -18,7 +18,17 @@ def call(Map args) {
             branch: el.cicd.EL_CICD_CONFIG_GIT_REPO_BRANCH_NAME,
             credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     }
-    verticalJenkinsCreationUtils.refreshGeneralAutomationPipelines(projectInfo, true)
+
+    stage('refresh automation pipelines') {
+        def pipelineFiles
+        dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
+            pipelineFiles = findFiles(glob: "**/*.xml")
+        }
+        
+        jenkinsUtils.createOrUpdatePipelines(el.cicd.NON_PROD_AUTOMATION, pipelineFiles)
+    }
+    
+    jenkinsUtils.createOrUpdatePipelines
 
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
@@ -37,56 +47,22 @@ def call(Map args) {
         }
     }
 
-    stage('Clean stale build-to-dev pipelines') {
-        onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
-    }
-
     stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {
         loggingUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
 
-        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-to-dev-pipeline-template.yml",
-                  text: libraryResource("buildconfigs/build-to-dev-pipeline-template.yml")
-
-        dir (el.cicd.BUILDCONFIGS_DIR) {
-            projectInfo.microServices.each { microService ->
-                sh """
-                    oc process --local \
-                               -f build-to-dev-pipeline-template.yml \
-                               -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
-                               -p PROJECT_ID=${projectInfo.id} \
-                               -p MICROSERVICE_GIT_REPO=${microService.gitRepoUrl} \
-                               -p MICROSERVICE_NAME=${microService.name} \
-                               -p DEPLOY_TO_NAMESPACE=${projectInfo.devNamespace} \
-                               -p GIT_BRANCH=${projectInfo.gitBranch} \
-                               -p CODE_BASE=${microService.codeBase} \
-                               -n ${projectInfo.cicdMasterNamespace} \
-                        | oc create -f - -n ${projectInfo.cicdMasterNamespace}
-
-                    ${shCmd.echo ''}
-                """
-            }
+        jenkinsUtils.generateJenkinsBuildPipelineFiles(projectInfo)
+        
+        def buildPipelineFiles
+        dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
+            buildPipelineFiles = findFiles(glob: "**/*-build-*.xml")
         }
-
-        writeFile file:"${el.cicd.BUILDCONFIGS_DIR}/build-library-pipeline-template.yml",
-                  text: libraryResource("buildconfigs/build-library-pipeline-template.yml")
-
-        dir (el.cicd.BUILDCONFIGS_DIR) {
-            projectInfo.libraries.each { library ->
-                sh """
-                    oc process --local \
-                               -f build-library-pipeline-template.yml \
-                               -p EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
-                               -p PROJECT_ID=${projectInfo.id} \
-                               -p LIBRARY_GIT_REPO=${library.gitRepoUrl} \
-                               -p LIBRARY_NAME=${library.name} \
-                               -p GIT_BRANCH=${projectInfo.gitBranch} \
-                               -p CODE_BASE=${library.codeBase} \
-                               -n ${projectInfo.cicdMasterNamespace} \
-                        | oc create -f - -n ${projectInfo.cicdMasterNamespace}
-
-                    ${shCmd.echo ''}
-                """
-            }
+        
+        onboardingUtils.generateJenkinsBuildPipelineFiles(projectInfo)
+        
+        jenkinsUtils.createOrUpdatePipelines(projectInfo.id, buildPipelineFiles)
+        
+        dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
+            sh 'rm -f *-build-*.xml'
         }
     }
 

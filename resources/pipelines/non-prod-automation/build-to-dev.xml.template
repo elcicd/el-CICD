@@ -1,5 +1,5 @@
 <flow-definition plugin="workflow-job">
-    <displayName>%PROJECT_ID%-%MICROSERVICE_NAME%-build-to-dev</displayName>
+    <displayName>%MICROSERVICE_NAME%-build-to-dev</displayName>
     <keepDependencies>false</keepDependencies>
     <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -14,7 +14,7 @@
                 <hudson.model.StringParameterDefinition>
                     <name>DEPLOY_TO_NAMESPACE</name>
                     <description>Namespace to deploy to (must be the dev environment or sandbox namespace)</description>
-                    <defaultValue>%DEV_NAME_SPACE%</defaultValue>
+                    <defaultValue>%DEV_NAMESPACE%</defaultValue>
                     <trim>true</trim>
                 </hudson.model.StringParameterDefinition>
                 <hudson.model.BooleanParameterDefinition>
@@ -26,17 +26,7 @@
         </hudson.model.ParametersDefinitionProperty>
     </properties>
     <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-        <script>
-            properties([
-                parameters(
-                    [
-                        string(name: 'GIT_BRANCH',  defaultValue: "${GIT_BRANCH}", description: 'Git repo branch name', trim: true),
-                        string(name: 'DEPLOY_TO_NAMESPACE',  defaultValue: "${DEPLOY_TO_NAMESPACE}", description: 'The namespace to deploy to', trim: true),
-                        booleanParam(name: 'RECREATE', defaultValue: false, description: "If true, build microservice, remove old build completely from dev, and then deploy new build")
-                    ]
-                )
-            ])
-  
+        <script>  
             node() {
                 def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
   

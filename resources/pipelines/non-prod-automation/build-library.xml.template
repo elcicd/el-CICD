@@ -1,5 +1,5 @@
 <flow-definition plugin="workflow-job">
-    <displayName>%PROJECT_ID%-%LIBRARY_NAME%-build-library</displayName>
+    <displayName>%LIBRARY_NAME%-build-library</displayName>
     <keepDependencies>false</keepDependencies>
     <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -21,15 +21,6 @@
     </properties>
     <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
         <script>
-            properties([
-                parameters(
-                    [
-                        string(name: 'GIT_BRANCH',  defaultValue: "${GIT_BRANCH}", description: 'Git repo branch name', trim: true),
-                        booleanParam(name: 'IS_SNAPSHOT', defaultValue: true, description: "If true, the build is a snapshot build for the library")
-                    ]
-                )
-            ])
-  
             node() {
                 def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
   
