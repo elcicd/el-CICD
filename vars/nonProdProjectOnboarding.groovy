@@ -8,6 +8,8 @@ def call(Map args) {
     onboardingUtils.init()
 
     def projectInfo = args.projectInfo
+    
+    jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
 
     verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 

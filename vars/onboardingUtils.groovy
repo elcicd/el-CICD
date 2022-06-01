@@ -15,10 +15,7 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
     
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        sh '''
-            echo ${GITHUB_ACCESS_TOKEN} > .ghtoken
-            gh auth login --with-token < .ghtoken
-        '''
+        sh 'echo ${GITHUB_ACCESS_TOKEN} | gh auth login --with-token'
     }
 }
 

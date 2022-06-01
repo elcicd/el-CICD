@@ -3,46 +3,69 @@
  *
  * Utility methods for pushing credentials to servers and external tools.
  */
- 
- def setJenkinsUrls(def projectInfo) {        
+
+import groovy.transform.Field
+
+@Field
+def CREATE_CREDS_PATH = 'credentials/store/system/domain/_/CREATE_CREDS_PATH'
+
+@Field
+def SYSTEM_DOMAIN_CREDS_PATH = 'system/domain/_/credential'
+
+@Field
+def CREATE_ITEM = 'createItem'
+
+@Field
+def JOB = 'job'
+
+@Field
+def NAME = 'name'
+
+@Field
+def CONFIG_ITEM = 'config.xml'
+
+@Field
+def FOLDER_ITEM = 'folder.xml'
+
+@Field
+def API_JSON = 'api/json'
+
+def configureTeamJenkinsUrls(def projectInfo) {        
     projectInfo.jenkinsUrls = [:]
     projectInfo.jenkinsUrls.HOST = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/credentials/store/system/domain/_/createCredentials"
-    projectInfo.jenkinsUrls.UDPATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/system/domain/_/credential/"
-    projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/system/domain/_/credential/doDelete"
+    projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${CREATE_CREDS_PATH}"
+    projectInfo.jenkinsUrls.UDPATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/"
+    projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/doDelete"
     
-    projectInfo.jenkinsUrls.CREATE_FOLDER = "${projectInfo.jenkinsUrls.HOST}/system/domain/_/credential/doDelete"
-    projectInfo.jenkinsUrls.CREATE_PIPELINE = "${projectInfo.jenkinsUrls.HOST}/system/domain/_/credential/doDelete"
-    
-    projectInfo.jenkinsUrls.CONFIG_XML = 'config.xml'
-    projectInfo.jenkinsUrls.CONFIG_XML = 'config.xml'
+    projectInfo.jenkinsUrls.ACCESS_FOLDER = "${projectInfo.jenkinsUrls.HOST}/${JOB}/"
  }
 
 def getJenkinsCurlCommand(def httpVerb) {
-    return getJenkinsCurlCommand(httpVerb, null)
+    return getJenkinsCurlCommand(httpVerb, '')
 }
 
-def getJenkinsCurlCommand(def httpVerb, def headerType) {
-    def contentHeader = ''
+def getJenkinsCurlCommand(def httpVerb, def headerType, def output = '-o /dev/null') {
+    def header = ''
     switch (headerType) {
         case 'XML':
-            contentHeader = "-H 'Content-Type:text/xml'"
-    } 
-    return "curl -ksS -o /dev/null -X ${httpVerb} -w '%{http_code}' ${contentHeader} -H \"Authorization: Bearer \${JENKINS_ACCESS_TOKEN}\""
+            header = "-H 'Content-Type:text/xml'"
+    }
+    
+    return "curl -ksS ${output ?: ''} -X ${httpVerb} -w '%{http_code}' ${header} -H \"Authorization: Bearer \${JENKINS_ACCESS_TOKEN}\""
 }
 
 def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${getJenkinsCurlCommand('POST', 'XML')} \
-                ${projectInfo.jenkinsUrls.HOST}/createItem?name=${folderName} --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/folder.xml
+            ${getJenkinsCurlCommand('POST', 'XML')} ${projectInfo.jenkinsUrls.HOST}${CREATE_ITEM}?${NAME}=${folderName} \
+                --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${projectInfo.jenkinsUrls.FOLDER_XML}
         """
     }
 }
  
 def deletePipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/"
+        sh "${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/"
     }
 }
 
@@ -51,7 +74,7 @@ def listPipelinesInFolder(def projectInfo, def folderName) {
         dir(pipelineFileDir) {
             def listOfPipelines =
                 sh(returnStdout: true, script: """
-                    ${getJenkinsCurlCommand('GET')} -f ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/api/json | jq -r '.jobs.name'
+                    ${getJenkinsCurlCommand('GET', null, null)} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs.name'
                 """).split(/\s/)
         }
     }
@@ -64,7 +87,7 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
                 PIPELINE_FILE=${pipelineFile.name}
                 ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
                 ${getJenkinsCurlCommand('POST', 'XML')} \
-                    ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.name}
+                    ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} --data-binary @${pipelineFile.name}
             """
         }
     }
@@ -73,9 +96,8 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
 def deletePipeline(def projectInfo, def pipelineFileDir, def pipelineName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${shCmd.echo 'Removing ${PIPELINE_FILE%.*} pipeline'}
-            ${getJenkinsCurlCommand('DELETE')} -H 'Content-Type:text/xml' \
-                ${projectInfo.jenkinsUrls.HOST}/job/${folderName}/createItem?name=\${PIPELINE_FILE%.*} --data-binary @${pipelineName}
+            ${shCmd.echo "Removing pipeline: ${pipelineName}"}
+            ${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}//${JOB}/${pipelineName}/
         """
     }
 }
