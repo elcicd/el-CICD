@@ -57,7 +57,7 @@ def getJenkinsCurlCommand(def httpVerb, def headerType, def output = '-o /dev/nu
 def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${getJenkinsCurlCommand('POST', 'XML')} ${projectInfo.jenkinsUrls.HOST}${CREATE_ITEM}?${NAME}=${folderName} \
+            ${getJenkinsCurlCommand('POST', 'XML')} ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
     }
