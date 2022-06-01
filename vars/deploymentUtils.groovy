@@ -6,8 +6,6 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-import groovy.transform.Field
-
 def mergeMaps(def toMap, def fromMap) {
     if (toMap && fromMap) {
         fromMap.each { k, v -> toMap[k] = toMap[k] in Map ? mapMerge(toMap[k], v) : v }

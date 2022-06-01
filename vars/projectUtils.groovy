@@ -9,7 +9,7 @@ def gatherProjectInfoStage(def projectId) {
 
     def projectInfo
     stage('Gather project information') {
-        echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
+        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
 
         dir (el.cicd.PROJECT_DEFS_DIR) {
             def projectFile = findFiles(glob: "**/${projectId}.json")
