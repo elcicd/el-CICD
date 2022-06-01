@@ -154,7 +154,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     if [[ ! -z "${DEL_NAMESPACE}" ]]
     then
         echo
-        echo -n "WARNING: '${ONBOARDING_MASTER_NAMESPACE}' was found, and will WILL BE DESTROYED AND REBUILT"
+        echo -n "WARNING: '${ONBOARDING_MASTER_NAMESPACE}' was found, and WILL BE DESTROYED AND REBUILT"
     else 
         echo
         echo -n "'${ONBOARDING_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"

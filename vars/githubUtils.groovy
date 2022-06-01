@@ -22,42 +22,6 @@ def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
 @Field
 def APPLICATION_JSON_HDR = '-H application:json'
 
-def createAndPushPublicPrivateSshKeys(def projectInfo) {
-    loggingUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",
-                             "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
-                             "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
-
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def credsFileName = 'scmSshCredentials.xml'
-        def jenkinsCurlCommand =
-            """${getJenkinsCurlCommand('POST')} -H "content-type:application/xml" --data-binary @${credsFileName}"""
-
-        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-            projectInfo.components.each { component ->
-                def pushDeployKeyIdCurlCommand = createScriptToPushDeployKey(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
-
-                def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
-                sh """
-                    ${shCmd.echo  '', "ADDING PUBLIC KEY TO GIT REPO: ${component.gitRepoName}"}
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
-
-                    ${pushDeployKeyIdCurlCommand}
-
-                    ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
-                    cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
-
-                    ${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}
-                    ${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}
-
-                    rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
-                """
-            }
-        }
-    }
-}
-
 def deleteSshKeys(def projectInfo) {
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM GIT REPOS")
 
