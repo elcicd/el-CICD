@@ -25,7 +25,7 @@ def call(Map args) {
             pipelineFiles = findFiles(glob: "**/*.xml")
         }
         
-        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.NON_PROD_AUTOMATION, pipelineFiles)
+        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.NON_PROD_AUTOMATION, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, pipelineFiles)
     }
     
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
@@ -57,7 +57,7 @@ def call(Map args) {
         
         onboardingUtils.generateJenkinsBuildPipelineFiles(projectInfo)
         
-        jenkinsUtils.createOrUpdatePipelines(projectInfo.id, buildPipelineFiles)
+        jenkinsUtils.createOrUpdatePipelines(projectInfo, projectInfo.id, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, buildPipelineFiles)
         
         dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
             sh 'rm -f *-build-*.xml'

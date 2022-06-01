@@ -256,7 +256,7 @@ def pushPrivateSshKey() {
     """
 }
 
-def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelineFiles) {
+def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelineDir, def pipelineFiles) {
     def msg = ["CREATING/UPDATING PIPELINES FROM THE FOLLOWING FILES IN THE JENKINS ${pipelineFolderName} FOLDER:"]
     msg.addAll(pipelineFiles.collect { it.name })
     loggingUtils.echoBanner(msg)
