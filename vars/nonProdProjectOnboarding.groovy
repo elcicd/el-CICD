@@ -105,7 +105,7 @@ def call(Map args) {
     stage('clone all component repo info') {
         projectInfo.components.each { component ->
             dir (component.workDir) {
-                sh "gh repo clone ${component.gitRepoUrl} --no-checkout"
+                sh "gh repo clone ${component.gitRepoUrl} -- --no-checkout"
             }
         }
     }
