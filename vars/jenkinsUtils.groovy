@@ -7,6 +7,15 @@
 import groovy.transform.Field
 
 @Field
+def GET = 'GET'
+
+@Field
+def POST = 'POST'
+
+@Field
+def DELETE = 'DELETE'
+
+@Field
 def CREATE_CREDS_PATH = 'credentials/store/system/domain/_/CREATE_CREDS_PATH'
 
 @Field
@@ -30,7 +39,16 @@ def FOLDER_ITEM = 'folder.xml'
 @Field
 def API_JSON = 'api/json'
 
-def configureTeamJenkinsUrls(def projectInfo) {        
+@Field
+def XML_CONTEXT_HEADER = "-H 'Content-Type:text/xml'"
+
+@Field
+def CURL_FAIL_FLAG = "-H 'Content-Type:text/xml'"
+
+@Field
+def CURL_NO_OUTPUT = '-o /dev/null'
+
+def configureCicdJenkinsUrls(def projectInfo) {        
     projectInfo.jenkinsUrls = [:]
     projectInfo.jenkinsUrls.HOST = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${CREATE_CREDS_PATH}"
@@ -38,28 +56,13 @@ def configureTeamJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/doDelete"
     
     projectInfo.jenkinsUrls.ACCESS_FOLDER = "${projectInfo.jenkinsUrls.HOST}/${JOB}"
- }
-
-def getJenkinsCurlCommand(def httpVerb) {
-    return getJenkinsCurlCommand(httpVerb, '')
-}
-
-def getJenkinsCurlCommand(def httpVerb, def headerType) {
-    def header = ''
-    switch (headerType) {
-        case 'XML':
-            header = "-H 'Content-Type:text/xml'"
-    }
-    
-    def output = httpVerb == 'GET' ? '' : '-o /dev/null'
-    
-    return """ curl -ksS ${output} -X ${httpVerb} ${header} -H "Authorization: Bearer \${JENKINS_ACCESS_TOKEN}" """
 }
 
 def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${getJenkinsCurlCommand('POST', 'XML')} ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
+            ${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} \
+                ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
     }
@@ -67,17 +70,20 @@ def createPipelinesFolder(def projectInfo, def folderName) {
  
 def deletePipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
+        sh "${curlUtils.getCmd(curlUtils.DELETE, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
     }
 }
 
 def listPipelinesInFolder(def projectInfo, def folderName) {
     def listOfPipelines = []
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        listOfPipelinesArray = 
-            sh(returnStdout: true, script: """
-                ${getJenkinsCurlCommand('GET')} -f ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} | jq -r '.jobs[].name'
-            """).split(/\s+/)
+        def curlScript =  """
+            ${curlUtils.getCmd(curlUtils.GET, JENKINS_ACCESS_TOKEN)} ${curlUtils.FAIL_SILENT} \
+                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} |  \
+                jq -r '.jobs[].name'"
+        """
+        
+        listOfPipelinesArray =  sh(returnStdout: true, script: curlScript).split(/\s+/)
         listOfPipelines.addAll(listOfPipelinesArray)
     }
     return listOfPipelines
@@ -88,7 +94,8 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
         sh """
             PIPELINE_FILE=${pipelineFile.name}
             ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
-            ${getJenkinsCurlCommand('POST', 'XML')} \
+            
+            ${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} \
                 --data-binary @${pipelineFileDir}/${pipelineFile.name}
         """
@@ -99,8 +106,28 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo "Removing pipeline: ${pipelineName}"}
-            ${getJenkinsCurlCommand('DELETE')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}//${JOB}/${pipelineName}/
+            ${curlUtils.getCmd(curlUtils.DELETE)} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/${pipelineName}/
         """
+    }
+}
+
+def pushSshCredentialsToJenkins(def keyId, def keyFile) {
+    def JENKINS_CREDS_FILE = jenkinsSshCredentials.xml
+    def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_FILE}"
+    
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} -f --data-binary @${SECRET_FILE_NAME}"
+        
+        sh(returnStdout: true, script: """
+            ${shCmd.echo ''}
+            JENKINS_CREDS=\$(sed -e 's/%UNIQUE_ID%/${keyId}/g' ${el.cicd.TEMPLATES_DIR}/${JENKINS_CREDS_FILE})
+            set +x -v; echo "\${JENKINS_CREDS//%PRIVATE_KEY%/$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
+
+            ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
+            ${curlCommand} ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
+
+            rm -f ${SECRET_FILE_NAME}
+        """)
     }
 }
 
@@ -141,7 +168,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
 
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
-        pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+        pushSshCredentialsToJenkins(keyId)
     }
     catch (Exception e) {
         echo "Creating ${keyId} on CICD failed, trying update"
@@ -179,7 +206,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     }
 }
 
-def deleteDeployKeysFromJenkins(def projectInfo) {
+def deleteProjectDeployKeysFromJenkins(def projectInfo) {
     def jenkinsUrl =
         "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}/credentials/store/system/domain/_/credential/"
 
@@ -187,31 +214,8 @@ def deleteDeployKeysFromJenkins(def projectInfo) {
         projectInfo.components.each { component ->
             sh """
                 ${shCmd.echo ''}
-                ${getJenkinsCurlCommand('POST')} ${jenkinsUrl}/${component.gitSshPrivateKeyName}/doDelete
+                ${curlUtils.getCmd(curlUtils.POST)} ${jenkinsUrl}/${component.gitRepoDeployKeyJenkinsId}/doDelete
             """
-        }
-    }
-}
-
-def pushSshCredentialsToJenkins(def cicdJenkinsNamespace, def url, def keyId) {
-    def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/elcicdReadOnlyGithubJenkinsSshCredentials.xml"
-    def credsArray = [sshUserPrivateKey(credentialsId: "${keyId}", keyFileVariable: "KEY_ID_FILE"),
-                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]
-    def curlCommand = """${getJenkinsCurlCommand('POST')} -H "content-type:application/xml" --data-binary @${SECRET_FILE_NAME} ${url}"""
-    withCredentials(credsArray) {
-        def httpCode = 
-            sh(returnStdout: true, script: """
-                ${shCmd.echo ''}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed 's/%UNIQUE_ID%/${keyId}/g' > ${SECRET_FILE_NAME}
-                cat \${KEY_ID_FILE} >> ${SECRET_FILE_NAME}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE_NAME}
-
-                ${curlCommand}
-
-                rm -f ${SECRET_FILE_NAME}
-            """).replaceAll(/[\s]/, '')
-        if (!httpCode.startsWith('2')) {
-            loggingUtils.errorBanner("Push SSH private key (${keyId}) to Jenkins failed with HTTP code: ${httpCode}")
         }
     }
 }
@@ -221,7 +225,7 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
                       string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN'))]
                       
     withCredentials(credsArray) {
-        def curlCommand = """${getJenkinsCurlCommand('POST')} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
+        def curlCommand = """${curlUtils.getCmd(curlUtils.POST)} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
         def httpCode = 
             sh(returnStdout: true, script: """
                 ${shCmd.echo ''}
@@ -236,24 +240,6 @@ def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tok
             loggingUtils.errorBanner("Push image repo access token (${tokenId}) to Jenkins failed with HTTP code: ${httpCode}")
         }
     }
-}
-
-def pushPrivateSshKey() {
-    def jenkinsUrls = getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
-    def jenkinsCurlCommand =
-        """${getJenkinsCurlCommand('POST')} -H "content-type:application/xml" --data-binary @${credsFileName}"""
-        
-    sh """
-        ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-        cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
-        cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
-        cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
-
-        ${jenkinsCurlCommand} ${jenkinsUrls.createCredsUrl}
-        ${jenkinsCurlCommand} ${jenkinsUrls.updateCredsUrl}
-
-        rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub
-    """
 }
 
 def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelineDir, def pipelineFiles) {

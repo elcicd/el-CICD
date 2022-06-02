@@ -13,10 +13,6 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml", text: libraryResource('templates/jenkinsSshCredentials-postfix.xml')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml", text: libraryResource('templates/jenkinsSshCredentials-prefix.xml')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
-    
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        sh 'echo ${GITHUB_ACCESS_TOKEN} | gh auth login --git-protocol ssh --with-token'
-    }
 }
 
 def deleteNamespaces(def namespaces) {
@@ -149,12 +145,12 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
             projectInfo.components.each { component ->
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitSshPrivateKeyName}' \
+                    ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
                         -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
                     
                     ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitSshPrivateKeyName}/g" > ${credsFileName}
-                    cat ${component.gitSshPrivateKeyName} >> ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitRepoDeployKeyJenkinsId}/g" > ${credsFileName}
+                    cat ${component.gitRepoDeployKeyJenkinsId} >> ${credsFileName}
                     cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
                 """
                 
@@ -164,8 +160,8 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
             
                 def pushDeployKeyIdCurlCommand = createScriptToPushDeployKey(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
-                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitSshPrivateKeyName)
-                sh "rm -f ${credsFileName} ${component.gitSshPrivateKeyName} ${component.gitSshPrivateKeyName}.pub"
+                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitRepoDeployKeyJenkinsId)
+                sh "rm -f ${credsFileName} ${component.gitRepoDeployKeyJenkinsId} ${component.gitRepoDeployKeyJenkinsId}.pub"
             }
         }
     }

@@ -8,48 +8,49 @@
 import groovy.transform.Field
 
 @Field
-def CURL_GET = 'curl -ksS -X GET'
+def GITHUB_REST_API_HDR = "-H 'Accept: application/vnd.github.v3+json'"
 
-@Field
-def CURL_POST = 'curl -ksS -X POST'
-
-@Field
-def CURL_DELETE = 'curl -ksS -X DELETE'
-
-@Field
-def GIT_HUB_REST_API_HDR = '-H Accept:application/vnd.github.v3+json'
-
-@Field
-def APPLICATION_JSON_HDR = '-H application:json'
-
-def deleteSshKeys(def projectInfo) {
-    loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM GIT REPOS")
-
+def deleteProjectDeployKeys(def projectInfo, def component) {
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        projectInfo.components.each { component ->
-            def fetchDeployKeyIdCurlCommand = createScriptGetDeployKeyId(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
-            def curlCommandToDeleteDeployKeyByIdFromScm =
-                createScriptToDeleteDeployKeyById(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
-            try {
-                sh """
-                    ${shCmd.echo ''}
-                    KEY_IDS=\$(${fetchDeployKeyIdCurlCommand})
-                    if [[ ! -z \${KEY_IDS} ]]
-                    then
-                        for KEY_ID in \${KEY_IDS}
-                        do
-                            ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
-                            ${curlCommandToDeleteDeployKeyByIdFromScm}/\${KEY_ID}
-                        done
-                    else
-                        ${shCmd.echo  '', "OLD DEPLOY KEY NOT FOUND: ${component.gitRepoName}"}
-                    fi
-                """
-            }
-            catch (Exception e) {
-                loggingUtils.errorBanner("EXCEPTION: CHECK WHETHER GIT REPO NAMES ARE PROPERLY DEFINED IN PROJECT-INFO", e.getMessage())
-            }
-        }
+        def jqIdFilter = """jq '.[] | select(.title  == "${projectInfo.gitRepoDeployKeyId}") | .id'"""
+        
+        def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+        sh """
+            ${shCmd.echo ''}
+            KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, GITHUB_ACCESS_TOKEN)} -f ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
+            if [[ ! -z \${KEY_IDS} ]]
+            then
+                ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
+                for KEY_ID in \${KEY_IDS}
+                do
+                    ${curlUtils.getCmd(curlUtils.DELETE, GITHUB_ACCESS_TOKEN)} ${url}/\${KEY_ID}
+                done
+            else
+                ${shCmd.echo  '', "OLD DEPLOY KEY NOT FOUND: ${component.gitRepoName}"}
+            fi
+        """
+    }
+}
+
+def addProjectDeployKey(def projectInfo, def component, def keyFile) {
+    def GITHUB_DEPLOY_KEY_FILE = 'githubDeployKey.json'
+    def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${GITHUB_DEPLOY_KEY_FILE}"
+    def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+    
+    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+        def curlCmd = curlUtils.getCmd(curlUtils.POST, GITHUB_ACCESS_TOKEN)
+        
+        sh """
+            GITHUB_DEPLOY_KEY=\$(sed -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${el.cicd.TEMPLATES_DIR}/${GITHUB_DEPLOY_KEY_FILE}})
+            set +x -v; echo "\${GITHUB_DEPLOY_KEY//%DEPLOY_KEY%/$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
+            sed -i -e "s/%READ_ONLY%/false}/" ${SECRET_FILE_NAME}
+            
+            ${curlUtils.getCmd(curlUtils.POST, GITHUB_ACCESS_TOKEN)} ${GITHUB_REST_API_HDR} \
+                https://${apiHost}/repos/${org}/${repoName}/keys \
+                -d @${SECRET_FILE_NAME}
+            
+            rm -f ${SECRET_FILE_NAME}
+        """
     }
 }
 
@@ -87,61 +88,6 @@ def createScriptPushWebhook(def projectInfo, def component, def ACCESS_TOKEN) {
                   -e "s|%COMPONENT_ID%|${component.id}|" > ${webhookFile}
 
             curl -ksS -X POST ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
-        """
-    }
-    else if (projectInfo.scmHost.contains('gitlab')) {
-        loggingUtils.errorBanner("GitLab is not supported yet")
-    }
-
-    return curlCommand
-}
-
-def createScriptGetDeployKeyId(def projectInfo, def component, def ACCESS_TOKEN) {
-    def curlCommand
-
-    if (projectInfo.scmHost.contains('github')) {
-        def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
-        def jqIdFilter = """jq '.[] | select(.title  == "${deployKeyName}") | .id'"""
-
-        curlCommand = "${CURL_GET} ${url} | ${jqIdFilter}"
-    }
-    else if (projectInfo.scmHost.contains('gitlab')) {
-        loggingUtils.errorBanner("GitLab is not supported yet")
-    }
-
-    return curlCommand
-}
-
-def createScriptToDeleteDeployKeyById(def projectInfo, def component, def ACCESS_TOKEN) {
-    def curlCommand
-
-    if (projectInfo.scmHost.contains('github')) {
-        curlCommand = "curl -ksS -X DELETE https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
-    }
-    else if (projectInfo.scmHost.contains('gitlab')) {
-        loggingUtils.errorBanner("GitLab is not supported yet")
-    }
-
-    return curlCommand
-}
-
-def createScriptToPushDeployKey(def projectInfo, def component, def ACCESS_TOKEN, def readOnly) {
-    def curlCommand
-
-    if (projectInfo.scmHost.contains('github')) {
-        def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
-        def secretFile = "${el.cicd.TEMP_DIR}/sshKeyFile.json"
-        readOnly = readOnly ? 'true' : 'false'
-
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
-        curlCommand = """
-            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed 's/%DEPLOY_KEY_NAME%/${deployKeyName}/' > ${secretFile}
-            cat ${component.gitSshPrivateKeyName}.pub >> ${secretFile}
-            cat ${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${secretFile}
-            sed -i -e "s/%READ_ONLY%/${readOnly}/" ${secretFile}
-
-            ${CURL_POST} ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${secretFile} ${url}
         """
     }
     else if (projectInfo.scmHost.contains('gitlab')) {

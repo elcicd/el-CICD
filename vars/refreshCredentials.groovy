@@ -42,7 +42,7 @@ def call(Map args) {
                 }
 
                 stage('Delete old github public keys with curl') {
-                    githubUtils.deleteSshKeys(projectInfo)
+                    githubUtils.deleteProjectDeployKeys(projectInfo)
                 }
 
                 def sdlcNamespace = args.isNonProd ? projectInfo.devNamespace : projectInfo.prodNamespace

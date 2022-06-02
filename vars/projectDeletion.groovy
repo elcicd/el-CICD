@@ -25,10 +25,10 @@ def call(Map args) {
     }
 
     stage('Delete GitHub deploy keys') {
-        githubUtils.deleteSshKeys(projectInfo)
+        githubUtils.deleteProjectDeployKeys(projectInfo)
 
         if (!args.deleteJenkinsCicdServer) {
-            jenkinsUtils.deleteDeployKeysFromJenkins(projectInfo)
+            jenkinsUtils.deleteProjectDeployKeysFromJenkins(projectInfo)
         }
     }
 

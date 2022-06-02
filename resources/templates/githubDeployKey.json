@@ -1,0 +1,5 @@
+{
+    "title": "%DEPLOY_KEY_NAME%",
+    "key": "%DEPLOY_KEY%",
+    "read_only": %READ_ONLY%
+}

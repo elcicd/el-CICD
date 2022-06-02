@@ -7,6 +7,8 @@
 
 def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
     stage("Check if group's prod or non-prod CICD Jenkins exist") {
+        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
+        
         def prodOrNonProd  = "${isNonProd ? 'NON-' : ''}PROD"
         loggingUtils.echoBanner("VERIFY ${projectInfo.rbacGroup}'S ${prodOrNonProd} CICD JENKINS EXIST")
 

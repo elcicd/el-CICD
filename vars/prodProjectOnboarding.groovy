@@ -8,8 +8,8 @@ def call(Map args) {
     onboardingUtils.init()
 
     def projectInfo = args.projectInfo
-
-    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
+    
+    cicdJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
     dir (el.cicd.EL_CICD_DIR) {
         git url: el.cicd.EL_CICD_GIT_REPO,
@@ -18,7 +18,7 @@ def call(Map args) {
     }
 
     stage('refresh automation pipelines') {
-        jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
+        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
         
         def pipelineFiles
         dir(el.cicd.PROD_AUTOMATION_PIPELINES_DIR) {
@@ -43,8 +43,12 @@ def call(Map args) {
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
-    stage('Delete old github public keys with curl') {
-        githubUtils.deleteSshKeys(projectInfo)
+    stage('Delete old github public keys') {
+        loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
+        
+        projectInfo.components.each { component ->
+            githubUtils.deleteProjectDeployKeys(projectInfo, component)
+        }
     }
 
     stage('Create and push public key for each github repo to github with curl') {

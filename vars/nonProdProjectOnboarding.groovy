@@ -9,7 +9,7 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    verticalJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
+    cicdJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
 
     dir (el.cicd.EL_CICD_DIR) {
         git url: el.cicd.EL_CICD_GIT_REPO,
@@ -18,7 +18,7 @@ def call(Map args) {
     }
 
     stage('refresh automation pipelines') {
-        jenkinsUtils.configureTeamJenkinsUrls(projectInfo)
+        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
         
         def pipelineFiles
         dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
@@ -101,35 +101,28 @@ def call(Map args) {
             }
         }
     }
-    
-    stage('clone all component repo info') {
-        projectInfo.components.each { component ->
-            dir (component.workDir) {
-                withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-                    sh "gh repo clone ${projectInfo.scmOrganization}/${component.gitRepoName} -- --no-checkout"
-                }
-            }
-        }
-    }
 
-    stage('Delete old github public keys with curl') {
-        def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
+    stage('Delete old github public keys') {
+        loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
+        
         projectInfo.components.each { component ->
-            dir ("${component.workDir}/${component.gitRepoName}") {
-                sh """
-                    KEY=\$(gh repo deploy-key list | grep '${deployKeyName}')
-                    if [[ ! -z \${KEY} ]]
-                    then
-                        KEY=\${KEY%%[[:space:]]*}
-                        gh repo deploy-key delete
-                    fi
-                """
-            }
+            githubUtils.deleteProjectDeployKeys(projectInfo, component)
         }
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        onboardingUtils.createAndPushPublicPrivateSshKeys(projectInfo)
+        projectInfo.components.each { component ->
+            dir(component.workDir) {
+                sh """
+                    ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
+                        -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+                """
+                
+                jenkinsUtils.pushSshCredentialsToJenkins(component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
+                
+                githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitRepoDeployKeyJenkinsId}.pub")
+            }
+        }
     }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {

@@ -51,8 +51,9 @@ def gatherProjectInfoStage(def projectId) {
             component.workDir = "${WORKSPACE}/${component.gitRepoName}"
 
             component.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.gitRepoName}.git"
-            component.gitSshPrivateKeyName = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+            component.gitRepoDeployKeyJenkinsId = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
         }
+        projectInfo.gitRepoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
 
         projectInfo.devEnv = el.cicd.devEnv
 
@@ -185,7 +186,7 @@ def cloneGitRepo(def component, def gitReference) {
     dir (component.workDir) {
         checkout([$class: 'GitSCM',
                   branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: component.gitSshPrivateKeyName, url: component.gitRepoUrl ]]
+                  userRemoteConfigs: [[ credentialsId: component.gitRepoDeployKeyJenkinsId, url: component.gitRepoUrl ]]
                ])
 
         def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
