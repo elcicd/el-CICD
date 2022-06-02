@@ -107,7 +107,7 @@ def call(Map args) {
             dir (component.workDir) {
                 withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
                     sh """
-                        echo \${GITHUB_ACCESS_TOKEN} | gh auth login --with-token
+                        gh config set git_protocol https -h github.com
                         gh repo clone ${component.gitRepoUrl} -- --no-checkout
                     """
                 }
