@@ -115,7 +115,7 @@ def call(Map args) {
     stage('Delete old github public keys with curl') {
         def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
         projectInfo.components.each { component ->
-            dir (component.workDir) {
+            dir ("${component.workDir}/${component.gitRepoName}") {
                 sh """
                     KEY=\$(gh repo deploy-key list | grep '${deployKeyName}')
                     if [[ ! -z \${KEY} ]]
