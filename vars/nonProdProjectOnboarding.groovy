@@ -105,7 +105,12 @@ def call(Map args) {
     stage('clone all component repo info') {
         projectInfo.components.each { component ->
             dir (component.workDir) {
-                sh "gh repo clone ${component.gitRepoUrl} -- --no-checkout"
+                withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+                    sh """
+                        echo \${GITHUB_ACCESS_TOKEN} | gh auth login --with-token'
+                        gh repo clone ${component.gitRepoUrl} -- --no-checkout
+                    """
+                }
             }
         }
     }
