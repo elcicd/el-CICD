@@ -106,7 +106,7 @@ def call(Map args) {
         projectInfo.components.each { component ->
             dir (component.workDir) {
                 withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-                    sh "gh repo clone ${component.gitOrganization}/${component.gitRepoName} -- --no-checkout"
+                    sh "gh repo clone ${component.scmOrganization}/${component.gitRepoName} -- --no-checkout"
                 }
             }
         }
