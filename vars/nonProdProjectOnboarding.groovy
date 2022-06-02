@@ -101,9 +101,29 @@ def call(Map args) {
             }
         }
     }
+    
+    stage('clone all component repo info') {
+        projectInfo.components.each { component ->
+            dir (component.workDir) {
+                sh "gh repo clone ${component.gitRepoUrl} --no-checkout"
+            }
+        }
+    }
 
     stage('Delete old github public keys with curl') {
-        githubUtils.deleteSshKeys(projectInfo)
+        def deployKeyName = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
+        projectInfo.components.each { component ->
+            dir (component.workDir) {
+                sh """
+                    KEY=\$(gh repo deploy-key list | grep ${deployKeyName})
+                    if [[ ! -z \${KEY} ]]
+                    then
+                        KEY=\${KEY%%[[:space:]]*}
+                        gh repo deploy-key delete
+                    fi
+                """
+            }
+        }
     }
 
     stage('Create and push public key for each github repo to github with curl') {

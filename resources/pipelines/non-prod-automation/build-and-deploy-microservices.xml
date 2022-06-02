@@ -15,14 +15,6 @@
     </properties>
     <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
         <script>
-            properties([
-                parameters(
-                    [
-                        string(name: 'PROJECT_ID', description: 'Project ID', trim: true)
-                    ]
-                )
-            ])
-  
             node() {
                 def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
   
