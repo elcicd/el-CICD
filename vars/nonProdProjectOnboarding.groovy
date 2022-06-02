@@ -117,7 +117,7 @@ def call(Map args) {
         projectInfo.components.each { component ->
             dir (component.workDir) {
                 sh """
-                    KEY=\$(gh repo deploy-key list | grep ${deployKeyName})
+                    KEY=\$(gh repo deploy-key list | grep '${deployKeyName}')
                     if [[ ! -z \${KEY} ]]
                     then
                         KEY=\${KEY%%[[:space:]]*}
