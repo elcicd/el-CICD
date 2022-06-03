@@ -60,8 +60,16 @@ def configureCicdJenkinsUrls(def projectInfo) {
 
 def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+        
+        def curlCmd  ="""
+            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
+                ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
+                --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
+        """
+        println curlCmd
+        sleep 2
         sh """
-            ${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} \
+            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
@@ -70,24 +78,15 @@ def createPipelinesFolder(def projectInfo, def folderName) {
  
 def deletePipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${curlUtils.getCmd(curlUtils.DELETE, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
+        sh "${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
     }
 }
 
 def listPipelinesInFolder(def projectInfo, def folderName) {
     def listOfPipelines = []
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        
-        def curlCmd  ="""
-            ${curlUtils.getCmd(curlUtils.GET, JENKINS_ACCESS_TOKEN)} ${curlUtils.FAIL_SILENT} \
-                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} |  \
-                jq -r '.jobs[].name'"
-        """
-        println curlCmd
-        sleep 2
-        
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {        
         def curlScript =  """
-            ${curlUtils.getCmd(curlUtils.GET, JENKINS_ACCESS_TOKEN)} ${curlUtils.FAIL_SILENT} \
+            ${curlUtils.getCmd(curlUtils.GET, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.FAIL_SILENT} \
                 ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} |  \
                 jq -r '.jobs[].name'"
         """
@@ -104,7 +103,7 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
             PIPELINE_FILE=${pipelineFile.name}
             ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
             
-            ${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} ${curlUtils.XML_CONTEXT_HEADER} \
+            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} \
                 --data-binary @${pipelineFileDir}/${pipelineFile.name}
         """
@@ -125,7 +124,7 @@ def pushSshCredentialsToJenkins(def keyId, def keyFile) {
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_FILE}"
     
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, JENKINS_ACCESS_TOKEN)} -f --data-binary @${SECRET_FILE_NAME}"
+        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f --data-binary @${SECRET_FILE_NAME}"
         
         sh(returnStdout: true, script: """
             ${shCmd.echo ''}
