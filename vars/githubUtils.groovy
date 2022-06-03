@@ -33,7 +33,7 @@ def deleteProjectDeployKeys(def projectInfo, def component) {
 }
 
 def addProjectDeployKey(def projectInfo, def component, def keyFile) {
-    def GITHUB_DEPLOY_KEY_FILE = 'githubDeployKey.json'
+    def GITHUB_DEPLOY_KEY_FILE = 'githubDeployKey-template.json'
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${GITHUB_DEPLOY_KEY_FILE}"
     def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
     
