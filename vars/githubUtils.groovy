@@ -47,7 +47,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys \
-                -d @${GITHUB_CREDS_FILE}
+                -d @${GITHUB_CREDS_FILE} | jq 'del(.key)'
             
             rm -f ${GITHUB_CREDS_FILE}
         """
