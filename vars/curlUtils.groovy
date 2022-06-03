@@ -4,6 +4,8 @@
  * Utility methods for creating curl commands.
  */
 
+import groovy.transform.Field
+
 @Field
 def GET = 'GET'
 
