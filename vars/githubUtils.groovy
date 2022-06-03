@@ -84,7 +84,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
-                -d @${WEBHOOK_FILE} | jq '"NEW HOOK ID: "+.id'
+                -d @${WEBHOOK_FILE} | jq '"NEW HOOK ID: \(.id)"'
             
             rm -f ${WEBHOOK_FILE}
         """
