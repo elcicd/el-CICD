@@ -20,7 +20,7 @@ def deleteProjectDeployKeys(def projectInfo, def component) {
             KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} -f ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
             if [[ ! -z \${KEY_IDS} ]]
             then
-                ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY(S) FROM ${component.gitRepoName}: \${KEY_IDS}"}
+                ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY(S) FROM ${component.gitRepoName}: \${KEY_IDS}", ''}
                 for KEY_ID in \${KEY_IDS}
                 do
                     ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${url}/\${KEY_ID}
@@ -38,6 +38,8 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
     
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
         sh """
+             ${shCmd.echo  '', "CREATING NEW GIT DEPLOY KEY FOR: ${component.gitRepoName}", ''}
+             
             set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
             sed -i -e 's/%DEPLOY_KEY_NAME%/${projectInfo.gitRepoDeployKeyId}/g' ${GITHUB_CREDS_FILE}
@@ -48,6 +50,8 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys \
                 -d @${GITHUB_CREDS_FILE} | jq 'del(.key)'
+                
+             ${shCmd.echo  '', "GIT DEPLOY KEY CREATED FOR: ${component.gitRepoName}", ''}
             
             rm -f ${GITHUB_CREDS_FILE}
         """
@@ -60,7 +64,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
         
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         sh """
-            ${shCmd.echo  '', "GIT WEBHOOK FOR: ${component.gitRepoName}"}
+            ${shCmd.echo  '', "CREATING NEW GIT WEBHOOK FOR: ${component.gitRepoName}", ''}
             
             cat ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} | \
               sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|" \
