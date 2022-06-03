@@ -23,7 +23,7 @@ def deleteProjectDeployKeys(def projectInfo, def component) {
                 ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
                 for KEY_ID in \${KEY_IDS}
                 do
-                    ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN')} ${url}/\${KEY_ID}
+                    ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${url}/\${KEY_ID}
                 done
             else
                 ${shCmd.echo  '', "OLD DEPLOY KEY NOT FOUND: ${component.gitRepoName}"}
@@ -75,7 +75,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks |
                 jq '.[] | select(.config.url  == "\${WEBHOOK}") | .id'
                 
-            for [[ HOOK_ID in \${HOOK_IDS} ]]
+            for \${HOOK_ID} in \${HOOK_IDS}
             do
                 ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                     https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks/\${HOOK_ID} 
