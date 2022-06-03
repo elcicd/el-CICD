@@ -43,7 +43,6 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
             sed -i -e 's/%DEPLOY_KEY_NAME%/${projectInfo.gitRepoDeployKeyId}/g' ${GITHUB_CREDS_FILE}
             GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
             echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
-            sed -i -e "s/%READ_ONLY%/false}/" ${GITHUB_CREDS_FILE}
             set -x
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
