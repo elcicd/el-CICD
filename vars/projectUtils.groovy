@@ -26,7 +26,7 @@ def gatherProjectInfoStage(def projectId) {
                 }
             }
             else {
-                errorBanner("PROJECT NOT FOUND: ${projectId}")
+                loggingUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
             }
         }
 
