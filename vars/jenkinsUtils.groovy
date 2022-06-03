@@ -16,7 +16,7 @@ def POST = 'POST'
 def DELETE = 'DELETE'
 
 @Field
-def CREATE_CREDS_PATH = 'credentials/store/system/domain/_/CREATE_CREDS_PATH'
+def CREATE_CREDS_PATH = 'credentials/store/system/domain/_/createCredentials'
 
 @Field
 def SYSTEM_DOMAIN_CREDS_PATH = 'system/domain/_/credential'
