@@ -115,21 +115,25 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
 }
 
 def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
-    def JENKINS_CREDS_FILE = 'jenkinsSshCredentials-template.xml'
-    def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_FILE}"
+    def JENKINS_CREDS_TEMPLATE_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-template.xml"
+    def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_TEMPLATE_FILE}"
     
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f --data-binary @${SECRET_FILE_NAME}"
+        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f --data-binary @${JENKINS_CREDS_FILE}"
         
         sh(returnStdout: true, script: """
             ${shCmd.echo ''}
-            JENKINS_CREDS=\$(sed -e 's/%UNIQUE_ID%/${keyId}/g' ${el.cicd.TEMPLATES_DIR}/${JENKINS_CREDS_FILE})
-            set +x -v; echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
+            cp ${JENKINS_CREDS_TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
+            sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
+            set +x -v
+            JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${keyFile})}" > ${JENKINS_CREDS_FILE}
+            set -x +v
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
 
-            rm -f ${SECRET_FILE_NAME}
+            rm -f ${JENKINS_CREDS_FILE}
         """)
     }
 }
