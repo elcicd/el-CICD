@@ -36,9 +36,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
     TEMPLATE_FILE = 'githubDeployKey-template.json'
     def GITHUB_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def curlCmd = curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')
-        
+    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
         sh """
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
             sed -i -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${GITHUB_CREDS_FILE}

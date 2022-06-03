@@ -119,7 +119,8 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def curlCommand = "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f --data-binary @${JENKINS_CREDS_FILE}"
+        def curlCommand =
+            "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
         sh(returnStdout: true, script: """
             ${shCmd.echo ''}
