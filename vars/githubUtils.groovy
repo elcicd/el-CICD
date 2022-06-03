@@ -55,28 +55,31 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
     }
 }
 
-def pushBuildWebhook(def projectInfo, def buildType) {
+def pushBuildWebhook(def projectInfo, def component, def buildType) {
+    TEMPLATE_FILE = 'githubWebhook-template.json'
+    def WEBHOOK_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
+    
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         sh """
-            ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
+            ${shCmd.echo  "GIT WEBHOOK FOR: ${component.gitRepoName}"}
             
-            cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
+            cat ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} | \
               sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|"   \
                   -e "s|%PROJECT_ID%|${projectInfo.id}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|"   \
                   -e "s|%BUILD_TYPE%|${buildType}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|"   \
-                  -e "s|%COMPONENT_ID%|${component.id}|" > ${webhookFile}
+                  -e "s|%COMPONENT_ID%|${component.id}|" > ${WEBHOOK_FILE}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
-                -d @${webhookFile}
+                -d @${WEBHOOK_FILE}
             
             ${curlUtils.getCmd(curlUtils.PATCH, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
-                -d @${webhookFile}
-
-            ${scriptToPushWebhookToScm}
+                -d @${WEBHOOK_FILE}
+            
+            rm -f ${WEBHOOK_FILE}
         """
     }
 }
