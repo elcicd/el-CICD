@@ -64,14 +64,11 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
             ${shCmd.echo  "GIT WEBHOOK FOR: ${component.gitRepoName}"}
             
             cat ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} | \
-              sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|"   \
-                  -e "s|%PROJECT_ID%|${projectInfo.id}|"   \
-                  -e "s|%COMPONENT_ID%|${component.id}|"   \
-                  -e "s|%BUILD_TYPE%|${buildType}|"   \
-                  -e "s|%COMPONENT_ID%|${component.id}|"   \
-                  -e "s|%COMPONENT_ID%|${component.id}|" > ${WEBHOOK_FILE}
-                  
-            cat  ${WEBHOOK_FILE}
+              sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|" \
+                  -e "s|%PROJECT_ID%|${projectInfo.id}|" \
+                  -e "s|%COMPONENT_ID%|${component.id}|" \
+                  -e "s|%BUILD_TYPE%|${buildType}|" \
+                  -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${component.gitSshPrivateKeyName}|" > ${WEBHOOK_FILE}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \

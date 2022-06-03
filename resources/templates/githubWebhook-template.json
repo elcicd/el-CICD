@@ -1,11 +1,11 @@
 {
-  "name": "%PROJECT_ID-%BUILD_TYPE%",
+  "name": "%PROJECT_ID%-%BUILD_TYPE%",
   "active": true,
   "events": [
     "push"
   ],
   "config": {
-    "url": "https://%HOSTNAME%/job/%PROJECT_ID/job/%COMPONENT_ID%-%BUILD_TYPE%"?token=TOKEN_NAME,
+    "url": "https://%HOSTNAME%/job/%PROJECT_ID/job/%COMPONENT_ID%-%BUILD_TYPE%?token=%WEB_TRIGGER_AUTH_TOKEN%",
     "insecure_ssl": "1"
   }
 }
