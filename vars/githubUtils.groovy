@@ -33,23 +33,26 @@ def deleteProjectDeployKeys(def projectInfo, def component) {
 }
 
 def addProjectDeployKey(def projectInfo, def component, def keyFile) {
-    def GITHUB_DEPLOY_KEY_FILE = 'githubDeployKey-template.json'
-    def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${GITHUB_DEPLOY_KEY_FILE}"
-    def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
+    TEMPLATE_FILE = 'githubDeployKey-template.json'
+    def GITHUB_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def curlCmd = curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')
         
         sh """
-            GITHUB_DEPLOY_KEY=\$(sed -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${el.cicd.TEMPLATES_DIR}/${GITHUB_DEPLOY_KEY_FILE}})
-            set +x -v; echo "\${GITHUB_DEPLOY_KEY//%DEPLOY_KEY%/\$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
-            sed -i -e "s/%READ_ONLY%/false}/" ${SECRET_FILE_NAME}
+            cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
+            sed -i -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${GITHUB_CREDS_FILE}
+            set +x -v
+            GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
+            echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
+            set -x +v
+            sed -i -e "s/%READ_ONLY%/false}/" ${GITHUB_CREDS_FILE}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')} ${GITHUB_REST_API_HDR} \
-                https://${apiHost}/repos/${org}/${repoName}/keys \
-                -d @${SECRET_FILE_NAME}
+                https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys \
+                -d @${GITHUB_CREDS_FILE}
             
-            rm -f ${SECRET_FILE_NAME}
+            rm -f ${GITHUB_CREDS_FILE}
         """
     }
 }

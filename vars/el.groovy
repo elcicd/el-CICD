@@ -138,8 +138,8 @@ def initializePipeline() {
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
-        el.cicd.TEMP_DIR="/tmp/${BUILD_TAG}"
-        el.cicd.TEMPLATES_DIR="${el.cicd.TEMP_DIR}/templates"
+        el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
+        el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
         sh """
             rm -rf '${WORKSPACE}'
             mkdir -p '${WORKSPACE}'
