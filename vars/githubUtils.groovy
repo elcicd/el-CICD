@@ -42,7 +42,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
         
         sh """
             GITHUB_DEPLOY_KEY=\$(sed -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${el.cicd.TEMPLATES_DIR}/${GITHUB_DEPLOY_KEY_FILE}})
-            set +x -v; echo "\${GITHUB_DEPLOY_KEY//%DEPLOY_KEY%/$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
+            set +x -v; echo "\${GITHUB_DEPLOY_KEY//%DEPLOY_KEY%/\$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
             sed -i -e "s/%READ_ONLY%/false}/" ${SECRET_FILE_NAME}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')} ${GITHUB_REST_API_HDR} \
