@@ -121,7 +121,7 @@ def pushSshCredentialsToJenkins(def keyId, def keyFile) {
         sh(returnStdout: true, script: """
             ${shCmd.echo ''}
             JENKINS_CREDS=\$(sed -e 's/%UNIQUE_ID%/${keyId}/g' ${el.cicd.TEMPLATES_DIR}/${JENKINS_CREDS_FILE})
-            set +x -v; echo "\${JENKINS_CREDS//%PRIVATE_KEY%/$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
+            set +x -v; echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${keyFile})}" > ${SECRET_FILE_NAME}; set -x +v
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
