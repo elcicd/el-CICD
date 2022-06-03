@@ -70,6 +70,8 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                   -e "s|%BUILD_TYPE%|${buildType}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|" > ${WEBHOOK_FILE}
+                  
+            cat  ${WEBHOOK_FILE}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
