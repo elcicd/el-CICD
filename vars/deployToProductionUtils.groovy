@@ -10,7 +10,7 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
 
     projectInfo.hasBeenReleased = false
     projectInfo.microServices.each { microService ->
-        withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+        withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
             def gitCmd = "git ls-remote ${microService.gitRepoUrl} '**/${projectInfo.releaseCandidateTag}-*' '**/${projectInfo.releaseVersionTag}-*'"
             def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
 

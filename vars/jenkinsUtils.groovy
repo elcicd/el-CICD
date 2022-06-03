@@ -225,7 +225,7 @@ def deleteProjectDeployKeysFromJenkins(def projectInfo) {
         projectInfo.components.each { component ->
             sh """
                 ${shCmd.echo ''}
-                ${curlUtils.getCmd(curlUtils.POST)} ${jenkinsUrl}/${component.gitRepoDeployKeyJenkinsId}/doDelete
+                ${curlUtils.getCmd(curlUtils.POST)} ${jenkinsUrl}/${component.gitDeployKeyJenkinsId}/doDelete
             """
         }
     }

@@ -12,7 +12,7 @@ def GITHUB_REST_API_HDR = "-H 'Accept: application/vnd.github.v3+json'"
 
 def deleteProjectDeployKeys(def projectInfo, def component) {
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def jqIdFilter = """jq '.[] | select(.title  == "${projectInfo.gitRepoDeployKeyId}") | .id'"""
+        def jqIdFilter = """jq '.[] | select(.title  == "${projectInfo.gitDeployKeyJenkinsId}") | .id'"""
         
         def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys"
         sh """
@@ -40,7 +40,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
         sh """
             set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
-            sed -i -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${GITHUB_CREDS_FILE}
+            sed -i -e 's/%DEPLOY_KEY_NAME%/${component.gitDeployKeyJenkinsId}/g' ${GITHUB_CREDS_FILE}
             GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
             echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
             sed -i -e "s/%READ_ONLY%/false}/" ${GITHUB_CREDS_FILE}
@@ -68,7 +68,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                   -e "s|%PROJECT_ID%|${projectInfo.id}|" \
                   -e "s|%COMPONENT_ID%|${component.id}|" \
                   -e "s|%BUILD_TYPE%|${buildType}|" \
-                  -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${component.gitSshPrivateKeyName}|" > ${WEBHOOK_FILE}
+                  -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${projectInfo.gitDeployKeyJenkinsId}|" > ${WEBHOOK_FILE}
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \

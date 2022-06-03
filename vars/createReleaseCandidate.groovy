@@ -168,7 +168,7 @@ def call(Map args) {
         projectInfo.microServices.each { microService ->
             if (microService.promote) {
                 dir(microService.workDir) {
-                    withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                         def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${microService.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`

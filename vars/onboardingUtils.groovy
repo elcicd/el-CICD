@@ -143,12 +143,12 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
             projectInfo.components.each { component ->
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
+                    ssh-keygen -b 2048 -t rsa -f '${component.gitDeployKeyJenkinsId}' \
                         -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
                     
                     ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitRepoDeployKeyJenkinsId}/g" > ${credsFileName}
-                    cat ${component.gitRepoDeployKeyJenkinsId} >> ${credsFileName}
+                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitDeployKeyJenkinsId}/g" > ${credsFileName}
+                    cat ${component.gitDeployKeyJenkinsId} >> ${credsFileName}
                     cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
                 """
                 
@@ -158,8 +158,8 @@ def createAndPushPublicPrivateSshKeys(def projectInfo) {
             
                 def pushDeployKeyIdCurlCommand = createScriptToPushDeployKey(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
 
-                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitRepoDeployKeyJenkinsId)
-                sh "rm -f ${credsFileName} ${component.gitRepoDeployKeyJenkinsId} ${component.gitRepoDeployKeyJenkinsId}.pub"
+                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitDeployKeyJenkinsId)
+                sh "rm -f ${credsFileName} ${component.gitDeployKeyJenkinsId} ${component.gitDeployKeyJenkinsId}.pub"
             }
         }
     }
@@ -184,7 +184,7 @@ def generateBuildPipelineFiles(def projectInfo) {
                 cp build-to-dev.xml.template ${microService.name}-build-to-dev.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                        -e "s/%MICROSERVICE_NAME%/${microService.name}/g" \
-                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${microService.gitSshPrivateKeyName}/g" \
+                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${projectInfo.gitDeployKeyJenkinsId}/g" \
                        -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
                        -e "s/%CODE_BASE%/${microService.codeBase}/g" \
                        -e "s/%DEV_NAMESPACE%/${projectInfo.devNamespace}/g" \
@@ -197,7 +197,7 @@ def generateBuildPipelineFiles(def projectInfo) {
                 cp build-library.xml.template ${library.name}-build-library.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                     -e "s/%LIBRARY_NAME%/${library.name}/g" \
-                    -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${library.gitSshPrivateKeyName}/g" \
+                    -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${projectInfo.gitDeployKeyJenkinsId}/g" \
                     -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
                     -e "s/%CODE_BASE%/${library.codeBase}/g" \
                     ${library.name}-build-library.xml

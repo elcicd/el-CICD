@@ -191,7 +191,7 @@ def call(Map args) {
                 if (microService.releaseCandidateGitTag) {
                     microService.deploymentBranch = "v${microService.releaseCandidateGitTag}"
                     dir(microService.workDir) {
-                        withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                        withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
                                 ${shCmd.echo '', "-> Creating deployment branch: ${microService.deploymentBranch}"}
                                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',

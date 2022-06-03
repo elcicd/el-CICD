@@ -25,13 +25,13 @@ def call(Map args) {
                 echo "Pushing deploy key for ${component.gitRepoName}"
                 
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
+                    ssh-keygen -b 2048 -t rsa -f '${component.gitDeployKeyJenkinsId}' \
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitDeployKeyJenkinsId, component.gitDeployKeyJenkinsId)
                 
-                githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitRepoDeployKeyJenkinsId}.pub")
+                githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitDeployKeyJenkinsId}.pub")
             }
         }
     }
