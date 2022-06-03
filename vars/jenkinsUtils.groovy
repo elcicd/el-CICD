@@ -112,7 +112,7 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
 }
 
 def pushSshCredentialsToJenkins(def keyId, def keyFile) {
-    def JENKINS_CREDS_FILE = jenkinsSshCredentials.xml
+    def JENKINS_CREDS_FILE = 'jenkinsSshCredentials.xml'
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_FILE}"
     
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
