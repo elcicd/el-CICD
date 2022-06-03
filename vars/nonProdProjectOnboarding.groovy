@@ -115,7 +115,7 @@ def call(Map args) {
             dir(component.workDir) {
                 sh """
                     ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
-                        -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
+                        -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
                 jenkinsUtils.pushSshCredentialsToJenkins(component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
