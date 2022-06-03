@@ -111,9 +111,9 @@ def call(Map args) {
     }
 
     stage('Create and push public key for each github repo to github with curl') {
-        loggingUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",,
-                                "PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
-                                "PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
+        loggingUtils.echoBanner("CREATE DEPLOY KEYS FOR EACH GIT REPO:",
+                                " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
+                                " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
                                 
         projectInfo.components.each { component ->
             dir(component.workDir) {

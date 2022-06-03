@@ -7,9 +7,9 @@
 def init() {
     loggingUtils.echoBanner("COPYING ONBOARDING RESOURCES TO JENKINS AGENT")
 
-    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubSshCredentials-postfix.json", text: libraryResource('templates/githubDeployKey.json')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubDeployKey.json", text: libraryResource('templates/githubDeployKey.json')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
-    writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml", text: libraryResource('templates/jenkinsSshCredentials.xml')
+    writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials.xml", text: libraryResource('templates/jenkinsSshCredentials.xml')
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
