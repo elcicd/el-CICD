@@ -88,7 +88,7 @@ def createScriptPushWebhook(def projectInfo, def component, def ACCESS_TOKEN) {
                   -e "s|%BC_SELF_LINK%|\${BC_SELF_LINK}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|" > ${webhookFile}
 
-            curl -ksS -X POST ${APPLICATION_JSON_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
+            curl -ksS -X POST ${GITHUB_REST_API_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
         """
     }
     else if (projectInfo.scmHost.contains('gitlab')) {
