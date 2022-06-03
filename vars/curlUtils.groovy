@@ -22,6 +22,9 @@ def DELETE = 'DELETE'
 def XML_CONTEXT_HEADER = "-H 'Content-Type:text/xml'"
 
 @Field
+def JSON_CONTEXT_HEADER = '-H application:json'
+
+@Field
 def SILENT = '-o /dev/null'
 
 @Field

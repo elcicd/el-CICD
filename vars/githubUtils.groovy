@@ -46,7 +46,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
             sed -i -e "s/%READ_ONLY%/false}/" ${GITHUB_CREDS_FILE}
             set -x
             
-            ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')} ${GITHUB_REST_API_HDR} \
+            ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN'), false} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys \
                 -d @${GITHUB_CREDS_FILE}
             
