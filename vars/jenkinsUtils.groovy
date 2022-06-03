@@ -114,7 +114,7 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     }
 }
 
-def pushSshCredentialsToJenkins(def keyId, def keyFile) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
     def JENKINS_CREDS_FILE = 'jenkinsSshCredentials.xml'
     def SECRET_FILE_NAME = "${el.cicd.TEMP_DIR}/${JENKINS_CREDS_FILE}"
     
@@ -171,23 +171,23 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
 
     def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
-        pushSshCredentialsToJenkins(keyId)
+        pushSshCredentialsToJenkins(projectInfo, keyId)
     }
     catch (Exception e) {
         echo "Creating ${keyId} on CICD failed, trying update"
     }
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
-        pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+        pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
     }
     catch (Exception e) {
         echo "Creating ${keyId} on CICD failed, trying update"
     }
-    pushSshCredentialsToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
 
     def tokenIds = []
     ENVS.each { ENV ->

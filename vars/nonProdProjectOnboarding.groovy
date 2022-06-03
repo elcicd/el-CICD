@@ -111,6 +111,10 @@ def call(Map args) {
     }
 
     stage('Create and push public key for each github repo to github with curl') {
+        pipelineUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",,
+                                 "PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
+                                 "PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
+                                
         projectInfo.components.each { component ->
             dir(component.workDir) {
                 sh """
@@ -118,7 +122,7 @@ def call(Map args) {
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
-                jenkinsUtils.pushSshCredentialsToJenkins(component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
                 
                 githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitRepoDeployKeyJenkinsId}.pub")
             }
