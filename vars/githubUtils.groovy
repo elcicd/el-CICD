@@ -57,7 +57,7 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
 def pushBuildWebhook(def projectInfo, def component, def buildType) {
     TEMPLATE_FILE = 'githubWebhook-template.json'
     def WEBHOOK_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
-    
+        
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo  "GIT WEBHOOK FOR: ${component.gitRepoName}"}
@@ -68,12 +68,21 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                   -e "s|%COMPONENT_ID%|${component.id}|" \
                   -e "s|%BUILD_TYPE%|${buildType}|" \
                   -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${component.gitDeployKeyJenkinsId}|" > ${WEBHOOK_FILE}
+                  
+            WEBHOOK=\$(cat ${WEBHOOK_FILE} | jq '.config.url')
+                  
+            HOOK_IDS=${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+                https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks |
+                jq '.[] | select(.config.url  == "\${WEBHOOK}") | .id'
+                
+            for [[ HOOK_ID in \${HOOK_IDS} ]]
+            do
+                ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+                    https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks/\${HOOK_ID} 
+            done
+            
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
-                https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
-                -d @${WEBHOOK_FILE}
-            
-            ${curlUtils.getCmd(curlUtils.PATCH, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
                 -d @${WEBHOOK_FILE}
             
