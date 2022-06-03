@@ -18,6 +18,7 @@
             </parameterDefinitions>
         </hudson.model.ParametersDefinitionProperty>
     </properties>
+    </properties>
     <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
         <script>
             node() {

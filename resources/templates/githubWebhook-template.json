@@ -1,12 +1,11 @@
 {
-  "name": "web",
+  "name": "%PROJECT_ID-%BUILD_TYPE%",
   "active": true,
   "events": [
     "push"
   ],
   "config": {
-    "url": "https://%HOSTNAME%%BC_SELF_LINK%/webhooks/%COMPONENT_ID%/github",
-    "content_type": "json",
+    "url": "https://%HOSTNAME%/job/%PROJECT_ID/job/%COMPONENT_ID%-%BUILD_TYPE%"?token=TOKEN_NAME,
     "insecure_ssl": "1"
   }
 }

@@ -36,5 +36,6 @@
         <sandbox>true</sandbox>
     </definition>
     <triggers />
+    <authToken>%WEB_TRIGGER_AUTH_TOKEN%</authToken>
     <disabled>false</disabled>
 </flow-definition>

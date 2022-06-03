@@ -10,6 +10,9 @@ import groovy.transform.Field
 def GET = 'GET'
 
 @Field
+def POST = 'PATCH'
+
+@Field
 def POST = 'POST'
 
 @Field

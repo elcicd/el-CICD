@@ -102,36 +102,17 @@ def call(Map args) {
         }
     }
 
-    stage('Delete old github public keys') {
-        loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
-        
-        projectInfo.components.each { component ->
-            githubUtils.deleteProjectDeployKeys(projectInfo, component)
-        }
-    }
-
-    stage('Create and push public key for each github repo to github with curl') {
-        loggingUtils.echoBanner("CREATE DEPLOY KEYS FOR EACH GIT REPO:",
-                                " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
-                                " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
-                                
-        projectInfo.components.each { component ->
-            dir(component.workDir) {
-                sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitRepoDeployKeyJenkinsId}' \
-                        -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
-                """
-                
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitRepoDeployKeyJenkinsId, component.gitRepoDeployKeyJenkinsId)
-                
-                githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitRepoDeployKeyJenkinsId}.pub")
-            }
-        }
-    }
+    manageDeployKeys([projectInfo: projectInfo])
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
-        githubUtils.createBuildWebhooks(projectInfo)
+        projectInfo.microServices.each { microService ->
+            githubUtils.pushBuildWebhook(projectInfo, microService, 'build-to-dev')
+        }
+
+        projectInfo.libraries.each { library ->
+            githubUtils.pushBuildWebhook(projectInfo, library, 'build-library')
+        }
     }
 }

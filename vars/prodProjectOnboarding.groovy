@@ -43,15 +43,5 @@ def call(Map args) {
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
-    stage('Delete old github public keys') {
-        loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
-        
-        projectInfo.components.each { component ->
-            githubUtils.deleteProjectDeployKeys(projectInfo, component)
-        }
-    }
-
-    stage('Create and push public key for each github repo to github with curl') {
-        onboardingUtils.createAndPushPublicPrivateSshKeys(projectInfo)
-    }
+    manageDeployKeys([projectInfo: projectInfo])
 }

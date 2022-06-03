@@ -38,13 +38,13 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
     
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
         sh """
+            set -x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
             sed -i -e 's/%DEPLOY_KEY_NAME%/${component.gitRepoDeployKeyJenkinsId}/g' ${GITHUB_CREDS_FILE}
-            set +x -v
             GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
             echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
-            set -x +v
             sed -i -e "s/%READ_ONLY%/false}/" ${GITHUB_CREDS_FILE}
+            set +x
             
             ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN')} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/keys \
@@ -55,46 +55,29 @@ def addProjectDeployKey(def projectInfo, def component, def keyFile) {
     }
 }
 
-def createBuildWebhooks(def projectInfo) {
+def pushBuildWebhook(def projectInfo, def buildType) {
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def buildComponents = []
-        buildComponents.addAll(projectInfo.microServices)
-        buildComponents.addAll(projectInfo.libraries)
-
-        buildComponents.each { component ->
-            if (!component.gitMicroServiceRepos) {
-                scriptToPushWebhookToScm = createScriptPushWebhook(projectInfo, component, 'GITHUB_ACCESS_TOKEN')
-                sh """
-                    ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
-
-                    ${scriptToPushWebhookToScm}
-                """
-            }
-        }
-    }
-}
-
-def createScriptPushWebhook(def projectInfo, def component, def ACCESS_TOKEN) {
-    def curlCommand
-
-    if (projectInfo.scmHost.contains('github')) {
-        def url = "https://\${${ACCESS_TOKEN}}@${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks"
-
-        def webhookFile = "${el.cicd.TEMP_DIR}/githubWebhook.json"
-        curlCommand = """
-            BC_SELF_LINK=\$(oc get bc -l component=${component.name} -o jsonpath='{.items[0].metadata.selfLink}' -n ${projectInfo.cicdMasterNamespace})
+        sh """
+            ${shCmd.echo  "GIT REPO NAME: ${component.gitRepoName}"}
+            
             cat ${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json | \
-              sed -e "s|%HOSTNAME%|${el.cicd.CLUSTER_API_HOSTNAME}|"   \
-                  -e "s|%BC_SELF_LINK%|\${BC_SELF_LINK}|"   \
+              sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|"   \
+                  -e "s|%PROJECT_ID%|${projectInfo.id}|"   \
+                  -e "s|%COMPONENT_ID%|${component.id}|"   \
+                  -e "s|%BUILD_TYPE%|${buildType}|"   \
+                  -e "s|%COMPONENT_ID%|${component.id}|"   \
                   -e "s|%COMPONENT_ID%|${component.id}|" > ${webhookFile}
+            
+            ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+                https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
+                -d @${webhookFile}
+            
+            ${curlUtils.getCmd(curlUtils.PATCH, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+                https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
+                -d @${webhookFile}
 
-            curl -ksS -X POST ${GITHUB_REST_API_HDR} ${GIT_HUB_REST_API_HDR} -d @${webhookFile} ${url}
+            ${scriptToPushWebhookToScm}
         """
     }
-    else if (projectInfo.scmHost.contains('gitlab')) {
-        loggingUtils.errorBanner("GitLab is not supported yet")
-    }
-
-    return curlCommand
 }
 
