@@ -61,7 +61,7 @@ def configureCicdJenkinsUrls(def projectInfo) {
 def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
-            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
+            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
@@ -70,7 +70,10 @@ def createPipelinesFolder(def projectInfo, def folderName) {
  
 def deletePipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh "${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} ${projectInfo.jenkinsUrls.HOST}/${folderName}/"
+        sh """
+            ${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
+                ${projectInfo.jenkinsUrls.HOST}/${folderName}/
+        """
     }
 }
 
@@ -78,7 +81,7 @@ def listPipelinesInFolder(def projectInfo, def folderName) {
     def listOfPipelines = []
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {        
         def curlScript =  """
-            ${curlUtils.getCmd(curlUtils.GET, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.FAIL_SILENT} \
+            ${curlUtils.getCmd(curlUtils.GET, 'JENKINS_ACCESS_TOKEN', false)} ${curlUtils.FAIL_SILENT} \
                 ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} |  \
                 jq -r '.jobs[].name'
         """

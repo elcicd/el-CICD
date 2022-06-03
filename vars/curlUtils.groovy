@@ -24,6 +24,6 @@ def SILENT = '-o /dev/null'
 @Field
 def FAIL_SILENT = '-f 2>/dev/null'
 
-def getCmd(def httpVerb, def token, def silent = false) {    
-    return """curl -ksS -X ${httpVerb} ${silent ? SILENT : ''} -H "Authorization: Bearer \${${token}}" """
+def getCmd(def httpVerb, String tokenName, def silent = true) {    
+    return """curl -ksS -X ${httpVerb} ${silent ? SILENT : ''} -H "Authorization: Bearer \${${tokenName}}" """
 }
