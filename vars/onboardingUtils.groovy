@@ -184,7 +184,7 @@ def generateBuildPipelineFiles(def projectInfo) {
                 cp build-to-dev.xml.template ${microService.name}-build-to-dev.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                        -e "s/%MICROSERVICE_NAME%/${microService.name}/g" \
-                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${component.gitDeployKeyJenkinsId}/g" \
+                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${microService.gitDeployKeyJenkinsId}/g" \
                        -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
                        -e "s/%CODE_BASE%/${microService.codeBase}/g" \
                        -e "s/%DEV_NAMESPACE%/${projectInfo.devNamespace}/g" \
