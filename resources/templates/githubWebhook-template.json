@@ -1,5 +1,5 @@
 {
-  "name": "%PROJECT_ID%-%BUILD_TYPE%",
+  "name": "web",
   "active": true,
   "events": [
     "push"
