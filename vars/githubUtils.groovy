@@ -71,9 +71,9 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                   
             WEBHOOK=\$(cat ${WEBHOOK_FILE} | jq '.config.url')
                   
-            HOOK_IDS=${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+            HOOK_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks |
-                jq '.[] | select(.config.url  == "\${WEBHOOK}") | .id'
+                jq '.[] | select(.config.url  == "\${WEBHOOK}") | .id')
                 
             for HOOK_ID in \${HOOK_IDS}
             do
