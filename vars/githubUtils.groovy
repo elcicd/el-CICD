@@ -20,7 +20,7 @@ def deleteProjectDeployKeys(def projectInfo, def component) {
             KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} -f ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
             if [[ ! -z \${KEY_IDS} ]]
             then
-                ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY FROM GIT REPO: ${component.gitRepoName}"}
+                ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY(S) FROM ${component.gitRepoName}: \${KEY_IDS}"}
                 for KEY_ID in \${KEY_IDS}
                 do
                     ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${url}/\${KEY_ID}
@@ -75,7 +75,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks |
                 jq '.[] | select(.config.url  == "\${WEBHOOK}") | .id'
                 
-            for \${HOOK_ID} in \${HOOK_IDS}
+            for HOOK_ID in \${HOOK_IDS}
             do
                 ${curlUtils.getCmd(curlUtils.DELETE, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                     https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks/\${HOOK_ID} 
