@@ -60,7 +60,7 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
         
     withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         sh """
-            ${shCmd.echo  "GIT WEBHOOK FOR: ${component.gitRepoName}"}
+            ${shCmd.echo  '', "GIT WEBHOOK FOR: ${component.gitRepoName}"}
             
             cat ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} | \
               sed -e "s|%HOSTNAME%|${projectInfo.jenkinsUrls.HOST}|" \
@@ -82,9 +82,11 @@ def pushBuildWebhook(def projectInfo, def component, def buildType) {
             done
             
             
-            ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+            HOOK_ID=\$(${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
                 https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${component.gitRepoName}/hooks \
-                -d @${WEBHOOK_FILE} | jq 'NEW HOOK ID: \\(.id)'
+                -d @${WEBHOOK_FILE} | jq '.id')
+            
+            ${shCmd.echo  '', "NEW GIT WEBHOOK ID CREATED: \${HOOK_ID}", ''}
             
             rm -f ${WEBHOOK_FILE}
         """
