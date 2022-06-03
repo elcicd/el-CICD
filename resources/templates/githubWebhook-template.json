@@ -5,7 +5,7 @@
     "push"
   ],
   "config": {
-    "url": "https://%HOSTNAME%/job/%PROJECT_ID/job/%COMPONENT_ID%-%BUILD_TYPE%?token=%WEB_TRIGGER_AUTH_TOKEN%",
+    "url": "https://%HOSTNAME%/job/%PROJECT_ID%/job/%COMPONENT_ID%-%BUILD_TYPE%?token=%WEB_TRIGGER_AUTH_TOKEN%",
     "insecure_ssl": "1"
   }
 }
