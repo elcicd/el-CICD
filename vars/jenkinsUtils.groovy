@@ -112,7 +112,7 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo "Removing pipeline: ${pipelineName}"}
-            ${curlUtils.getCmd(curlUtils.DELETE)} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/${pipelineName}/
+            ${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/${pipelineName}/
         """
     }
 }
