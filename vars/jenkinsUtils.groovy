@@ -125,7 +125,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKey) {
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
-        sh(returnStdout: true, script: """
+        sh """
             ${shCmd.echo ''}
             set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
@@ -138,7 +138,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKey) {
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
 
             rm -f ${JENKINS_CREDS_FILE}
-        """)
+        """
     }
 }
 
@@ -192,13 +192,7 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
-            try {
-                pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.createCredsUrl, tokenId)
-            }
-            catch (Exception e) {
-                echo "Creating ${tokenId} on CICD failed, trying update"
-            }
-            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, tokenId)
+            pushImageRepositoryTokenToJenkins(projectInfo, tokenId)
 
             tokenIds.add(tokenId)
         }
@@ -214,25 +208,25 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def component) {
     }
 }
 
-def pushImageRepositoryTokenToJenkins(def cicdJenkinsNamespace, def url, def tokenId) {
+def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
     def credsArray = [string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN',
                       string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN'))]
                       
     withCredentials(credsArray) {
-        def curlCommand = """${curlUtils.getCmd(curlUtils.POST)} -H "content-type:application/xml" --data-binary @jenkinsTokenCredentials.xml ${url}"""
-        def httpCode = 
-            sh(returnStdout: true, script: """
-                ${shCmd.echo ''}
-                cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${tokenId}/g" > jenkinsTokenCredentials-named.xml
-                cat jenkinsTokenCredentials-named.xml | sed "s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|g" > jenkinsTokenCredentials.xml
+        def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials.xml"
+        def curlCommand =
+            "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
+        
+        sh """
+            ${shCmd.echo ''}
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | \
+                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
-                ${curlCommand}
+            ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
+            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
 
-                rm -f jenkinsTokenCredentials-named.xml jenkinsTokenCredentials.xml
-            """).replaceAll(/[\s]/, '')
-        if (!httpCode.startsWith('2')) {
-            loggingUtils.errorBanner("Push image repo access token (${tokenId}) to Jenkins failed with HTTP code: ${httpCode}")
-        }
+            rm -f ${JENKINS_CREDS_FILE}
+        """
     }
 }
 
