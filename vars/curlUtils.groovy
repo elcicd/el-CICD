@@ -7,6 +7,9 @@
 import groovy.transform.Field
 
 @Field
+def DELETE = 'DELETE'
+
+@Field
 def GET = 'GET'
 
 @Field
@@ -16,7 +19,7 @@ def PATCH = 'PATCH'
 def POST = 'POST'
 
 @Field
-def DELETE = 'DELETE'
+def PUT = 'PUT'
 
 @Field
 def XML_CONTEXT_HEADER = "-H 'Content-Type:text/xml'"

@@ -7,18 +7,6 @@
 import groovy.transform.Field
 
 @Field
-def GET = 'GET'
-
-@Field
-def POST = 'POST'
-
-@Field
-def PUT = 'PUT'
-
-@Field
-def DELETE = 'DELETE'
-
-@Field
 def SYSTEM_DOMAIN_CREDS_BASE_PATH = 'credentials/store/system/domain/_'
 
 @Field
