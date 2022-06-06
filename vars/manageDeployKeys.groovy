@@ -6,7 +6,13 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    
+
+    jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
+
+    stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
+        jenkinsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+    }
+
     stage('Delete old github public keys') {
         loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
         
