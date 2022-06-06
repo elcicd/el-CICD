@@ -40,6 +40,8 @@ def call(Map args) {
                 jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitDeployKeyJenkinsId, component.gitDeployKeyJenkinsId)
                 
                 githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitDeployKeyJenkinsId}.pub")
+                
+                sh "rm -f ${component.gitDeployKeyJenkinsId} ${component.gitDeployKeyJenkinsId}.pub"
             }
         }
     }

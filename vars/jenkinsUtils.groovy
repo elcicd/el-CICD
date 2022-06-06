@@ -160,8 +160,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyVar})}" > ${JENKINS_CREDS_FILE}
             set -x
             
-            cat ${JENKINS_CREDS_FILE}
-            
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
 

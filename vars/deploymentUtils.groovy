@@ -404,7 +404,7 @@ def waitingForPodsToTerminate(def deployToNamespace) {
         COUNTER=1
         while [[ ! -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
-            printf -- '-%.0s' {1..${COUNTER}}
+            printf -- '-%.0s' {1..\${COUNTER}}
             echo
             sleep 2
             let COUNTER+=1
