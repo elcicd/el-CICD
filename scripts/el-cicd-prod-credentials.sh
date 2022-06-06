@@ -6,11 +6,11 @@ _refresh_prod_credentials() {
 
     echo
     echo "Adding read only deploy key for el-CICD"
-    _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
+    _push_deploy_key_to_github el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
 
     echo
     echo "Adding read only deploy key for el-CICD-config"
-    _push_github_public_ssh_deploy_key el-CICD-config \
+    _push_deploy_key_to_github el-CICD-config \
                                     ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
                                     ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 

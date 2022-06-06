@@ -109,13 +109,13 @@ __gather_dev_setup_info() {
     then
         if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
         then
-            read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GIT_REPO_ACCESS_TOKEN
+            read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GITHUB_ACCESS_TOKEN
             echo
         else
-            GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
+            GITHUB_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
         fi
 
-        local TOKEN_TEST_RESULT=$(curl -s -u :${GIT_REPO_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
+        local TOKEN_TEST_RESULT=$(curl -s -u :${GITHUB_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
         if [[ -z ${TOKEN_TEST_RESULT} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
@@ -366,7 +366,7 @@ __create_credentials() {
 
     echo
     echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}"
-    echo ${GIT_REPO_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
+    echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
 
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}
@@ -418,7 +418,7 @@ __create_git_repo() {
     ${GIT_COMMAND} checkout -b  ${EL_CICD_GIT_REPO_BRANCH_NAME}
 
     ${GIT_COMMAND} \
-        -c credential.helper="!creds() { echo password=${GIT_REPO_ACCESS_TOKEN}; }; creds" \
+        -c credential.helper="!creds() { echo password=${GITHUB_ACCESS_TOKEN}; }; creds" \
         push -u origin ${EL_CICD_GIT_REPO_BRANCH_NAME}
 }
 
@@ -428,8 +428,8 @@ __create_remote_github_repo() {
     local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
 
     REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-        -u :${GIT_REPO_ACCESS_TOKEN} \
-        -H "Accept: application/vnd.github.v3+json"  \
+        -u :${GITHUB_ACCESS_TOKEN} \
+        ${GITHUB_REST_API_HDR}  \
         https://${GIT_API_DOMAIN}/user/repos \
         -d "${GIT_JSON_POST}")
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 201 ]]

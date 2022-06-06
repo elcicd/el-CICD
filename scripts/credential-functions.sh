@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+export GITHUB_REST_API_HDR='Accept: application/vnd.github.v3+json'
+
 _check_sealed_secrets() {
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
@@ -56,10 +58,10 @@ _install_sealed_secrets() {
     fi
 }
 
-_push_github_public_ssh_deploy_key() {
+_push_deploy_key_to_github() {
     local GIT_REPO_NAME=${1}
     local DEPLOY_KEY_TITLE=${2}
-    local DEPLOY_KEY_FILE=${3}
+    local DEPLOY_KEY_FILE="${3}.pub"
 
     # READ_ONLY *MUST* be ${_FALSE} to push a read/write key
     local READ_ONLY=${4}
@@ -68,28 +70,33 @@ _push_github_public_ssh_deploy_key() {
         READ_ONLY=true
     fi
 
-    local GIT_REPO_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
-    local EL_CICD_GITHUB_URL="https://${GIT_REPO_ACCESS_TOKEN}@${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${1}/keys"
+    local GITHUB_BEARER_TOKEN="Authorization: Bearer $(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})"
+    local EL_CICD_GITHUB_KEYS_URL="https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_NAME}/keys"
 
     # DELETE old key, if any
-    local KEY_ID=$(curl -ksS -X GET ${EL_CICD_GITHUB_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id")
+    local KEY_ID=$(curl -ksS -X GET -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" ${EL_CICD_GITHUB_KEYS_URL} | \
+        jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
     if [[ ! -z ${KEY_ID} ]]
     then
-        echo "Deleting old GitHub key ${2} with ID: ${KEY_ID}"
-        curl -ksS -X DELETE ${EL_CICD_GITHUB_URL}/${KEY_ID}
+        echo "Deleting old GitHub key ${DEPLOY_KEY_TITLE} with ID: ${KEY_ID}"
+        curl -fksS -X DELETE -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | \
+            jq 'del(.key)'
     else
-        echo "Adding key  ${2} to GitHub for first time" 
+        echo "Adding key  ${DEPLOY_KEY_TITLE} to GitHub for first time" 
     fi
 
-    local SECRET_FILE="${SECRET_FILE_TEMP_DIR}/sshKeyFile.json"
-    cat ${TEMPLATES_DIR}/githubSshCredentials-prefix.json | sed "s/%DEPLOY_KEY_NAME%/${DEPLOY_KEY_TITLE}/" > ${SECRET_FILE}
-    cat ${3}.pub >> ${SECRET_FILE}
-    cat ${TEMPLATES_DIR}/githubSshCredentials-postfix.json >> ${SECRET_FILE}
-    sed -i -e "s/%READ_ONLY%/${READ_ONLY}/" ${SECRET_FILE}
+    local TEMPLATE_FILE='githubDeployKey-template.json'
+    local GITHUB_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
+    cp ${TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
+    sed -i -e "s/%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}/g" ${GITHUB_CREDS_FILE}
+    GITHUB_CREDS=$(<${GITHUB_CREDS_FILE})
+    echo "${GITHUB_CREDS//%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${GITHUB_CREDS_FILE}
+    
+    local RESULT=$(curl -fksS -X POST -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL} | \
+        jq 'del(.key)')
+    printf "New GitHub key created:\n${RESULT}\n"
 
-    curl -ksS -X POST -H Accept:application/vnd.github.v3+json -d @${SECRET_FILE} ${EL_CICD_GITHUB_URL}
-
-    rm -f ${SECRET_FILE}
+    rm -f ${GITHUB_CREDS_FILE}
 }
 
 _create_env_image_registry_secret() {
@@ -126,33 +133,35 @@ _push_access_token_to_jenkins() {
     local SECRET_TOKEN=$(cat ${TKN_FILE})
 
     # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
-    local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
+    local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
+    cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
-    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${SECRET_FILE} ${CREDS_ID}
+    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${JENKINS_CREDS_FILE}
 
-    rm -f ${SECRET_FILE}
+    rm -f ${JENKINS_CREDS_FILE}
 }
 
 _push_ssh_creds_to_jenkins() {
     local JENKINS_URL=${1}
     local CREDS_ID=${2}
+    local DEPLOY_KEY_FILE=${3}
+    
+    local TEMPLATE_FILE='jenkinsSshCredentials-template.xml'
+    local JENKINS_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
+    cp ${TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
+    sed -i -e "s/%UNIQUE_ID%/${CREDS_ID}/g" ${JENKINS_CREDS_FILE}
+    JENKINS_CREDS=$(<${JENKINS_CREDS_FILE})
+    echo "${JENKINS_CREDS//%PRIVATE_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${JENKINS_CREDS_FILE}
 
-    local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
+    __push_creds_file_to_jenkins ${JENKINS_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE} 
 
-    cat ${TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${CREDS_ID}/g" > ${SECRET_FILE}
-    cat ${3} >> ${SECRET_FILE}
-    cat ${TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${SECRET_FILE}
-
-    __push_creds_file_to_jenkins ${JENKINS_URL} ${SECRET_FILE} ${CREDS_ID}
-
-    rm -f ${SECRET_FILE}
+    rm -f ${JENKINS_CREDS_FILE}
 }
 
 __push_creds_file_to_jenkins() {
     local JENKINS_DOMAIN=${1}
-    local SECRET_FILE=${2}
-    local CREDS_ID=${3}
+    local CREDS_ID=${2}
+    local JENKINS_CREDS_FILE=${3}
 
     local JENKINS_CREDS_URL="https://${JENKINS_DOMAIN}/credentials/store/system/domain/_"
 
@@ -160,8 +169,10 @@ __push_creds_file_to_jenkins() {
     local CONTENT_TYPE_XML="content-type:application/xml"
 
     # Create and update to make sure it takes
-    curl -ksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/createCredentials"
-    curl -ksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${SECRET_FILE} "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
+    curl -ksS -o /dev/null -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${JENKINS_CREDS_FILE} \
+        "${JENKINS_CREDS_URL}/createCredentials"
+    curl -fksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${JENKINS_CREDS_FILE} \
+        "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
 }
 
 _run_custom_credentials_script() {

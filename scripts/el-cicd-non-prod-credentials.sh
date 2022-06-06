@@ -2,16 +2,17 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 _refresh_non_prod_credentials() {
+    set -e
     rm -rf ${SECRET_FILE_TEMP_DIR}
     mkdir -p ${SECRET_FILE_TEMP_DIR}
 
     echo
     echo "Adding read only deploy key for el-CICD"
-    _push_github_public_ssh_deploy_key el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} 
+    _push_deploy_key_to_github el-CICD ${EL_CICD_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
     echo
     echo "Adding read only deploy key for el-CICD-config"
-    _push_github_public_ssh_deploy_key el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
+    _push_deploy_key_to_github el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
     JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
     
@@ -67,4 +68,5 @@ _refresh_non_prod_credentials() {
 
     echo 
     echo 'Non-prod Onboarding Server Credentials Script Complete'
+    set +e
 }

@@ -1,6 +1,39 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+set -E -o functrace
+
+_failure() {
+    set +xv
+    ECHO_STACKTRACE=$(echo ${BASH_COMMAND} | sed 's/ .*//')
+    if [[ $- =~ e && (${ERR_CODE} != 0 || -z $(command -v ${ECHO_STACKTRACE})) ]]
+    then
+        echo 
+        echo "================ STACKTRACE ================"
+        echo
+        LEN=${#BASH_LINENO[@]}
+        for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
+        do
+            echo '---'
+            echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
+            echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
+            if [[ ${INDEX} > 0 ]]
+            then 
+                echo "  LINE: ${BASH_LINENO[${INDEX}]}"
+            else 
+                echo "  COMMAND:"
+                echo "${BASH_COMMAND}" | sed -e 's/^/      /'
+            fi
+        done 
+        echo
+        echo "============================================"
+        echo
+        echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE:=<unknown>}"
+    fi
+}
+
+trap '_failure ${LINENO}' EXIT
+
 cd "$(dirname ${0})"
 
 read -r -d '' WARNING_MSG << EOM

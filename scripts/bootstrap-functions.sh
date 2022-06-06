@@ -17,7 +17,7 @@ _bootstrap_el_cicd() {
         echo "Exiting."
         exit 1
     fi
-
+    
     __gather_and_confirm_bootstrap_info_with_user
 
     if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]

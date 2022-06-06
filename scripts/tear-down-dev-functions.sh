@@ -196,12 +196,12 @@ __remove_git_repo() {
     local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})}
 
     local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${__PAT} \
-        -H "Accept: application/vnd.github.v3+json"  \
+        ${GITHUB_REST_API_HDR}  \
         https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR})
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 200 ]]
     then
         curl -X DELETE -sI -o /dev/null -u :${__PAT} \
-            -H "Accept: application/vnd.github.v3+json"  https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}
+            ${GITHUB_REST_API_HDR}  https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}
         echo "${GIT_REPO_DIR} deleted from Git host ${EL_CICD_GIT_DOMAIN}/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}"
     else
         echo "${GIT_REPO_DIR} NOT FOUND on Git host, or the Access Token has expired. Skipping..."
