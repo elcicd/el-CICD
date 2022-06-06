@@ -132,39 +132,6 @@ def createNfsShare(def projectInfo, def namespace, def pvName, def nfsShare) {
     """
 }
 
-def createAndPushPublicPrivateSshKeys(def projectInfo) {
-    loggingUtils.echoBanner("CREATE PUBLIC/PRIVATE KEYS FOR EACH MICROSERVICE GIT REPO ACCESS",
-                             "PUSH EACH PUBLIC KEY FOR SCM REPO TO SCM HOST",
-                             "PUSH EACH PRIVATE KEY TO THE el-CICD MASTER JENKINS")
-
-    withCredentials([string(credentialsId: el.cicd.GIT_SITE_WIDE_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
-        def credsFileName = 'scmSshCredentials.xml'
-
-        withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-            projectInfo.components.each { component ->
-                sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitDeployKeyJenkinsId}' \
-                        -q -N '' -C 'Jenkins Deploy key for microservice' 2>/dev/null <<< y >/dev/null
-                    
-                    ${shCmd.echo  '', "ADDING PRIVATE KEY FOR GIT REPO ON CICD JENKINS: ${component.name}"}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-prefix.xml | sed "s/%UNIQUE_ID%/${component.gitDeployKeyJenkinsId}/g" > ${credsFileName}
-                    cat ${component.gitDeployKeyJenkinsId} >> ${credsFileName}
-                    cat ${el.cicd.TEMPLATES_DIR}/jenkinsSshCredentials-postfix.xml >> ${credsFileName}
-                """
-                
-                // githubUtils.pushDeployKey(component)
-                
-                // jenkinsUtils.pushDeployKey(component)
-            
-                def pushDeployKeyIdCurlCommand = createScriptToPushDeployKey(projectInfo, component, 'GITHUB_ACCESS_TOKEN', false)
-
-                def jenkinsUrls = jenkinsUtils.getJenkinsCredsUrls(projectInfo, component.gitDeployKeyJenkinsId)
-                sh "rm -f ${credsFileName} ${component.gitDeployKeyJenkinsId} ${component.gitDeployKeyJenkinsId}.pub"
-            }
-        }
-    }
-}
-
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
     def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     sh """

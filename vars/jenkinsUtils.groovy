@@ -177,25 +177,23 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
-    def jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
         pushSshCredentialsToJenkins(projectInfo, keyId)
     }
     catch (Exception e) {
         echo "Creating ${keyId} on CICD failed, trying update"
     }
-    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    jenkinsUrls = getJenkinsCredsUrls(projectInfo, keyId)
     try {
-        pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, keyId)
+        pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.createCredsUrl, keyId)
     }
     catch (Exception e) {
         echo "Creating ${keyId} on CICD failed, trying update"
     }
-    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, keyId)
+    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, keyId)
 
     def tokenIds = []
     ENVS.each { ENV ->
@@ -203,14 +201,13 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
-            jenkinsUrls = getJenkinsCredsUrls(projectInfo, tokenId)
             try {
-                pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.createCredsUrl, tokenId)
+                pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.createCredsUrl, tokenId)
             }
             catch (Exception e) {
                 echo "Creating ${tokenId} on CICD failed, trying update"
             }
-            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, jenkinsUrls.updateCredsUrl, tokenId)
+            pushImageRepositoryTokenToJenkins(projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, tokenId)
 
             tokenIds.add(tokenId)
         }

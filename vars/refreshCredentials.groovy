@@ -49,9 +49,7 @@ def call(Map args) {
                 def sldcNamespacesExist = sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${sdlcNamespace}")
 
                 if (sldcNamespacesExist) {
-                    stage('Create and push public key for each github repo to github with curl') {
-                        onboardingUtils.createAndPushPublicPrivateSshKeys(projectInfo)
-                    }
+                    manageDeployKeys([projectInfo: projectInfo])
 
                     stage('Refresh pull secrets per build environment') {
                         loggingUtils.echoBanner("COPY PULL SECRETS TO ALL NAMESPACE ENVIRONMENTS FOR ${projectInfo.id}")
