@@ -157,7 +157,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            ${sshKeyVar}=\$(echo \${${sshKeyVar}} | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
+            ${sshKeyVar}=\$(echo \${${sshKeyVar}} | sed -e :a -e '/^\n*$/{\$d;N;};/\n$/ba')
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${\$(<${sshKeyVar})}}" > ${JENKINS_CREDS_FILE}
             set -x
             
