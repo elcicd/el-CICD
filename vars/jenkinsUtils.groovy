@@ -95,10 +95,10 @@ def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pip
             ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} \
                 --data-binary @${pipelineFileDir}/${pipelineFile.name}
-                
-            ${curlUtils.getCmd(curlUtils.PATCH, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
-                ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
-                --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
+            
+            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
+                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/\${PIPELINE_FILE%.*}/${CONFIG_ITEM} \
+                --data-binary @${pipelineFileDir}/${pipelineFile.name}
         """
     }
 }
