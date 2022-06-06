@@ -143,7 +143,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     }
 }
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -157,8 +157,8 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            ${sshKeyVar}=\$(echo \${${sshKeyVar}} | perl -0777 -pe 's{\\s+\\z}{}m')
-            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${${sshKeyVar}}}" > ${JENKINS_CREDS_FILE}
+            ${sshKeyVar}=\$(echo \${${sshKeyVar}} | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${\$(<${sshKeyVar})}}" > ${JENKINS_CREDS_FILE}
             set -x
             
             cat ${JENKINS_CREDS_FILE}
