@@ -177,15 +177,15 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
-    withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
-                     variable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+    withCredentials([sshUserPrivateKey(credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+                                       variable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
         pushSshCredentialsToJenkins(projectInfo, keyId, ${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID})
     }
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([string(credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
-                            variable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+    withCredentials([sshUserPrivateKey(credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+                                       variable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
         pushSshCredentialsToJenkins(projectInfo, keyId, ${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID})
     }
 
