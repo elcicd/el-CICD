@@ -117,7 +117,7 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     }
 }
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKey) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -131,7 +131,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def keyFile) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${keyFile})}" > ${JENKINS_CREDS_FILE}
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(sshKey)}" > ${JENKINS_CREDS_FILE}
             set -x
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
@@ -177,23 +177,17 @@ def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
 
-    try {
-        pushSshCredentialsToJenkins(projectInfo, keyId)
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+                     variable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+        pushSshCredentialsToJenkins(projectInfo, keyId, ${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID})
     }
-    catch (Exception e) {
-        echo "Creating ${keyId} on CICD failed, trying update"
-    }
-    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    try {
-        pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.createCredsUrl, keyId)
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+                            variable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+        pushSshCredentialsToJenkins(projectInfo, keyId, ${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID})
     }
-    catch (Exception e) {
-        echo "Creating ${keyId} on CICD failed, trying update"
-    }
-    pushSshCredentialsToJenkins(projectInfo, projectInfo.cicdMasterNamespace, projectInfo.jenkinsUrls.updateCredsUrl, keyId)
 
     def tokenIds = []
     ENVS.each { ENV ->
