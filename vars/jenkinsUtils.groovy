@@ -121,12 +121,14 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+        EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID.stripTrailing()
         pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
     }
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
+        EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID.stripTrailing()
         pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
     }
 
@@ -157,7 +159,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            ${sshKeyVar}=\$(echo \${${sshKeyVar}} | sed -e :a -e '/^\n*\$/{\$d;N;};/\n\$/ba')
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${\$(<${sshKeyVar})}}" > ${JENKINS_CREDS_FILE}
             set -x
             
