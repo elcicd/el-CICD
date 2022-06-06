@@ -43,5 +43,5 @@ def call(Map args) {
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
-    manageDeployKeys([projectInfo: projectInfo])
+    manageDeployKeys([projectInfo: projectInfo, isNonProd: false])
 }

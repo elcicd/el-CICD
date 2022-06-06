@@ -102,7 +102,7 @@ def call(Map args) {
         }
     }
 
-    manageDeployKeys([projectInfo: projectInfo])
+    manageDeployKeys([projectInfo: projectInfo, isNonProd: true])
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
