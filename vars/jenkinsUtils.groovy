@@ -221,7 +221,7 @@ def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
                 sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
-            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
+            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${tokenId}/config.xml
 
             rm -f ${JENKINS_CREDS_FILE}
         """
