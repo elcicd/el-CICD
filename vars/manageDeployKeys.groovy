@@ -37,11 +37,7 @@ def call(Map args) {
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
-                def envVar = component.gitDeployKeyJenkinsId.replaceAll(/\p{Punct}/, '_')
-                def sshKey = readFile component.gitDeployKeyJenkinsId
-                withEnv(["${envVar}=${sshKey}"]) {
-                    jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitDeployKeyJenkinsId, envVar)
-                }
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitDeployKeyJenkinsId, component.gitDeployKeyJenkinsId)
                 
                 githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitDeployKeyJenkinsId}.pub")
             }
