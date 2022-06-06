@@ -13,7 +13,7 @@ def GET = 'GET'
 def POST = 'POST'
 
 @Field
-def PATCH = 'PATCH'
+def PUT = 'PUT'
 
 @Field
 def DELETE = 'DELETE'
