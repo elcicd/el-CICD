@@ -59,7 +59,7 @@ def createPipelinesFolder(def projectInfo, def folderName) {
                 ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
                 
-            ${curlUtils.getCmd(curlUtils.PUT, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
+            ${curlUtils.getCmd(curlUtils.PATCH, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
