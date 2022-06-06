@@ -34,7 +34,7 @@ def call(Map args) {
                     }
 
                     stage('Push el-CICD credentials') {
-                        jenkinsUtils.pushElCicdCredentialsToCicdServer(projectInfo, ENVS)
+                        jenkinsUtils.copyElCicdCredentialsToCicdServer(projectInfo, ENVS)
                     }
                 }
                 else {

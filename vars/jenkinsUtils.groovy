@@ -117,6 +117,32 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
     }
 }
 
+def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
+    def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
+    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'KEY_ID_FILE')]) {
+        pushSshCredentialsToJenkins(projectInfo, keyId, KEY_ID_FILE)
+    }
+
+    keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
+    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'KEY_ID_FILE')]) {
+        pushSshCredentialsToJenkins(projectInfo, keyId, KEY_ID_FILE)
+    }
+
+    def tokenIds = []
+    ENVS.each { ENV ->
+        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
+        if (!tokenIds.contains(tokenId)) {
+            loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
+
+            pushImageRepositoryTokenToJenkins(projectInfo, tokenId)
+
+            tokenIds.add(tokenId)
+        }
+    }
+}
+
 def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKey) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
@@ -133,6 +159,8 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKey) {
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(sshKey)}" > ${JENKINS_CREDS_FILE}
             set -x
+            
+            cat ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
@@ -171,32 +199,6 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
                 oc apply -f - -n ${projectInfo.cicdMasterNamespace}
         done
     """
-}
-
-def pushElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
-    def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-    }
-
-    keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
-    }
-
-    def tokenIds = []
-    ENVS.each { ENV ->
-        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
-        if (!tokenIds.contains(tokenId)) {
-            loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
-
-            pushImageRepositoryTokenToJenkins(projectInfo, tokenId)
-
-            tokenIds.add(tokenId)
-        }
-    }
 }
 
 def deleteProjectDeployKeyFromJenkins(def projectInfo, def component) {

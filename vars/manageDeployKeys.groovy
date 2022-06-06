@@ -12,7 +12,7 @@ def call(Map args) {
     jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
 
     stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
-        jenkinsUtils.pushElCicdCredentialsToCicdServer(projectInfo, envs)
+        jenkinsUtils.copyElCicdCredentialsToCicdServer(projectInfo, envs)
     }
 
     stage('Delete old github public keys') {
