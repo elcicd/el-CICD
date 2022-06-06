@@ -13,6 +13,9 @@ def GET = 'GET'
 def POST = 'POST'
 
 @Field
+def PATCH = 'PATCH'
+
+@Field
 def DELETE = 'DELETE'
 
 @Field
@@ -65,6 +68,10 @@ def createPipelinesFolder(def projectInfo, def folderName) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
+                ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
+                --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
+                
+            ${curlUtils.getCmd(curlUtils.PUT, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
                 ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
                 --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
         """
