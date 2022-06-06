@@ -121,7 +121,9 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID.trim()
+        def last = EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID.lastIndexOf('-')
+        EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID =
+            EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID.substring(0, last + 1)
         pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
     }
 
