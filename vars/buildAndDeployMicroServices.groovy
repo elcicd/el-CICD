@@ -45,13 +45,6 @@ def call(Map args) {
                 stage("building first bucket of microservices to ${projectInfo.deployToNamespace}") {
                     microServices[0].each { microService ->
                         build(job: "../${projectInfo.id}/${microService.name}-build-to-dev", wait: true)
-                              
-                        // sh """
-                        //     oc start-build ${microService.id}-build-to-dev \
-                        //         --env DEPLOY_TO_NAMESPACE=${projectInfo.deployToNamespace} \
-                        //         --env GIT_BRANCH=${projectInfo.gitBranch} \
-                        //         --wait -n ${projectInfo.cicdMasterNamespace}
-                        // """
                     }
                 }
             },
