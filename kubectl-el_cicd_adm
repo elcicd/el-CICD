@@ -1,38 +1,41 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-set -E -o functrace
+set -E
+
+trap 'ERRO_LINENO=$LINENO' ERR
+trap '_failure' EXIT
 
 _failure() {
-    set +xv
-    ECHO_STACKTRACE=$(echo ${BASH_COMMAND} | sed 's/ .*//')
-    if [[ $- =~ e && (${ERR_CODE} != 0 || -z $(command -v ${ECHO_STACKTRACE})) ]]
-    then
-        echo 
-        echo "================ STACKTRACE ================"
-        echo
-        LEN=${#BASH_LINENO[@]}
-        for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
-        do
-            echo '---'
-            echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
-            echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
-            if [[ ${INDEX} > 0 ]]
-            then 
-                echo "  LINE: ${BASH_LINENO[${INDEX}]}"
-            else 
-                echo "  COMMAND:"
-                echo "${BASH_COMMAND}" | sed -e 's/^/      /'
-            fi
-        done 
-        echo
-        echo "============================================"
-        echo
-        echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE:=<unknown>}"
-    fi
+   ERR_CODE=$?
+   set +xv
+   if [[  $- =~ e && ${ERR_CODE} != 0 ]] 
+   then
+       echo
+       echo "========= CATASTROPHIC COMMAND FAIL ========="
+       echo
+       echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE}"
+       echo
+       LEN=${#BASH_LINENO[@]}
+       for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
+       do
+           echo '---'
+           echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
+           echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
+           if [[ ${INDEX} > 0 ]]
+           then
+               echo "  COMMAND: ${FUNCNAME[${INDEX}]}"
+               echo "  LINE: ${BASH_LINENO[${INDEX}]}"
+           else
+               echo "  COMMAND: ${BASH_COMMAND}"
+               echo "  LINE: ${ERRO_LINENO}"
+           fi
+       done
+       echo
+       echo "======= END CATASTROPHIC COMMAND FAIL ======="
+       echo
+   fi
 }
-
-trap '_failure ${LINENO}' EXIT
 
 cd "$(dirname ${0})"
 
@@ -61,7 +64,7 @@ Options:
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
     -D,   --setup-dev:       setup an environment for developing el-CICD
-      ,   --start-crc:       start CRC development cluster
+      ,   --start-crc:       start OpenShift Local development cluster
     -T,   --tear-down-dev:   tear down an environment for developing el-CICD
           --help:            display this help text and exit
 
@@ -73,27 +76,27 @@ read -r -d '' DEV_SETUP_WELCOME_MSG << EOM
 Welcome to the el-CICD setup utility for developing with or on el-CICD.
 
 el-CICD will perform the necessary setup for running the tutorial or developing with el-CICD:
-  - Optionally setup CodeReady Containers, if downloaded to the el-CICD home directory and not currently installed.
+  - Optionally setup OpenShift Local, if downloaded to the el-CICD home directory and not currently installed.
   - Optionally setup up an image registry to mimic an external registry, with or without an NFS share.
   - Clone and push all el-CICD and sample project Git repositories into your Git host (only GitHub is supported currently).
   - Install the Sealed Secrets controller onto your cluster
 
-NOTES: Red Hat CodeReady Containers may be downloaded from here:
-       https://developers.redhat.com/products/codeready-containers/overview
+NOTES: Red Hat OpenShift Local may be downloaded from here:
+       https://developers.redhat.com/products/openshift-local/overview
 EOM
 
 read -r -d '' DEV_TEAR_DOWN_WELCOME_MSG << EOM
 Welcome to the el-CICD dev environment tear down utility.
 Before beginning to tear down your environment, please make sure of the following:
 
-1) Log into an OKD cluster as cluster admin, or you can use Red Hat CodeReady Containers:
-   https://developers.redhat.com/products/codeready-containers/overview
-   NOTE: el-CICD can setup CodeReady Containers for you if requested.
+1) Log into an OKD cluster as cluster admin, or you can use Red Hat OpenShift Local:
+   https://developers.redhat.com/products/openshift-local/overview
+   NOTE: el-CICD can setup OpenShift Local for you if requested.
 
 2) Have root priveleges on this machine. sudo password is required to complete setup.
 
 el-CICD will optionally tear down:
-    - CodeReady Containers
+    - OpenShift Local
     - The cluster image registry
     - The NFS registry directory
     - Remove el-CICD repositories pushed to your Git host
@@ -152,12 +155,6 @@ CONFIG_REPOSITORY_JENKINS=${CONFIG_REPOSITORY}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=${BOOTSTRAP_DIR}/../jenkins-target
 
-if [[ ! -z $(command -v crc) ]]
-then
-    CRC_EXEC=$(which crc)
-    CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
-fi
-
 echo
 echo 'Loading el-CICD environment...'
 
@@ -177,6 +174,20 @@ echo
 echo 'el-CICD environment loaded'
 
 set +o allexport
+
+if [[ ! -z $(command -v crc) ]]
+then
+    CRC_EXEC=$(which crc)
+    CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+elif [[ -z $(which oc --skip-alias 2>/dev/null) ]]
+then
+    echo
+    echo '============ WARNING!!! =============='
+    echo
+    echo 'IF NOT INSTALLING OPENSHIFT LOCAL, YOU MUST INSTALL THE OKD CLI!'
+    echo 
+    echo '============ WARNING!!! =============='
+fi
 
 echo
 case ${CLI_OPTION} in

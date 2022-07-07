@@ -36,9 +36,9 @@ __gather_dev_tear_down_info() {
     echo
     if [[ -d ${HOME}/.crc ]]
     then
-        REMOVE_CRC=$(_get_yes_no_answer 'Do you wish to tear down CRC? [Y/n] ')
+        REMOVE_CRC=$(_get_yes_no_answer 'Do you wish to tear down OpenShift Local? [Y/n] ')
     else
-        echo 'CRC installation not found.  Skipping...'
+        echo 'OpenShift Local installation not found.  Skipping...'
     fi
 
     if [[ ${REMOVE_CRC} != ${_YES} && ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
@@ -74,9 +74,9 @@ __summarize_and_confirm_dev_tear_down() {
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
-        echo "CRC ${_BOLD}WILL${_REGULAR} be torn down.  The image registry ${_BOLD}WILL${_REGULAR} also be torn down as a result."
+        echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be torn down.  The image registry ${_BOLD}WILL${_REGULAR} also be torn down as a result."
     else 
-        echo "CRC will ${_BOLD}NOT${_REGULAR} be torn down."
+        echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be torn down."
 
         if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
         then
@@ -113,14 +113,14 @@ _remove_existing_crc() {
     if [[ ! -z ${CRC_EXEC} ]]
     then
         echo
-        echo 'Cleaning up old CRC install'
+        echo 'Cleaning up old OpenShift Local install'
         ${CRC_EXEC} stop
         ${CRC_EXEC} delete
         ${CRC_EXEC} cleanup
     fi
 
     echo
-    echo 'Removing old CRC installation directories'
+    echo 'Removing old OpenShift Local installation directories'
     rm -rfv ${EL_CICD_HOME}/crc*/
     rm -rfv ${HOME}/.crc
 }

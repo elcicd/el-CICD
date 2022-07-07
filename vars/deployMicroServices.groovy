@@ -12,51 +12,24 @@ def call(Map args) {
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
 
-    stage('Build templates and retrieve template definitions') {
-        if (microServices) {
-            deploymentUtils.processTemplateDefs(projectInfo, microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING BUILD TEMPLATES AND RETRIEVE TEMPLATE DEFINITIONS"
-        }
-    }
-
-    stage('Remove all microservices to be deployed, if selected') {
+    stage('Remove selected microservices, if selected') {
         if (args.recreate) {
-            deploymentUtils.removeMicroservices(projectInfo, microServices)
+            deploymentUtils.removeMicroservices(projectInfo)
         }
         else if (args.recreateAll) {
-            deploymentUtils.removeAllMicroservices(projectInfo)
+            deploymentUtils.removeMicroservices(projectInfo, microServices)
         }
         else {
             echo "RECREATE NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED"
         }
     }
 
-    stage('Process all openshift templates') {
+    stage('Deploy microservices') {
         if (microServices) {
-            deploymentUtils.processTemplates(projectInfo, microServices, args.imageTag)
+            deploymentUtils.deployMicroservices(projectInfo, microServices)
         }
         else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING PROCESS ALL OKD TEMPLATES"
-        }
-    }
-
-    stage('Apply all openshift resources') {
-        if (microServices) {
-            deploymentUtils.applyResources(projectInfo, microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING APPLY ALL OKD RESOURCES"
-        }
-    }
-
-    stage('Deploy image in namespace from artifact repository') {
-        if (microServices) {
-            deploymentUtils.rolloutLatest(projectInfo, microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOY IMAGE IN ${envCaps} FROM ARTIFACT REPOSITORY"
+            echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOYMENT"
         }
     }
 
@@ -66,15 +39,6 @@ def call(Map args) {
         }
         else {
             echo "NO MICROSERVICES TO DEPLOY: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
-        }
-    }
-
-    stage('Cleanup orphaned openshift resources') {
-        if (microServices) {
-            deploymentUtils.cleanupOrphanedResources(projectInfo, microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING CLEANUP ORPHANED OKD RESOURCES"
         }
     }
 

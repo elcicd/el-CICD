@@ -46,14 +46,14 @@ __gather_dev_setup_info() {
     CRC_TAR_XZ=$(ls ${EL_CICD_HOME}/crc-*.tar.xz 2>/dev/null | wc -l)
     if [[ ${CRC_TAR_XZ} == '1' && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
     then
-        SETUP_CRC=$(_get_yes_no_answer 'Do you wish to setup CRC? [Y/n] ')
+        SETUP_CRC=$(_get_yes_no_answer 'Do you wish to setup OpenShift Local? [Y/n] ')
     else
-        echo 'WARNING: CRC tar.xz and/or pull-secret.txt not found in el-CICD home directory.  Skipping...'
+        echo 'WARNING: OpenShift Local tar.xz and/or pull-secret.txt not found in el-CICD home directory.  Skipping...'
     fi
 
     if [[ ${SETUP_CRC} != ${_YES} ]]
     then
-        read -p 'Enter Cluster wildcard domain (leave blank if using a currently running CRC instance): ' TEMP_CLUSTER_WILDCARD_DOMAIN
+        read -p 'Enter Cluster wildcard domain (leave blank if using a currently running OpenShift Local instance): ' TEMP_CLUSTER_WILDCARD_DOMAIN
         CLUSTER_WILDCARD_DOMAIN=${TEMP_CLUSTER_WILDCARD_DOMAIN:-${CLUSTER_WILDCARD_DOMAIN}}
     fi
 
@@ -135,9 +135,9 @@ __summarize_and_confirm_dev_setup_info() {
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
-        echo "CRC ${_BOLD}WILL${_REGULAR} be setup.  Login to kubeadmin will be automated."
+        echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be setup.  Login to kubeadmin will be automated."
     else
-        echo 'CRC will ${_BOLD}NOT${_REGULAR} be setup.'
+        echo 'OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup.'
     fi
     echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
@@ -162,7 +162,7 @@ __summarize_and_confirm_dev_setup_info() {
     then
         echo "Credential files ${_BOLD}WILL${_REGULAR} be (re)generated."
     else
-        echo "Credential files will ${_BOLD}NOT${_REGULAR} be (re)generaed."
+        echo "Credential files will ${_BOLD}NOT${_REGULAR} be (re)generated."
     fi
 
     if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
@@ -181,7 +181,7 @@ __bootstrap_clean_crc() {
     _remove_existing_crc
 
     echo
-    echo "Extracting CRC tar.xz to ${EL_CICD_HOME}"
+    echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
     
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
@@ -196,7 +196,7 @@ _start_crc() {
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
     then    
         echo
-        echo "Starting CRC with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
+        echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
         ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
 
         eval $(${CRC_EXEC} oc-env)

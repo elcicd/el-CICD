@@ -125,15 +125,15 @@ def initializePipeline() {
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
         el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
+        el.cicd.HELM_CHART_DEFAULTS_DIR = "${el.cicd.EL_CICD_DIR}/resources/helm-chart-defaults"
         el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
         el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
-        
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
-        el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/managed-okd-templates"
+        el.cicd.HELM_CHART_DIR = "${el.cicd.CONFIG_DIR}/managed-helm-chart"
         el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
@@ -165,17 +165,4 @@ def initializePipeline() {
                 credentialsId: el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
     }
-}
-
-def getNonProdPipelines() {
-    return ['build-and-deploy-microservices.xml',
-            'create-release-candidate.xml',
-            'microservice-promotion-removal.xml',
-            'microservice-redeploy-removal.xml',
-            'redeploy-release-candidate.xml',
-            'run-system-tests.xml']
-}
-
-def getProdPipelines() {
-    return ['deploy-to-production.xml']
 }
