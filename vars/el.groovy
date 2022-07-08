@@ -161,13 +161,9 @@ def initializePipeline() {
         """
 
         dir (el.cicd.EL_CICD_DIR) {
-            checkout([$class: 'GitSCM',
-                    branches: [[ name: el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME ]],
-                    userRemoteConfigs: [[ credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
-                                            url: el.cicd.EL_CICD_GIT_REPO,
-                                            ]],
-                    depth: 1
-                ])
+            git url: el.cicd.EL_CICD_GIT_REPO,
+                branch: el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME,
+                credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
         }
 
         dir (el.cicd.CONFIG_DIR) {
