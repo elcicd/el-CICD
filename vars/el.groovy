@@ -12,51 +12,52 @@ static def cicd = [:]
 
 def initMetaData(Map metaData) {
     stage('Init Metadata') {
-    loggingUtils.echoBanner("INITIALIZING METADATA...")
-    
-    el.cicd.putAll(metaData)
+        loggingUtils.echoBanner("INITIALIZING METADATA...")
+        
+        el.cicd.putAll(metaData)
 
-    el.cicd.EL_CICD_DIR = "${WORKSPACE}/el-CICD"
-    el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
-    el.cicd.HELM_CHART_DEFAULTS_DIR = "${el.cicd.EL_CICD_DIR}/resources/helm-chart-defaults"
-    el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
-    el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
-    
-    el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
-    el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
-    el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
-    el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
-    el.cicd.HELM_CHART_DIR = "${el.cicd.CONFIG_DIR}/managed-helm-chart"
-    el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
-    el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
-    el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
+        el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
+        el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
+        el.cicd.HELM_CHART_DEFAULTS_DIR = "${el.cicd.EL_CICD_DIR}/resources/helm-chart-defaults"
+        el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
+        el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
+        
+        el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
+        el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
+        el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
+        el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
+        el.cicd.HELM_CHART_DIR = "${el.cicd.CONFIG_DIR}/managed-helm-chart"
+        el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
+        el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
+        el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
-    el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
-    el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
+        el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
+        el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
 
-    el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
+        el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
 
-    el.cicd.devEnv = el.cicd.DEV_ENV.toLowerCase()
-    el.cicd.testEnvs = el.cicd.TEST_ENVS.collect { it.toLowerCase() }
-    el.cicd.preProdEnv = el.cicd.PRE_PROD_ENV.toLowerCase()
+        el.cicd.devEnv = el.cicd.DEV_ENV.toLowerCase()
+        el.cicd.testEnvs = el.cicd.TEST_ENVS.collect { it.toLowerCase() }
+        el.cicd.preProdEnv = el.cicd.PRE_PROD_ENV.toLowerCase()
 
-    el.cicd.hotfixEnv = el.cicd.HOTFIX_ENV.toLowerCase()
+        el.cicd.hotfixEnv = el.cicd.HOTFIX_ENV.toLowerCase()
 
-    el.cicd.nonProdEnvs = [el.cicd.devEnv]
-    el.cicd.nonProdEnvs.addAll(el.cicd.testEnvs)
-    el.cicd.nonProdEnvs.add(el.cicd.preProdEnv)
+        el.cicd.nonProdEnvs = [el.cicd.devEnv]
+        el.cicd.nonProdEnvs.addAll(el.cicd.testEnvs)
+        el.cicd.nonProdEnvs.add(el.cicd.preProdEnv)
 
-    el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
+        el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
 
-    el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+        el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
 
-    el.cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
+        el.cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
-    el.cicd.OKD_CLEANUP_RESOURCE_LIST='deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
+        el.cicd.OKD_CLEANUP_RESOURCE_LIST='deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
 
-    el.cicd.CM_META_INFO_POSTFIX = 'meta-info'
+        el.cicd.CM_META_INFO_POSTFIX = 'meta-info'
 
-    el.cicd.RELEASE_VERSION_PREFIX = 'v'
+        el.cicd.RELEASE_VERSION_PREFIX = 'v'
+    }
 }
 
 def node(Map args, Closure body) {

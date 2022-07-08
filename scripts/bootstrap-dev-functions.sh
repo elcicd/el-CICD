@@ -387,10 +387,10 @@ __init_el_cicd_repos() {
     find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
     find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
 
-    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
-    for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
+    local ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO}:${EL_CICD_CONFIG_REPO}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
+    for EL_CICD_REPO_dir in ${ALL_EL_CICD_REPOS}
     do
-        __create_git_repo ${EL_CICD_DIR}
+        __create_git_repo ${EL_CICD_REPO_dir}
     done
 }
 
