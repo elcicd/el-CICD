@@ -88,6 +88,8 @@ def node(Map args, Closure body) {
     ]) {
         node(args.agent) {
             try {
+                ls -R el.cicd.EL_CICD_DIR
+                
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
