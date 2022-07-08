@@ -89,7 +89,7 @@ def node(Map args, Closure body) {
     ]) {
         node(args.agent) {
             try {
-                ls -R el.cicd.EL_CICD_DIR
+                sh "ls -R ${el.cicd.EL_CICD_DIR}"
                 
                 initializePipeline()
 
