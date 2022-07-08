@@ -88,9 +88,7 @@ def node(Map args, Closure body) {
         volumes: secretVolume
     ]) {
         node(args.agent) {
-            try {
-                sh "ls -R ${el.cicd.EL_CICD_DIR}"
-                
+            try {                
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
@@ -161,6 +159,16 @@ def initializePipeline() {
             oc version
             ${shCmd.echo "\n======================="}
         """
+
+        dir (el.cicd.EL_CICD_DIR) {
+            checkout([$class: 'GitSCM',
+                    branches: [[ name: el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME ]],
+                    userRemoteConfigs: [[ credentialsId: el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+                                            url: el.cicd.EL_CICD_GIT_REPO,
+                                            ]],
+                    depth: 1
+                ])
+        }
 
         dir (el.cicd.CONFIG_DIR) {
             git url: el.cicd.EL_CICD_CONFIG_GIT_REPO,
