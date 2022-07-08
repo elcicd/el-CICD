@@ -83,7 +83,7 @@ def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     if (projectInfo.microServices && projectInfo.nfsShares) {
         loggingUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
 
-        dir(el.cicd.HELM_CHART_DIR) {
+        dir(el.cicd.OKD_TEMPLATES_DIR) {
             projectInfo.nfsShares.each { nfsShare ->
                 def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
                 envs.each { env ->
