@@ -20,7 +20,7 @@ def deployMicroservices(def projectInfo, def microServices) {
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p ${el.cicd.TEMP_CHART_DIR}
-                cp ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
+                cp -r ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
                 cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
                     ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
                 
