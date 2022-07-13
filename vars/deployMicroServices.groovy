@@ -33,15 +33,6 @@ def call(Map args) {
         }
     }
 
-    stage('Update microservice meta-info maps') {
-        if (microServices) {
-            deploymentUtils.updateMicroServiceMetaInfo(projectInfo, microServices)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING UPDATE MICROSERVICE META-INFO MAPS"
-        }
-    }
-
     stage('Confirm successful deployment in namespace from artifact repository') {
         if (microServices) {
             deploymentUtils.confirmDeployments(projectInfo, microServices)

@@ -6,19 +6,27 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-def deployMicroservices(def projectInfo, def microServices, def valuesFiles, def profiles) {
+def deployMicroservices(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
+    
+    loggingUtils.echoBanner("GENERATING DEPLOYMENT MANIFESTS FROM MANAGED HELM CHART PROFILES:",
+                            "${projectInfo.deployToEnv}}")
     
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
-
+    
     microServices.each { microService ->
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
-                cp ${el.cicd.HELM_CHART_DEFAULTS_DIR}/templates/* ./managed-helm-chart/templates/
+                rm -rf ${el.cicd.TEMP_CHART_DIR}
+                cp ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
+                cp ${projectInfo.deployToEnv}/* ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
+                
+                REGEX_VALUES_FILES='\./values(.*-${projectInfo.deployToEnv})?\.(yml|yaml)'
+                VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
             
-                helm upgrade --install --atomic \
+                helm upgrade --install --debug \
                     --set projectId=${projectInfo.id} \
                     --set microService=${microService.name} \
                     --set gitRepoName=${microService.gitRepo} \
@@ -32,11 +40,28 @@ def deployMicroservices(def projectInfo, def microServices, def valuesFiles, def
                     --set pullSecret=${pullSecret} \
                     --set buildNumber=${BUILD_NUMBER} \
                     --set profiles=${projectInfo.deployToEnv} \
-                    -n ${projectInfo.deployToNamespace} \
-                    -f ${valuesFilePaths.join(' -f ')} \
-                    ${microService.name} ./managed-helm-chart
+                    -f \${VALUES_FILES} \
+                    ${microService.name} ${el.cicd.HELM_CHART_DIR}
+                    -n ${projectInfo.deployToNamespace}
             """
+        }
     }
+}
+
+def confirmDeployments(def projectInfo, def microServices) {
+    assert projectInfo; assert microServices
+
+    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    sh """
+        ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
+        for MICROSERVICE_NAME in ${microServiceNames}
+        do
+            oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name | \
+                xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
+        done
+    """
+
+    waitingForPodsToTerminate(projectInfo.deployToNamespace)
 }
 
 def removeMicroservices(def projectInfo) {

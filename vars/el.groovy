@@ -18,7 +18,6 @@ def initMetaData(Map metaData) {
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
         el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
-        el.cicd.HELM_CHART_DEFAULTS_DIR = "${el.cicd.EL_CICD_DIR}/resources/helm-chart-defaults"
         el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
         el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
         
@@ -34,6 +33,8 @@ def initMetaData(Map metaData) {
 
         el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
         el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
+        el.cicd.TEMP_CHART_DIR = "${el.cicd.TEMP_DIR}/helm"
+        el.cicd.TEMP_CHART_TEMPLATES_DIR = "${el.cicd.TEMP_CHART_DIR}/templates"
 
         el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
 
