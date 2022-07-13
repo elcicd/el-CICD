@@ -42,7 +42,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     --set buildNumber=${BUILD_NUMBER} \
                     --set "profiles={${projectInfo.deployToEnv}}" \
                     \${VALUES_FILES} \
-                    ${microService.name} ${el.cicd.HELM_CHART_DIR}
+                    ${microService.name} ${el.cicd.TEMP_CHART_DIR}
                     -n ${projectInfo.deployToNamespace}
             """
         }
