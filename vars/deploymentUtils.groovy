@@ -24,7 +24,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
                     ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
                 
-                REGEX_VALUES_FILES='.*/values(.*-${projectInfo.deployToEnv}-?)?\.(yml|yaml)'
+                REGEX_VALUES_FILES='.*/values(.*-${projectInfo.deployToEnv}-?)?\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
             
                 helm upgrade --install --debug \
