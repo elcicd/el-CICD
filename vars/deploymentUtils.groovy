@@ -10,7 +10,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
     
     loggingUtils.echoBanner("GENERATING DEPLOYMENT MANIFESTS FROM MANAGED HELM CHART PROFILES:",
-                            "${projectInfo.deployToEnv}}")
+                            "${projectInfo.deployToEnv}")
     
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
@@ -19,7 +19,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     microServices.each { microService ->
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
-                rm -rf ${el.cicd.TEMP_CHART_DIR}
+                mkdir -p ${el.cicd.TEMP_CHART_DIR}
                 cp ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
                 cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
                     ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
