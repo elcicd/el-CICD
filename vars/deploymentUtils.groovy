@@ -41,7 +41,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     --set pullSecret=${pullSecret} \
                     --set buildNumber=${BUILD_NUMBER} \
                     --set profiles=${projectInfo.deployToEnv} \
-                    -f \${VALUES_FILES} \
+                    \${VALUES_FILES} \
                     ${microService.name} ${el.cicd.HELM_CHART_DIR}
                     -n ${projectInfo.deployToNamespace}
             """
