@@ -41,9 +41,15 @@ def deployMicroservices(def projectInfo, def microServices) {
                            --set buildNumber=${BUILD_NUMBER} \
                            --set "profiles={${projectInfo.deployToEnv}}"
             
-                helm template --debug ${HELM_ARGS}
+                helm template --debug \${HELM_ARGS} \
+                    \${VALUES_FILES} \
+                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    -n ${projectInfo.deployToNamespace}
                 
-                helm upgrade --install ${HELM_ARGS}
+                helm upgrade --install \${HELM_ARGS} \
+                    \${VALUES_FILES} \
+                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    -n ${projectInfo.deployToNamespace}
             """
         }
     }
