@@ -39,7 +39,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                            --set imageTag=${projectInfo.deployToEnv} \
                            --set pullSecret=${pullSecret} \
                            --set buildNumber=${BUILD_NUMBER} \
-                           --set "profiles={${projectInfo.deployToEnv}}"
+                           --set 'profiles={${projectInfo.deployToEnv}}'"
             
                 helm template --debug \${HELM_ARGS} \
                     \${VALUES_FILES} \
