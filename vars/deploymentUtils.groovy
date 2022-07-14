@@ -17,7 +17,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     
     def values = ["projectId=${projectInfo.id}",
-                  "microService=${microService.name}"
+                  "microService=${microService.name}",
                   "gitRepoName=${microService.gitRepo}",
                   "srcCommitHash=${microService.srcCommitHash}",
                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
