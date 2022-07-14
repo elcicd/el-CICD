@@ -26,24 +26,24 @@ def deployMicroservices(def projectInfo, def microServices) {
                 
                 REGEX_VALUES_FILES='.*/values(.*-${projectInfo.deployToEnv}-?)?\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
+                
+                HELM_ARGS="--set projectId=${projectInfo.id} \
+                           --set microService=${microService.name} \
+                           --set gitRepoName=${microService.gitRepo} \
+                           --set srcCommitHash=${microService.srcCommitHash} \
+                           --set deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED} \
+                           --set deploymentCommitHash=${microService.deploymentCommitHash} \
+                           --set releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
+                           --set releaseRegion=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
+                           --set imageRepository=${imageRepository} \
+                           --set imageTag=${projectInfo.deployToEnv} \
+                           --set pullSecret=${pullSecret} \
+                           --set buildNumber=${BUILD_NUMBER} \
+                           --set "profiles={${projectInfo.deployToEnv}}"
             
-                helm upgrade --install --debug \
-                    --set projectId=${projectInfo.id} \
-                    --set microService=${microService.name} \
-                    --set gitRepoName=${microService.gitRepo} \
-                    --set srcCommitHash=${microService.srcCommitHash} \
-                    --set deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED} \
-                    --set deploymentCommitHash=${microService.deploymentCommitHash} \
-                    --set releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED} \
-                    --set releaseRegion=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
-                    --set imageRepository=${imageRepository} \
-                    --set imageTag=${projectInfo.deployToEnv} \
-                    --set pullSecret=${pullSecret} \
-                    --set buildNumber=${BUILD_NUMBER} \
-                    --set "profiles={${projectInfo.deployToEnv}}" \
-                    \${VALUES_FILES} \
-                    ${microService.name} ${el.cicd.TEMP_CHART_DIR}
-                    -n ${projectInfo.deployToNamespace}
+                helm template --debug ${HELM_ARGS}
+                
+                helm upgrade --install ${HELM_ARGS}
             """
         }
     }
