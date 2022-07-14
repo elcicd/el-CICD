@@ -16,21 +16,24 @@ def deployMicroservices(def projectInfo, def microServices) {
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     
-    def values = ["projectId=${projectInfo.id}",
-                  "microService=${microService.name}",
-                  "gitRepoName=${microService.gitRepo}",
-                  "srcCommitHash=${microService.srcCommitHash}",
-                  "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                  "deploymentCommitHash=${microService.deploymentCommitHash}",
-                  "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                  "releaseRegion=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
-                  "imageRepository=${imageRepository}",
-                  "imageTag=${projectInfo.deployToEnv}",
-                  "pullSecret=${pullSecret}",
-                  "buildNumber=${BUILD_NUMBER}",
-                  "'profiles={${projectInfo.deployToEnv}}'"]
+    def projectValues =
+        ["projectId=${projectInfo.id}",
+         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+         "releaseRegion=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
+         "imageRepository=${imageRepository}",
+         "imageTag=${projectInfo.deployToEnv}",
+         "pullSecret=${pullSecret}",
+         "buildNumber=${BUILD_NUMBER}",
+         "'profiles={${projectInfo.deployToEnv}}'"]
     
     microServices.each { microService ->
+        def msValues = ["microService=${microService.name}",
+                        "gitRepoName=${microService.gitRepo}",
+                        "srcCommitHash=${microService.srcCommitHash}",
+                        "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
+                        "deploymentCommitHash=${microService.deploymentCommitHash}"]
+        msValues.addAll(projectValues)
+        
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
                 mkdir -p ${el.cicd.TEMP_CHART_DIR}
@@ -42,13 +45,13 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
                             
                 helm template --debug \
-                    --set ${values.join(' --set ')} \
+                    --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
                 
                 helm upgrade --install \
-                    --set ${values.join(' --set ')} \
+                    --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
