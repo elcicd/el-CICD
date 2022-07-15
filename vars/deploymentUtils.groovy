@@ -110,10 +110,8 @@ def waitingForPodsToTerminate(def deployToNamespace) {
         until [[ -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
             yes - | head -\${COUNTER} | paste -s -d '' -
-            echo "COUNTER before: \$COUNTER"
             sleep 2
             let "COUNTER++"
-            echo "COUNTER after: \$COUNTER"
         done
         set -x
     """

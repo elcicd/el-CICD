@@ -25,10 +25,9 @@ def deleteNamespaces(def namespaces) {
         COUNTER=1
         until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespaces}) ]]
         do
-            printf -- '-%.0s' {1..\${COUNTER}}
-            ${shCmd.echo ''}
+            yes - | head -\${COUNTER} | paste -s -d '' -
             sleep 2
-            let COUNTER+=1
+            let "COUNTER++"
         done
         set -x
     """
