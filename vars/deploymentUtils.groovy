@@ -64,10 +64,12 @@ def deployMicroservices(def projectInfo, def microServices) {
 
 def confirmDeployments(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
-
+    
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    loggingUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:",
+                                 "${microServiceNames}")
+
     sh """
-        ${pipelineUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:", "${microServiceNames}")}
         for MICROSERVICE_NAME in ${microServiceNames}
         do
             oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name | \
