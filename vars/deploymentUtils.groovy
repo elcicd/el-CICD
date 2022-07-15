@@ -74,7 +74,7 @@ def confirmDeployments(def projectInfo, def microServices) {
     sh """
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name | \
+            oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace} | \
                 xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
         done
     """
