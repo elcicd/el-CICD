@@ -106,13 +106,13 @@ def removeMicroservices(def projectInfo, def microServices) {
 def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
         ${shCmd.echo '', 'Confirming microservice pods have finished terminating...'}
+
         set +x
-        sleep 2
         COUNTER=1
-        while [[ ! -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
+        until [[ -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
             printf -- '-%.0s' {1..\${COUNTER}}
-            echo
+            ${shCmd.echo ''}
             sleep 2
             let COUNTER+=1
         done
