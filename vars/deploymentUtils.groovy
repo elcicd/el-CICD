@@ -28,7 +28,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     
     microServices.each { microService ->
         def msValues = ["microService=${microService.name}",
-                        "gitRepoName=${microService.gitRepo}",
+                        "gitRepoName=${microService.gitRepoName}",
                         "srcCommitHash=${microService.srcCommitHash}",
                         "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
                         "deploymentCommitHash=${microService.deploymentCommitHash}"]
