@@ -112,7 +112,7 @@ def waitingForPodsToTerminate(def deployToNamespace) {
             printf -- '-%.0s' {1..\${COUNTER}}
             echo "COUNTER before: \$COUNTER"
             sleep 2
-            COUNTER=\$((COUNTER++))
+            let "COUNTER++"
             echo "COUNTER after: \$COUNTER"
         done
         set -x
