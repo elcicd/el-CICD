@@ -47,14 +47,14 @@ def deployMicroservices(def projectInfo, def microServices) {
                 helm template --debug \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
-                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yml \
+                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
                 
                 helm upgrade --install \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
-                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yml \
+                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
             """
