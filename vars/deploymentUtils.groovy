@@ -57,8 +57,6 @@ def deployMicroservices(def projectInfo, def microServices) {
                     -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
-                
-                sleep 3
             """
         }
     }
@@ -114,7 +112,7 @@ def waitingForPodsToTerminate(def deployToNamespace) {
             printf -- '-%.0s' {1..\${COUNTER}}
             ${shCmd.echo ''}
             sleep 2
-            let COUNTER+=1
+            ((COUNTER++))
         done
         set -x
     """
