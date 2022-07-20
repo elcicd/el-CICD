@@ -40,8 +40,11 @@ def deployMicroservices(def projectInfo, def microServices) {
             sh """
                 mkdir -p ${el.cicd.TEMP_CHART_DIR}
                 cp -r ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
-                cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
-                    ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
+                if [[ -d ./${projectInfo.deployToEnv} ]]
+                then
+                    cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
+                        ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
+                fi
                 
                 REGEX_VALUES_FILES='.*/values(.*-${projectInfo.deployToEnv}-?)?\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
