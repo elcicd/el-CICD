@@ -26,7 +26,7 @@ def deployMicroservices(def projectInfo, def microServices) {
          "'profiles={${projectInfo.deployToEnv}}'"]
          
     def ingressHostSuffix =
-        (projectInfo.deployToEnv != projectInfo.prodEnv) ? projectInfo.deployToNamespace - projectInfo.id) : ''
+        (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
     microServices.each { microService ->
         def msValues = ["microService=${microService.name}",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
