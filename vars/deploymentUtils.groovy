@@ -19,15 +19,17 @@ def deployMicroservices(def projectInfo, def microServices) {
     def projectValues =
         ["projectId=${projectInfo.id}",
          "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-         "releaseRegion=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED}",
          "imageRepository=${imageRepository}",
          "imageTag=${projectInfo.deployToEnv}",
          "pullSecret=${pullSecret}",
          "buildNumber=${BUILD_NUMBER}",
          "'profiles={${projectInfo.deployToEnv}}'"]
-    
+         
+    def ingressHostSuffix =
+        (projectInfo.deployToEnv != projectInfo.prodEnv) ? projectInfo.deployToNamespace - projectInfo.id) : ''
     microServices.each { microService ->
         def msValues = ["microService=${microService.name}",
+                        "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "gitRepoName=${microService.gitRepoName}",
                         "srcCommitHash=${microService.srcCommitHash}",
                         "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
