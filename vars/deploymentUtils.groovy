@@ -56,7 +56,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
                 
-                helm upgrade --install \
+                helm upgrade --install --cleanup-on-fail \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
                     -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
