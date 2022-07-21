@@ -77,7 +77,7 @@ def confirmDeployments(def projectInfo, def microServices) {
     sh """
         for MICROSERVICE_NAME in ${microServiceNames}
         do
-            DEPLOYS=$(oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
+            DEPLOYS=\$(oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
             if [[ ! -z \${DEPLOYS} ]]
             then
                 echo \${DEPLOYS} | xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
