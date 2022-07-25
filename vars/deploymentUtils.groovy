@@ -43,7 +43,8 @@ def deployMicroservices(def projectInfo, def microServices) {
                 REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
                 
-                ln -s -T ${el.cicd.HELM_CHART_DIR} ../../el-CICD-config/managed-helm-chart
+                mkdir -p ../../el-CICD-config
+                ln -s ${el.cicd.HELM_CHART_DIR} ../../el-CICD-config/managed-helm-chart
                 helm dependency update .
                             
                 helm template --debug \
