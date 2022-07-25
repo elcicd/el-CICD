@@ -33,8 +33,9 @@ def initMetaData(Map metaData) {
 
         el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
         el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
-        el.cicd.TEMP_CHART_DIR = "${el.cicd.TEMP_DIR}/helm"
         el.cicd.TEMP_CHART_TEMPLATES_DIR = "${el.cicd.TEMP_CHART_DIR}/templates"
+        el.cicd.DEP_CHART_DIR = "${el.cicd.TEMP_DIR}/dependencies"
+        el.cicd.TEMP_CHART_DIR = "${el.cicd.TEMP_DIR}/.helm"
 
         el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
 
