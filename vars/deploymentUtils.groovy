@@ -38,29 +38,25 @@ def deployMicroservices(def projectInfo, def microServices) {
         
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
-                mkdir -p ${el.cicd.TEMP_CHART_DIR}
-                cp -r ${el.cicd.HELM_CHART_DIR}/* ${el.cicd.TEMP_CHART_DIR}
-                if [[ -d ./${projectInfo.deployToEnv} ]]
-                then
-                    cp -n \$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name "*.tpl" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json") \
-                        ${el.cicd.TEMP_CHART_TEMPLATES_DIR}
-                fi
+                rm -f charts/*
                 
-                REGEX_VALUES_FILES='.*/values(.*-${projectInfo.deployToEnv}-?)?\\.(yml|yaml)'
+                REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
+                
+                helm dependency update .
                             
                 helm template --debug \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
-                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
+                    ${microService.name} . \
                     -n ${projectInfo.deployToNamespace}
                 
                 helm upgrade --install --history-max=1 --cleanup-on-fail \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
-                    -f ${el.cicd.TEMP_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
+                    ${microService.name} . \
                     -n ${projectInfo.deployToNamespace}
             """
         }
