@@ -43,10 +43,10 @@ def deployMicroservices(def projectInfo, def microServices) {
                 REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
                 VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
                 
-                mkdir -p ${el.cicd.DEP_CHART_DIR}
-                mkdir -p ${el.cicd.TEMP_CHART_DIR}
-                cp -r ${el.cicd.HELM_CHART_DIR} ${el.cicd.DEP_CHART_DIR}
-                cp -r . ${el.cicd.TEMP_CHART_DIR}
+                mkdir -p ${el.cicd.TEMP_MANAGED_CHART_DIR}
+                mkdir -p ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
+                ln -s ${el.cicd.HELM_CHART_DIR} ${el.cicd.TEMP_MANAGED_CHART_DIR}
+                ln -s . ${el.cicd.TEMP_CHART_DIR}
                 
                 helm dependency update ${el.cicd.TEMP_CHART_DIR}
                             
