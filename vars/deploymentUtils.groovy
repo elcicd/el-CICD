@@ -48,7 +48,6 @@ def deployMicroservices(def projectInfo, def microServices) {
                 cp -r ${el.cicd.HELM_CHART_DIR} ${el.cicd.DEP_CHART_DIR}
                 cp -r . ${el.cicd.TEMP_CHART_DIR}
                 
-                ln -s ${el.cicd.HELM_CHART_DIR} ../../el-CICD-config/managed-helm-chart
                 helm dependency update ${el.cicd.TEMP_CHART_DIR}
                             
                 helm template --debug \
