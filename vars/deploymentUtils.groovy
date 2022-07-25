@@ -46,22 +46,22 @@ def deployMicroservices(def projectInfo, def microServices) {
                 mkdir -p ${el.cicd.TEMP_MANAGED_CHART_DIR}
                 mkdir -p ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
                 ln -s ${el.cicd.HELM_CHART_DIR} ${el.cicd.TEMP_MANAGED_CHART_DIR}
-                ln -s . ${el.cicd.TEMP_CHART_DIR}
+                ln -s . ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
                 
-                helm dependency update ${el.cicd.TEMP_CHART_DIR}
+                helm dependency update ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
                             
                 helm template --debug \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
                     -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    ${microService.name} ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
                 
                 helm upgrade --install --history-max=1 --cleanup-on-fail \
                     --set ${msValues.join(' --set ')} \
                     \${VALUES_FILES} \
                     -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_CHART_DIR} \
+                    ${microService.name} ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} \
                     -n ${projectInfo.deployToNamespace}
             """
         }
