@@ -39,14 +39,14 @@ def deployMicroservices(def projectInfo, def microServices) {
         dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
             sh """
                 rm -f charts/*
-                
-                REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
-                VALUES_FILES=\$(find . -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
-                
+                                
                 mkdir -p ${el.cicd.TEMP_MANAGED_CHART_DIR}
                 mkdir -p ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
-                ln -s ${el.cicd.HELM_CHART_DIR} ${el.cicd.TEMP_MANAGED_CHART_DIR}
-                ln -s . ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
+                cp -r ${el.cicd.HELM_CHART_DIR} ${el.cicd.TEMP_MANAGED_CHART_DIR}
+                cp -r ./* ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
+                
+                REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
+                VALUES_FILES=\$(find ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
                 
                 helm dependency update ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
                             
