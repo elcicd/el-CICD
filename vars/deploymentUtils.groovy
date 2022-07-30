@@ -17,51 +17,55 @@ def deployMicroservices(def projectInfo, def microServices) {
     def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
     
     def projectValues =
-        ["elCicdChart.projectId=${projectInfo.id}",
-         "elCicdChart.releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-         "elCicdChart.imageRepository=${imageRepository}",
-         "elCicdChart.imageTag=${projectInfo.deployToEnv}",
-         "elCicdChart.pullSecret=${pullSecret}",
-         "elCicdChart.buildNumber=${BUILD_NUMBER}",
-         "'elCicdChart.profiles={${projectInfo.deployToEnv}}'"]
+        ["projectId=${projectInfo.id}",
+         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+         "imageRepository=${imageRepository}",
+         "imageTag=${projectInfo.deployToEnv}",
+         "pullSecret=${pullSecret}",
+         "buildNumber=${BUILD_NUMBER}",
+         "'profiles={${projectInfo.deployToEnv}}'"]
          
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
     microServices.each { microService ->
-        def msValues = ["elCicdChart.microService=${microService.name}",
-                        "elCicdChart.ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
-                        "elCicdChart.gitRepoName=${microService.gitRepoName}",
-                        "elCicdChart.srcCommitHash=${microService.srcCommitHash}",
-                        "elCicdChart.deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                        "elCicdChart.deploymentCommitHash=${microService.deploymentCommitHash}"]
+        def msValues = ["microService=${microService.name}",
+                        "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "gitRepoName=${microService.gitRepoName}",
+                        "srcCommitHash=${microService.srcCommitHash}",
+                        "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
+                        "deploymentCommitHash=${microService.deploymentCommitHash}"]
         msValues.addAll(projectValues)
         
-        dir("${microService.workDir}/${el.cicd.MICROSERVICE_DEPLOY_DEF_DIR}") {
+        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
+            def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+            def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/kustomization.yml"
             sh """
                 rm -f charts/*
-                                
-                mkdir -p ${el.cicd.TEMP_MANAGED_CHART_DIR}
-                mkdir -p ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
-                cp -r ${el.cicd.HELM_CHART_DIR} ${el.cicd.TEMP_MANAGED_CHART_DIR}
-                cp -r ./* ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
                 
-                REGEX_VALUES_FILES='.*/values.*\\.(yml|yaml)'
-                VALUES_FILES=\$(find ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} -maxdepth 1 -regextype egrep -regex \${REGEX_VALUES_FILES} -printf '-f %f ')
+                rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
+                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}
+                echo "${kustomizeSh}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
+                echo "${kustomizationTemplate}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/kustomization.yml
+                sed 's/%MICROSERVICE%/${microService.name}/g' ./${el.cicd.DEFAULT_KUSTOMIZE}/kustomization.yml
                 
-                helm dependency update ${el.cicd.TEMP_MICROSERVICE_CHART_DIR}
+                echo ${msValues.sort().join{'\n')} > deploy.properties
+                
+                helm dependency update .
                             
                 helm template --debug \
                     --set ${msValues.join(' --set ')} \
-                    \${VALUES_FILES} \
-                    -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    values.yml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    ${microService.name} . --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace}
                 
-                helm upgrade --install --history-max=1 --cleanup-on-fail \
+                helm upgrade --install --history-max=0 --cleanup-on-fail --debug \
                     --set ${msValues.join(' --set ')} \
-                    \${VALUES_FILES} \
-                    -f ${el.cicd.HELM_CHART_DIR}/values-default.yaml \
-                    ${microService.name} ${el.cicd.TEMP_MICROSERVICE_CHART_DIR} \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    values.yml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    ${microService.name} . \
                     -n ${projectInfo.deployToNamespace}
             """
         }

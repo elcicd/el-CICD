@@ -20,22 +20,20 @@ def initMetaData(Map metaData) {
         el.cicd.EL_CICD_PIPELINES_DIR = "${el.cicd.EL_CICD_DIR}/resources/pipelines"
         el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/non-prod-automation"
         el.cicd.PROD_AUTOMATION_PIPELINES_DIR = "${el.cicd.EL_CICD_PIPELINES_DIR}/prod-automation"
+        el.cicd.DEFAULT_KUSTOMIZE = "kustomize"
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
-        el.cicd.HELM_CHART_DIR = "${el.cicd.CONFIG_DIR}/managed-helm-chart"
         el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/managed-okd-templates"
         el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
+        el.cicd.EL_CICD_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/helm/chart-config"
 
         el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
         el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
-        el.cicd.TEMP_CHART_TEMPLATES_DIR = "${el.cicd.TEMP_CHART_DIR}/templates"
-        el.cicd.TEMP_MANAGED_CHART_DIR = "${el.cicd.TEMP_DIR}/el-CICD-config"
-        el.cicd.TEMP_MICROSERVICE_CHART_DIR = "${el.cicd.TEMP_DIR}/microservice/.helm"
 
         el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
 
