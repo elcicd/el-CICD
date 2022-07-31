@@ -1,0 +1,61 @@
+
+{{/*
+Kustomization YAML
+*/}}
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+{{- include "kustomization.kustType" (list $ "resources") }}
+{{- include "kustomization.kustType" (list $ "generators") }}
+{{- include "kustomization.kustType" (list $ "transformers") }}
+{{- include "kustomization.kustType" (list $ "validators") }}
+
+labels:
+- pairs:
+    projectid: "{{ $.Values.projectId }}"
+    microservice: "{{ $.Values.microService }}"
+  includeSelectors: true
+  includeTemplates: true
+- pairs:
+    profiles: "{{ join "," $.Values.profiles }}"
+    git-repo: "{{ $.Values.gitRepoName }}"
+    src-commit-hash: "{{ $.Values.srcCommitHash }}"
+    deployment-branch: "{{ $.Values.deploymentBranch | default $.Values.UNDEFINED }}"
+    deployment-commit-hash: "{{ $.Values.deploymentCommitHash }}"
+    release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
+    build-number: "{{ $.Values.buildNumber }}"
+    deploy-time: "{{ now | date "2006-01-02-15:04:05" }}"
+  includeTemplates: true
+
+
+configMapGenerator:
+- name: {{ $.Values.microService }}-meta-info
+  options:
+    disableNameSuffixHash: true
+  literals:
+  - projectid={{ $.Values.projectId }}
+  - microservice={{ $.Values.microService }}
+  - profiles={{ join "," $.Values.profiles }}
+  - git-repo={{ $.Values.gitRepoName }}
+  - src-commit-hash={{ $.Values.srcCommitHash }}
+  - deployment-branch={{ $.Values.deploymentBranch | default $.Values.UNDEFINED }}
+  - deployment-commit-hash={{ $.Values.deploymentCommitHash }}
+  - release-version={{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}
+  - build-number={{ $.Values.buildNumber }}
+  - deploy-time={{ now | date "2006-01-02-15:04:05" }}
+  
+{{/*
+Read in any kustomize resource or operations files and add to kustomization.yaml file.
+*/}}
+{{- define "kustomization.kustType" }}
+  {{- $ := index . 0 }}
+  {{- $kustType := index . 1 }}
+  {{- $kustTypeGlob := (printf "%s/**.{json,yml,yaml}" $kustType) }}
+  {{- $kustTypeFiles := ($.Files.Glob $kustTypeGlob) }}
+  {{- if $kustTypeFiles }}
+{{ $kustType }}:
+    {{- range $kustTypeFilePath, $_ :=  $kustTypeFiles }}
+- {{ $kustTypeFilePath }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+

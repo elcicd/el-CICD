@@ -3,18 +3,16 @@ set -e
 cd "$(dirname ${0})"
 cat <&0 > ./resources/all.yml
 
-COMMENTS=$(awk '/^#.*$/&&!/^# Source:/ {print $0}' ./resources/all.yml)
+awk '/__VALUES_END__/{flag=0} flag; /__VALUES_START__/{flag=1}' ./resources/all.yml > values.yml
+sed -i '/__VALUES_START__/,/__VALUES_END__/d' ./resources/all.yml
 
-for DIR in $(find . -mindepth 1 -type d -printf '%f\n')
-do
-  echo "${DIR}:" >> kustomization.yml
-  for KUST_FILE in  $(ls ${DIR}/*.yaml ${DIR}/*.yml ${DIR}/*.json 2>/dev/null || : )
-  do
-    echo "- ${KUST_FILE}" >> kustomization.yml
-  done
-done
-  
-oc kustomize .
+COMMENTS=$(awk '/# EXCLUDED/||/# Profiles:/ {print $0}' ./resources/all.yml)
+RENDERED=$(awk '/# Rendered ->/ {print $0}' ./resources/all.yml)
+
+helm template kustomize -f values.yml . > kustomization.yml
+kustomize build .
+echo "${COMMENTS}"
 echo '---'
-echo "$COMMENTS"
+echo "${RENDERED}"
+echo '---'
 set +e
