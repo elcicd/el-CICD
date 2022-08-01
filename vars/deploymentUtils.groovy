@@ -35,7 +35,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     microServices.each { microService ->
         dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
             writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-            writeFile text: kustomizationChart, file: "Chart.yml"
+            writeFile text: kustomizationChart, file: "Chart.yaml"
         }
 
         dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
@@ -53,6 +53,7 @@ def deployMicroservices(def projectInfo, def microServices) {
 
             sh """
                 rm -rf charts
+                ls -alR ./kustomize
 
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
