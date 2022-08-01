@@ -39,7 +39,7 @@ def deployMicroservices(def projectInfo, def microServices) {
         }
 
         dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
-            writeFile text: kustomizationChart, file: "kustomization.yaml"
+            writeFile text: kustomizationTemplate, file: "kustomization.yaml"
         }
 
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
