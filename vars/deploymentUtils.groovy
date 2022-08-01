@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Utility methods for apply OKD resources
@@ -8,17 +8,17 @@
 
 def deployMicroservices(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
-    
+
     loggingUtils.echoBanner("GENERATING DEPLOYMENT MANIFESTS FROM MANAGED HELM CHART PROFILES:",
                             "${projectInfo.deployToEnv}")
-                            
+
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
     def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
-    
+
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
-    
+
     def commonValues = ["projectId=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "imageRepository=${imageRepository}",
@@ -27,21 +27,21 @@ def deployMicroservices(def projectInfo, def microServices) {
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'"]
-    
+
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
     def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
-    
+
     microServices.each { microService ->
         dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
             writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
             writeFile text: kustomizationChart, file: "Chart.yml"
         }
-        
+
         dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
             writeFile text: kustomizationChart, file: "kustomization.yaml"
         }
-            
+
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             def msCommonValues = ["microService=${microService.name}",
                                   "gitRepoName=${microService.gitRepoName}",
@@ -50,21 +50,22 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "deploymentCommitHash=${microService.deploymentCommitHash}",
                                   "elCicdChart.renderValuesForKust=true"]
             msCommonValues.addAll(commonValues)
-            
+
             def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
-            
+
             sh """
                 rm -rf charts
-                                
+
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
-                
+
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/generators
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/transformers 
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/validators               
-                
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/transformers
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/validators
+
                 helm dependency update .
-                            
+
+                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 for SUB_COMMAND in 'template --debug' 'upgrade --install --history-max=0 --cleanup-on-fail --debug'
                 do
                     helm \${SUB_COMMAND} \
@@ -82,7 +83,7 @@ def deployMicroservices(def projectInfo, def microServices) {
 
 def confirmDeployments(def projectInfo, def microServices) {
     assert projectInfo; assert microServices
-    
+
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
     loggingUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:",
                                  "${microServiceNames}")
@@ -111,7 +112,7 @@ def removeMicroservices(def projectInfo, def microServices) {
     def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
 
     loggingUtils.echoBanner("REMOVING SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")
-    
+
     sh """
         for MICROSERVICE_NAME in ${microServiceNames}
         do
