@@ -54,7 +54,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 echo "${kustomizationTemplate}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml
                 set -x
                 
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/resources
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/generators
@@ -65,13 +65,13 @@ def deployMicroservices(def projectInfo, def microServices) {
                             
                 for SUB_COMMAND in 'template --debug' 'upgrade --install --history-max=0 --cleanup-on-fail --debug'
                 do
-                helm \${SUB_COMMAND} \
-                    --set ${msCommonValues.join(' --set elCicdChart.')} \
-                    values.yml \
-                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                    --post-renderer ${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                    ${microService.name} . \
-                    -n ${projectInfo.deployToNamespace}
+                    helm \${SUB_COMMAND} \
+                        --set ${msCommonValues.join(' --set elCicdChart.')} \
+                        values.yml \
+                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                        --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                        ${microService.name} . \
+                        -n ${projectInfo.deployToNamespace}
                 done
             """
         }
