@@ -25,7 +25,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                         "imageTag" : projectInfo.deployToEnv,
                         "pullSecret" : pullSecret,
                         "ingressHostSuffix" : "${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
-                        "buildNumber" : ${BUILD_NUMBER},
+                        "buildNumber" : env.BUILD_NUMBER,
                         "profiles" : "'{${projectInfo.deployToEnv}}'"]
                   
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
