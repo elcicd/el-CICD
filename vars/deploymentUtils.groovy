@@ -32,7 +32,16 @@ def deployMicroservices(def projectInfo, def microServices) {
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
     def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
     
-    microServices.each { microService ->        
+    microServices.each { microService ->
+        dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
+            writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+            writeFile text: kustomizationChart, file: "Chart.yml"
+        }
+        
+        dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
+            writeFile text: kustomizationChart, file: "kustomization.yaml"
+        }
+            
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             def msCommonValues = ["microService=${microService.name}",
                                   "gitRepoName=${microService.gitRepoName}",
@@ -45,22 +54,8 @@ def deployMicroservices(def projectInfo, def microServices) {
             def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
             
             sh """
-                rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
-                
-                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-                ${kustomizeSh}
-                EOF
-                chmod +x "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-                
-                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-                ${kustomizationChart}
-                EOF
-                
-                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
-                ${kustomizationTemplate}
-                EOF
-                
+                rm -rf charts
+                                
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 
