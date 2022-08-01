@@ -29,13 +29,13 @@ def deployMicroservices(def projectInfo, def microServices) {
                         "profiles='{${projectInfo.deployToEnv}}'"]
                   
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-    writefile text: kustomizeSh file: "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+    writefile text: kustomizeSh, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-    writefile text: kustomizationChart file: "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
+    writefile text: kustomizationChart, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
     
     dir("${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
         def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
-        writefile text: kustomizationTemplate file: "./kustomization.yaml"
+        writefile text: kustomizationTemplate, file: "./kustomization.yaml"
     }
     
     microServices.each { microService ->        
