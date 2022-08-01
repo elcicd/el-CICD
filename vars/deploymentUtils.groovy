@@ -14,7 +14,7 @@ def deployMicroservices(def projectInfo, def microServices) {
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
-    def pullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
+    def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
 
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
@@ -23,7 +23,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "imageRepository=${imageRepository}",
                         "imageTag=${projectInfo.deployToEnv}",
-                        "pullSecret=${pullSecret}",
+                        "imagePullSecret=${imagePullSecret}",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'"]
