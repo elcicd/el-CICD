@@ -49,7 +49,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
                 set +x
                 echo "${kustomizeSh}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
-                chmod +x /${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
+                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 echo "${kustomizationChart}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml
                 
                 echo "${kustomizationTemplate}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml
