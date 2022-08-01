@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e +x
+set -e
 cd "$(dirname ${0})"
 
 cat <&0 > ./resources/all.yaml
@@ -16,4 +16,4 @@ echo "${COMMENTS}"
 echo '---'
 echo "${RENDERED}"
 echo '---'
-set +e -x
+set +e
