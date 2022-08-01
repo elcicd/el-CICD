@@ -30,7 +30,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                   
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-    def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/kustomization.yaml"
+    def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
     
     microServices.each { microService ->        
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {            
