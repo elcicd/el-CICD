@@ -19,14 +19,14 @@ def deployMicroservices(def projectInfo, def microServices) {
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
     
-    def commonValues = ["projectId" : projectInfo.id,
-                        "releaseVersionTag" : projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED,
-                        "imageRepository" : imageRepository,
-                        "imageTag" : projectInfo.deployToEnv,
-                        "pullSecret" : pullSecret,
-                        "ingressHostSuffix" : "${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
-                        "buildNumber" : env.BUILD_NUMBER,
-                        "profiles" : "'{${projectInfo.deployToEnv}}'"]
+    def commonValues = ["projectId=${projectInfo.id}",
+                        "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "imageRepository=${imageRepository}",
+                        "imageTag=${projectInfo.deployToEnv}",
+                        "pullSecret=${pullSecret}",
+                        "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "buildNumber=\${BUILD_NUMBER}",
+                        "profiles='{${projectInfo.deployToEnv}}'"]
                   
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
@@ -34,12 +34,12 @@ def deployMicroservices(def projectInfo, def microServices) {
     
     microServices.each { microService ->        
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {            
-            def msCommonValues = ["microService" : microService.name,
-                                  "gitRepoName" : microService.gitRepoName,
-                                  "srcCommitHash" : microService.srcCommitHash,
-                                  "deploymentBranch" : microService.deploymentBranch ?: el.cicd.UNDEFINED,
-                                  "deploymentCommitHash" : microService.deploymentCommitHash]
-            msCommonValues.putAll(commonValues)
+            def msCommonValues = ["microService=${microService.name}",
+                                  "gitRepoName=${microService.gitRepoName}",
+                                  "srcCommitHash=${microService.srcCommitHash}",
+                                  "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
+            msCommonValues.addAll(commonValues)
             
             def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
             
