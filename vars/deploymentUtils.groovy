@@ -19,14 +19,14 @@ def deployMicroservices(def projectInfo, def microServices) {
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
 
-    def commonValues = ["projectId=${projectInfo.id}",
-                        "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "imageRepository=${imageRepository}",
-                        "imageTag=${projectInfo.deployToEnv}",
-                        "pullSecret=${pullSecret}",
-                        "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
-                        "buildNumber=\${BUILD_NUMBER}",
-                        "profiles='{${projectInfo.deployToEnv}}'"]
+    def commonValues = ["elCicdChart.projectId=${projectInfo.id}",
+                        "elCicdChart.releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "elCicdChart.imageRepository=${imageRepository}",
+                        "elCicdChart.imageTag=${projectInfo.deployToEnv}",
+                        "elCicdChart.pullSecret=${pullSecret}",
+                        "elCicdChart.ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "elCicdChart.buildNumber=\${BUILD_NUMBER}",
+                        "elCicdChart.profiles='{${projectInfo.deployToEnv}}'"]
 
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
@@ -43,11 +43,11 @@ def deployMicroservices(def projectInfo, def microServices) {
         }
 
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            def msCommonValues = ["microService=${microService.name}",
-                                  "gitRepoName=${microService.gitRepoName}",
-                                  "srcCommitHash=${microService.srcCommitHash}",
-                                  "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${microService.deploymentCommitHash}",
+            def msCommonValues = ["elCicdChart.microService=${microService.name}",
+                                  "elCicdChart.gitRepoName=${microService.gitRepoName}",
+                                  "elCicdChart.srcCommitHash=${microService.srcCommitHash}",
+                                  "elCicdChart.deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                  "elCicdChart.deploymentCommitHash=${microService.deploymentCommitHash}",
                                   "elCicdChart.renderValuesForKust=true"]
             msCommonValues.addAll(commonValues)
 
@@ -62,18 +62,29 @@ def deployMicroservices(def projectInfo, def microServices) {
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/validators
 
                 helm dependency update .
-
+                
+                helm template --debug {microService.name} . \
+                    --set ${msCommonValues.join(' --set elCicdChart.')} \
+                    values.yml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    ${microService.name} ./ \
+                    -n ${projectInfo.deployToNamespace}
+                
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
-                for SUB_COMMAND in 'template --debug' 'upgrade --install --history-max=0 --cleanup-on-fail --debug'
-                do
-                    helm \${SUB_COMMAND} \
-                        --set ${msCommonValues.join(' --set elCicdChart.')} \
-                        values.yml \
-                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                        --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                        ${microService.name} ./ \
-                        -n ${projectInfo.deployToNamespace}
-                done
+                helm template --debug {microService.name} . \
+                    -f values.yml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    --set ${msCommonValues.join(' --set elCicdChart.')} \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    -n ${projectInfo.deployToNamespace}
+                
+                helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
+                    -f values.yml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    --set ${msCommonValues.join(' --set elCicdChart.')} \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    -n ${projectInfo.deployToNamespace}
             """
         }
     }
