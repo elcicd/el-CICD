@@ -27,19 +27,19 @@ def deployMicroservices(def projectInfo, def microServices) {
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'"]
-                  
-    def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-    writeFile text: kustomizeSh, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-    def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-    writeFile text: kustomizationChart, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-    
-    dir("${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
-        def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
-        writeFile text: kustomizationTemplate, file: "./kustomization.yaml"
-    }
     
     microServices.each { microService ->        
-        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {            
+        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
+            def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+            writeFile text: kustomizeSh, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+            def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
+            writeFile text: kustomizationChart, file: "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
+            
+            dir("${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
+                def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
+                writeFile text: kustomizationTemplate, file: "./kustomization.yaml"
+            }
+            
             def msCommonValues = ["microService=${microService.name}",
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
