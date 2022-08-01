@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 cd "$(dirname ${0})"
+mkdir resources
+mkdir generators
+mkdir transformers
+mkdir validators
+
 cat <&0 > ./resources/all.yml
 
 awk '/__VALUES_END__/{flag=0} flag; /__VALUES_START__/{flag=1}' ./resources/all.yml > values.yml
