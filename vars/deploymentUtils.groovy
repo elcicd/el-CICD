@@ -53,7 +53,6 @@ def deployMicroservices(def projectInfo, def microServices) {
 
             sh """
                 rm -rf charts
-                ls -alR ./kustomize
 
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
