@@ -33,15 +33,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
     
     microServices.each { microService ->        
-        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {     
-            dir (${el.cicd.DEFAULT_KUSTOMIZE}) {
-                writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-                writeFile text: kustomizationChart, file: "Chart.yaml"
-                dir ('templates') {
-                    writeFile text: kustomizationTemplate, file: "kustomization.yaml"
-                }
-            }
-                   
+        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             def msCommonValues = ["microService=${microService.name}",
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
@@ -55,7 +47,21 @@ def deployMicroservices(def projectInfo, def microServices) {
             sh """
                 rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
+                
+                set +x
+                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+                ${kustomizeSh}
+                EOF
                 chmod +x "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
+                
+                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
+                ${kustomizationChart}
+                EOF
+                
+                cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
+                ${kustomizationTemplate}
+                EOF
+                set -x
                 
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
