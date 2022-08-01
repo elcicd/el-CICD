@@ -27,7 +27,7 @@ labels:
 
 
 configMapGenerator:
-- name: {{ $.Values.microService }}-meta-info
+- name: {{ $.Values.projectId }}-{{ $.Values.microService }}-meta-info
   options:
     disableNameSuffixHash: true
   literals:
