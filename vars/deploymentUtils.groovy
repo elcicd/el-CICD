@@ -63,14 +63,6 @@ def deployMicroservices(def projectInfo, def microServices) {
 
                 helm dependency update .
                 
-                helm template --debug {microService.name} . \
-                    --set ${msCommonValues.join(' --set elCicdChart.')} \
-                    values.yml \
-                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                    ${microService.name} ./ \
-                    -n ${projectInfo.deployToNamespace}
-                
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 helm template --debug {microService.name} . \
                     -f values.yml \
