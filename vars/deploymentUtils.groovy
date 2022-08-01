@@ -39,7 +39,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "srcCommitHash" : microService.srcCommitHash,
                                   "deploymentBranch" : microService.deploymentBranch ?: el.cicd.UNDEFINED,
                                   "deploymentCommitHash" : microService.deploymentCommitHash]
-            msCommonValues.addAll(commonValues)
+            msCommonValues.putAll(commonValues)
             
             def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
             
