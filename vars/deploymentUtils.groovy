@@ -34,8 +34,6 @@ def deployMicroservices(def projectInfo, def microServices) {
     
     microServices.each { microService ->        
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {            
-            def deployProps = kustomization.labels.collect { key, value -> "${key}=${value}" }
-            
             def msCommonValues = ["microService" : microService.name,
                                   "gitRepoName" : microService.gitRepoName,
                                   "srcCommitHash" : microService.srcCommitHash,
