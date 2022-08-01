@@ -51,8 +51,6 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "elCicdChart.renderValuesForKust=true"]
             msCommonValues.addAll(commonValues)
 
-            def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
-
             sh """
                 rm -rf charts
 
@@ -73,7 +71,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                         values.yml \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                         --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                        ${microService.name} . \
+                        ${microService.name} ./ \
                         -n ${projectInfo.deployToNamespace}
                 done
             """
