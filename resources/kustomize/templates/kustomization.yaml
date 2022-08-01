@@ -23,7 +23,7 @@ labels:
     deployment-commit-hash: "{{ $.Values.deploymentCommitHash }}"
     release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
     build-number: "{{ $.Values.buildNumber }}"
-    deploy-time: "{{ now | date "2006-01-02-15:04:05" }}"
+    deploy-time: "{{ now | date "2006-01-02-15:04:05" | quote }}"
   includeTemplates: true
 
 
@@ -41,7 +41,7 @@ configMapGenerator:
   - deployment-commit-hash={{ $.Values.deploymentCommitHash }}
   - release-version={{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}
   - build-number={{ $.Values.buildNumber }}
-  - deploy-time={{ now | date "2006-01-02-15:04:05" }}
+  - deploy-time={{ now | date "2006-01-02-15:04:05" | quote }}
   
 {{/*
 Read in any kustomize resource or operations files and add to kustomization.yaml file.
