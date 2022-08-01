@@ -48,7 +48,6 @@ def deployMicroservices(def projectInfo, def microServices) {
                 rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
                 
-                set +x
                 cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
                 ${kustomizeSh}
                 EOF
@@ -61,7 +60,6 @@ def deployMicroservices(def projectInfo, def microServices) {
                 cat << EOF > "./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
                 ${kustomizationTemplate}
                 EOF
-                set -x
                 
                 mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
