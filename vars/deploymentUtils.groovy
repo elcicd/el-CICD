@@ -45,10 +45,10 @@ def deployMicroservices(def projectInfo, def microServices) {
             
             sh """
                 rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
+                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
                 echo "${kustomizeSh}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 echo "${kustomizationChart}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml
                 
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
                 echo "${kustomizationTemplate}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml
                 
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/resources
