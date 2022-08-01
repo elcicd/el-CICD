@@ -9,7 +9,6 @@ kind: Kustomization
 {{- include "kustomization.kustType" (list $ "transformers") }}
 {{- include "kustomization.kustType" (list $ "validators") }}
 
-{{- $deployTime := (now | date "2006-01-02-15:04:05") }}
 labels:
 - pairs:
     projectid: "{{ $.Values.projectId }}"
@@ -24,7 +23,6 @@ labels:
     deployment-commit-hash: "{{ $.Values.deploymentCommitHash }}"
     release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
     build-number: "{{ $.Values.buildNumber }}"
-    deploy-time: "'{{ $deployTime }}'"
   includeTemplates: true
 
 
@@ -42,7 +40,7 @@ configMapGenerator:
   - deployment-commit-hash={{ $.Values.deploymentCommitHash }}
   - release-version={{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}
   - build-number="{{ $.Values.buildNumber }}"
-  - deploy-time="'{{ $deployTime }}'"
+  - deploy-time="{{ now | date "2006-01-02-15:04:05" }}"
   
 {{/*
 Read in any kustomize resource or operations files and add to kustomization.yaml file.
