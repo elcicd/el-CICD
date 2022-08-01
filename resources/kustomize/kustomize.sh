@@ -1,10 +1,6 @@
 #!/bin/bash
-set -e
+set -e +x
 cd "$(dirname ${0})"
-mkdir resources
-mkdir generators
-mkdir transformers
-mkdir validators
 
 cat <&0 > ./resources/all.yml
 
@@ -20,4 +16,4 @@ echo "${COMMENTS}"
 echo '---'
 echo "${RENDERED}"
 echo '---'
-set +e
+set +e -x

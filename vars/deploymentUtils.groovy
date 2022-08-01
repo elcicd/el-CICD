@@ -38,7 +38,8 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
+                                  "deploymentCommitHash=${microService.deploymentCommitHash}",
+                                  "elCicdChart.renderValuesForKust=true"]
             msCommonValues.addAll(commonValues)
             
             def helmSubcommands = ['template --debug', 'upgrade --install --history-max=0 --cleanup-on-fail --debug']
@@ -46,24 +47,26 @@ def deployMicroservices(def projectInfo, def microServices) {
             sh """
                 rm -rf ${el.cicd.DEFAULT_KUSTOMIZE}
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/templates
+                set +x
                 echo "${kustomizeSh}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 echo "${kustomizationChart}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml
                 
                 echo "${kustomizationTemplate}" > ./${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml
+                set -x
                 
                 mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/resources
-                cp -v ${projectInfo.deployToEnv}/* ${el.cicd.DEFAULT_KUSTOMIZE}/resources
+                cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
                 
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/generators
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/transformers 
-                mkdir -p ${el.cicd.DEFAULT_KUSTOMIZE}/validators               
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/generators
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/transformers 
+                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/validators               
                 
                 helm dependency update .
                             
                 for SUB_COMMAND in 'template --debug' 'upgrade --install --history-max=0 --cleanup-on-fail --debug'
                 do
                 helm \${SUB_COMMAND} \
-                    --set ${msCommonValues.join(' --set ')} \
+                    --set ${msCommonValues.join(' --set elCicdChart.')} \
                     values.yml \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --post-renderer ${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
