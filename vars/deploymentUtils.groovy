@@ -88,7 +88,9 @@ def confirmDeployments(def projectInfo, def microServices) {
             DEPLOYS=\$(oc get dc,deploy -l microservice=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
             if [[ ! -z \${DEPLOYS} ]]
             then
+                echo 'howdy1'
                 echo \${DEPLOYS} | xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
+                echo 'howdy2'
             fi
         done
     """
@@ -119,9 +121,9 @@ def removeMicroservices(def projectInfo, def microServices) {
 
 def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
+        echo 'howdy3'
         ${shCmd.echo '', 'Confirming microservice pods have finished terminating...'}
-
-        set +x
+        echo 'howdy4'
         COUNTER=1
         until [[ -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
         do
@@ -129,6 +131,5 @@ def waitingForPodsToTerminate(def deployToNamespace) {
             sleep 2
             let "COUNTER++"
         done
-        set -x
     """
 }
