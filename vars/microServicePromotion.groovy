@@ -192,7 +192,7 @@ def call(Map args) {
             projectInfo.microServices.each { microService ->
                 if (microService.promote && !microService.deployBranchExists) {
                     dir(microService.workDir) {
-                        withCredentials([sshUserPrivateKey(credentialsId: microService.gitSshPrivateKeyName, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                        withCredentials([sshUserPrivateKey(credentialsId: microService.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
                                 ${shCmd.echo  "-> Creating Deployment Branch for the image ${microService.id}: ${microService.deploymentBranch}"}
                                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',

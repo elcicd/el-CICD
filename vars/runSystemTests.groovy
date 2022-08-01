@@ -79,7 +79,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                         dir(systemTest.workDir) {
                             git url: systemTest.gitRepoUrl,
                                 branch: projectInfo.gitTestBranch,
-                                credentialsId: systemTest.gitSshPrivateKeyName
+                                credentialsId: systemTest.gitDeployKeyJenkinsId
                         }
                     }
 
