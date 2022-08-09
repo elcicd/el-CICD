@@ -2,6 +2,7 @@
 set -e
 cd "$(dirname ${0})"
 
+mkdir -p ./resources
 cat <&0 > ./resources/all.yaml
 
 awk '/__VALUES_END__/{flag=0} flag; /__VALUES_START__/{flag=1}' ./resources/all.yaml > values.yaml

@@ -20,13 +20,13 @@ def deployMicroservices(def projectInfo, def microServices) {
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
 
     def commonValues = ["projectId=${projectInfo.id}",
+                        "parameters.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "imageRepository=${imageRepository}",
-                        "imageTag=${projectInfo.deployToEnv}",
-                        "imagePullSecret=${imagePullSecret}",
+                        "imagePullSecrets='{${imagePullSecret}}'",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
-                        "profiles='{${projectInfo.deployToEnv}}'"]
+                        "profiles='{${projectInfo.deployToEnv}}'",
+                        "renderValuesForKust=true"]
 
     def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
@@ -43,12 +43,15 @@ def deployMicroservices(def projectInfo, def microServices) {
         }
 
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            def msCommonValues = ["microService=${microService.name}",
+            def appImage = "${imageRepository}/${projectInfo.id}-${microService.name}:${projectInfo.deployToEnv}"
+            def msCommonValues = ["appName=${microService.name}",
+                                  "microService=${microService.name}",
+                                  "parameters.MICROSERVICE_NAME=${microService.name}",
+                                  "appImage=${appImage}",
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${microService.deploymentCommitHash}",
-                                  "renderValuesForKust=true"]
+                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
             msCommonValues.addAll(commonValues)
 
             sh """
