@@ -64,7 +64,7 @@ Options:
     -a,   --agents:          only build el-CICD Jenkins agent images
     -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
     -D,   --setup-dev:       setup an environment for developing el-CICD
-      ,   --start-crc:       start OpenShift Local development cluster
+          --start-crc:       start OpenShift Local development cluster
     -T,   --tear-down-dev:   tear down an environment for developing el-CICD
           --help:            display this help text and exit
 

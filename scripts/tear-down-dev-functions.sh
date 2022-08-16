@@ -183,7 +183,7 @@ __remove_whitelisted_image_registry_host_names() {
 
 __delete_remote_el_cicd_git_repos() {
     echo
-    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
+    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS_REPO}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
     for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
     do
         __remove_git_repo ${EL_CICD_DIR}
