@@ -17,7 +17,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
 
     def ingressHostSuffix =
-        (projectInfo.deployToEnv != projectInfo.prodEnv) ? (projectInfo.deployToNamespace - projectInfo.id) : ''
+        (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
     def commonValues = ["projectId=${projectInfo.id}",
                         "parameters.PROJECT_ID=${projectInfo.id}",
@@ -57,16 +57,16 @@ def deployMicroservices(def projectInfo, def microServices) {
             sh """
                 rm -rf charts
 
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/resources
+                for KUST_DIR in resources generators transformers validators
+                do
+                    mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR}
+                    cp -v ${el.cicd.EL_CICD_HELM_DIR}/\${KUST_DIR}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR} 2>/dev/null || :
+                done
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
-
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/generators
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/transformers
-                mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/validators
 
                 helm dependency update .
                 
-                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh                
+                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
                 helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
                     -f values.yml \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
