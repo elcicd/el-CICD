@@ -22,10 +22,10 @@ def call(Map args) {
 
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             imageExists = projectInfo.microServices.find { microService ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag)
                 return sh(returnStdout: true, script: verifyImageCmd)
             }
         }
@@ -104,11 +104,11 @@ def call(Map args) {
 
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
             imageMissing = projectInfo.microServicesToTag.find { microService ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
                 return !sh(returnStdout: true, script: "${verifyImageCmd}")
             }
         }
@@ -149,10 +149,10 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             projectInfo.microServicesToTag.each { microService ->
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
                 sh """
                     ${shCmd.echo ''}
                     ${tagImageCmd}

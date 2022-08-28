@@ -67,10 +67,10 @@ def call(Map args) {
             def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
 
             withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN')]) {
+                             variable: 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
                 projectInfo.microServicesToPromote.each { microService ->
                     def verifyImageCmd =
-                        shCmd.verifyImage(projectInfo.ENV_FROM, 'FROM_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
+                        shCmd.verifyImage(projectInfo.ENV_FROM, 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.deployFromEnv)
                     if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
                         def image = "${microService.id}:${projectInfo.deployFromEnv}"
                         errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
@@ -148,24 +148,24 @@ def call(Map args) {
             loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                     projectInfo.microServicesToPromote.collect { it. name }.join(', '))
 
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REPO_ACCESS_TOKEN'),
-                            string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')])
+            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN'),
+                            string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')])
             {
                 projectInfo.microServicesToPromote.each { microService ->
                     def promoteTag = "${projectInfo.deployToEnv}-${microService.srcCommitHash}"
                     def copyImage =
                         shCmd.copyImage(projectInfo.ENV_FROM,
-                                                'FROM_IMAGE_REPO_ACCESS_TOKEN',
+                                                'FROM_IMAGE_REGISTRY_ACCESS_TOKEN',
                                                 microService.id,
                                                 projectInfo.deployFromEnv,
                                                 projectInfo.ENV_TO,
-                                                'TO_IMAGE_REPO_ACCESS_TOKEN',
+                                                'TO_IMAGE_REGISTRY_ACCESS_TOKEN',
                                                 microService.id,
                                                 promoteTag)
 
                     def tagImage =
                         shCmd.tagImage(projectInfo.ENV_TO,
-                                               'TO_IMAGE_REPO_ACCESS_TOKEN',
+                                               'TO_IMAGE_REGISTRY_ACCESS_TOKEN',
                                                microService.id,
                                                promoteTag,
                                                projectInfo.deployToEnv)

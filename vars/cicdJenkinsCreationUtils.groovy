@@ -42,7 +42,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
     
             helm upgrade --install --history-max=0 --cleanup-on-fail  \
-                --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+                --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
                 --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \
                 --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
                 --set elCicdChart.parameters.CPU_LIMIT=${JENKINS_CPU_LIMIT} \

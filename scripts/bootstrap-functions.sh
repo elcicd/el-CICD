@@ -45,7 +45,7 @@ _bootstrap_el_cicd() {
 
     echo
     echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
-    echo "htpps://${JENKINS_URL}"
+    echo "https://${JENKINS_URL}"
 }
 
 _source_el_cicd_config_files() {
@@ -230,7 +230,7 @@ __create_onboarding_automation_server() {
     
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OCP_VERSION ]] && echo 'true' || echo 'false')
     helm upgrade --install --history-max=0 --cleanup-on-fail  \
-        --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+        --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \
         --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
         --set elCicdChart.parameters.CPU_LIMIT=${JENKINS_CPU_LIMIT} \

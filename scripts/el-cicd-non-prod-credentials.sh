@@ -15,7 +15,7 @@ _refresh_non_prod_credentials() {
     _push_deploy_key_to_github el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
     
     echo
-    echo 'Pushing OCP TOKEN to Jenkins for masking purposes'
+    echo 'Pushing OKD TOKEN to Jenkins'
     local SA_SECRET_NAME=$(oc get secrets -o custom-columns=:.metadata.name -n ${ONBOARDING_MASTER_NAMESPACE} | grep -m 1 jenkins-token)
     local SA_TOKEN="$(oc get secrets ${SA_SECRET_NAME} -o custom-columns=:.data.token -n ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')"
     echo ${SA_TOKEN} | base64 -d > ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}

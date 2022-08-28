@@ -93,16 +93,16 @@ def call(Map args) {
                                  "${projectInfo.microServicesToRedeploy.collect { it.name } .join(', ')}")
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN')]) {
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             projectInfo.microServicesToRedeploy.each { microService ->
                 def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"
                 def msg = "${microService.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
 
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, imageTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, imageTag)
 
                 def tagImageEnvCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
 
                 sh """
                     ${shCmd.echo ''}

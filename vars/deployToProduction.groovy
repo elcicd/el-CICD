@@ -157,14 +157,14 @@ def call(Map args) {
 
         if (!projectInfo.hasBeenReleased) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN'),
+                             variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN'),
                              string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'PROD_IMAGE_REPO_ACCESS_TOKEN')])
+                             variable: 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN')])
             {
                 projectInfo.microServicesInRelease.each { microService ->
                     def copyImageCmd =
-                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag,
-                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REPO_ACCESS_TOKEN', microService.id, projectInfo.releaseVersionTag)
+                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag,
+                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseVersionTag)
 
                     sh """
                         ${shCmd.echo ''}

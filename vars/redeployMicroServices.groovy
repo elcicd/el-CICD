@@ -92,11 +92,11 @@ def call(Map args) {
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
         withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
+                         variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
             projectInfo.microServicesToRedeploy.each { microService ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.ENV_TO, 'TO_IMAGE_REPO_ACCESS_TOKEN', microService.id, microService.deploymentImageTag)
+                    shCmd.verifyImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, microService.deploymentImageTag)
 
                 if (!sh(returnStdout: true, script: verifyImageCmd).trim()) {
                     errorMsgs << "    ${microService.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
@@ -125,11 +125,11 @@ def call(Map args) {
                                  projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'TO_IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REPO_ACCESS_TOKEN}"
+                         variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
             projectInfo.microServicesToRedeploy.each { microService ->
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.ENV_TO, 'TO_IMAGE_REPO_ACCESS_TOKEN', microService.id, microService.deploymentImageTag, projectInfo.deployToEnv)
+                    shCmd.tagImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, microService.deploymentImageTag, projectInfo.deployToEnv)
                 sh """
                     ${shCmd.echo '', "--> Tagging image '${microService.id}:${microService.deploymentImageTag}' as '${microService.id}:${projectInfo.deployToEnv}'"}
 

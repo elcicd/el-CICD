@@ -9,18 +9,18 @@ _build_el_cicd_jenkins_image() {
     set -e
     echo
     echo -n 'Podman: '
-    ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
-    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
+    ENABLE_TLS=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS:-true}
+    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REGISTRY}
     
     podman build --squash \
-        --build-arg OKD_VERSION=${OKD_VERSION} \
+        --build-arg OCP_VERSION=${OCP_VERSION} \
         --build-arg CONFIG_FILE_PATH=${JENKINS_CONTAINER_CONFIG_DIR} \
         --build-arg CASC_FILE=${JENKINS_CASC_FILE} \
         --build-arg PLUGINS_FILE=${JENKINS_PLUGINS_FILE} \
-        -t ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+        -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
         
-    podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME}
+    podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
     set +e
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
@@ -65,14 +65,14 @@ _build_el_cicd_jenkins_agent_images_image() {
 
             set -e
             echo -n 'Podman: '
-            ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
-            podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
+            ENABLE_TLS=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS:-true}
+            podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REGISTRY}
             
             podman build --squash \
-                -t ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
+                -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
                 -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
 
-            podman push --tls-verify=false ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
+            podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
             set +e
         done
 
