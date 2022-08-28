@@ -1,5 +1,31 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
+_build_el_cicd_jenkins_image() {
+    echo
+    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_NAME}"
+    echo
+    __init_jenkins_build
+
+    set -e
+    echo
+    echo -n 'Podman: '
+    ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
+    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
+    
+    podman build --squash \
+        --build-arg OKD_VERSION=${OKD_VERSION} \
+        --build-arg CONFIG_FILE_PATH=${JENKINS_CONTAINER_CONFIG_DIR} \
+        --build-arg CASC_FILE=${JENKINS_CASC_FILE} \
+        --build-arg PLUGINS_FILE=${JENKINS_PLUGINS_FILE} \
+        -t ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+        -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
+        
+    podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME}
+    set +e
+
+    rm -rf ${TARGET_JENKINS_BUILD_DIR}
+    set +e
+}
 
 __init_jenkins_build() {
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
@@ -16,30 +42,6 @@ __init_jenkins_build() {
             cp -vRT ${BUILD_DIR} ${TARGET_JENKINS_BUILD_DIR}
         done
     fi
-}
-
-_build_el_cicd_jenkins_image() {
-    echo
-    echo "Updating el-CICD Jenkins image ${JENKINS_IMAGE_STREAM}"
-    echo
-    __init_jenkins_build
-
-    set -e
-    cat ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins-template > ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-    sed -i -e "s|%CONFIG_PATH%|${JENKINS_CONTAINER_CONFIG_DIR}|g;" \
-           -e "s/%JENKINS_CONFIGURATION_FILE%/${JENKINS_CASC_FILE}/g;" \
-           -e "s/%JENKINS_PLUGINS_FILE%/${JENKINS_PLUGINS_FILE}/g" \
-        ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-
-    echo
-    echo -n 'Podman: '
-    ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
-    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
-    podman build --squash -t ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_STREAM} -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile
-    podman push --tls-verify=false ${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_STREAM}
-    set +e
-
-    rm -rf ${TARGET_JENKINS_BUILD_DIR}
 }
 
 _build_el_cicd_jenkins_agent_images_image() {
@@ -65,7 +67,11 @@ _build_el_cicd_jenkins_agent_images_image() {
             echo -n 'Podman: '
             ENABLE_TLS=${JENKINS_IMAGE_REPO_ENABLE_TLS:-true}
             podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REPO}
-            podman build --squash -t ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
+            
+            podman build --squash \
+                -t ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
+                -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
+
             podman push --tls-verify=false ${JENKINS_IMAGE_REPO}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
             set +e
         done

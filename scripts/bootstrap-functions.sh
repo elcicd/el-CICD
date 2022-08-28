@@ -44,7 +44,8 @@ _bootstrap_el_cicd() {
     __build_jenkins_agents_if_necessary
 
     echo
-    echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete"
+    echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
+    echo "htpps://${JENKINS_URL}"
 }
 
 _source_el_cicd_config_files() {
@@ -97,7 +98,7 @@ __create_config_source_file() {
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
-    if [[ ! -z $(oc get is --ignore-not-found ${JENKINS_IMAGE_STREAM} -n openshift) ]]
+    if [[ ! -z $(oc get is --ignore-not-found ${JENKINS_IMAGE_NAME} -n openshift) ]]
     then
         echo
         UPDATE_EL_CICD_JENKINS=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
@@ -114,13 +115,8 @@ __bootstrap_el_cicd_onboarding_server() {
     __create_master_namespace_with_selectors
 
     _create_el_cicd_meta_info_config_map
-
-    if [[ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ]]
-    then
-        __create_onboarding_automation_server 'non-prod-project-onboarding'
-    else
-        __create_onboarding_automation_server 'prod-project-onboarding'
-    fi
+    
+    __create_onboarding_automation_server
 }
 
 __summarize_and_confirm_bootstrap_run_with_user() {
@@ -142,7 +138,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
     else
         echo
-        echo "WARNING: '${JENKINS_IMAGE_STREAM}' ImageStream was not found."
+        echo "WARNING: '${JENKINS_IMAGE_NAME}' ImageStream was not found."
         echo 'el-CICD Jenkins WILL BE BUILT.'
     fi
 
@@ -212,21 +208,44 @@ __create_master_namespace_with_selectors() {
 
 __create_onboarding_automation_server() {
     echo
-    oc new-app jenkins-persistent -p MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-                                  -p VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-                                  -p DISABLE_ADMINISTRATIVE_MONITORS=${JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                  -p JENKINS_IMAGE_STREAM_TAG=${JENKINS_IMAGE_STREAM}:latest \
-                                  -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
-                                  -e OPENSHIFT_ENABLE_OAUTH=true \
-                                  -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
-                                  -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                  -e CASC_JENKINS_CONFIG=${JENKINS_CONTAINER_CONFIG_DIR}/${JENKINS_CASC_FILE} \
-                                  -n ${ONBOARDING_MASTER_NAMESPACE}
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    echo
+    echo "Be aware that the el-CICD Onboarding 'jenkins' service account needs cluster-admin"
+    echo "permissions for managing and creating multiple cluster resources RBAC"
+    echo
+    echo "NOTE: This DOES NOT apply to CICD servers"
+    echo
+    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
+    echo
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    
+    echo
+    set -e
+    helm dependency update ${CONFIG_REPOSITORY_JENKINS_HELM}
+    
+    if [[ -z ${JENKINS_IMAGE_PULL_SECRET} && ${OKD_VERSION} ]]
+    then
+        JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' | grep deployer-dockercfg)
+    fi
+    
+    JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OCP_VERSION ]] && echo 'true' || echo 'false')
+    helm upgrade --install --history-max=0 --cleanup-on-fail  \
+        --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+        --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \
+        --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
+        --set elCicdChart.parameters.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+        --set elCicdChart.parameters.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
+        --set elCicdChart.parameters.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        --set elCicdChart.parameters.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
+        jenkins \
+        ${CONFIG_REPOSITORY_JENKINS_HELM}
 
     sleep 2
     echo
     echo 'Waiting for Jenkins to come up...'
-    oc rollout status dc jenkins -n ${ONBOARDING_MASTER_NAMESPACE}
+    oc rollout status deploy jenkins -n ${ONBOARDING_MASTER_NAMESPACE}
 
     echo
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
@@ -244,6 +263,7 @@ __create_onboarding_automation_server() {
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
+    set +e
     __create_onboarding_pipelines
 }
 
@@ -255,13 +275,13 @@ __create_onboarding_pipelines() {
                                      echo ${NON_PROD_ONBOARDING_PIPELINES_DIR} || echo ${PROD_ONBOARDING_PIPELINES_DIR})
 
     PIPELINES_FILES=$(find ${ONBOARDING_PIPELINES_DIR} -name '*.xml')
-    JENKINS_ONBOARDING_SERVER_URL=$(oc get route --no-headers -o custom-columns=:.spec.host)
+    set -e
     for PIPELINE_FILE in ${PIPELINES_FILES}
     do
         PIPELINE_NAME=$(basename ${PIPELINE_FILE})
         echo "Creating ${PIPELINE_NAME%.*}..."
         local RESULT=$(curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $(oc whoami -t)" -H 'Content-Type:text/xml' \
-                       "https://${JENKINS_ONBOARDING_SERVER_URL}/createItem?name=${PIPELINE_NAME%.*}" \
+                       "https://${JENKINS_URL}/createItem?name=${PIPELINE_NAME%.*}" \
                        --data-binary @${PIPELINE_FILE})
         if [[ ${RESULT} != '200' ]]
         then
@@ -273,7 +293,9 @@ __create_onboarding_pipelines() {
             exit 1
         fi
     done
-    curl -kSs -X POST -H "Authorization: Bearer $(oc whoami -t)" -o /dev/null "https://${JENKINS_ONBOARDING_SERVER_URL}/reload"
+    curl -kSs -X POST -H "Authorization: Bearer $(oc whoami -t)" -o /dev/null "https://${JENKINS_URL}/reload"
+    set +e
+    
     sleep 5
 }
 

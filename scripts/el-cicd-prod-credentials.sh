@@ -14,8 +14,6 @@ _refresh_prod_credentials() {
                                     ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} \
                                     ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
-    JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
-
     echo
     echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'
     _push_access_token_to_jenkins  ${JENKINS_URL} ${GIT_SITE_WIDE_ACCESS_TOKEN_ID} ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}

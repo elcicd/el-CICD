@@ -22,7 +22,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     def commonValues = ["projectId=${projectInfo.id}",
                         "parameters.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "imagePullSecrets='{${imagePullSecret}}'",
+                        "imagePullSecret='${imagePullSecret}",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'",

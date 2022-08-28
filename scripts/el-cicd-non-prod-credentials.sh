@@ -13,8 +13,6 @@ _refresh_non_prod_credentials() {
     echo
     echo "Adding read only deploy key for el-CICD-config"
     _push_deploy_key_to_github el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
-
-    JENKINS_URL=$(oc get route jenkins -o jsonpath='{.spec.host}' -n ${ONBOARDING_MASTER_NAMESPACE})
     
     echo
     echo 'Pushing OCP TOKEN to Jenkins for masking purposes'

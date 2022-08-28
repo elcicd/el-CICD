@@ -142,7 +142,6 @@ _push_access_token_to_jenkins() {
 }
 
 _push_ssh_creds_to_jenkins() {
-    local JENKINS_URL=${1}
     local CREDS_ID=${2}
     local DEPLOY_KEY_FILE=${3}
     

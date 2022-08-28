@@ -40,12 +40,25 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             ${loggingUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
+    
+            helm upgrade --install --history-max=0 --cleanup-on-fail  \
+                --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REPO}/${JENKINS_IMAGE_NAME} \
+                --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \
+                --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
+                --set elCicdChart.parameters.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+                --set elCicdChart.parameters.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
+                --set elCicdChart.parameters.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+                --set elCicdChart.parameters.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+                -n ${ONBOARDING_MASTER_NAMESPACE} \
+                -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
+                jenkins \
+                ${CONFIG_REPOSITORY_JENKINS_HELM}
 
             ${shCmd.echo ''}
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                                           -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
                                           -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.JENKINS_IMAGE_STREAM}:latest \
+                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.JENKINS_IMAGE_NAME}:latest \
                                           -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
                                           -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
                                           -e TRY_UPGRADE_IF_NO_MARKER=true \
