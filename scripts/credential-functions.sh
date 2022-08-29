@@ -103,10 +103,10 @@ _create_env_image_registry_secret() {
     local ENV=${1}
     local NAMESPACE_NAME=${2}
 
-    local USER_NAME=$(eval echo \${${ENV}${IMAGE_REPO_USERNAME_POSTFIX}})
-    local SECRET_NAME=$(eval echo \${${ENV}${IMAGE_REPO_PULL_SECRET_POSTFIX}})
+    local USER_NAME=$(eval echo \${${ENV}${IMAGE_REGISTRY_USERNAME_POSTFIX}})
+    local SECRET_NAME=$(eval echo \${${ENV}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}})
     local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
-    local DOMAIN=$(eval echo \${${ENV}${IMAGE_REPO_POSTFIX}})
+    local DOMAIN=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
 
     echo
     echo "Creating secret ${SECRET_NAME} for SDLC environment ${ENV}"

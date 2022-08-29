@@ -228,7 +228,7 @@ __create_onboarding_automation_server() {
         JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' | grep deployer-dockercfg)
     fi
     
-    JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OCP_VERSION ]] && echo 'true' || echo 'false')
+    JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     helm upgrade --install --history-max=0 --cleanup-on-fail  \
         --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \

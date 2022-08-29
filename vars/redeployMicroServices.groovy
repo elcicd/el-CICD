@@ -91,9 +91,9 @@ def call(Map args) {
 
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
             projectInfo.microServicesToRedeploy.each { microService ->
                 def verifyImageCmd =
                     shCmd.verifyImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, microService.deploymentImageTag)
@@ -124,9 +124,9 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.microServicesToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
-            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
+            def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_ACCESS_TOKEN}"
             projectInfo.microServicesToRedeploy.each { microService ->
                 def tagImageCmd =
                     shCmd.tagImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, microService.deploymentImageTag, projectInfo.deployToEnv)

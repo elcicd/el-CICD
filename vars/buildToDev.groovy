@@ -67,11 +67,11 @@ void call(Map args) {
         projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
         loggingUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
 
-        def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
+        def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
         def tlsVerify = el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS}" : ''
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'DEV_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             dir(microService.workDir) {
                 sh """

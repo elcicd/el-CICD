@@ -13,8 +13,8 @@ def deployMicroservices(def projectInfo, def microServices) {
                             "${projectInfo.deployToEnv}")
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
-    def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_POSTFIX}"]
-    def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
+    def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+    def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
 
     def ingressHostSuffix =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''

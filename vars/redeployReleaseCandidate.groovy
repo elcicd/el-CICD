@@ -39,15 +39,15 @@ def call(Map args) {
                                  projectInfo.microServicesToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                                variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
-            def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_USERNAME_POSTFIX}"]
-            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_POSTFIX}"]
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
+                                variable: 'IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+            def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
+            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
             projectInfo.microServicesToRedeploy.each { microService ->
                 def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, imageTag)
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
                 def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" :
@@ -92,7 +92,7 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
                                  "${projectInfo.microServicesToRedeploy.collect { it.name } .join(', ')}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             projectInfo.microServicesToRedeploy.each { microService ->
                 def imageTag = "${projectInfo.preProdEnv}-${microService.srcCommitHash}"

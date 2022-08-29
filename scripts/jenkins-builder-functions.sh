@@ -13,7 +13,7 @@ _build_el_cicd_jenkins_image() {
     podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REGISTRY}
     
     podman build --squash \
-        --build-arg OCP_VERSION=${OCP_VERSION} \
+        --build-arg OKD_VERSION=${OKD_VERSION} \
         --build-arg CONFIG_FILE_PATH=${JENKINS_CONTAINER_CONFIG_DIR} \
         --build-arg CASC_FILE=${JENKINS_CASC_FILE} \
         --build-arg PLUGINS_FILE=${JENKINS_PLUGINS_FILE} \

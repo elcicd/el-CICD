@@ -127,7 +127,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
 
     def tokenIds = []
     ENVS.each { ENV ->
-        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"]
+        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"]
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
@@ -166,7 +166,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
 def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def ENVS) {
     loggingUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
 
-    def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"] }.toSet()
+    def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"] }.toSet()
     def copyBuildSecrets = ENVS.contains(projectInfo.DEV_ENV)
 
     sh """
@@ -204,7 +204,7 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def component) {
 }
 
 def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
-    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REPO_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REGISTRY_ACCESS_TOKEN'),
                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials.xml"
         def curlCommand =
@@ -213,7 +213,7 @@ def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
         sh """
             ${shCmd.echo ''}
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | \
-                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REPO_ACCESS_TOKEN}|" > ${JENKINS_CREDS_FILE}
+                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REGISTRY_ACCESS_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${tokenId}/config.xml

@@ -49,14 +49,14 @@ def call(Map args) {
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
-        withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'IMAGE_REPO_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
+                         variable: 'IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
 
             projectInfo.microServices.each { microService ->
                 if (microService.releaseCandidateGitTag) {
                     def copyImageCmd =
-                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REPO_ACCESS_TOKEN', microService.id, imageTag)
+                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, imageTag)
                     def imageFound = sh(returnStdout: true, script: "${copyImageCmd}").trim()
 
                     def msg
@@ -65,7 +65,7 @@ def call(Map args) {
                             "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}"
                     }
                     else {
-                        msg = "-> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REPO_POSTFIX}"]}"
+                        msg = "-> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]}"
                     }
 
                     echo msg
@@ -156,9 +156,9 @@ def call(Map args) {
                                  "${projectInfo.microServicesInRelease.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+            withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                              variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN'),
-                             string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REPO_ACCESS_TOKEN_ID_POSTFIX}"],
+                             string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                              variable: 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN')])
             {
                 projectInfo.microServicesInRelease.each { microService ->

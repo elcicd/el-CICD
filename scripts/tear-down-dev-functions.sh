@@ -162,17 +162,17 @@ __remove_image_registry_nfs_share() {
 }
 
 __remove_whitelisted_image_registry_host_names() {
-    local IMAGE_REPOS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
-    local IMAGE_REPOS=''
-    for REPO in ${IMAGE_REPOS_LIST[@]}
+    local IMAGE_REGISTRYS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
+    local IMAGE_REGISTRYS=''
+    for REPO in ${IMAGE_REGISTRYS_LIST[@]}
     do
-        IMAGE_REPOS="${IMAGE_REPOS} $(eval echo \${${REPO}${IMAGE_REPO_USERNAME_POSTFIX}})"
+        IMAGE_REGISTRYS="${IMAGE_REGISTRYS} $(eval echo \${${REPO}${IMAGE_REGISTRY_USERNAME_POSTFIX}})"
     done
-    IMAGE_REPOS=$(echo ${IMAGE_REPOS} | xargs -n1 | sort -u | xargs)
+    IMAGE_REGISTRYS=$(echo ${IMAGE_REGISTRYS} | xargs -n1 | sort -u | xargs)
 
     echo
     local HOST_NAMES=''
-    for REGISTRY_NAME in ${IMAGE_REPOS}
+    for REGISTRY_NAME in ${IMAGE_REGISTRYS}
     do
         HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 

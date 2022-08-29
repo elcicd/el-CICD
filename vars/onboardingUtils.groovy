@@ -132,7 +132,7 @@ def createNfsShare(def projectInfo, def namespace, def pvName, def nfsShare) {
 }
 
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
-    def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REPO_PULL_SECRET_POSTFIX}"]
+    def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
     sh """
         ${shCmd.echo ''}
         oc get secrets ${secretName} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
