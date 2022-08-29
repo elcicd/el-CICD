@@ -35,6 +35,11 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
 def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
     stage('Creating CICD namespaces and rbacGroup Jenkins') {
         def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${el.cicd.CICD_MASTER_NODE_SELECTORS }'" : ''
+        
+        if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
+            el.cicd.JENKINS_IMAGE_PULL_SECRET =
+                sh(returnStdout: true, script: 'oc get secrets -o custom-columns=:metadata.name | grep deployer-dockercfg')
+        }
 
         sh """
             ${loggingUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
@@ -42,13 +47,13 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
     
             helm upgrade --install --history-max=0 --cleanup-on-fail  \
-                --set elCicdChart.parameters.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
-                --set elCicdChart.parameters.JENKINS_URL=${JENKINS_URL} \
-                --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
-                --set elCicdChart.parameters.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
-                --set elCicdChart.parameters.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-                --set elCicdChart.parameters.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-                --set elCicdChart.parameters.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+                --set elCicdChart.parameters.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
+                --set elCicdChart.parameters.JENKINS_URL=${el.cicd.JENKINS_URL} \
+                --set "elCicdChart.parameters.OPENSHIFT_ENABLE_OAUTH='${el.cicd.JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
+                --set elCicdChart.parameters.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
+                --set elCicdChart.parameters.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
+                --set elCicdChart.parameters.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                --set elCicdChart.parameters.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
                 -n ${ONBOARDING_MASTER_NAMESPACE} \
                 -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
                 jenkins \
