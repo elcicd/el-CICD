@@ -21,7 +21,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
     }
 }
 
-def createCicdNamespaceAndJenkins(def projectInfo, def) {
+def createCicdNamespaceAndJenkins(def projectInfo) {
     stage('Creating CICD namespace and rbacGroup Jenkins Automation Server') {
         def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${el.cicd.CICD_MASTER_NODE_SELECTORS }'" : ''
         
