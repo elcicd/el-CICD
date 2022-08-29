@@ -57,7 +57,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                 -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} \
                 -f ${el.cicd.JENKINS_HELM_DIR}/values.yml \
                 jenkins \
-                ${el.cicd.CONFIG_REPOSITORY_JENKINS_HELM}
+                ${el.cicd.JENKINS_HELM_DIR}
 
             ${shCmd.echo ''}
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
