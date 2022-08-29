@@ -53,6 +53,9 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
                                   "deploymentCommitHash=${microService.deploymentCommitHash}"]
             msCommonValues.addAll(commonValues)
+            
+            loggingUtils.echoBanner("What's in our helm script:",
+                                    "elCicdChart.${msCommonValues.join(' --set elCicdChart.')}")
 
             sh """
                 rm -rf charts
