@@ -40,11 +40,11 @@ def deployMicroservices(def projectInfo, def microServices) {
         }
 
         dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            def appImage = "${imageRepository}/${projectInfo.id}-${microService.name}:${projectInfo.deployToEnv}"
+            def microServiceImage = "${imageRepository}/${projectInfo.id}-${microService.name}:${projectInfo.deployToEnv}"
             def msCommonValues = ["appName=${microService.name}",
                                   "microService=${microService.name}",
                                   "parameters.MICROSERVICE_NAME=${microService.name}",
-                                  "defaultImage${appImage}",
+                                  "defaultImage=${microServiceImage}",
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
