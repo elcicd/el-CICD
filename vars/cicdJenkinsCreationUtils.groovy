@@ -46,6 +46,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
 
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
     
+            ${shCmd.echo ''}
             helm upgrade --install --history-max=0 --cleanup-on-fail --debug \
                 --set elCicdChart.parameters.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
                 --set elCicdChart.parameters.JENKINS_URL=${el.cicd.JENKINS_URL} \
@@ -58,17 +59,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                 -f ${el.cicd.JENKINS_HELM_DIR}/values.yml \
                 jenkins \
                 ${el.cicd.JENKINS_HELM_DIR}
-
-            ${shCmd.echo ''}
-            oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                                          -p VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                                          -p DISABLE_ADMINISTRATIVE_MONITORS=${el.cicd.JENKINS_DISABLE_ADMINISTRATIVE_MONITORS} \
-                                          -p JENKINS_IMAGE_STREAM_TAG=${el.cicd.JENKINS_IMAGE_NAME}:latest \
-                                          -e OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS=true \
-                                          -e JENKINS_JAVA_OVERRIDES=-D-XX:+UseCompressedOops \
-                                          -e TRY_UPGRADE_IF_NO_MARKER=true \
-                                          -e CASC_JENKINS_CONFIG=${el.cicd.JENKINS_CONTAINER_CONFIG_DIR}/${el.cicd.JENKINS_CASC_FILE} \
-                                          -n ${projectInfo.cicdMasterNamespace}
+                
             ${shCmd.echo ''}
             ${shCmd.echo 'Creating nonrootbuilder SCC if necessary and applying to jenkins ServiceAccount'}
             oc apply -f ${el.cicd.JENKINS_CONFIG_DIR}/jenkinsServiceAccountSecurityContext.yml
