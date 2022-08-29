@@ -19,7 +19,7 @@ def deployMicroservices(def projectInfo, def microServices) {
     def commonValues = ["projectId=${projectInfo.id}",
                         "parameters.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "imagePullSecret=${imagePullSecret}",
+                        "defaultImagePullSecret=${imagePullSecret}",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'",
@@ -44,15 +44,12 @@ def deployMicroservices(def projectInfo, def microServices) {
             def msCommonValues = ["appName=${microService.name}",
                                   "microService=${microService.name}",
                                   "parameters.MICROSERVICE_NAME=${microService.name}",
-                                  "appImage=${appImage}",
+                                  "defaultImage${appImage}",
                                   "gitRepoName=${microService.gitRepoName}",
                                   "srcCommitHash=${microService.srcCommitHash}",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
                                   "deploymentCommitHash=${microService.deploymentCommitHash}"]
             msCommonValues.addAll(commonValues)
-            
-            loggingUtils.echoBanner("What's in our helm script:",
-                                    "elCicdChart.${msCommonValues.join(' --set elCicdChart.')}")
 
             sh """
                 rm -rf charts
