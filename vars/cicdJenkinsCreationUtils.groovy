@@ -17,23 +17,12 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
             oc get groups ${projectInfo.rbacGroup} --no-headers
         """
 
-        def cicdMasterProjectExist =
-            sh(returnStdout: true, script: "oc get rs --ignore-not-found -l app=jenkins -n ${projectInfo.cicdMasterNamespace}")
-
-        if (!cicdMasterProjectExist) {
-            onboardingUtils.deleteNamespaces(projectInfo.cicdMasterNamespace)
-
-            def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
-            createCicdNamespaceAndJenkins(projectInfo, envs)
-        }
-        else {
-            echo "EXISTENCE CONFIRMED: ${prodOrNonProd} CICD JENKINS EXIST"
-        }
+        createCicdNamespaceAndJenkins(projectInfo)
     }
 }
 
-def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
-    stage('Creating CICD namespaces and rbacGroup Jenkins') {
+def createCicdNamespaceAndJenkins(def projectInfo, def) {
+    stage('Creating CICD namespace and rbacGroup Jenkins Automation Server') {
         def nodeSelectors = el.cicd.CICD_MASTER_NODE_SELECTORS ? "--node-selector='${el.cicd.CICD_MASTER_NODE_SELECTORS }'" : ''
         
         if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
@@ -51,7 +40,10 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
         sh """
             ${loggingUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
-            oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
+            if [[ -z \$(oc get project --ignore-not-found ${projectInfo.cicdMasterNamespace}) ]]
+            then
+                oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
+            fi
     
             ${shCmd.echo ''}
             helm dependency update ${el.cicd.JENKINS_HELM_DIR}
