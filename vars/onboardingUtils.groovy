@@ -41,7 +41,7 @@ def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
             ${shCmd.echo ''}
             oc adm new-project ${namespace} ${nodeSelectors}
 
-            oc policy add-role-to-group admin ${projectInfo.rbacGroup} -n ${namespace}
+            oc policy add-role-to-group edit ${projectInfo.rbacGroup} -n ${namespace}
 
             oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
 
