@@ -48,6 +48,9 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             oc adm new-project ${projectInfo.cicdMasterNamespace} ${nodeSelectors}
     
             ${shCmd.echo ''}
+            helm dependency update ${el.cicd.JENKINS_HELM_DIR}
+            
+            ${shCmd.echo ''}
             helm upgrade --install --history-max=0 --cleanup-on-fail --debug \
                 --set elCicdChart.parameters.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
                 --set elCicdChart.parameters.JENKINS_URL=${jenkinsUrl} \
