@@ -18,7 +18,7 @@ def verifyCicdJenkinsExists(def projectInfo, def isNonProd) {
         """
 
         def cicdMasterProjectExist =
-            sh(returnStdout: true, script: "oc get rc --ignore-not-found -l app=jenkins-persistent -n ${projectInfo.cicdMasterNamespace}")
+            sh(returnStdout: true, script: "oc get rs --ignore-not-found -l app=jenkins -n ${projectInfo.cicdMasterNamespace}")
 
         if (!cicdMasterProjectExist) {
             onboardingUtils.deleteNamespaces(projectInfo.cicdMasterNamespace)
@@ -76,7 +76,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
             ${shCmd.echo ''}
             sleep 2
             ${shCmd.echo 'Waiting for Jenkins to come up...'}
-            oc rollout status deploy jenkins -n ${projectInfo.cicdMasterNamespace}
+            oc rollout status dc jenkins -n ${projectInfo.cicdMasterNamespace}
             ${shCmd.echo ''}
             ${shCmd.echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
             sleep 5
