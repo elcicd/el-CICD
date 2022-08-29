@@ -36,7 +36,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
                 )
         }
         
-        def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}"
+        def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
         sh """
             ${loggingUtils.shellEchoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")}
 
