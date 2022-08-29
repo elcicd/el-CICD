@@ -54,10 +54,10 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
                 --set elCicdChart.parameters.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
                 --set elCicdChart.parameters.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
                 --set elCicdChart.parameters.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
-                -n ${ONBOARDING_MASTER_NAMESPACE} \
-                -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
+                -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} \
+                -f ${el.cicd.JENKINS_HELM_DIR}/values.yml \
                 jenkins \
-                ${CONFIG_REPOSITORY_JENKINS_HELM}
+                ${el.cicd.CONFIG_REPOSITORY_JENKINS_HELM}
 
             ${shCmd.echo ''}
             oc new-app jenkins-persistent -p MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \

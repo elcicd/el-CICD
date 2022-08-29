@@ -24,13 +24,14 @@ def initMetaData(Map metaData) {
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
         el.cicd.JENKINS_CONFIG_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
+        el.cicd.JENKINS_HELM_DIR = "${el.cicd.JENKINS_CONFIG_DIR}/.helm"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
         el.cicd.OKD_TEMPLATES_DIR = "${el.cicd.CONFIG_DIR}/managed-okd-templates"
         el.cicd.RESOURCE_QUOTA_DIR = "${el.cicd.CONFIG_DIR}/resource-quotas"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
-        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.CONFIG_DIR}/.helm/"
+        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.CONFIG_DIR}/.helm"
 
         el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
         el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
