@@ -38,7 +38,7 @@ def createCicdNamespaceAndJenkins(def projectInfo, def envs) {
         
         if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
             el.cicd.JENKINS_IMAGE_PULL_SECRET =
-                sh(returnStdout: true, script: 'oc get secrets -o custom-columns=:metadata.name | grep deployer-dockercfg | tr -d '[:space:]')
+                sh(returnStdout: true, script: "oc get secrets -o custom-columns=:metadata.name | grep deployer-dockercfg | tr -d '[:space:]'")
         }
         
         def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}"
