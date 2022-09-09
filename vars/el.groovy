@@ -66,7 +66,7 @@ def node(Map args, Closure body) {
     assert args.agent
     
     def volumeDefs = [
-        persistentVolumeClaim(claimName: 'jenkins-home', mountPath: '/home/jenkins'),
+        persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins'),
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
 
@@ -79,7 +79,7 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: "0",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         containers: [
             containerTemplate(
                 name: 'jnlp',
@@ -155,14 +155,6 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            ${shCmd.echo "\n=======================\n"}
-            ls -al ~/.m2/repository/
-            ${shCmd.echo "\n=======================\n"}
-            ls -alR ~/agent
-            ${shCmd.echo "\n=======================\n"}
-            rm -rf '${WORKSPACE}'
-            mkdir -p '${WORKSPACE}'
-
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
