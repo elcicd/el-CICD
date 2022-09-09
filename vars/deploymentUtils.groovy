@@ -46,9 +46,9 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "parameters.MICROSERVICE_NAME=${microService.name}",
                                   "global.defaultImage=${microServiceImage}",
                                   "gitRepoName=${microService.gitRepoName}",
-                                  "srcCommitHash=${microService.srcCommitHash}",
+                                  "srcCommitHash='${microService.srcCommitHash}'",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
+                                  "deploymentCommitHash='${microService.deploymentCommitHash}'"]
             msCommonValues.addAll(commonValues)
 
             sh """
