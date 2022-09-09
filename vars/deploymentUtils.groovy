@@ -46,9 +46,9 @@ def deployMicroservices(def projectInfo, def microServices) {
                                   "parameters.MICROSERVICE_NAME=${microService.name}",
                                   "global.defaultImage=${microServiceImage}",
                                   "gitRepoName=${microService.gitRepoName}",
-                                  "srcCommitHash='${microService.srcCommitHash}'",
+                                  "srcCommitHash=${microService.srcCommitHash}",
                                   "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash='${microService.deploymentCommitHash}'"]
+                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
             msCommonValues.addAll(commonValues)
 
             sh """
@@ -70,7 +70,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                    --set elCicdChart.${msCommonValues.join(' --set elCicdChart.')} \
+                    --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace}
             """
