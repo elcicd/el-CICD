@@ -147,6 +147,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
         sh """
+            set -v
             ${shCmd.echo ''}
             if [[ -z \${${sshKeyVar}} ]]
             then
