@@ -65,8 +65,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
 
-                VALUES_FILE=\$(test -f values.yaml && echo values.yaml)
-                VALUES_FILE=\$((test -z \${VALUES_FILE} && echo values.yml) || echo \${VALUES_FILE})
+                VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
                 helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
