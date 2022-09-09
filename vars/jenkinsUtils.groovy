@@ -119,7 +119,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: keyId)]) {
+    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
         pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
     }
 
@@ -173,7 +173,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
         
         sh """
             ${shCmd.echo ''}
-            set +x
             if [[ -z \${${sshKeyVar}} ]]
             then
                 ${shCmd.echo "Generating key for ${sshKeyVar}"}
@@ -183,6 +182,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
                 echo \${${sshKeyVar}} > ${sshKeyVar}
             fi
                 
+            set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
