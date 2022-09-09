@@ -95,7 +95,7 @@ def node(Map args, Closure body) {
         volumes: volumeDefs
     ]) {
         node(args.agent) {
-            try {                
+            try {           
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
@@ -155,6 +155,7 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
+            ls -alR
             rm -rf '${WORKSPACE}'
             mkdir -p '${WORKSPACE}'
 
