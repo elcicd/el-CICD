@@ -64,17 +64,24 @@ def initMetaData(Map metaData) {
 
 def node(Map args, Closure body) {
     assert args.agent
+    
+    def volumeDefs = [
+        persistentVolumeClaim(mountPath: '/home/jenkins', claimName: 'jenkins-home'),
+        emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
+    ]
 
-    def secretVolume = args.isBuild ?
-        [secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")] :
-        []
+    if (args.isBuild) {
+        volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
+    }
+        
+    volumeDefs.add 
 
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "0",
         containers: [
             containerTemplate(
                 name: 'jnlp',
@@ -87,7 +94,7 @@ def node(Map args, Closure body) {
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
         ],
-        volumes: secretVolume
+        volumes: volumeDefs
     ]) {
         node(args.agent) {
             try {                
