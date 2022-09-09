@@ -71,10 +71,8 @@ def node(Map args, Closure body) {
     ]
 
     if (args.isBuild) {
-        volumeDefs.add(secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/"))
+        volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
-        
-    volumeDefs.add 
 
     podTemplate([
         label: "${args.agent}",
