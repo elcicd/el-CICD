@@ -155,7 +155,11 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            ls -alR
+            ${shCmd.echo "\n=======================\n"}
+            ls -al ~/.m2/repository/
+            ${shCmd.echo "\n=======================\n"}
+            ls -alR ~/agent
+            ${shCmd.echo "\n=======================\n"}
             rm -rf '${WORKSPACE}'
             mkdir -p '${WORKSPACE}'
 
