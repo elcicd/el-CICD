@@ -115,15 +115,11 @@ def deletePipeline(def projectInfo, def folderName, def pipelineName) {
 def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
-    }
+    pushSshCredentialsToJenkins(projectInfo, keyId)
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
-    withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
-    }
+    pushSshCredentialsToJenkins(projectInfo, keyId)
 
     def tokenIds = []
     ENVS.each { ENV ->
@@ -142,18 +138,17 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN'),
+                     sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
         sh """
             ${shCmd.echo ''}
-            set -v
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${${sshKeyVar}})}" > ${JENKINS_CREDS_FILE}
-            set +v
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${READ_ONLY_GITHUB_PRIVATE_KEY_ID})}" > ${JENKINS_CREDS_FILE}
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
