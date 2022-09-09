@@ -145,12 +145,12 @@ def copySshCredentialsToJenkins(def projectInfo, def keyId) {
         
         sh """
             ${shCmd.echo ''}
-            set +x -v
+            set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${READ_ONLY_GITHUB_PRIVATE_KEY_ID})}" > ${JENKINS_CREDS_FILE}
-            set -x +v
+            set -x
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
@@ -161,7 +161,7 @@ def copySshCredentialsToJenkins(def projectInfo, def keyId) {
 }
 
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyName) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -172,7 +172,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyName) {
         sh """
             ${shCmd.echo ''}
             set +x
-            ssh-keygen -b 2048 -t rsa -f '${sshKeyName}' \
+            ssh-keygen -b 2048 -t rsa -f '${sshKeyVar}' \
                 -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
