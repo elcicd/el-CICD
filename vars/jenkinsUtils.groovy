@@ -134,7 +134,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     }
 }
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
