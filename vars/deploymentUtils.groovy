@@ -68,7 +68,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILE=$(test -f values.yaml && echo values.yaml)
                 VALUES_FILE=$((test -z $VALUES_FILE && echo values.yml) || $VALUES_FILE)
                 helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
-                    -f ${VALUES_FILE} \
+                    -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --set elCicdChart.${msCommonValues.join(' --set elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
