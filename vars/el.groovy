@@ -66,7 +66,7 @@ def node(Map args, Closure body) {
     assert args.agent
     
     def volumeDefs = [
-        persistentVolumeClaim(mountPath: '/home/jenkins', claimName: 'jenkins-home'),
+        dynamicPVC(mountPath: '/home/jenkins'),
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
 
