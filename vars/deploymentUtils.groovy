@@ -62,16 +62,31 @@ def deployMicroservices(def projectInfo, def microServices) {
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
 
                 helm dependency update .
-                
+
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
 
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
-                helm upgrade --install --history-max=0 --cleanup-on-fail --debug ${microService.name} . \
+
+                set +e
+                helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace}
+                HELM_ERR=\$?
+                set -e
+
+                if [[ \${HELM_ERR} != 0 ]]
+                then
+                    ${shCmd.echo '', 'HELM ERROR: attempting to generate template output:', ''}
+                    helm template --debug ${microService.name} . \
+                        -f \${VALUES_FILE} \
+                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                        --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                        -n ${projectInfo.deployToNamespace}
+                    exit \${HELM_ERR}
+                fi
             """
         }
     }
