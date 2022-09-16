@@ -68,18 +68,18 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
 
                 set +e
-                helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
-                    -f \${VALUES_FILE} \
-                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                    --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
-                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                    -n ${projectInfo.deployToNamespace}
-                HELM_ERR=\$?
+                HELM_RESULT=\$(helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
+                                -f \${VALUES_FILE} \
+                                -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                                --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                                --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                                -n ${projectInfo.deployToNamespace})
                 set -e
 
-                if [[ \${HELM_ERR} != 0 ]]
+                set +x
+                if [[ \${HELM_RESULT} != 0 ]]
                 then
-                    ${shCmd.echo '', 'HELM ERROR: attempting to generate template output:', ''}
+                    ${shCmd.echo '', 'HELM ERROR(EXIT CODE \${HELM_RESULT})', 'Attempting to generate template output...', ''}
                     helm template --debug ${microService.name} . \
                         -f \${VALUES_FILE} \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
@@ -87,6 +87,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                         -n ${projectInfo.deployToNamespace}
                     exit \${HELM_ERR}
                 fi
+                set -x
             """
         }
     }
