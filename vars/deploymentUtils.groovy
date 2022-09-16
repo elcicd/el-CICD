@@ -80,7 +80,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     set +x
                     echo 
                     echo 'HELM ERROR'
-                    echo 'Attempting to generate template output...
+                    echo 'Attempting to generate template output...'
                     echo
                     helm template --debug ${microService.name} . \
                         -f \${VALUES_FILE} \
