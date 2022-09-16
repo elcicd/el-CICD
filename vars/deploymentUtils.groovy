@@ -79,7 +79,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 fi
                 
                 set +e
-                if helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
+                if helm upgrade --force --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
