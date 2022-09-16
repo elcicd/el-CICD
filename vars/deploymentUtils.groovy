@@ -85,7 +85,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                         --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                         -n ${projectInfo.deployToNamespace}
-                    exit \${HELM_ERR}
+                    exit \${HELM_RESULT}
                 fi
                 set -x
             """
