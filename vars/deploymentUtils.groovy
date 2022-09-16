@@ -70,7 +70,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 set +e
                 oc patch secret \$(oc get secret -l name=${microService.name}) \
                     -p '{"metadata":{"labels":{"status":"deployed"}}}' \
-                    --type=merge 
+                    --type=merge \
                     -n ${projectInfo.deployToNamespace}
                 if helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
