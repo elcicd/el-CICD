@@ -68,15 +68,16 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
 
                 set +e
-                HELM_RESULT=\$(helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
+                helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                                 -f \${VALUES_FILE} \
                                 -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                                 --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                                 --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                                -n ${projectInfo.deployToNamespace})
+                                -n ${projectInfo.deployToNamespace}
+                set +x
+                HELM_RESULT=\$?
                 set -e
 
-                set +x
                 if [[ \${HELM_RESULT} != 0 ]]
                 then
                     ${shCmd.echo '', 'HELM ERROR(EXIT CODE \${HELM_RESULT})', 'Attempting to generate template output...', ''}
