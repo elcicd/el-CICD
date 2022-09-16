@@ -68,7 +68,10 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
 
                 set +e
-                oc patch secret \$(oc get secret -l name=${microService.name}) --type=merge -p '{"metadata":{"labels":{"status":"deployed"}}}'
+                oc patch secret \$(oc get secret -l name=${microService.name}) \
+                    -p '{"metadata":{"labels":{"status":"deployed"}}}' \
+                    -n ${projectInfo.deployToNamespace}
+                oc get secret \$(oc get secret -l name=${microService.name}) -o yaml  -n ${projectInfo.deployToNamespace}
                 if helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
