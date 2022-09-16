@@ -68,27 +68,29 @@ def deployMicroservices(def projectInfo, def microServices) {
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
 
                 set +e
-                helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
-                                -f \${VALUES_FILE} \
-                                -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                                --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
-                                --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                                -n ${projectInfo.deployToNamespace}
-                set +x
-                HELM_RESULT=\$?
-                set -e
-
-                if [[ \${HELM_RESULT} != 0 ]]
+                if helm upgrade --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
+                    -f \${VALUES_FILE} \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    -n ${projectInfo.deployToNamespace}
                 then
-                    ${shCmd.echo '', 'HELM ERROR(EXIT CODE \${HELM_RESULT})', 'Attempting to generate template output...', ''}
+                    ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
+                else
+                    set +x
+                    echo 
+                    echo 'HELM ERROR'
+                    echo 'Attempting to generate template output...
+                    echo
                     helm template --debug ${microService.name} . \
                         -f \${VALUES_FILE} \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                         --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                         -n ${projectInfo.deployToNamespace}
-                    exit \${HELM_RESULT}
+                    set -ex
+                    exit 1
                 fi
-                set -x
+                set -e
             """
         }
     }
