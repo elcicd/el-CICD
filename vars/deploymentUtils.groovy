@@ -73,7 +73,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                               -n ${projectInfo.deployToNamespace})
                 if [[ ! -z \${SECRET_NAME} ]]
                 then
-                    oc patch secret \$() \
+                    oc patch secret \${SECRET_NAME} \
                         -p '{"metadata":{"labels":{"status":"deployed"}}}' \
                         --type=merge \
                         -n ${projectInfo.deployToNamespace}
