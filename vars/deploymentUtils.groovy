@@ -82,7 +82,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 if helm upgrade --force --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                    --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                    --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace}
                 then
@@ -96,7 +96,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     helm template --debug ${microService.name} . \
                         -f \${VALUES_FILE} \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
-                        --set elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                        --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                         -n ${projectInfo.deployToNamespace}
                     set -ex
                     exit 1

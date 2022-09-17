@@ -37,6 +37,15 @@ spec:
           limits:
             cpu: 500m
             memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
       - name: auth-vol
         secret:
