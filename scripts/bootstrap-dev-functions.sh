@@ -137,7 +137,7 @@ __summarize_and_confirm_dev_setup_info() {
     then
         echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be setup.  Login to kubeadmin will be automated."
     else
-        echo 'OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup.'
+        echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup."
     fi
     echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
