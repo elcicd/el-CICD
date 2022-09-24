@@ -19,7 +19,7 @@ def call(Map args) {
             pipelineFiles = findFiles(glob: "**/*.xml")
         }
         
-        jenkinsUtils.createOrUpdatePipelines(projectInfo, '.', el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, pipelineFiles)
+        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.NON_PROD_AUTOMATION, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, pipelineFiles)
     }
     
     onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
