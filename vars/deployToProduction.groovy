@@ -30,22 +30,22 @@ def call(Map args) {
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
-        projectInfo.microServicesInRelease = projectInfo.microServices.findAll { it.releaseCandidateGitTag }
+        projectInfo.componentsInRelease = projectInfo.components.findAll { it.releaseCandidateGitTag }
 
-        if (!projectInfo.microServicesInRelease)  {
+        if (!projectInfo.componentsInRelease)  {
             loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
-        else if (projectInfo.microServices.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
+        else if (projectInfo.components.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
             loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
-                                      "Release Tags: ${projectInfo.microServices.collect{ it.releaseCandidateGitTag }}",
-                                      "Release Branches: ${projectInfo.microServices.collect{ it.deploymentBranch }}")
+                                      "Release Tags: ${projectInfo.components.collect{ it.releaseCandidateGitTag }}",
+                                      "Release Branches: ${projectInfo.components.collect{ it.deploymentBranch }}")
         }
     }
 
     stage('Verify images are ready for deployment') {
         loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.releaseCandidateTag}:",
-                                 projectInfo.microServicesInRelease.collect { it.name }.join(', '))
+                                 projectInfo.componentsInRelease.collect { it.name }.join(', '))
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
@@ -53,16 +53,16 @@ def call(Map args) {
                          variable: 'IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
 
-            projectInfo.microServices.each { microService ->
-                if (microService.releaseCandidateGitTag) {
+            projectInfo.components.each { component ->
+                if (component.releaseCandidateGitTag) {
                     def copyImageCmd =
-                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, imageTag)
+                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_ACCESS_TOKEN', component.id, imageTag)
                     def imageFound = sh(returnStdout: true, script: "${copyImageCmd}").trim()
 
                     def msg
                     if (imageFound) {
-                        msg = microService.deploymentBranch ?
-                            "REDEPLOYMENT CAN PROCEED FOR ${microService.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${microService.name}"
+                        msg = component.deploymentBranch ?
+                            "REDEPLOYMENT CAN PROCEED FOR ${component.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${component.name}"
                     }
                     else {
                         msg = "-> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]}"
@@ -80,18 +80,18 @@ def call(Map args) {
         }
     }
 
-    stage('Checkout all microservice repositories') {
+    stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
-        projectInfo.microServices.each { microService ->
-            def refName = microService.deploymentBranch ?: microService.releaseCandidateGitTag
+        projectInfo.components.each { component ->
+            def refName = component.deploymentBranch ?: component.releaseCandidateGitTag
             if (refName) {
-                projectUtils.cloneGitRepo(microService, refName)
+                projectUtils.cloneGitRepo(component, refName)
             }
         }
     }
 
-    stage('Collect deployment hashes; prune unchanged microservices from deployment') {
+    stage('Collect deployment hashes; prune unchanged components from deployment') {
         loggingUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
 
         def metaInfoReleaseShell =
@@ -101,19 +101,19 @@ def call(Map args) {
         def metaInfoRegionShell =
             "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
         def metaInfoRegionChanged = sh(returnStdout: true, script: metaInfoRegionShell) != projectInfo.releaseRegion
-        projectInfo.microServicesToDeploy = projectInfo.microServicesInRelease.findAll { microService ->
-            dir(microService.workDir) {
+        projectInfo.componentsToDeploy = projectInfo.componentsInRelease.findAll { component ->
+            dir(component.workDir) {
                 def deploymentCommitHashChanged = false
                 if (!deployAll && !metaInfoRegionChanged && !metaInfoReleaseChanged) {
-                    def depCommitHashScript = "oc get cm ${microService.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
-                    deploymentCommitHashChanged = sh(returnStdout: true, script: depCommitHashScript) != microService.deploymentCommitHash
+                    def depCommitHashScript = "oc get cm ${component.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
+                    deploymentCommitHashChanged = sh(returnStdout: true, script: depCommitHashScript) != component.deploymentCommitHash
                 }
 
-                microService.promote =
+                component.promote =
                     !projectInfo.hasBeenReleased || metaInfoRegionChanged || deployAll || deploymentCommitHashChanged
             }
 
-            return microService.promote
+            return component.promote
         }
     }
 
@@ -133,13 +133,13 @@ def call(Map args) {
             "===========================================",
             '',
             '-> Microservices included in this release:',
-            projectInfo.microServicesInRelease.collect { it.name }.join(', '),
+            projectInfo.componentsInRelease.collect { it.name }.join(', '),
             '',
             deployAllMsg,
-            projectInfo.microServicesToDeploy.collect { it.name }.join(', '),
+            projectInfo.componentsToDeploy.collect { it.name }.join(', '),
             '',
-            '-> All other microservices and their associated resources NOT in this release WILL BE REMOVED!',
-            projectInfo.microServices.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
+            '-> All other components and their associated resources NOT in this release WILL BE REMOVED!',
+            projectInfo.components.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
             '',
             '===========================================',
             '',
@@ -153,7 +153,7 @@ def call(Map args) {
 
     stage('Promote images') {
         loggingUtils.echoBanner("PROMOTE IMAGES TO PROD:",
-                                 "${projectInfo.microServicesInRelease.collect { it.name } .join(', ')}")
+                                 "${projectInfo.componentsInRelease.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
             withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
@@ -161,17 +161,17 @@ def call(Map args) {
                              string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                              variable: 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN')])
             {
-                projectInfo.microServicesInRelease.each { microService ->
+                projectInfo.componentsInRelease.each { component ->
                     def copyImageCmd =
-                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag,
-                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseVersionTag)
+                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag,
+                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseVersionTag)
 
                     sh """
                         ${shCmd.echo ''}
                         ${copyImageCmd}
                         ${shCmd.echo '',
                                     '******',
-                                    "${microService.name}: ${projectInfo.releaseCandidateTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersionTag} in ${projectInfo.prodEnv}",
+                                    "${component.name}: ${projectInfo.releaseCandidateTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersionTag} in ${projectInfo.prodEnv}",
                                     '******'}
                     """
                 }
@@ -184,19 +184,19 @@ def call(Map args) {
 
     stage('Create release branch(es) to synchronize with production image(s)') {
         loggingUtils.echoBanner("CREATE RELEASE DEPLOYMENT BRANCH(ES) FOR PRODUCTION:",
-                                 projectInfo.microServicesToDeploy.collect { it.name }.join(', '))
+                                 projectInfo.componentsToDeploy.collect { it.name }.join(', '))
 
         if (!projectInfo.hasBeenReleased) {
-            projectInfo.microServices.each { microService ->
-                if (microService.releaseCandidateGitTag) {
-                    microService.deploymentBranch = "v${microService.releaseCandidateGitTag}"
-                    dir(microService.workDir) {
-                        withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            projectInfo.components.each { component ->
+                if (component.releaseCandidateGitTag) {
+                    component.deploymentBranch = "v${component.releaseCandidateGitTag}"
+                    dir(component.workDir) {
+                        withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shCmd.echo '', "-> Creating deployment branch: ${microService.deploymentBranch}"}
+                                ${shCmd.echo '', "-> Creating deployment branch: ${component.deploymentBranch}"}
                                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                                     "git branch ${microService.deploymentBranch}",
-                                                     "git push origin ${microService.deploymentBranch}")}
+                                                     "git branch ${component.deploymentBranch}",
+                                                     "git push origin ${component.deploymentBranch}")}
                             """
                         }
                     }
@@ -209,8 +209,8 @@ def call(Map args) {
     }
 
     deployMicroServices(projectInfo: projectInfo,
-                        microServices: projectInfo.microServicesToDeploy,
-                        microServicesToRemove: projectInfo.microServices.findAll { !it.releaseCandidateGitTag },
+                        components: projectInfo.componentsToDeploy,
+                        componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateGitTag },
                         imageTag: projectInfo.releaseVersionTag)
 
     deployToProductionUtils.updateProjectMetaInfo(projectInfo)

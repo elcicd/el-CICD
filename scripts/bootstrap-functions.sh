@@ -230,13 +230,13 @@ __create_onboarding_automation_server() {
     
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     helm upgrade --install --history-max=1 --cleanup-on-fail  \
-        --set elCicdChart.elcicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
-        --set elCicdChart.elcicdDefs.JENKINS_URL=${JENKINS_URL} \
-        --set "elCicdChart.elcicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
-        --set elCicdChart.elcicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
-        --set elCicdChart.elcicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-        --set elCicdChart.elcicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-        --set elCicdChart.elcicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+        --set elCicdChart.elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
+        --set elCicdChart.elCicdDefs.JENKINS_URL=${JENKINS_URL} \
+        --set "elCicdChart.elCicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
+        --set elCicdChart.elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+        --set elCicdChart.elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
+        --set elCicdChart.elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        --set elCicdChart.elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
         jenkins \

@@ -13,12 +13,12 @@ kind: Kustomization
 labels:
 - pairs:
     projectid: "{{ $.Values.projectId }}"
-    microservice: "{{ $.Values.microService }}"
+    component: "{{ $.Values.microService }}"
   includeSelectors: true
   includeTemplates: true
 - pairs:
     profiles: "{{ join "," $.Values.profiles }}"
-    git-repo: "{{ $.Values.gitRepoName }}"
+    scm-repo: "{{ $.Values.scmRepoName }}"
     src-commit-hash: "{{ $.Values.srcCommitHash }}"
     deployment-branch: "{{ $.Values.deploymentBranch | default $.Values.UNDEFINED }}"
     deployment-commit-hash: "{{ $.Values.deploymentCommitHash }}"
@@ -33,9 +33,9 @@ configMapGenerator:
     disableNameSuffixHash: true
   literals:
   - projectid="{{ $.Values.projectId }}"
-  - microservice="{{ $.Values.microService }}"
+  - component="{{ $.Values.microService }}"
   - profiles="{{ join "," $.Values.profiles }}"
-  - git-repo="{{ $.Values.gitRepoName }}"
+  - scm-repo="{{ $.Values.scmRepoName }}"
   - src-commit-hash="{{ $.Values.srcCommitHash }}"
   - deployment-branch="{{ $.Values.deploymentBranch | default $.Values.UNDEFINED }}"
   - deployment-commit-hash="{{ $.Values.deploymentCommitHash }}"

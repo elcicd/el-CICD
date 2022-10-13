@@ -9,9 +9,9 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
     assert projectInfo.releaseVersionTag =~ /[\w][\w.-]*/: "projectInfo.releaseVersionTag must match the pattern [\\w][\\w.-]*: ${projectInfo.releaseVersionTag}"
 
     projectInfo.hasBeenReleased = false
-    projectInfo.microServices.each { microService ->
-        withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            def gitCmd = "git ls-remote ${microService.gitRepoUrl} '**/${projectInfo.releaseCandidateTag}-*' '**/${projectInfo.releaseVersionTag}-*'"
+    projectInfo.components.each { component ->
+        withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            def gitCmd = "git ls-remote ${component.repoUrl} '**/${projectInfo.releaseCandidateTag}-*' '**/${projectInfo.releaseVersionTag}-*'"
             def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
 
             if (branchAndTagNames) {
@@ -19,21 +19,21 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
                 assert branchAndTagNames.size() < 3
                 branchAndTagNames = branchAndTagNames.each { name ->
                     if (name.contains('/tags/')) {
-                        microService.releaseCandidateGitTag = name.trim().find( /[\w.-]+$/)
-                        assert microService.releaseCandidateGitTag ==~ "${projectInfo.releaseCandidateTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE CANDIDATE TAG [${microService.name}]: ${microService.releaseCandidateGitTag}"
+                        component.releaseCandidateGitTag = name.trim().find( /[\w.-]+$/)
+                        assert component.releaseCandidateGitTag ==~ "${projectInfo.releaseCandidateTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateGitTag}"
                     }
                     else {
                         projectInfo.hasBeenReleased = true
-                        microService.deploymentBranch = name.trim().find( /[\w.-]+$/)
-                        assert microService.deploymentBranch ==~ "${projectInfo.releaseVersionTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${microService.name}]: ${microService.deploymentBranch}"
+                        component.deploymentBranch = name.trim().find( /[\w.-]+$/)
+                        assert component.deploymentBranch ==~ "${projectInfo.releaseVersionTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${component.name}]: ${component.deploymentBranch}"
                     }
                 }
-                microService.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)
+                component.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)
             }
             else {
-                echo "--> NO RELEASE CANDIDATE OR VERSION INFORMATION FOUND FOR: ${microService.name}"
+                echo "--> NO RELEASE CANDIDATE OR VERSION INFORMATION FOUND FOR: ${component.name}"
             }
         }
     }
@@ -43,7 +43,7 @@ def updateProjectMetaInfo(def projectInfo) {
     assert projectInfo.id ; assert projectInfo.releaseVersionTag =~ /[\w][\w.-]*/
 
     stage('update project meta-info for production') {
-        def microServiceNames = projectInfo.microServices.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
+        def componentNames = projectInfo.components.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """
             ${loggingUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX}")}
@@ -55,7 +55,7 @@ def updateProjectMetaInfo(def projectInfo) {
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
                 --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
-                --from-literal=microservices=${microServiceNames} \
+                --from-literal=components=${componentNames} \
                 --from-literal=build-number=${BUILD_NUMBER} \
                 -n ${projectInfo.prodNamespace}
 

@@ -30,7 +30,7 @@
                         pipelineName: 'run-system-tests',
                         projectId: params.PROJECT_ID]
             el.node(args) {
-                runSystemTests(args)
+                runPostDeploymentTests(args)
             }
         </script>
         <sandbox>true</sandbox>

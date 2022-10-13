@@ -23,9 +23,9 @@ def call(Map args) {
         def imageExists = true
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
-            imageExists = projectInfo.microServices.find { microService ->
+            imageExists = projectInfo.components.find { component ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.releaseCandidateTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag)
                 return sh(returnStdout: true, script: verifyImageCmd)
             }
         }
@@ -36,12 +36,12 @@ def call(Map args) {
         }
     }
 
-    stage('Clone microservice configuration repositories for microservices images') {
+    stage('Clone component configuration repositories for components images') {
         loggingUtils.echoBanner("VERIFY VERSION TAG DOES NOT EXIST IN SCM")
 
-        projectInfo.microServices.each { microService ->
-            dir(microService.workDir) {
-                projectUtils.cloneGitRepo(microService, projectInfo.gitBranch)
+        projectInfo.components.each { component ->
+            dir(component.workDir) {
+                projectUtils.cloneGitRepo(component, projectInfo.scmBranch)
 
                 def gitTagCheck = "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'"
                 versionTagExists = sh(returnStdout: true, script: gitTagCheck) != '0'
@@ -52,49 +52,49 @@ def call(Map args) {
         }
     }
 
-    stage ('Select microservices to tag as release candidate') {
+    stage ('Select components to tag as release candidate') {
         loggingUtils.echoBanner("SELECT MICROSERVICES TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
 
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.microservice}{":"}{.data.src-commit-hash}{" "}'
+        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
         def msNameHashData = sh(returnStdout: true, script: script)
 
-        projectInfo.microServices.each { microService ->
-            def hashData = msNameHashData.find("${microService.name}:[0-9a-z]{7}")
+        projectInfo.components.each { component ->
+            def hashData = msNameHashData.find("${component.name}:[0-9a-z]{7}")
             if (hashData) {
-                microService.releaseCandidateAvailable = true
-                microService.srcCommitHash = hashData.split(':')[1]
+                component.releaseCandidateAvailable = true
+                component.srcCommitHash = hashData.split(':')[1]
 
-                microService.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, microService, projectInfo.preProdEnv)
-                dir(microService.workDir) {
+                component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
+                dir(component.workDir) {
                     sh """
-                        git checkout ${microService.deploymentBranch}
+                        git checkout ${component.deploymentBranch}
                     """
                 }
             }
         }
 
-        projectInfo.microServicesAvailable = projectInfo.microServices.findAll {it.releaseCandidateAvailable }
-        def inputs = projectInfo.microServicesAvailable.collect { microService ->
-            booleanParam(name: microService.name, defaultValue: microService.status, description: "status: ${microService.status}")
+        projectInfo.componentsAvailable = projectInfo.components.findAll {it.releaseCandidateAvailable }
+        def inputs = projectInfo.componentsAvailable.collect { component ->
+            booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
         }
 
         if (!inputs) {
             loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE TO TAG!")
         }
 
-        def cicdInfo = input( message: "Select microservices to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
+        def cicdInfo = input( message: "Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
 
-        projectInfo.microServicesToTag = projectInfo.microServicesAvailable.findAll { microService ->
-            def answer = (inputs.size() > 1) ? cicdInfo[microService.name] : cicdInfo
+        projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
+            def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
             if (answer) {
-                microService.promote = true
+                component.promote = true
             }
 
-            return microService.promote
+            return component.promote
         }
 
-        if (!projectInfo.microServicesToTag) {
+        if (!projectInfo.componentsToTag) {
             loggingUtils.errorBanner("NO MICROSERVICES SELECTED TO TAG!")
         }
     }
@@ -106,9 +106,9 @@ def call(Map args) {
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-            imageMissing = projectInfo.microServicesToTag.find { microService ->
+            imageMissing = projectInfo.componentsToTag.find { component ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.preProdEnv)
                 return !sh(returnStdout: true, script: "${verifyImageCmd}")
             }
         }
@@ -119,8 +119,8 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.microServicesToTag.collect { it.name }.join(' ')
-        def removalNames = projectInfo.microServices.findAll{ !it.promote }.collect { it.name }.join(' ')
+        def promotionNames = projectInfo.componentsToTag.collect { it.name }.join(' ')
+        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { it.name }.join(' ')
 
         def msg = loggingUtils.createBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
@@ -150,13 +150,13 @@ def call(Map args) {
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
-            projectInfo.microServicesToTag.each { microService ->
+            projectInfo.componentsToTag.each { component ->
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', microService.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
                 sh """
                     ${shCmd.echo ''}
                     ${tagImageCmd}
-                    ${shCmd.echo "${microService.id}:${projectInfo.preProdEnv} tagged as ${microService.id}:${projectInfo.releaseCandidateTag}"}
+                    ${shCmd.echo "${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.releaseCandidateTag}"}
                 """
             }
         }
@@ -165,14 +165,14 @@ def call(Map args) {
     stage('Tag all images and configuration commits') {
         loggingUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON EACH MICROSERVICE DEPLOYMENT BRANCH FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
 
-        projectInfo.microServices.each { microService ->
-            if (microService.promote) {
-                dir(microService.workDir) {
-                    withCredentials([sshUserPrivateKey(credentialsId: microService.gitRepoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-                        def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${microService.srcCommitHash}"
+        projectInfo.components.each { component ->
+            if (component.promote) {
+                dir(component.workDir) {
+                    withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                        def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${component.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-                            ${shCmd.echo "-> Tagging release candidate in '${microService.gitRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                            ${shCmd.echo "-> Tagging release candidate in '${component.scmRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
                             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                         """
                     }

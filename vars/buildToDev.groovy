@@ -8,9 +8,9 @@
 
 void call(Map args) {
     def projectInfo = args.projectInfo
-    def microService = projectInfo.microServices.find { it.name == args.microServiceName }
+    def component = projectInfo.components.find { it.name == args.componentName }
 
-    microService.gitBranch = args.gitBranch
+    component.scmBranch = args.scmBranch
 
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
@@ -24,11 +24,11 @@ void call(Map args) {
     }
 
     stage('Checkout code from repository') {
-        loggingUtils.echoBanner("CLONING ${microService.gitRepoName} REPO, REFERENCE: ${microService.gitBranch}")
+        loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")
 
-        projectUtils.cloneGitRepo(microService, microService.gitBranch)
+        projectUtils.cloneGitRepo(component, component.scmBranch)
 
-        dir (microService.workDir) {
+        dir (component.workDir) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
@@ -38,25 +38,25 @@ void call(Map args) {
 
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.ASSEMBLER]
     buildSteps.each { buildStep ->
-        stage("build step: run ${buildStep} for ${microService.name}") {
-            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${microService.name}")
+        stage("build step: run ${buildStep} for ${component.name}") {
+            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR MICROSERVICE: ${component.name}")
 
-            dir(microService.workDir) {
-                def moduleName = microService[buildStep] ?: buildStep
-                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${microService.codeBase}/${moduleName}.groovy"
+            dir(component.workDir) {
+                def moduleName = component[buildStep] ?: buildStep
+                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${component.codeBase}/${moduleName}.groovy"
 
                 switch(buildStep) {
                     case el.cicd.BUILDER:
-                        builderModule.build(projectInfo, microService)
+                        builderModule.build(projectInfo, component)
                         break;
                     case el.cicd.TESTER:
-                        builderModule.test(projectInfo, microService)
+                        builderModule.test(projectInfo, component)
                         break;
                     case el.cicd.SCANNER:
-                        builderModule.scan(projectInfo, microService)
+                        builderModule.scan(projectInfo, component)
                         break;
                     case el.cicd.ASSEMBLER:
-                        builderModule.assemble(projectInfo, microService)
+                        builderModule.assemble(projectInfo, component)
                         break;
                 }
             }
@@ -65,7 +65,7 @@ void call(Map args) {
 
     stage('build, scan, and push image to repository') {
         projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
-        loggingUtils.echoBanner("BUILD ${microService.id}:${projectInfo.imageTag} IMAGE")
+        loggingUtils.echoBanner("BUILD ${component.id}:${projectInfo.imageTag} IMAGE")
 
         def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
@@ -73,37 +73,37 @@ void call(Map args) {
 
         withCredentials([string(credentialsId: el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
                          variable: 'DEV_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
-            dir(microService.workDir) {
+            dir(component.workDir) {
                 sh """
                     chmod 777 Dockerfile
 
-                    echo "\nLABEL SRC_COMMIT_REPO='${microService.gitRepoUrl}'" >> Dockerfile
-                    echo "\nLABEL SRC_COMMIT_BRANCH='${microService.gitBranch}'" >> Dockerfile
-                    echo "\nLABEL SRC_COMMIT_HASH='${microService.srcCommitHash}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_REPO='${component.repoUrl}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_BRANCH='${component.scmBranch}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_HASH='${component.srcCommitHash}'" >> Dockerfile
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
                     podman login ${tlsVerify} --username ${el.cicd.DEV_IMAGE_REGISTRY_USERNAME} --password \${DEV_IMAGE_REGISTRY_ACCESS_TOKEN} ${imageRepo}
 
                     podman build --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} --squash \
-                                 -t ${imageRepo}/${microService.id}:${projectInfo.imageTag} -f ./Dockerfile
+                                 -t ${imageRepo}/${component.id}:${projectInfo.imageTag} -f ./Dockerfile
                 """
 
-                loggingUtils.echoBanner("SCAN ${microService.id}:${projectInfo.imageTag} IMAGE")
+                loggingUtils.echoBanner("SCAN ${component.id}:${projectInfo.imageTag} IMAGE")
 
                 def imageScanner = load "${el.cicd.BUILDER_STEPS_DIR}/imageScanner.groovy"
-                imageScanner.scanImage(projectInfo, microService.name)
+                imageScanner.scanImage(projectInfo, component.name)
 
-                loggingUtils.echoBanner("PUSH ${microService.id}:${projectInfo.imageTag} IMAGE")
+                loggingUtils.echoBanner("PUSH ${component.id}:${projectInfo.imageTag} IMAGE")
 
                 sh """
-                    podman push ${tlsVerify} ${imageRepo}/${microService.id}:${projectInfo.imageTag}
+                    podman push ${tlsVerify} ${imageRepo}/${component.id}:${projectInfo.imageTag}
                 """
             }
         }
     }
 
     deployMicroServices(projectInfo: projectInfo,
-                        microServices: [microService],
+                        components: [component],
                         imageTag: projectInfo.imageTag,
                         recreate: args.recreate)
 }

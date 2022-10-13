@@ -39,7 +39,7 @@ def call(Map args) {
         }
     }
 
-    stage('Add build-to-dev and/or build-library pipelines for each Github repo on non-prod Jenkins') {
+    stage('Add build-to-dev and/or build-artifact pipelines for each Github repo on non-prod Jenkins') {
         loggingUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
 
         onboardingUtils.generateBuildPipelineFiles(projectInfo)
@@ -57,7 +57,7 @@ def call(Map args) {
     }
 
     stage('Setup OKD namespace environments') {
-        if (projectInfo.microServices) {
+        if (projectInfo.components) {
             loggingUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:",
                                       projectInfo.nonProdNamespaces.values().join(', '))
 
@@ -80,7 +80,7 @@ def call(Map args) {
     }
 
     stage('Setup OKD sandbox environment(s)') {
-        if (projectInfo.microServices && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
+        if (projectInfo.components && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
             loggingUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.values().join(', '))
 
             def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
@@ -101,12 +101,12 @@ def call(Map args) {
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
-        projectInfo.microServices.each { microService ->
-            githubUtils.pushBuildWebhook(projectInfo, microService, 'build-to-dev')
+        projectInfo.components.each { component ->
+            githubUtils.pushBuildWebhook(projectInfo, component, 'build-to-dev')
         }
 
-        projectInfo.libraries.each { library ->
-            githubUtils.pushBuildWebhook(projectInfo, library, 'build-library')
+        projectInfo.artifacts.each { artifact ->
+            githubUtils.pushBuildWebhook(projectInfo, artifact, 'build-artifact')
         }
     }
 }

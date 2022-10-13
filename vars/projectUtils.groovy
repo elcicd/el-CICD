@@ -34,26 +34,26 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
         
-        projectInfo.microServices = projectInfo.microServices ?: []
-        projectInfo.libraries = projectInfo.libraries ?: []
-        projectInfo.systemTests = projectInfo.systemTests ?: []
+        projectInfo.components = projectInfo.components ?: []
+        projectInfo.artifacts = projectInfo.artifacts ?: []
+        projectInfo.testModules = projectInfo.testModules ?: []
 
-        projectInfo.components = []
-        projectInfo.components.addAll(projectInfo.microServices)
-        projectInfo.components.addAll(projectInfo.libraries)
-        projectInfo.components.addAll(projectInfo.systemTests)
+        projectInfo.modules = []
+        projectInfo.modules.addAll(projectInfo.components)
+        projectInfo.modules.addAll(projectInfo.artifacts)
+        projectInfo.modules.addAll(projectInfo.testModules)
 
-        projectInfo.components.each { component ->
-            component.projectId = projectInfo.id
-            component.name = component.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
-            component.id = "${projectInfo.id}-${component.name}"
+        projectInfo.modules.each { module ->
+            module.projectId = projectInfo.id
+            module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+            module.id = "${projectInfo.id}-${module.name}"
 
-            component.workDir = "${WORKSPACE}/${component.gitRepoName}"
+            module.workDir = "${WORKSPACE}/${module.scmRepoName}"
 
-            component.gitRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${component.gitRepoName}.git"
-            component.gitDeployKeyJenkinsId = "${component.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+            module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+            module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.GIT_CREDS_POSTFIX}"
         }
-        projectInfo.gitRepoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
+        projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
 
         projectInfo.devEnv = el.cicd.devEnv
 
@@ -132,17 +132,17 @@ def validateProjectInfo(def projectInfo) {
         /^(([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])\.)*([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])(\/[\p{Alnum}][\p{Alnum}-]*)*$/ :
         "bad or missing scmRestApiHost '${projectInfo.scmHost}"
     assert projectInfo.scmOrganization : "missing scmOrganization"
-    assert projectInfo.gitBranch : "missing git branch"
-    assert ((projectInfo.components.size() - projectInfo.systemTests.size()) > 0) : "No microservices or libraries defined"
+    assert projectInfo.scmBranch : "missing git branch"
+    assert ((projectInfo.modules.size() - projectInfo.testModules.size()) > 0) : "No components or artifacts defined"
 
-    projectInfo.components.each { component ->
-        assert component.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for microservice, [\\w-.]+: ${component.gitRepoName}"
-        assert component.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${component.codeBase}"
+    projectInfo.modules.each { module ->
+        assert module.scmRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${module.scmRepoName}"
+        assert module.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${module.codeBase}"
     }
 
-    projectInfo.systemTests.each { systemTest ->
-        systemTest.microServiceRepos.each { gitRepoName ->
-            assert projectInfo.microServices.find { it.gitRepoName == gitRepoName }  : "System test has undefined microservice repo ${gitRepoName}"
+    projectInfo.testModules.each { testModule ->
+        testModule.componentRepos.each { scmRepoName ->
+            assert projectInfo.components.find { it.scmRepoName == scmRepoName }  : "System test has undefined component repo ${scmRepoName}"
         }
     }
 
@@ -180,22 +180,22 @@ def validateNfsShare(def projectInfo, def nfsShare) {
     assert nfsShare.claimName: "missing nfsShare.claimName"
 }
 
-def cloneGitRepo(def component, def gitReference) {
-   assert component ; assert gitReference
+def cloneGitRepo(def module, def gitReference) {
+   assert module ; assert gitReference
 
-    dir (component.workDir) {
+    dir (module.workDir) {
         checkout([$class: 'GitSCM',
                   branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: component.gitDeployKeyJenkinsId, url: component.gitRepoUrl ]]
+                  userRemoteConfigs: [[ credentialsId: module.gitDeployKeyJenkinsId, url: module.repoUrl ]]
                ])
 
         def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-        component.srcCommitHash = component.srcCommitHash ?: currentHash
-        component.deploymentCommitHash = currentHash
+        module.srcCommitHash = module.srcCommitHash ?: currentHash
+        module.deploymentCommitHash = currentHash
     }
 }
 
-def getNonProdDeploymentBranchName(def projectInfo, def microService, def deploymentEnv) {
+def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymentEnv) {
     return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
-        "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${microService.srcCommitHash}" : null
+        "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${component.srcCommitHash}" : null
 }

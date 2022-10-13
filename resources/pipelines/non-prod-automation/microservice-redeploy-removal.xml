@@ -30,7 +30,7 @@
                         pipelineName: 'microservice-redeploy',
                         projectId: params.PROJECT_ID]
             el.node(args) {
-                redeployMicroServices(args)
+                redeployComponents(args)
             }
         </script>
         <sandbox>true</sandbox>

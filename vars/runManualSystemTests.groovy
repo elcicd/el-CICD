@@ -1,8 +1,8 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-and-deploy-microservices pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/build-and-deploy-microservices-pipeline-template.
+ * Defines the bulk of the build-and-deploy-components pipeline.  Called inline from the
+ * a realized el-CICD/resources/buildconfigs/build-and-deploy-components-pipeline-template.
  *
  */
 
@@ -15,46 +15,46 @@ def call(Map args) {
         def TEST_CODE_BASE = 'Test Type:'
         def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
 
-        inputs.addAll(projectInfo.systemTests.collect { booleanParam(name: "${it.gitRepoName}/${it.codeBase}") } )
+        inputs.addAll(projectInfo.testModules.collect { booleanParam(name: "${it.scmRepoName}/${it.codeBase}") } )
 
         def cicdInfo = input(message: "Select environment and test types to run:", parameters: inputs)
 
-        projectInfo.systemTestEnv = cicdInfo[TEST_ENV]
-        projectInfo.SYSTEM_TEST_ENV = projectInfo.systemTestEnv.toUpperCase()
-        projectInfo.systemTestNamespace = projectInfo.nonProdNamespaces[projectInfo.systemTestEnv]
-        projectInfo.systemTestNamespace = projectInfo.systemTestNamespace ?: projectInfo.sandboxNamespaces[projectInfo.systemTestEnv]
+        projectInfo.testModuleEnv = cicdInfo[TEST_ENV]
+        projectInfo.SYSTEM_TEST_ENV = projectInfo.testModuleEnv.toUpperCase()
+        projectInfo.testModuleNamespace = projectInfo.nonProdNamespaces[projectInfo.testModuleEnv]
+        projectInfo.testModuleNamespace = projectInfo.testModuleNamespace ?: projectInfo.sandboxNamespaces[projectInfo.testModuleEnv]
 
-        projectInfo.systemTestsToRun = [] as Set
+        projectInfo.testModulesToRun = [] as Set
         cicdInfo.each { name, answer ->
             if (name != TEST_ENV && answer) {
-                def systemTest = projectInfo.systemTests.find { "${it.gitRepoName}/${it.codeBase}" == name }
-                if (systemTest) {
-                    projectInfo.systemTestsToRun += systemTest
+                def testModule = projectInfo.testModules.find { "${it.scmRepoName}/${it.codeBase}" == name }
+                if (testModule) {
+                    projectInfo.testModulesToRun += testModule
                 }
             }
         }
 
-        if (!projectInfo.systemTestsToRun) {
+        if (!projectInfo.testModulesToRun) {
             loggingUtils.errorBanner("NO TEST TYPES SELECTED TO RUN")
         }
     }
 
-    stage ('Select microservices to test') {
-        def jsonPath = '{range .items[?(@.data.microservice)]}{.data.microservice}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.systemTestNamespace}"
+    stage ('Select components to test') {
+        def jsonPath = '{range .items[?(@.data.component)]}{.data.component}{" "}'
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.testModuleNamespace}"
         def msNames = sh(returnStdout: true, script: script).split(' ')
 
         def testMicroServiceReposSet = [] as Set
-        projectInfo.systemTestsToRun.each { systemTest ->
-            testMicroServiceReposSet.addAll(systemTest.microServiceRepos)
+        projectInfo.testModulesToRun.each { testModule ->
+            testMicroServiceReposSet.addAll(testModule.componentRepos)
         }
 
         def inputs = []
         def msTestPossibilities = [] as Set
-        projectInfo.microServices.each { microService ->
-            if (msNames.contains(microService.name) && testMicroServiceReposSet.contains(microService.gitRepoName)) {
-                msTestPossibilities += microService
-                inputs += booleanParam(name: microService.name)
+        projectInfo.components.each { component ->
+            if (msNames.contains(component.name) && testMicroServiceReposSet.contains(component.scmRepoName)) {
+                msTestPossibilities += component
+                inputs += booleanParam(name: component.name)
             }
         }
 
@@ -64,28 +64,28 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.systemTestEnv}")
+            loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.testModuleEnv}")
         }
 
-        def cicdInfo = input(message: "Select microservices to test in ${projectInfo.systemTestEnv}",
+        def cicdInfo = input(message: "Select components to test in ${projectInfo.testModuleEnv}",
                              parameters: inputs)
 
-        projectInfo.microServicesToTest = msTestPossibilities.findAll { microService ->
-            return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[microService.name]) : cicdInfo
+        projectInfo.componentsToTest = msTestPossibilities.findAll { component ->
+            return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[component.name]) : cicdInfo
         }
 
-        projectInfo.systemTestsToRun = [] as Set
-        projectInfo.microServicesToTest.each { microService ->
-            def sts = projectInfo.systemTests.findAll { systemTest -> 
-                systemTest.microServiceRepos.find { it == microService.gitRepoName }
+        projectInfo.testModulesToRun = [] as Set
+        projectInfo.componentsToTest.each { component ->
+            def sts = projectInfo.testModules.findAll { testModule -> 
+                testModule.componentRepos.find { it == component.scmRepoName }
             }
-            projectInfo.systemTestsToRun.addAll(sts)
+            projectInfo.testModulesToRun.addAll(sts)
         }
 
-        if (!projectInfo.microServicesToTest) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.systemTestEnv}")
+        if (!projectInfo.componentsToTest) {
+            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.testModuleEnv}")
         }
     }
 
-    runSystemTests(projectInfo: projectInfo, systemTestsToRun: projectInfo.systemTestsToRun, microServicesToTest: projectInfo.microServicesToTest)
+    runPostDeploymentTests(projectInfo: projectInfo, testModulesToRun: projectInfo.testModulesToRun, componentsToTest: projectInfo.componentsToTest)
 }

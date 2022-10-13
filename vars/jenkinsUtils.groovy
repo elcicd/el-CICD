@@ -194,11 +194,11 @@ def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def 
     """
 }
 
-def deleteProjectDeployKeyFromJenkins(def projectInfo, def component) {
+def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo ''}
-            ${curlUtils.getCmd(curlUtils.POST)} ${projectInfo.jenkinsUrls.DELETE_CREDS}/${component.gitDeployKeyJenkinsId}/doDelete
+            ${curlUtils.getCmd(curlUtils.POST)} ${projectInfo.jenkinsUrls.DELETE_CREDS}/${module.gitDeployKeyJenkinsId}/doDelete
         """
     }
 }

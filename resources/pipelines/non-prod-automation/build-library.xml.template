@@ -37,7 +37,7 @@
                         pipelineName: 'build-library',
                         projectId: '%PROJECT_ID%',
                         libraryName: '%LIBRARY_NAME%',
-                        gitBranch: params.GIT_BRANCH,
+                        scmBranch: params.GIT_BRANCH,
                         isSnapshot: params.IS_SNAPSHOT]
             el.node(args) {
                 buildLibrary(args)

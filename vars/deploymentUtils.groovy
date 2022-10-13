@@ -6,8 +6,8 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-def deployMicroservices(def projectInfo, def microServices) {
-    assert projectInfo; assert microServices
+def deployMicroservices(def projectInfo, def components) {
+    assert projectInfo; assert components
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
@@ -29,26 +29,26 @@ def deployMicroservices(def projectInfo, def microServices) {
     def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
     def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
 
-    microServices.each { microService ->
-        dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
+    components.each { component ->
+        dir ("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
             writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
             writeFile text: kustomizationChart, file: "Chart.yaml"
         }
 
-        dir ("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
+        dir ("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
             writeFile text: kustomizationTemplate, file: "kustomization.yaml"
         }
 
-        dir("${microService.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            def microServiceImage = "${imageRepository}/${projectInfo.id}-${microService.name}:${projectInfo.deployToEnv}"
-            def msCommonValues = ["appName=${microService.name}",
-                                  "microService=${microService.name}",
-                                  "elcicdDefs.MICROSERVICE_NAME=${microService.name}",
-                                  "global.defaultImage=${microServiceImage}",
-                                  "gitRepoName=${microService.gitRepoName}",
-                                  "srcCommitHash=${microService.srcCommitHash}",
-                                  "deploymentBranch=${microService.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${microService.deploymentCommitHash}"]
+        dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
+            def componentImage = "${imageRepository}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+            def msCommonValues = ["appName=${component.name}",
+                                  "component=${component.name}",
+                                  "elcicdDefs.MICROSERVICE_NAME=${component.name}",
+                                  "global.defaultImage=${componentImage}",
+                                  "scmRepoName=${component.scmRepoName}",
+                                  "srcCommitHash=${component.srcCommitHash}",
+                                  "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                  "deploymentCommitHash=${component.deploymentCommitHash}"]
             msCommonValues.addAll(commonValues)
 
             sh """
@@ -67,7 +67,7 @@ def deployMicroservices(def projectInfo, def microServices) {
 
                 VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
 
-                SECRET_NAME=\$(oc get secret --ignore-not-found --no-headers -l name=${microService.name},status!=deployed \
+                SECRET_NAME=\$(oc get secret --ignore-not-found --no-headers -l name=${component.name},status!=deployed \
                               -o custom-columns=:.metadata.name \
                               -n ${projectInfo.deployToNamespace})
                 if [[ ! -z \${SECRET_NAME} ]]
@@ -79,7 +79,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                 fi
                 
                 set +e
-                if helm upgrade --force --install --history-max=1 --cleanup-on-fail --debug ${microService.name} . \
+                if helm upgrade --force --install --history-max=1 --cleanup-on-fail --debug ${component.name} . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
@@ -93,7 +93,7 @@ def deployMicroservices(def projectInfo, def microServices) {
                     echo 'HELM ERROR'
                     echo 'Attempting to generate template output...'
                     echo
-                    helm template --debug ${microService.name} . \
+                    helm template --debug ${component.name} . \
                         -f \${VALUES_FILE} \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                         --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
@@ -107,17 +107,17 @@ def deployMicroservices(def projectInfo, def microServices) {
     }
 }
 
-def confirmDeployments(def projectInfo, def microServices) {
-    assert projectInfo; assert microServices
+def confirmDeployments(def projectInfo, def components) {
+    assert projectInfo; assert components
 
-    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    def componentNames = components.collect { component -> component.name }.join(' ')
     loggingUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:",
-                                 "${microServiceNames}")
+                                 "${componentNames}")
 
     sh """
-        for MICROSERVICE_NAME in ${microServiceNames}
+        for MICROSERVICE_NAME in ${componentNames}
         do
-            DEPLOYS=\$(oc get deploy -l microservice=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
+            DEPLOYS=\$(oc get deploy -l component=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
             if [[ ! -z \${DEPLOYS} ]]
             then
                 echo \${DEPLOYS} | xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
@@ -129,18 +129,18 @@ def confirmDeployments(def projectInfo, def microServices) {
 }
 
 def removeMicroservices(def projectInfo) {
-    removeMicroservices(projectInfo, projectInfo.microServices)
+    removeMicroservices(projectInfo, projectInfo.components)
 }
 
-def removeMicroservices(def projectInfo, def microServices) {
-    assert projectInfo; assert microServices
+def removeMicroservices(def projectInfo, def components) {
+    assert projectInfo; assert components
 
-    def microServiceNames = microServices.collect { microService -> microService.name }.join(' ')
+    def componentNames = components.collect { component -> component.name }.join(' ')
 
-    loggingUtils.echoBanner("REMOVING SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${microServiceNames}")
+    loggingUtils.echoBanner("REMOVING SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${componentNames}")
 
     sh """
-        for MICROSERVICE_NAME in ${microServiceNames}
+        for MICROSERVICE_NAME in ${componentNames}
         do
             helm uninstall \${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
         done
@@ -151,7 +151,7 @@ def removeMicroservices(def projectInfo, def microServices) {
 
 def waitingForPodsToTerminate(def deployToNamespace) {
     sh """
-        ${shCmd.echo '', 'Confirming microservice pods have finished terminating...'}
+        ${shCmd.echo '', 'Confirming component pods have finished terminating...'}
         set +x
         COUNTER=1
         until [[ -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]

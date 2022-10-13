@@ -18,8 +18,8 @@ def call(Map args) {
     stage('Delete old github public keys') {
         loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
         
-        projectInfo.components.each { component ->
-            githubUtils.deleteProjectDeployKeys(projectInfo, component)
+        projectInfo.modules.each { module ->
+            githubUtils.deleteProjectDeployKeys(projectInfo, module)
         }
     }
 
@@ -28,20 +28,20 @@ def call(Map args) {
                                 " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
                                 " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
                                 
-        projectInfo.components.each { component ->
-            dir(component.workDir) {
-                echo "Pushing deploy key for ${component.gitRepoName}"
+        projectInfo.modules.each { module ->
+            dir(module.workDir) {
+                echo "Pushing deploy key for ${module.scmRepoName}"
                 
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${component.gitDeployKeyJenkinsId}' \
+                    ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' \
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, component.gitDeployKeyJenkinsId, component.gitDeployKeyJenkinsId)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.gitDeployKeyJenkinsId, module.gitDeployKeyJenkinsId)
                 
-                githubUtils.addProjectDeployKey(projectInfo, component, "${component.gitDeployKeyJenkinsId}.pub")
+                githubUtils.addProjectDeployKey(projectInfo, module, "${module.gitDeployKeyJenkinsId}.pub")
                 
-                sh "rm -f ${component.gitDeployKeyJenkinsId} ${component.gitDeployKeyJenkinsId}.pub"
+                sh "rm -f ${module.gitDeployKeyJenkinsId} ${module.gitDeployKeyJenkinsId}.pub"
             }
         }
     }

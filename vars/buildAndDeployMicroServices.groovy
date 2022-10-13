@@ -1,8 +1,8 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-and-deploy-microservices pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/build-and-deploy-microservices-pipeline-template.
+ * Defines the bulk of the build-and-deploy-components pipeline.  Called inline from the
+ * a realized el-CICD/resources/buildconfigs/build-and-deploy-components-pipeline-template.
  *
  */
 
@@ -10,22 +10,22 @@ def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
-    stage("Select sandbox, microservice, and branch") {
+    stage("Select sandbox, component, and branch") {
         List inputs = [choice(name: 'buildToNamespace', description: 'The Namespace to build and deploy to', choices: projectInfo.builderNamespaces),
-                       string(name: 'gitBranch',  defaultValue: projectInfo.gitBranch, description: 'The branch to build', trim: true),
-                       booleanParam(name: 'buildAll', description: 'Build all microservices'),
+                       string(name: 'scmBranch',  defaultValue: projectInfo.scmBranch, description: 'The branch to build', trim: true),
+                       booleanParam(name: 'buildAll', description: 'Build all components'),
                        booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
 
-        inputs += projectInfo.microServices.collect { microService ->
-            booleanParam(name: microService.name, description: "status: ${microService.status}")
+        inputs += projectInfo.components.collect { component ->
+            booleanParam(name: component.name, description: "status: ${component.status}")
         }
 
-        def cicdInfo = input(message: "Select namepsace and microservices to build to:", parameters: inputs)
+        def cicdInfo = input(message: "Select namepsace and components to build to:", parameters: inputs)
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
-        projectInfo.gitBranch = cicdInfo.gitBranch
+        projectInfo.scmBranch = cicdInfo.scmBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
-        projectInfo.microServices.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
+        projectInfo.components.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
     }
 
     stage('Clean environment if requested') {
@@ -34,34 +34,34 @@ def call(Map args) {
         }
     }
 
-    def microServices = [[],[],[]]
-    projectInfo.microServices.findAll { it.build }.eachWithIndex { microService, i ->
-        microServices[i%3].add(microService)
+    def components = [[],[],[]]
+    projectInfo.components.findAll { it.build }.eachWithIndex { component, i ->
+        components[i%3].add(component)
     }
 
-    if (microServices) {
+    if (components) {
         parallel(
             firstBucket: {
-                stage("building first bucket of microservices to ${projectInfo.deployToNamespace}") {
-                    microServices[0].each { microService ->
-                        build(job: "../${projectInfo.id}/${microService.name}-build-to-dev", wait: true)
+                stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
+                    components[0].each { component ->
+                        build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
                     }
                 }
             },
             secondBucket: {
-                stage("building second bucket of microservices to ${projectInfo.deployToNamespace}") {
-                    if (microServices[1]) {
-                        microServices[1].each { microService ->
-                            build(job: "../${projectInfo.id}/${microService.name}-build-to-dev", wait: true)
+                stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
+                    if (components[1]) {
+                        components[1].each { component ->
+                            build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
                         }
                     }
                 }
             },
             thirdBucket: {
-                stage("building third bucket of microservices to ${projectInfo.deployToNamespace}") {
-                    if (microServices[2]) {
-                        microServices[2].each { microService ->
-                            build(job: "../${projectInfo.id}/${microService.name}-build-to-dev", wait: true)
+                stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
+                    if (components[2]) {
+                        components[2].each { component ->
+                            build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
                         }
                     }
                 }

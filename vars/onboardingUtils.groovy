@@ -79,7 +79,7 @@ def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
 
 def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
     def pvNames = [:]
-    if (projectInfo.microServices && projectInfo.nfsShares) {
+    if (projectInfo.components && projectInfo.nfsShares) {
         loggingUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
 
         dir(el.cicd.OKD_TEMPLATES_DIR) {
@@ -145,28 +145,28 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 
 def generateBuildPipelineFiles(def projectInfo) {
     dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
-        projectInfo.microServices.each { microService ->
+        projectInfo.components.each { component ->
             sh """
-                cp build-to-dev.xml.template ${microService.name}-build-to-dev.xml
+                cp build-to-dev.xml.template ${component.name}-build-to-dev.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
-                       -e "s/%MICROSERVICE_NAME%/${microService.name}/g" \
-                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${microService.gitDeployKeyJenkinsId}/g" \
-                       -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
-                       -e "s/%CODE_BASE%/${microService.codeBase}/g" \
+                       -e "s/%MICROSERVICE_NAME%/${component.name}/g" \
+                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${component.gitDeployKeyJenkinsId}/g" \
+                       -e "s/%GIT_BRANCH%/${projectInfo.scmBranch}/g" \
+                       -e "s/%CODE_BASE%/${component.codeBase}/g" \
                        -e "s/%DEV_NAMESPACE%/${projectInfo.devNamespace}/g" \
-                    ${microService.name}-build-to-dev.xml
+                    ${component.name}-build-to-dev.xml
             """
         }
         
-        projectInfo.libraries.each { library ->
+        projectInfo.artifacts.each { artifact ->
             sh """
-                cp build-library.xml.template ${library.name}-build-library.xml
+                cp build-artifact.xml.template ${artifact.name}-build-artifact.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
-                    -e "s/%LIBRARY_NAME%/${library.name}/g" \
-                    -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${library.gitDeployKeyJenkinsId}/g" \
-                    -e "s/%GIT_BRANCH%/${projectInfo.gitBranch}/g" \
-                    -e "s/%CODE_BASE%/${library.codeBase}/g" \
-                    ${library.name}-build-library.xml
+                    -e "s/%LIBRARY_NAME%/${artifact.name}/g" \
+                    -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${artifact.gitDeployKeyJenkinsId}/g" \
+                    -e "s/%GIT_BRANCH%/${projectInfo.scmBranch}/g" \
+                    -e "s/%CODE_BASE%/${artifact.codeBase}/g" \
+                    ${artifact.name}-build-artifact.xml
             """
         }
     }

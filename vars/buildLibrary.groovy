@@ -1,25 +1,25 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-library pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/build-library-pipeline-template.
+ * Defines the bulk of the build-artifact pipeline.  Called inline from the
+ * a realized el-CICD/resources/buildconfigs/build-artifact-pipeline-template.
  *
  */
 
 void call(Map args) {
 
     def projectInfo = args.projectInfo
-    def library = projectInfo.libraries.find { it.name == args.libraryName }
+    def artifact = projectInfo.artifacts.find { it.name == args.libraryName }
 
-    library.gitBranch = args.gitBranch
-    library.isSnapshot = args.isSnapshot
+    artifact.scmBranch = args.scmBranch
+    artifact.isSnapshot = args.isSnapshot
 
     stage('Checkout code from repository') {
-        loggingUtils.echoBanner("CLONING ${library.gitRepoName} REPO, REFERENCE: ${library.gitBranch}")
+        loggingUtils.echoBanner("CLONING ${artifact.scmRepoName} REPO, REFERENCE: ${artifact.scmBranch}")
 
-        projectUtils.cloneGitRepo(library, library.gitBranch)
+        projectUtils.cloneGitRepo(artifact, artifact.scmBranch)
 
-        dir (library.workDir) {
+        dir (artifact.workDir) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
@@ -29,25 +29,25 @@ void call(Map args) {
 
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.DEPLOYER]
     buildSteps.each { buildStep ->
-        stage("build step: run ${buildStep} for ${library.name}") {
-            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR library: ${library.name}")
+        stage("build step: run ${buildStep} for ${artifact.name}") {
+            loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR artifact: ${artifact.name}")
 
-            dir(library.workDir) {
-                def moduleName = library[buildStep] ?: buildStep
-                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${library.codeBase}/${moduleName}.groovy"
+            dir(artifact.workDir) {
+                def moduleName = artifact[buildStep] ?: buildStep
+                def builderModule = load "${el.cicd.BUILDER_STEPS_DIR}/${artifact.codeBase}/${moduleName}.groovy"
 
                 switch(buildStep) {
                     case el.cicd.BUILDER:
-                        builderModule.build(projectInfo, library)
+                        builderModule.build(projectInfo, artifact)
                         break;
                     case el.cicd.TESTER:
-                        builderModule.test(projectInfo, library)
+                        builderModule.test(projectInfo, artifact)
                         break;
                     case el.cicd.SCANNER:
-                        builderModule.scan(projectInfo, library)
+                        builderModule.scan(projectInfo, artifact)
                         break;
                     case el.cicd.DEPLOYER:
-                        builderModule.deploy(projectInfo, library)
+                        builderModule.deploy(projectInfo, artifact)
                         break;
                 }
             }

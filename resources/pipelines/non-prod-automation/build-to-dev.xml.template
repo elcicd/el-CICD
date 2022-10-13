@@ -44,7 +44,7 @@
                         projectId: '%PROJECT_ID%',
                         microServiceName: '%MICROSERVICE_NAME%',
                         deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                        gitBranch: params.GIT_BRANCH,
+                        scmBranch: params.GIT_BRANCH,
                         recreate: params.RECREATE]
             el.node(args) {
                 buildToDev(args)

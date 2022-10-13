@@ -1,42 +1,42 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Run system tests for all microservices per codeBase.
+ * Run system tests for all components per codeBase.
  */
 
 def call(Map args) {
     assert args.projectInfo
-    assert args.systemTestsToRun
-    assert args.microServicesToTest
+    assert args.testModulesToRun
+    assert args.componentsToTest
 
     def projectInfo = args.projectInfo
-    def systemTestsToRun = args.systemTestsToRun
-    def microServicesToTest = args.microServicesToTest
+    def testModulesToRun = args.testModulesToRun
+    def componentsToTest = args.componentsToTest
 
-    def gitRepoToMsMap = microServicesToTest.collectEntries {
-        [it.gitRepoName, it]
+    def repoToMsMap = componentsToTest.collectEntries {
+        [it.scmRepoName, it]
     }
 
     def codeBasesToNodes = [:]
-    systemTestsToRun.each { systemTest ->
+    testModulesToRun.each { testModule ->
         def msCodeBaseList = []
-        systemTest.microServiceRepos.each { gitRepoName ->
-            if (gitRepoToMsMap[gitRepoName]) {
-                msCodeBaseList.add(gitRepoToMsMap[gitRepoName])
+        testModule.componentRepos.each { scmRepoName ->
+            if (repoToMsMap[scmRepoName]) {
+                msCodeBaseList.add(repoToMsMap[scmRepoName])
             }
         }
 
         if (msCodeBaseList) {
-            codeBasesToNodes[systemTest.codeBase] = createTestNode(systemTest.codeBase, projectInfo, systemTest, msCodeBaseList)
+            codeBasesToNodes[testModule.codeBase] = createTestNode(testModule.codeBase, projectInfo, testModule, msCodeBaseList)
         }
     
-        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
+        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.scmRepoName}")
     }
 
     parallel(codeBasesToNodes)
 }
 
-def createTestNode(def codeBase, def projectInfo, def systemTest, def microServicesToTest) {
+def createTestNode(def codeBase, def projectInfo, def testModule, def componentsToTest) {
     return {
         podTemplate([
             label: "${codeBase}",
@@ -44,7 +44,7 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
             serviceAccount: "${el.cicd.JENKINS_TESTER_SERVICE_ACCOUNT}",
             podRetention: onFailure(),
             idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-            namespace: "${projectInfo.systemTestNamespace}",
+            namespace: "${projectInfo.testModuleNamespace}",
             containers: [
                 containerTemplate(
                     name: 'jnlp',
@@ -75,20 +75,20 @@ def createTestNode(def codeBase, def projectInfo, def systemTest, def microServi
                     }
 
                     stage ('Pull test code') {
-                        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${systemTest.gitRepoName}")
-                        dir(systemTest.workDir) {
-                            git url: systemTest.gitRepoUrl,
-                                branch: projectInfo.gitTestBranch,
-                                credentialsId: systemTest.gitDeployKeyJenkinsId
+                        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.scmRepoName}")
+                        dir(testModule.workDir) {
+                            git url: testModule.repoUrl,
+                                branch: projectInfo.scmTestBranch,
+                                credentialsId: testModule.gitDeployKeyJenkinsId
                         }
                     }
 
                     stage ('Run tests') {
                         def testModule = load "${el.cicd.SYSTEM_TEST_RUNNERS_DIR}/${codeBase}.groovy"
-                        microServicesToTest.each { microService ->
-                            loggingUtils.echoBanner("TESTING ${microService.name} IN ${projectInfo.systemTestNamespace} WITH ${codeBase}")
-                            dir(systemTest.workDir) {
-                                testModule.runTests(projectInfo, microService, projectInfo.systemTestNamespace, projectInfo.systemTestEnv)
+                        componentsToTest.each { component ->
+                            loggingUtils.echoBanner("TESTING ${component.name} IN ${projectInfo.testModuleNamespace} WITH ${codeBase}")
+                            dir(testModule.workDir) {
+                                testModule.runTests(projectInfo, component, projectInfo.testModuleNamespace, projectInfo.testModuleEnv)
                             }
                         }
                     }

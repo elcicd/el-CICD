@@ -30,7 +30,7 @@
                         pipelineName: 'microservice-promotion',
                         projectId: params.PROJECT_ID]
             el.node(args) {
-                microServicePromotion(args)
+                promoteComponents(args)
             }
   
         </script>
