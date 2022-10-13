@@ -50,13 +50,13 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             
             ${shCmd.echo ''}
             helm upgrade --install --history-max=1 --cleanup-on-fail --debug \
-                --set elCicdChart.elcicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-                --set elCicdChart.elcicdDefs.JENKINS_URL=${jenkinsUrl} \
-                --set 'elCicdChart.elcicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? true : false}"' \
-                --set elCicdChart.elcicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
-                --set elCicdChart.elcicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                --set elCicdChart.elcicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                --set elCicdChart.elcicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
+                --set elCicdChart.elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
+                --set elCicdChart.elCicdDefs.JENKINS_URL=${jenkinsUrl} \
+                --set 'elCicdChart.elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? true : false}"' \
+                --set elCicdChart.elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
+                --set elCicdChart.elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
+                --set elCicdChart.elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                --set elCicdChart.elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
                 -n ${projectInfo.cicdMasterNamespace} \
                 -f ${el.cicd.JENKINS_HELM_DIR}/values.yml \
                 jenkins \

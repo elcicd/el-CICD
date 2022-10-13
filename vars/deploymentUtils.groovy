@@ -17,7 +17,7 @@ def deployMicroservices(def projectInfo, def components) {
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
     def commonValues = ["projectId=${projectInfo.id}",
-                        "elcicdDefs.PROJECT_ID=${projectInfo.id}",
+                        "elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "global.defaultImagePullSecret=${imagePullSecret}",
                         "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
@@ -43,7 +43,7 @@ def deployMicroservices(def projectInfo, def components) {
             def componentImage = "${imageRepository}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
             def msCommonValues = ["appName=${component.name}",
                                   "component=${component.name}",
-                                  "elcicdDefs.MICROSERVICE_NAME=${component.name}",
+                                  "elCicdDefs.MICROSERVICE_NAME=${component.name}",
                                   "global.defaultImage=${componentImage}",
                                   "scmRepoName=${component.scmRepoName}",
                                   "srcCommitHash=${component.srcCommitHash}",
