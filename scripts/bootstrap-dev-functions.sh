@@ -112,7 +112,7 @@ __gather_dev_setup_info() {
             read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GITHUB_ACCESS_TOKEN
             echo
         else
-            GITHUB_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})
+            GITHUB_ACCESS_TOKEN=$(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})
         fi
 
         local TOKEN_TEST_RESULT=$(curl -s -u :${GITHUB_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
@@ -365,8 +365,8 @@ __create_credentials() {
     ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
 
     echo
-    echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}"
-    echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
+    echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}"
+    echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}
 
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}

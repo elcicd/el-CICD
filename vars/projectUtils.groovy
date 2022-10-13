@@ -51,7 +51,7 @@ def gatherProjectInfoStage(def projectId) {
             module.workDir = "${WORKSPACE}/${module.scmRepoName}"
 
             module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
-            module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+            module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
         }
         projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
 

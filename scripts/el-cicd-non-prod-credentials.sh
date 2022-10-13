@@ -23,7 +23,7 @@ _refresh_non_prod_credentials() {
 
     echo
     echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'
-    _push_access_token_to_jenkins  ${JENKINS_URL} ${GIT_SITE_WIDE_ACCESS_TOKEN_ID} ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE}
+    _push_access_token_to_jenkins  ${JENKINS_URL} ${SCM_ADMIN_ACCESS_TOKEN_ID} ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}
 
     echo
     echo 'Pushing el-CICD git READ ONLY private key to Jenkins'

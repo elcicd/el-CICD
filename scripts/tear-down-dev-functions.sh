@@ -193,7 +193,7 @@ __delete_remote_el_cicd_git_repos() {
 __remove_git_repo() {
     GIT_REPO_DIR=${1}
 
-    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})}
+    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})}
 
     local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${__PAT} \
         ${GITHUB_REST_API_HDR}  \

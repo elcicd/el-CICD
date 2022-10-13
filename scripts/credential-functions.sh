@@ -3,6 +3,41 @@
 
 export GITHUB_REST_API_HDR='Accept: application/vnd.github.v3+json'
 
+_verify_secret_files_exist() {
+    if [[ ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
+          ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
+          ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
+          ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
+          ! -f ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE} ]]
+    then
+        echo
+        echo "ERROR:"
+        echo "  MISSING ONE OR MORE OF THE FOLLOWING CREDENTIALS FILES:"
+        echo "    ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}"
+        echo "    ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
+        echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}"
+        echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
+        echo "    ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE//${SECRET_FILE_DIR}\//}"
+        echo "ENSURE ALL el-CICD CREDENTIALS FILES EXIST BEFORE RE-RUNNING"
+        exit 1
+    fi
+    
+    CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
+    for ENV in ${CICD_ENVIRONMENTS}
+    do
+        local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        if [[ ! -f ${TKN_FILE} ]]
+        then
+            echo
+            echo "ERROR:"
+            echo "  MISSING THE FOLLOWING ENV PULL SECRET TOKEN FILE:"
+            echo "    ${TKN_FILE//${SECRET_FILE_DIR}\//}"
+            echo "ENSURE ALL el-CICD PULL SECRET TOKEN FILES EXIST BEFORE RE-RUNNING"
+            exit 1
+        fi
+    done
+}
+
 _check_sealed_secrets() {
     if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
     then
@@ -70,7 +105,7 @@ _push_deploy_key_to_github() {
         READ_ONLY=true
     fi
 
-    local GITHUB_BEARER_TOKEN="Authorization: Bearer $(cat ${EL_CICD_GIT_REPO_ACCESS_TOKEN_FILE})"
+    local GITHUB_BEARER_TOKEN="Authorization: Bearer $(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})"
     local EL_CICD_GITHUB_KEYS_URL="https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_NAME}/keys"
 
     # DELETE old key, if any
@@ -132,7 +167,6 @@ _push_access_token_to_jenkins() {
 
     local SECRET_TOKEN=$(cat ${TKN_FILE})
 
-    # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
     local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
     cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
