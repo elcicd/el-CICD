@@ -151,7 +151,7 @@ def generateBuildPipelineFiles(def projectInfo) {
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                        -e "s/%MICROSERVICE_NAME%/${component.name}/g" \
                        -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${component.gitDeployKeyJenkinsId}/g" \
-                       -e "s/%GIT_BRANCH%/${projectInfo.scmBranch}/g" \
+                       -e "s/%SCM_BRANCH%/${projectInfo.scmBranch}/g" \
                        -e "s/%CODE_BASE%/${component.codeBase}/g" \
                        -e "s/%DEV_NAMESPACE%/${projectInfo.devNamespace}/g" \
                     ${component.name}-build-to-dev.xml
@@ -164,7 +164,7 @@ def generateBuildPipelineFiles(def projectInfo) {
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
                     -e "s/%LIBRARY_NAME%/${artifact.name}/g" \
                     -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${artifact.gitDeployKeyJenkinsId}/g" \
-                    -e "s/%GIT_BRANCH%/${projectInfo.scmBranch}/g" \
+                    -e "s/%SCM_BRANCH%/${projectInfo.scmBranch}/g" \
                     -e "s/%CODE_BASE%/${artifact.codeBase}/g" \
                     ${artifact.name}-build-artifact.xml
             """

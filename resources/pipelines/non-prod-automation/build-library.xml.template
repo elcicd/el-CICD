@@ -6,9 +6,9 @@
         <hudson.model.ParametersDefinitionProperty>
             <parameterDefinitions>
                 <hudson.model.StringParameterDefinition>
-                    <name>GIT_BRANCH</name>
+                    <name>SCM_BRANCH</name>
                     <description>Git branch to build</description>
-                    <defaultValue>%GIT_BRANCH%</defaultValue>
+                    <defaultValue>%SCM_BRANCH%</defaultValue>
                     <trim>true</trim>
                 </hudson.model.StringParameterDefinition>
                 <hudson.model.BooleanParameterDefinition>
@@ -37,7 +37,7 @@
                         pipelineName: 'build-library',
                         projectId: '%PROJECT_ID%',
                         libraryName: '%LIBRARY_NAME%',
-                        scmBranch: params.GIT_BRANCH,
+                        scmBranch: params.SCM_BRANCH,
                         isSnapshot: params.IS_SNAPSHOT]
             el.node(args) {
                 buildLibrary(args)

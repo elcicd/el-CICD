@@ -6,9 +6,9 @@
         <hudson.model.ParametersDefinitionProperty>
             <parameterDefinitions>
                 <hudson.model.StringParameterDefinition>
-                    <name>GIT_BRANCH</name>
+                    <name>SCM_BRANCH</name>
                     <description>Git branch to build</description>
-                    <defaultValue>%GIT_BRANCH%</defaultValue>
+                    <defaultValue>%SCM_BRANCH%</defaultValue>
                     <trim>true</trim>
                 </hudson.model.StringParameterDefinition>
                 <hudson.model.StringParameterDefinition>
@@ -44,7 +44,7 @@
                         projectId: '%PROJECT_ID%',
                         microServiceName: '%MICROSERVICE_NAME%',
                         deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                        scmBranch: params.GIT_BRANCH,
+                        scmBranch: params.SCM_BRANCH,
                         recreate: params.RECREATE]
             el.node(args) {
                 buildToDev(args)
