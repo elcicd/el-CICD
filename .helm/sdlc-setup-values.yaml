@@ -1,0 +1,142 @@
+elCicdDefs:
+  BUILD_PIPELINE_LABELS:
+    projectid: ${PROJECT_ID}
+    component: ${BASE_APP_NAME}
+    jenkins-pipeline: 'true'  
+  SHARED_PIPELINE_LABELS:
+    projectid: ${PROJECT_ID}
+    jenkins-pipeline: 'true'
+  COMMON_BUILD_ARGS: |-
+    agent: '${CODE_BASE}',
+    isBuild: true,
+    pipelineName: '${APP_NAME}',
+    projectId: '${PROJECT_ID}',
+    scmBranch: params.SCM_BRANCH
+  SCM_BRANCH_BUILD_PARAM: |-
+    <hudson.model.StringParameterDefinition>
+        <name>SCM_BRANCH</name>
+        <description>Git branch to build</description>
+        <defaultValue>${SCM_BRANCH}</defaultValue>
+        <trim>true</trim>
+    </hudson.model.StringParameterDefinition>
+  RELEASE_CANDIDATE_PARAMS: |-
+    <hudson.model.ParametersDefinitionProperty>
+        <parameterDefinitions>
+          <hudson.model.StringParameterDefinition>
+            <name>RELEASE_CANDIDATE_TAG</name>
+            <description>${RELEASE_CANDIDATE_TAG_DESCRIPTION}</description>
+            <trim>true</trim>
+          </hudson.model.StringParameterDefinition>
+        </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  RELEASE_CANDIDATE_ARGS: |-
+    def args = [agent: ${JENKINS_AGENT_DEFAULT},
+                pipelineName: '${APP_NAME}',
+                projectId: ${PROJECT_ID},
+                releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+  PROJECT_FOLDER_DATA:
+    contentKey: config.xml
+    config.xml: ${FILE|jenkinsFolder.xml}
+    path: ${PROJECT_ID}/config.xml
+    optional: 'true'
+  PIPELINE_CONFIG_MAP_DATA:
+    contentKey: config.xml
+    config.xml: ${FILE|pipelineTemplate.xml}
+    path: ${PROJECT_ID}/jobs/${APP_NAME}/config.xml
+    optional: 'true'
+  JENKINS_SERVICEACCOUNT_NAME: jenkins
+  
+elCicdTemplates:
+- templateName: configMap
+  appName: ${PROJECT_ID}-jenkins-folder
+  labels:
+    projectid: ${PROJECT_ID}
+    jenkins-folder: 'true'
+  data: ${PROJECT_FOLDER_DATA}
+      
+- templateName: configMap
+  appNames: ${BUILD_COMPONENT_PIPELINES}
+  appName: ${}-build-component
+  labels: ${BUILD_PIPELINE_LABELS}
+  elCicdDefs:
+    PIPELINE_PARAMS: ${FILE|buildComponentParams.xml}
+    EL_CICD_API_CALL: |-
+      def args = [${COMMON_BUILD_ARGS},
+                  componentName: '${BASE_APP_NAME}',
+                  deployToNamespace: params.DEPLOY_TO_NAMESPACE,
+                  recreate: params.RECREATE]
+      el.node(args) {
+          buildComponent(args)
+      }
+    AUTH_TOKEN:
+      ${PROJECT_ID}-${BASE_APP_NAME}-scm-repo-private-contentKey
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+
+- templateName: configMap
+  appNames: ${BUILD_ARTIFACT_PIPELINES}
+  appName: ${}-build-artifact
+  labels: ${BUILD_PIPELINE_LABELS}
+  elCicdDefs:
+    PIPELINE_PARAMS: ${FILE|buildArtifactParams.xml}
+    EL_CICD_API_CALL: |-
+      def args = [${COMMON_BUILD_ARGS},
+                  artifactName: '${BASE_APP_NAME}',
+                  isSnapshot: params.IS_SNAPSHOT]
+      el.node(args) {
+          buildArtifact(args)
+      }
+    AUTH_TOKEN:
+      ${PROJECT_ID}-${BASE_APP_NAME}-scm-repo-private-contentKey
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+
+- templateName: configMap
+  appNames:
+  - build-artifacts-and-components
+  - promote-or-remove-components
+  - run-post-deployment-tests
+  - redeploy-or-remove-components
+  - create-release-candidate
+  - redeploy-release-candidate
+  appName: ${#}-${}
+  labels: ${SHARED_PIPELINE_LABELS}
+  elCicdDefs:
+    EL_CICD_API_CALL: |-
+      def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                  pipelineName: '${BASE_APP_NAME}',
+                  projectId: params.PROJECT_ID,
+                  releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+      el.node(args) {
+          ${EL_CICD_API_METHOD}(args)
+      }
+  elCicdDefs-build-artifacts-and-components:
+    EL_CICD_API_METHOD: buildArtifactsAndComponents
+  elCicdDefs-promote-or-remove-components:
+    EL_CICD_API_METHOD: promoteComponents
+  elCicdDefs-run-post-deployment-tests:
+    EL_CICD_API_METHOD: runPostDeploymentTests
+  elCicdDefs-redeploy-or-remove-components:
+    EL_CICD_API_METHOD: redeployComponents
+  elCicdDefs-create-release-candidate:
+    EL_CICD_API_METHOD: createReleaseCandidate
+    PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
+    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')"
+  elCicdDefs-redeploy-release-candidate:
+    EL_CICD_API_METHOD: redeployReleaseCandidate
+    PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
+    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+  
+- templateName: roleBinding
+  appName: ${PROJECT_ID}-edit
+  namespaces: ${SDLC_NAMESPACES}
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICEACCOUNT_NAME}
+    namespace: ${JENKINS_SERVICEACCOUNT_NAMESPACE}
+  - kind: Group
+    name: ${${BASE_NAME_SPACE}_GROUP}
+  

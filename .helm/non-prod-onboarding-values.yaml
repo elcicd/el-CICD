@@ -1,0 +1,151 @@
+elCicdTemplates-non-prod:
+- templateName: configMap
+  appNames:
+  - project-onboarding
+  - refresh-credentials
+  - delete-project
+  labels:
+    jenkins-pipeline: 'true'
+  data:
+    contentKey: config.xml
+    config.xml: ${PIPELINE_XML}
+    path: ${APP_NAME}/config.xml
+  
+elCicdDefs-project-onboarding:
+  PIPELINE_XML: |-
+    <flow-definition plugin="workflow-job">
+      <displayName>${APP_NAME}</displayName>
+      <keepDependencies>false</keepDependencies>
+      <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+        <hudson.model.ParametersDefinitionProperty>
+          <parameterDefinitions>
+            <hudson.model.StringParameterDefinition>
+              <name>PROJECT_ID</name>
+              <description>Project ID</description>
+              <trim>true</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.BooleanParameterDefinition>
+              <name>REBUILD_NON_PROD</name>
+              <description>Should all non-prod environment(s) be torn down and new, empty projects created?</description>
+              <defaultValue>false</defaultValue>
+            </hudson.model.BooleanParameterDefinition>
+            <hudson.model.BooleanParameterDefinition>
+              <name>REBUILD_SANDBOXES</name>
+              <description>Should the sandbox environment(s) be torn down and new, empty projects created</description>
+              <defaultValue>false</defaultValue>
+            </hudson.model.BooleanParameterDefinition>
+          </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+      </properties>
+      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cp">
+        <script>
+          node() {
+              def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+              def elCicdData = elcicdMetaData.data
+              
+              def scmMap = [$class: 'GitSCMSource',
+                          remote: elCicdData.EL_CICD_GIT_REPO,
+                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+              el.initMetaData(elCicdData)
+          }
+
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineName: 'non-prod-project-onboarding',
+                      projectId: params.PROJECT_ID,
+                      rebuildNonProd: params.REBUILD_NON_PROD,
+                      rebuildSandboxes: params.REBUILD_SANDBOXES]
+          el.node(args) {                    
+              nonProdProjectOnboarding(args)
+          }
+        </script>
+        <sandbox>true</sandbox>
+      </definition>
+      <triggers />
+      <disabled>false</disabled>
+    </flow-definition>
+
+elCicdDefs-refresh-credentials:
+  PIPELINE_XML: |-
+    <flow-definition plugin="workflow-job">
+      <displayName>${APP_NAME}</displayName>
+      <keepDependencies>false</keepDependencies>
+      <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+      </properties>
+      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+        <script>
+          node() {
+              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+
+              def scmMap = [$class: 'GitSCMSource',
+                          remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                          credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+              el.initMetaData(cicdMetaData.data)
+          }
+
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineName: 'non-prod-refresh-credentials',
+                      isNonProd: true]
+          el.node(args) {
+              refreshCredentials(args)
+          }  
+        </script>
+        <sandbox>true</sandbox>
+      </definition>
+      <triggers />
+      <disabled>false</disabled>
+    </flow-definition>
+  
+elCicdDefs-delete-project:
+  PIPELINE_XML: |-
+    <flow-definition plugin="workflow-job">
+      <displayName>${APP_NAME}</displayName>
+      <keepDependencies>false</keepDependencies>
+      <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+        <hudson.model.ParametersDefinitionProperty>
+          <parameterDefinitions>
+            <hudson.model.StringParameterDefinition>
+              <name>PROJECT_ID</name>
+              <description>Project ID</description>
+              <trim>true</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.BooleanParameterDefinition>
+              <name>DELETE_JENKINS_CICD_SERVER</name>
+              <description>Should the team's Jenkins CICD Automation Server be deleted, too?</description>
+              <defaultValue>false</defaultValue>
+            </hudson.model.BooleanParameterDefinition>
+          </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+      </properties>
+      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+        <script>
+          node() {
+              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+
+              def scmMap = [$class: 'GitSCMSource',
+                          remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                          credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+              el.initMetaData(cicdMetaData.data)
+          }
+
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineName: 'delete-project',
+                      projectId: params.PROJECT_ID,
+                      deleteJenkinsCicdServer: params.DELETE_JENKINS_CICD_SERVER]
+          el.node(args) {
+              projectDeletion(args)
+          }
+        </script>
+        <sandbox>true</sandbox>
+      </definition>
+      <triggers />
+      <disabled>false</disabled>
+    </flow-definition>

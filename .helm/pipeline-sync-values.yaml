@@ -1,0 +1,25 @@
+elCicdTemplates:
+- templateName: job
+  appName: jenkins-pipeline-sync
+  image: ${JENKINS_SYNC_JOB_IMAGE}
+  projectedVolumeLabels:
+  - name: mounted-jenkins-jobs
+    mountPath: /mnt/mounted-jobs
+    labels:
+    - jenkins-folder
+    - jenkins-pipeline
+  serviceAccountName: jenkins
+  command: ["/bin/bash"]
+  args:
+  - -c
+  - pwd;
+    id;
+    echo "Syncing Jenkins pipelines";
+    mkdir jobs;
+    cp -rLv /mnt/mounted-jobs/* jobs;
+    chmod 777 -R jobs;
+    JENKINS_POD=$(oc get pods -o custom-columns=:.metadata.name | grep jenkins | grep -v sync);
+    tar czvf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
+    echo -n "HTTP CODE FROM JENKINS RESTART -> ";
+    curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/safeRestart;
+    echo "el-CICD Jenkins jobs updated";

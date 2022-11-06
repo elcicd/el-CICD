@@ -31,7 +31,9 @@ _bootstrap_el_cicd() {
         sleep 2
     fi
 
-    __bootstrap_el_cicd_onboarding_server ${EL_CICD_ONBOARDING_SERVER_TYPE}
+    __build_jenkins_agents_if_necessary
+
+    __bootstrap_el_cicd_onboarding_server
 
     echo
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
@@ -40,8 +42,6 @@ _bootstrap_el_cicd() {
     echo
     echo "RUN ALL CUSTOM SCRIPTS '${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
     __run_custom_config_scripts
-
-    __build_jenkins_agents_if_necessary
 
     echo
     echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
@@ -108,8 +108,6 @@ __gather_and_confirm_bootstrap_info_with_user() {
 }
 
 __bootstrap_el_cicd_onboarding_server() {
-    local EL_CICD_ONBOARDING_SERVER_TYPE=${1}
-
     _delete_namespace ${ONBOARDING_MASTER_NAMESPACE} 10
 
     __create_master_namespace_with_selectors
@@ -167,9 +165,9 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
     then
         echo
-        echo "WARNING: JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}, and the base el-CICD Jenkins agent ImageStream was NOT found"
+        echo "WARNING: JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}, and the base el-CICD Jenkins agent image was NOT found"
         echo
-        echo "JENKINS AGENTS WILL BE BUILT"
+        echo "ALL JENKINS AGENTS WILL BE BUILT"
     fi
 
     _confirm_continue
@@ -220,36 +218,44 @@ __create_onboarding_automation_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
     echo
-    set -e
-    helm dependency update ${CONFIG_REPOSITORY_JENKINS_HELM}
-    
+    set -e    
     if [[ -z ${JENKINS_IMAGE_PULL_SECRET} && ${OKD_VERSION} ]]
     then
         JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' | grep deployer-dockercfg)
     fi
     
+    _helm_repo_add_and_update_elCicdCharts
+    
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
-    helm upgrade --install --history-max=1 --cleanup-on-fail  \
-        --set elCicdChart.elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
-        --set elCicdChart.elCicdDefs.JENKINS_URL=${JENKINS_URL} \
-        --set "elCicdChart.elCicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
-        --set elCicdChart.elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
-        --set elCicdChart.elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-        --set elCicdChart.elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-        --set elCicdChart.elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+    set -x
+    helm upgrade --atomic --install --history-max=1  \
+        --set elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
+        --set elCicdDefs.JENKINS_URL=${JENKINS_URL} \
+        --set "elCicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
+        --set elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+        --set elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
+        --set elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        --set elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${CONFIG_REPOSITORY_JENKINS_HELM}/values.yml \
+        -f ${HELM_DIR}/jenkins-values.yaml \
+        -f ${HELM_DIR}/${EL_CICD_ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         jenkins \
-        ${CONFIG_REPOSITORY_JENKINS_HELM}
-
-    sleep 2
-    echo
-    echo 'Waiting for Jenkins to come up...'
-    oc rollout status deploy jenkins -n ${ONBOARDING_MASTER_NAMESPACE}
+        elCicdCharts/elCicdChart
+    set +x
 
     echo
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
     sleep 5
+    
+    set -x
+    helm upgrade --atomic --install --history-max=1  \
+        --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
+        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -f ${HELM_DIR}/pipeline-sync-values.yaml \
+        jenkins-sync \
+        elCicdCharts/elCicdChart
+    exit 1
+    set +x
 
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
@@ -264,39 +270,14 @@ __create_onboarding_automation_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
     set +e
-    __create_onboarding_pipelines
+    echo helm"EXITING: TIME TO INSTALL PIPELINES"
+    exit 0
 }
 
-__create_onboarding_pipelines() {
+_helm_repo_add_and_update_elCicdCharts() {
     echo
-    echo "Creating the ${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Automation Server pipelines:"
-    
-    local ONBOARDING_PIPELINES_DIR=$([ ${EL_CICD_ONBOARDING_SERVER_TYPE} == 'non-prod' ] && \
-                                     echo ${NON_PROD_ONBOARDING_PIPELINES_DIR} || echo ${PROD_ONBOARDING_PIPELINES_DIR})
-
-    PIPELINES_FILES=$(find ${ONBOARDING_PIPELINES_DIR} -name '*.xml')
-    set -e
-    for PIPELINE_FILE in ${PIPELINES_FILES}
-    do
-        PIPELINE_NAME=$(basename ${PIPELINE_FILE})
-        echo "Creating ${PIPELINE_NAME%.*}..."
-        local RESULT=$(curl -kSs -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $(oc whoami -t)" -H 'Content-Type:text/xml' \
-                       "https://${JENKINS_URL}/createItem?name=${PIPELINE_NAME%.*}" \
-                       --data-binary @${PIPELINE_FILE})
-        if [[ ${RESULT} != '200' ]]
-        then
-            echo '================= ERROR: PIPELINE CREATION ==================='
-            echo "UNABLE TO CREATE PIPELINE: ${PIPELINE_NAME}"
-            echo "HTTP CODE: ${RESULT}"
-            echo 'EXITING...'
-            echo '================= ERROR: PIPELINE CREATION ==================='
-            exit 1
-        fi
-    done
-    curl -kSs -X POST -H "Authorization: Bearer $(oc whoami -t)" -o /dev/null "https://${JENKINS_URL}/reload"
-    set +e
-    
-    sleep 5
+    helm repo add elCicdCharts https://raw.githubusercontent.com/elcicd/el-CICD-deploy/main/charts
+    helm repo update elCicdCharts
 }
 
 _delete_namespace() {
@@ -331,7 +312,7 @@ __build_jenkins_agents_if_necessary() {
         _build_el_cicd_jenkins_agent_images_image
     else
         echo
-        echo "Base agent found: to manually rebuild Jenkins Agents, run the 'el-cicd.sh --jenkins-agents'"
+        echo "Base agent found: to manually rebuild Jenkins Agents, run the 'oc el-cicd-adm --jenkins-agents <el-CICD config file>'"
     fi
 }
 

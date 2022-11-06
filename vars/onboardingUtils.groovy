@@ -149,7 +149,7 @@ def generateBuildPipelineFiles(def projectInfo) {
             sh """
                 cp build-to-dev.xml.template ${component.name}-build-to-dev.xml
                 sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
-                       -e "s/%MICROSERVICE_NAME%/${component.name}/g" \
+                       -e "s/%COMPONENT_NAME%/${component.name}/g" \
                        -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${component.gitDeployKeyJenkinsId}/g" \
                        -e "s/%SCM_BRANCH%/${projectInfo.scmBranch}/g" \
                        -e "s/%CODE_BASE%/${component.codeBase}/g" \

@@ -126,23 +126,23 @@ _remove_existing_crc() {
 }
 
 _remove_image_registry() {
-    _delete_namespace ${DEMO_IMAGE_REGISTRY}
+    if [[ ! -z $(helm list -q -n ${DEMO_IMAGE_REGISTRY} -f ${DEMO_IMAGE_REGISTRY}) ]]
+    then
+        echo
+        echo "Uninstalling ${DEMO_IMAGE_REGISTRY}..."
+        helm uninstall ${DEMO_IMAGE_REGISTRY} -n ${DEMO_IMAGE_REGISTRY}
+        oc delete project ${DEMO_IMAGE_REGISTRY}
 
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
-    local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
-    for REGISTRY_NAME in ${REGISTRY_NAMES}
-    do
-        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+        local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
+        local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
+        for REGISTRY_NAME in ${REGISTRY_NAMES}
+        do
+            local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
-        IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
-    done
-    echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
-
-    local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
-    sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" \
-        -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/" \
-        ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-pv-template.yml | \
-        oc delete --ignore-not-found -f -
+            IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
+        done
+        echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
+    fi
 }
 
 __remove_image_registry_nfs_share() {

@@ -13,14 +13,14 @@ def deployMicroservices(def projectInfo, def components) {
     def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
 
-    def ingressHostSuffix =
+    def ingressHostDomain =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
     def commonValues = ["projectId=${projectInfo.id}",
                         "elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "global.defaultImagePullSecret=${imagePullSecret}",
-                        "ingressHostSuffix='${ingressHostSuffix}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'",
                         "renderValuesForKust=true"]
@@ -43,7 +43,7 @@ def deployMicroservices(def projectInfo, def components) {
             def componentImage = "${imageRepository}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
             def msCommonValues = ["appName=${component.name}",
                                   "component=${component.name}",
-                                  "elCicdDefs.MICROSERVICE_NAME=${component.name}",
+                                  "elCicdDefs.COMPONENT_NAME=${component.name}",
                                   "global.defaultImage=${componentImage}",
                                   "scmRepoName=${component.scmRepoName}",
                                   "srcCommitHash=${component.srcCommitHash}",
@@ -115,9 +115,9 @@ def confirmDeployments(def projectInfo, def components) {
                                  "${componentNames}")
 
     sh """
-        for MICROSERVICE_NAME in ${componentNames}
+        for COMPONENT_NAME in ${componentNames}
         do
-            DEPLOYS=\$(oc get deploy -l component=\${MICROSERVICE_NAME} -o name -n ${projectInfo.deployToNamespace})
+            DEPLOYS=\$(oc get deploy -l component=\${COMPONENT_NAME} -o name -n ${projectInfo.deployToNamespace})
             if [[ ! -z \${DEPLOYS} ]]
             then
                 echo \${DEPLOYS} | xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
@@ -140,9 +140,9 @@ def removeMicroservices(def projectInfo, def components) {
     loggingUtils.echoBanner("REMOVING SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${componentNames}")
 
     sh """
-        for MICROSERVICE_NAME in ${componentNames}
+        for COMPONENT_NAME in ${componentNames}
         do
-            helm uninstall \${MICROSERVICE_NAME} -n ${projectInfo.deployToNamespace}
+            helm uninstall \${COMPONENT_NAME} -n ${projectInfo.deployToNamespace}
         done
     """
 

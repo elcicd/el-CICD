@@ -16,7 +16,8 @@ __bootstrap_dev_environment() {
         __bootstrap_clean_crc
 
         __additional_cluster_config
-    else
+    elif [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
+    then
         _start_crc
     fi
 
@@ -259,71 +260,45 @@ __create_image_registry_nfs_share() {
 
 __setup_image_registries() {
     set -e
-    oc new-project ${DEMO_IMAGE_REGISTRY}
-
+    DEMO_IMAGE_REGISTRY_PROFILES=htpasswd
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
         __create_image_registry_nfs_share
-
-        local LOCAL_NFS_IP=$(ip -j route get 8.8.8.8 | jq -r '.[].prefsrc')
-        sed -e "s/%LOCAL_NFS_IP%/${LOCAL_NFS_IP}/" \
-            -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/" \
-            ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-pv-template.yml | oc create -f -
+        
+        DEMO_IMAGE_REGISTRY_PROFILES=${DEMO_IMAGE_REGISTRY_PROFILES},nfs
     fi
+
+    _helm_repo_add_and_update_elCicdCharts
+        
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
+    for REGISTRY_NAME in ${REGISTRY_NAMES}
+    do
+        local APP_NAME=${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}
+        local APP_NAMES=${APP_NAMES:+${APP_NAMES},}${APP_NAME}
+        local HTPASSWDS=${HTPASSWDS:+${HTPASSWDS},}elCicdDefs-htpasswd.${APP_NAME}_HTPASSWD=${DEMO_IMAGE_REGISTRY_USER_PWD}
+    done
+    
+    DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
+    
+    helm upgrade --install --atomic --create-namespace --history-max=1 \
+        --set "profiles={${DEMO_IMAGE_REGISTRY_PROFILES}}" \
+        --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
+        --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
+        --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
+        --set-string ${HTPASSWDS} \
+        --set-string ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
+        --set createNamespaces=true \
+        -n ${DEMO_IMAGE_REGISTRY} \
+        ${DEMO_IMAGE_REGISTRY} \
+        elCicdCharts/elCicdImageRegistry
 
     __register_insecure_registries
 
-    __generate_deployments
     set +e
 
     echo
     echo 'Docker Registry is up!'
     sleep 2
-}
-
-__generate_deployments() {
-    local TMP_DIR=/tmp/${DEMO_IMAGE_REGISTRY}
-    mkdir -p ${TMP_DIR}
-
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
-    for REGISTRY_NAME in ${REGISTRY_NAMES}
-    do
-        local TMP_FILE=${TMP_DIR}/${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}-tmp.yml
-        local OUTPUT_FILE=${TMP_DIR}/${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}.yml
-
-        sed -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/g"  \
-            -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g"  \
-            -e "s/%CLUSTER_WILDCARD_DOMAIN%/${CLUSTER_WILDCARD_DOMAIN}/g" \
-            ${SCRIPTS_RESOURCES_DIR}/${DEMO_IMAGE_REGISTRY}-template.yml > ${TMP_FILE}
-
-        if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
-        then
-            local PATCH=$(sed -e "s/%DEMO_IMAGE_REGISTRY%/${DEMO_IMAGE_REGISTRY}/g" \
-                              -e "s/%REGISTRY_NAME%/${REGISTRY_NAME}/g" \
-                              ${SCRIPTS_RESOURCES_DIR}/demo-nfs-deployment.patch)
-            oc patch --local -f "${TMP_FILE}" -p "${PATCH}" -o yaml > ${OUTPUT_FILE}
-            awk '/^apiVersion:.*/ { print "---" } 1' ${OUTPUT_FILE} > ${TMP_FILE}
-        fi
-
-        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_IMAGE_REGISTRY_USER_PWD})
-        echo '---' >> ${TMP_FILE}
-        oc create secret generic ${REGISTRY_NAME}-auth-secret --dry-run=client --from-literal=htpasswd=${HTPASSWD} \
-            -n ${DEMO_IMAGE_REGISTRY} -o yaml >> ${TMP_FILE}
-
-        mv ${TMP_FILE} ${OUTPUT_FILE}
-    done
-
-    echo
-    oc create -f ${TMP_DIR} -n ${DEMO_IMAGE_REGISTRY}
-    rm -rf ${TMP_DIR}
-
-    echo
-    local DCS="$(oc get deploy -o 'custom-columns=:.metadata.name' -n ${DEMO_IMAGE_REGISTRY} | xargs)"
-    for DC in ${DCS}
-    do
-        echo
-        oc rollout status deploy/${DC} -n ${DEMO_IMAGE_REGISTRY}
-    done
 }
 
 __register_insecure_registries() {

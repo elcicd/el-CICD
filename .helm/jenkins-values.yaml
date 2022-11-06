@@ -1,0 +1,133 @@
+elCicdDefs:
+  JENKINS_SERVICE_NAME: jenkins
+  DISABLE_ADMINISTRATIVE_MONITORS: "false"
+  KUBERNETES_MASTER: https://kubernetes.default:443
+  ENABLE_FATAL_ERROR_LOG_FILE: "false"
+  JENKINS_UC_INSECURE: "false"
+
+  CPU_REQUEST: 500m
+  MEMORY_REQUEST: 256Mi
+
+  JENKINS_VOLUME_MNTS:
+  - mountPath: /var/lib/jenkins
+    name: ${JENKINS_SERVICE_NAME}-data
+  JENKINS_VOLUMES:
+  - name: ${JENKINS_SERVICE_NAME}-data
+    persistentVolumeClaim:
+      claimName: ${JENKINS_SERVICE_NAME}
+
+elCicdTemplates:
+- templateName: deployment
+  appName: ${JENKINS_SERVICE_NAME}
+  labels:
+    name: ${JENKINS_SERVICE_NAME}
+  elCicdDefs-non-prod:
+    # override non-prod values here
+  elCicdDefs-prod:
+    # override prod values here
+  image: ${JENKINS_IMAGE}
+  strategyType: Recreate
+  imagePullPolicy: Always
+  imagePullSecret: ${JENKINS_IMAGE_PULL_SECRET}
+  serviceAccountName: ${JENKINS_SERVICE_NAME}
+  env:
+  - name: JENKINS_JAVA_OVERRIDES
+    value: -D-XX:+UseCompressedOops
+  - name: OPENSHIFT_ENABLE_OAUTH
+    value: ${OPENSHIFT_ENABLE_OAUTH}
+  - name: OPENSHIFT_ENABLE_REDIRECT_PROMPT
+    value: "true"
+  - name: KUBERNETES_MASTER
+    value: https://kubernetes.default:443
+  - name: KUBERNETES_TRUST_CERTIFICATES
+    value: "true"
+  - name: JENKINS_SERVICE_NAME
+    value: ${JENKINS_SERVICE_NAME}
+  - name: JNLP_SERVICE_NAME
+    value: ${JENKINS_SERVICE_NAME}
+  - name: ENABLE_FATAL_ERROR_LOG_FILE
+    value: ${ENABLE_FATAL_ERROR_LOG_FILE}
+  - name: JENKINS_UC_INSECURE
+    value: ${JENKINS_UC_INSECURE}
+  - name: CONFIG_MAP_JOBS_DIR
+    value: /var/lib/jenkins/mounted-jenkins-jobs
+  ports:
+    - name: httpport
+      containerPort: 8080
+    - name: jnlpport
+      containerPort: 50000
+  readinessProbe:
+    httpGet:
+      path: /login
+      port: 8080
+    initialDelaySeconds: 3
+    timeoutSeconds: 240
+  livenessProbe:
+    failureThreshold: 2
+    httpGet:
+      path: /login
+      port: 8080
+    initialDelaySeconds: 420
+    periodSeconds: 360
+    timeoutSeconds: 240
+  resources:
+    limits:
+      cpu: ${CPU_LIMIT}
+      memory: ${MEMORY_LIMIT}
+    requests:
+      cpu: ${CPU_REQUEST}
+      memory: ${MEMORY_REQUEST}
+  volumeMounts: ${JENKINS_VOLUME_MNTS}
+  volumes: ${JENKINS_VOLUMES}
+  projectedVolumeLabels:
+  - name: mounted-jenkins-jobs
+    mountPath: /var/lib/jenkins/mounted-jenkins-jobs
+    labels:
+    - jenkins-folder
+    - jenkins-pipeline
+
+- templateName: configMap
+  appName: openshift-jenkins-login-plugin-config
+  data:
+    Overall-Administer: edit
+    Overall-Read: view
+    Job-Build: view
+    Job-Cancel: view
+    Job-Read: view
+
+- templateName: service
+  appName: ${JENKINS_SERVICE_NAME}
+  ports:
+  - name: https
+    port: 8080
+  - name: jnlpport
+    port: 50000
+
+- templateName: ingress
+  appName: ${JENKINS_SERVICE_NAME}
+  host: ${JENKINS_URL}
+
+- templateName: serviceAccount
+  appName: ${JENKINS_SERVICE_NAME}
+  annotations:
+    serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}/
+
+- templateName: roleBinding
+  appName: ${JENKINS_SERVICE_NAME}_edit
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICE_NAME}
+
+- templateName: persistentVolumeClaim
+  appName: ${JENKINS_SERVICE_NAME}
+  storageRequest: ${VOLUME_CAPACITY}
+  accessMode: ReadWriteOnce
+      
+- templateName: persistentVolumeClaim
+  appName: ${JENKINS_SERVICE_NAME}-agent-home
+  storageRequest: ${VOLUME_CAPACITY}
+  accessMode: ReadWriteMany
