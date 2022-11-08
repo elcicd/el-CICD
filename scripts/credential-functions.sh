@@ -213,11 +213,11 @@ _run_custom_credentials_script() {
     local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
 
     echo
-    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_REPOSITORY_BOOTSTRAP}..."
-    if [[ -f ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
+    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_BOOTSTRAP_DIR}..."
+    if [[ -f ${CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
     then
         echo "Found ${CUSTOM_CREDENTIALS_SCRIPT}; running..."
-        ${CONFIG_REPOSITORY_BOOTSTRAP}/${CUSTOM_CREDENTIALS_SCRIPT}
+        ${CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT}
         echo "Custom script ${CUSTOM_CREDENTIALS_SCRIPT} completed"
     else
         echo "Custom script '${CUSTOM_CREDENTIALS_SCRIPT}' not found."

@@ -32,7 +32,7 @@ __init_jenkins_build() {
 
     mkdir -p ${TARGET_JENKINS_BUILD_DIR}
 
-    cp -vRT ${CONFIG_REPOSITORY_JENKINS} ${TARGET_JENKINS_BUILD_DIR}
+    cp -vRT ${CONFIG_JENKINS_DIR} ${TARGET_JENKINS_BUILD_DIR}
 
     if [[ ! -z ${JENKINS_AGENTS_BUILD_DIRS} ]]
     then

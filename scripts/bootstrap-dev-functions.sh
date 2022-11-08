@@ -9,7 +9,7 @@ __bootstrap_dev_environment() {
 
     __summarize_and_confirm_dev_setup_info
 
-    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
@@ -354,13 +354,13 @@ __create_credentials() {
 }
 
 __init_el_cicd_repos() {
-    __set_config_value EL_CICD_ORGANIZATION ${EL_CICD_ORGANIZATION} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
-    __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
-    __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${CONFIG_REPOSITORY}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_ORGANIZATION ${EL_CICD_ORGANIZATION} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
-    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
-    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
-    find ${CONFIG_REPOSITORY}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
+    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
+    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
+    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
 
     local ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO} ${EL_CICD_CONFIG_REPO} ${EL_CICD_DEPLOY_REPO} ${EL_CICD_DOCS_REPO} ${EL_CICD_TEST_PROJECTS}")
     for EL_CICD_REPO_dir in ${ALL_EL_CICD_REPOS}

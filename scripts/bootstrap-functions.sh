@@ -8,11 +8,11 @@ export _YES='Yes'
 export _NO='No'
 
 _bootstrap_el_cicd() {
-    EL_CICD_ONBOARDING_SERVER_TYPE=${1}
+    ONBOARDING_SERVER_TYPE=${1}
 
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
-        echo "el-CICD ${EL_CICD_ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
+        echo "el-CICD ${ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
         echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} and rerun."
         echo "Exiting."
         exit 1
@@ -37,14 +37,14 @@ _bootstrap_el_cicd() {
 
     echo
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
-    _refresh_${EL_CICD_ONBOARDING_SERVER_TYPE/-/_}_credentials
+    _refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials
 
     echo
-    echo "RUN ALL CUSTOM SCRIPTS '${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_REPOSITORY_BOOTSTRAP}"
+    echo "RUN ALL CUSTOM SCRIPTS '${ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_BOOTSTRAP_DIR}"
     __run_custom_config_scripts
 
     echo
-    echo "${EL_CICD_ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
+    echo "${ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
     echo "https://${JENKINS_URL}"
 }
 
@@ -80,7 +80,7 @@ __create_config_source_file() {
     local EXTRA_CONF_FILES=$(echo ${INCLUDE_SYSTEM_FILES}:${ADDITIONAL_FILES} | tr ':' ' ')
     for CONF_FILE in ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}
     do
-        local FOUND_FILES="${FOUND_FILES} $(find ${CONFIG_REPOSITORY} ${CONFIG_REPOSITORY_BOOTSTRAP} -maxdepth 1 -name ${CONF_FILE})"
+        local FOUND_FILES="${FOUND_FILES} $(find ${CONFIG_DIR} ${CONFIG_BOOTSTRAP_DIR} -maxdepth 1 -name ${CONF_FILE})"
     done
     echo "Config processed: $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
     awk -F= '!line[$1]++' ${SYSTEM_DEFAULT_CONFIG_FILE} ${FOUND_FILES} >> ${META_INFO_FILE_TMP}
@@ -110,7 +110,8 @@ __gather_and_confirm_bootstrap_info_with_user() {
 __bootstrap_el_cicd_onboarding_server() {
     _delete_namespace ${ONBOARDING_MASTER_NAMESPACE} 10
 
-    __create_master_namespace_with_selectors
+    local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
+    oc new-project ${ONBOARDING_MASTER_NAMESPACE}
 
     _create_el_cicd_meta_info_config_map
     
@@ -154,14 +155,6 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo -n "'${ONBOARDING_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
     fi
 
-    if [[ ! -z ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
-    then
-        echo -n " with the following node selectors:"
-        echo "${ONBOARDING_MASTER_NODE_SELECTORS}"
-    else
-        echo
-    fi
-
     if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
     then
         echo
@@ -183,24 +176,6 @@ _confirm_continue() {
         echo
         echo "You must enter ${_YES} for bootstrap to continue.  Exiting..."
         exit 0
-    fi
-}
-
-__create_master_namespace_with_selectors() {
-    echo
-    NODE_SELECTORS=$(echo ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
-    local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
-    if [[ ! -z  ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
-    then
-        CREATE_MSG="${CREATE_MSG} with node selectors: ${ONBOARDING_MASTER_NODE_SELECTORS}"
-    fi
-    echo ${CREATE_MSG}
-
-    if [[ ! -z ${ONBOARDING_MASTER_NODE_SELECTORS} ]]
-    then
-        oc adm new-project ${ONBOARDING_MASTER_NAMESPACE} --node-selector="${ONBOARDING_MASTER_NODE_SELECTORS}"
-    else
-        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
     fi
 }
 
@@ -228,7 +203,7 @@ __create_onboarding_automation_server() {
     
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
-    helm upgrade --atomic --install --history-max=1  \
+    helm upgrade --atomic --install --history-max=1 \
         --set elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set elCicdDefs.JENKINS_URL=${JENKINS_URL} \
         --set "elCicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
@@ -237,8 +212,9 @@ __create_onboarding_automation_server() {
         --set elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         --set elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -f ${CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         -f ${HELM_DIR}/jenkins-values.yaml \
-        -f ${HELM_DIR}/${EL_CICD_ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x
@@ -248,13 +224,12 @@ __create_onboarding_automation_server() {
     sleep 5
     
     set -x
-    helm upgrade --atomic --install --history-max=1  \
+    helm upgrade --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${HELM_DIR}/pipeline-sync-values.yaml \
         jenkins-sync \
         elCicdCharts/elCicdChart
-    exit 1
     set +x
 
     echo
@@ -270,8 +245,6 @@ __create_onboarding_automation_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
     set +e
-    echo helm"EXITING: TIME TO INSTALL PIPELINES"
-    exit 0
 }
 
 _helm_repo_add_and_update_elCicdCharts() {
@@ -317,7 +290,7 @@ __build_jenkins_agents_if_necessary() {
 }
 
 __run_custom_config_scripts() {
-    local SCRIPTS=$(find "${CONFIG_REPOSITORY_BOOTSTRAP}" -type f -executable \( -name "${EL_CICD_ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
+    local SCRIPTS=$(find "${CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "${ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
     if [[ ! -z ${SCRIPTS} ]]
     then
         for FILE in ${SCRIPTS}
