@@ -144,31 +144,32 @@ def getSldcConfigValues(def projectInfo) {
         elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}.${projectInfo.id}-${env}_GROUP"] = group
     }
     
-    elCicdDefs.NFS_APP_NAMES = []
-    projectInfo.nfsShares.each { nfsShare ->
-        nfsShare.envs.each { env ->
-            def namespace = projectInfo.nonProdNamespaces[env]
-            def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-            elCicdDefs.NFS_APP_NAMES << appName
-            
-            nfsMap = [:]
-            nfsMap.CLAIM_NAME = nfsShare.claimName
-            nfsMap.CAPACITY = nfsShare.capacity
-            nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
-            nfsMap.PATH = nfsShare.exportPath
-            nfsMap.SERVER = nfsShare.server
-            nfsMap.NAMESPACE = namespace
-            
-            sdlcConfigValues[appName] = nfsMap
-        }
-    }
-    sdlcConfigValues.elCicdDefs = elCicdDefs
-    
     sdlcConfigValues.profiles = []
     sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keys())
     if (projectInfo.nfsShares) {
         sdlcConfigValues.profiles << "nfs"
+        
+        elCicdDefs.NFS_APP_NAMES = []
+        projectInfo.nfsShares.each { nfsShare ->
+            nfsShare.envs.each { env ->
+                def namespace = projectInfo.nonProdNamespaces[env]
+                def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+                elCicdDefs.NFS_APP_NAMES << appName
+                
+                nfsMap = [:]
+                nfsMap.CLAIM_NAME = nfsShare.claimName
+                nfsMap.CAPACITY = nfsShare.capacity
+                nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
+                nfsMap.PATH = nfsShare.exportPath
+                nfsMap.SERVER = nfsShare.server
+                nfsMap.NAMESPACE = namespace
+                
+                sdlcConfigValues[appName] = nfsMap
+            }
+        }
     }
+    
+    sdlcConfigValues.elCicdDefs = elCicdDefs
     
     return sdlcConfigValues
 }
