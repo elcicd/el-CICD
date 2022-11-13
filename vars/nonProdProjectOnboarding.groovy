@@ -9,12 +9,6 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    stage("Install/upgrade CICD Jenkins if necessary") {
-        def rbacGroups = projectInfo.rbacGroups.toMapString()
-        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
-        onboardingUtils.createNonProdSdlcNamespacesAndPipelines(projectInfo)
-    }
-
     stage('Tear down project SDLC for reinstall requested') {
         loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
 
@@ -22,11 +16,13 @@ def call(Map args) {
             sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
         }
     }
+
+    stage("Install/upgrade CICD Jenkins if necessary") {
+        onboardingUtils.createCicdNamespaceAndJenkins(projectInfo)
+    }
     
-    stage('Install/upgrade project SDLC resources') {
-        loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
-        
-        onboardingUtils.createSdlcNamespacesAndPipelines(projectInfo)
+    stage('Install/upgrade project SDLC resources') {        
+        onboardingUtils.createNonProdSdlcNamespacesAndPipelines(projectInfo)
     }
     
     jenkinsUtils.configureCicdJenkinsUrls(projectInfo)

@@ -25,93 +25,87 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 }
 
 def createCicdNamespaceAndJenkins(def projectInfo) {
-    stage('Creating CICD namespace and Jenkins CICD Server for project') {
-        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} NAMESPACE AND CICD SERVER FOR PROJECT ${projectInfo.id}")
+    def rbacGroups = projectInfo.rbacGroups.toMapString()
+    loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
-        if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
-            el.cicd.JENKINS_IMAGE_PULL_SECRET =
-                sh(returnStdout: true,
-                    script: """
-                        oc get secrets -o custom-columns=:metadata.name -n ${projectInfo.cicdMasterNamespace} | \
-                        grep deployer-dockercfg | \
-                        tr -d '[:space:]'
-                    """
-                )
-        }
-        
-        def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-        def helmCommands = """
-            helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-            
-            helm upgrade --create-namespace --atomic --install --history-max=1 \
-                --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-                --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
-                --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
-                --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
-                --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
-                --set-string create-namespaces \
-                -n ${projectInfo.cicdMasterNamespace} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
-                ${PROJECT_ID} \
-                elCicdCharts/elCicdChart
-        """
-        
-        echo helmCommand
-
+    if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
         sh """
-            set +x
-            ${helmCommands}
-
-            echo
-            echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
-            sleep 5
-            set -x
+            if [[ -z \$(oc get project ${projectInfo.cicdMasterNamespace} --no-headers --ignore-not-found) ]]
+            then
+                oc create project ${projectInfo.cicdMasterNamespace}
+                sleep 3
+            fi
         """
+        
+        el.cicd.JENKINS_IMAGE_PULL_SECRET =
+            sh(returnStdout: true,
+                script: """
+                    oc get secrets -o custom-columns=:metadata.name -n ${projectInfo.cicdMasterNamespace} | \
+                    grep deployer-dockercfg | \
+                    tr -d '[:space:]'
+                """
+            )
     }
+    
+    def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    sh """
+        ${shCmd.echo ''}
+        helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+        
+        ${shCmd.echo ''}
+        helm upgrade --create-namespace --atomic --install --history-max=1 \
+            --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
+            --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
+            --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
+            --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
+            --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
+            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+            --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
+            --set-string create-namespaces \
+            -n ${projectInfo.cicdMasterNamespace} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
+            -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
+            -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            ${PROJECT_ID} \
+            elCicdCharts/elCicdChart
+
+        ${shCmd.echo ''}
+        ${shCmd.echo 'Jenkins CICD Server up, sleep for 5 more seconds to make sure server REST api is ready'}
+        sleep 5
+    """
 }
 
 
 def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
-    stage('Creating SDLC namespaces and pipelines') {
-        loggingUtils.echoBanner("CREATING/UPGRADING THE SLDC ENVIRONMENTS AND RESOURCES FOR PROJECT ${PROJECT_ID}")
+    loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
 
-        def projectDefs = getSldcConfigValues(projectInfo)
-        def sdlcConfigValues = writeYaml(data: elCicdDefs, returnText: true)
-        
-        def sdlcConfigFile = "sdlc-config-values.yaml"
-        writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
-        
-        def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-        def helmCommands = """
-            helm upgrade --atomic --install --history-max=1 --debug \
-                -f ${sdlcConfigFile} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
-                -n ${projectInfo.cicdMasterNamespace} \
-                ${projectInfo.id} \
-                elCicdCharts/elCicdChart
+    def projectDefs = getSldcConfigValues(projectInfo)
+    def sdlcConfigValues = writeYaml(data: elCicdDefs, returnText: true)
+    
+    def sdlcConfigFile = "sdlc-config-values.yaml"
+    writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
+    
+    def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+            
+    sh """
+        ${shCmd.echo ''}
+        helm upgrade --create-namespace --atomic --install --history-max=1 --debug \
+            -f ${sdlcConfigFile} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
+            -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
+            -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -n ${projectInfo.cicdMasterNamespace} \
+            ${projectInfo.id} \
+            elCicdCharts/elCicdChart
 
-            helm upgrade --wait-for-jobs --install --history-max=1  \
-                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-                -n ${projectInfo.cicdMasterNamespace} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
-                jenkins-sync \
-                elCicdCharts/elCicdChart
-        """
-        
-        echo helmCommands
-                
-        sh """
-            set +x
-            ${helmCommands}
-            set -x
-        """
-    }
+        ${shCmd.echo ''}
+        helm upgrade --wait-for-jobs --install --history-max=1  \
+            --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
+            -n ${projectInfo.cicdMasterNamespace} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+            jenkins-sync \
+            elCicdCharts/elCicdChart
+    """
 }
 
 def getSldcConfigValues(def projectInfo) {
