@@ -60,7 +60,6 @@ _create_meta_info_file() {
     do
         local FOUND_FILES="${FOUND_FILES} $(find ${CONFIG_DIR} ${CONFIG_BOOTSTRAP_DIR} -maxdepth 1 -name ${CONF_FILE})"
     done
-    echo "Config processed: $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
     awk -F= '!line[$1]++' ${SYSTEM_DEFAULT_CONFIG_FILE} ${FOUND_FILES} >> ${META_INFO_FILE_TMP}
 
     echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE_TMP}
@@ -72,6 +71,8 @@ _create_meta_info_file() {
     rm ${META_INFO_FILE_TMP}
 
     sort -o ${META_INFO_FILE} ${META_INFO_FILE}
+    echo "Config files processed for el-cicd-meta-info (${META_INFO_FILE}):"
+    echo "    $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
@@ -87,10 +88,11 @@ __gather_and_confirm_bootstrap_info_with_user() {
 }
 
 __bootstrap_el_cicd_onboarding_server() {
-    _delete_namespace ${ONBOARDING_MASTER_NAMESPACE} 10
-
-    local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
-    oc new-project ${ONBOARDING_MASTER_NAMESPACE}
+    if [[ -z $(oc get project ${ONBOARDING_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
+    then
+        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
+        sleep 3
+    fi
     
     __create_onboarding_automation_server
 }
@@ -171,7 +173,7 @@ __create_onboarding_automation_server() {
     set -e    
     if [[ -z ${JENKINS_IMAGE_PULL_SECRET} && ${OKD_VERSION} ]]
     then
-        JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' | grep deployer-dockercfg)
+        JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' -n ${ONBOARDING_MASTER_NAMESPACE} | grep deployer-dockercfg)
     fi
 
     _create_meta_info_file
@@ -180,7 +182,7 @@ __create_onboarding_automation_server() {
     
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
-    helm upgrade --create-namespace --atomic --install --history-max=1 \
+    helm upgrade --atomic --install --history-max=1 \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
@@ -212,6 +214,7 @@ __create_onboarding_automation_server() {
         jenkins-sync \
         elCicdCharts/elCicdChart
     set +x
+    helm uninstall jenkins-sync
 
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="

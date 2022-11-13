@@ -349,8 +349,8 @@ __create_credentials() {
     do
         echo
         echo "Creating the image repository access token file for ${ENV} environment:"
-        echo "$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})"
-        echo ${DEMO_IMAGE_REGISTRY_USER_PWD} > $(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        echo "$(eval echo \${${ENV}${PULL_TOKEN_POSTFIX}})"
+        echo ${DEMO_IMAGE_REGISTRY_USER_PWD} > $(eval echo \${${ENV}${PULL_TOKEN_POSTFIX}})
     done
 }
 

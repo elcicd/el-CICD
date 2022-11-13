@@ -194,6 +194,8 @@ fi
 
 _verify_scm_secret_files_exist
 
+_verify_pull_secret_files_exist
+
 echo
 case ${CLI_OPTION} in
 
