@@ -147,7 +147,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.NFS_APP_NAMES = []
     projectInfo.nfsShares.each { nfsShare ->
         nfsShare.envs.each { env ->
-            def namepace = projectInfo.nonProdNamespaces[env]
+            def namespace = projectInfo.nonProdNamespaces[env]
             def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
             elCicdDefs.NFS_APP_NAMES << appName
             
