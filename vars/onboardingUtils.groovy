@@ -74,8 +74,9 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
         loggingUtils.echoBanner("CREATING/UPGRADING THE SLDC ENVIRONMENTS AND RESOURCES FOR PROJECT ${PROJECT_ID}")
 
         def projectDefs = getSldcConfigValues(projectInfo)
+        def sdlcConfigValues = writeYaml(data: elCicdDefs, returnText: true)
+        
         def sdlcConfigFile = "sdlc-config-values.yaml"
-        def sdlcConfigValues = writeYaml(text: elCicdDefs, returnText: true)
         writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
         
         def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
