@@ -17,7 +17,7 @@ def initMetaData(Map metaData) {
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
-        el.cicd.EL_CICD_HELM_DIR = "${EL_CICD_DIR}/.helm"
+        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.EL_CICD_DIR}/.helm"
         el.cicd.DEFAULT_KUSTOMIZE = "kustomize"
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
