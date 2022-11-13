@@ -117,7 +117,7 @@ elCicdDefs-delete-project:
             </hudson.model.StringParameterDefinition>
             <hudson.model.BooleanParameterDefinition>
               <name>DELETE_JENKINS_CICD_SERVER</name>
-              <description>Should the team's Jenkins CICD Automation Server be deleted, too?</description>
+              <description>Should the team's Jenkins CICD CICD Server be deleted, too?</description>
               <defaultValue>false</defaultValue>
             </hudson.model.BooleanParameterDefinition>
           </parameterDefinitions>

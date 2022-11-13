@@ -25,8 +25,8 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
 }
 
 def createCicdNamespaceAndJenkins(def projectInfo) {
-    stage('Creating CICD namespace and rbacGroup Jenkins Automation Server') {
-        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} NAMESPACE AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")
+    stage('Creating CICD namespace and Jenkins CICD Server for project') {
+        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} NAMESPACE AND CICD SERVER FOR PROJECT ${projectInfo.id}")
 
         if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
             el.cicd.JENKINS_IMAGE_PULL_SECRET =

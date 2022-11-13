@@ -11,7 +11,7 @@ def call(Map args) {
     def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
     jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
 
-    stage('Push Image Repo Pull Secrets to rbacGroup Jenkins') {
+    stage('Push Image Repo Pull Secrets to CICD Jenkins') {
         jenkinsUtils.copyElCicdCredentialsToCicdServer(projectInfo, envs)
     }
 
@@ -25,7 +25,7 @@ def call(Map args) {
 
     stage('Create and push public key for each github repo to github with curl') {
         loggingUtils.echoBanner("CREATE DEPLOY KEYS FOR EACH GIT REPO:",
-                                " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroup} CICD JENKINS",
+                                " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroups[projectInfo.devEnv]} CICD JENKINS",
                                 " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
                                 
         projectInfo.modules.each { module ->

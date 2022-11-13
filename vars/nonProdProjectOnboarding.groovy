@@ -10,8 +10,8 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage("Install/upgrade CICD Jenkins if necessary") {
-        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")
-        
+        def rbacGroups = projectInfo.rbacGroups.toMapString()
+        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
         onboardingUtils.createNonProdSdlcNamespacesAndPipelines(projectInfo)
     }
 

@@ -32,7 +32,6 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.id = projectId
 
-        projectInfo.cicdMasterNamespace = "${projectInfo.rbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
         
         projectInfo.components = projectInfo.components ?: []
         projectInfo.artifacts = projectInfo.artifacts ?: []
@@ -115,6 +114,9 @@ def gatherProjectInfoStage(def projectId) {
 
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
+        
+        projectInfo.defaultRbacGroup = projectInfo.rbacGroups[projectInfo.devEnv]
+        projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
     }
 
     validateProjectInfo(projectInfo)
@@ -123,7 +125,9 @@ def gatherProjectInfoStage(def projectId) {
 }
 
 def validateProjectInfo(def projectInfo) {
-    assert projectInfo.rbacGroup : 'missing rbacGroup'
+    assert projectInfo.rbacGroups : 'missing rbacGroups'
+    def errMsg = "missing ${projectInfo.devEnv} rbacGroup: this is the default RBAC group for all environments if not otherwise specified"
+    assert projectInfo.defaultRbacGroup : errMsg
 
     assert projectInfo.scmHost ==~
         /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :

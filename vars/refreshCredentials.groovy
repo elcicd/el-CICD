@@ -38,7 +38,7 @@ def call(Map args) {
                     }
                 }
                 else {
-                    loggingUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s Automation Server already updated, moving on to updating component credentials")
+                    loggingUtils.echoBanner("${projectInfo.cicdMasterNamespace}'s CICD Server already updated, moving on to updating component credentials")
                 }
 
                 stage('Delete old github public keys with curl') {

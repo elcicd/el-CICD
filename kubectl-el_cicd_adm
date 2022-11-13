@@ -54,10 +54,10 @@ Usage: oc el-cicd-adm [OPTION] [root-config-file]
 el-CICD Admin Utility
 
 Options:
-    -N,   --non-prod:        bootstraps Non-prod el-CICD Onboarding Automation Server
-    -n,   --non-prod-creds:  refresh Non-prod el-CICD Onboarding Automation Server credentials
-    -P,   --prod:            bootstraps Prod el-CICD Onboarding Automation Server
-    -p,   --prod-creds:      refresh Prod el-CICD Onboarding Automation Server credentials
+    -N,   --non-prod:        bootstraps Non-prod el-CICD Onboarding CICD Server
+    -n,   --non-prod-creds:  refresh Non-prod el-CICD Onboarding CICD Server credentials
+    -P,   --prod:            bootstraps Prod el-CICD Onboarding CICD Server
+    -p,   --prod-creds:      refresh Prod el-CICD Onboarding CICD Server credentials
     -c,   --cicd-creds:      run the refresh-credentials pipeline
     -s,   --sealed-secrets:  reinstall/upgrade Sealed Secrets
     -j,   --jenkins:         only build el-CICD Jenkins image

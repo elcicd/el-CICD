@@ -16,7 +16,7 @@ def call(Map args) {
         namespacesToDelete += args.deleteJenkinsCicdServer ? " ${projectInfo.cicdMasterNamespace}" : ''
 
         def msg = args.deleteJenkinsCicdServer ?
-            "REMOVING ${projectInfo.rbacGroup} AUTOMATION SERVER AND ${projectInfo.id} ENVIRONMENT(S):" :
+            "REMOVING ${projectInfo.id} CICD SERVER AND ENVIRONMENT(S):" :
             "REMOVING ${projectInfo.id} ENVIRONMENT(S):"
 
         loggingUtils.echoBanner(msg, namespacesToDelete.join(' '))
