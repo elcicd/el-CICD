@@ -69,7 +69,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
 }
 
 
-def createNonProdSdlcNamespacesAndPipelines(def projectInfo, def isNonProd) {
+def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     stage('Creating SDLC namespaces and pipelines') {
         loggingUtils.echoBanner("CREATING/UPGRADING THE SLDC ENVIRONMENTS AND RESOURCES FOR PROJECT ${PROJECT_ID}")
 
