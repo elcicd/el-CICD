@@ -142,6 +142,7 @@ def getSldcConfigValues(def projectInfo) {
 
     projectInfo.rbacGroups.each { env, group ->
         elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}.${projectInfo.id}-${env}_GROUP"] = group
+    }
     
     elCicdDefs.NFS_APP_NAMES = []
     projectInfo.nfsShares.each { nfsShare ->
