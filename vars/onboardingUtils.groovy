@@ -157,7 +157,7 @@ def getSldcConfigValues(def projectInfo) {
             nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
             nfsMap.PATH = nfsShare.exportPath
             nfsMap.SERVER = nfsShare.server
-            nfsMap.NAMESPACE = namepace
+            nfsMap.NAMESPACE = namespace
             
             sdlcConfigValues[appName] = nfsMap
         }
