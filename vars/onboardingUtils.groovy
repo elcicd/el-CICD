@@ -145,7 +145,7 @@ def getSldcConfigValues(def projectInfo) {
     }
     
     sdlcConfigValues.profiles = []
-    sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keys())
+    sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
     if (projectInfo.nfsShares) {
         sdlcConfigValues.profiles << "nfs"
         
