@@ -45,20 +45,20 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
             ${shCmd.echo ''}
-            helm upgrade --create-namespace --atomic --install --history-max=1 \
-                --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-                --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
-                --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
-                --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
-                --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
-                --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
-                --set-string create-namespaces
-                -n ${projectInfo.cicdMasterNamespace} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
-                ${PROJECT_ID} \
+            helm upgrade --create-namespace --atomic --install --history-max=1 \ \n
+                --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \ \n
+                --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \ \n
+                --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \ \n
+                --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \ \n
+                --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \ \n
+                --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \ \n
+                --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \ \n
+                --set-string create-namespaces \ \n
+                -n ${projectInfo.cicdMasterNamespace} \ \n
+                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \ \n
+                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \ \n
+                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \ \n
+                ${PROJECT_ID} \ \n
                 elCicdCharts/elCicdChart
 
             ${shCmd.echo ''}
@@ -81,20 +81,20 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
         
         def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
         def helmCommands = """
-            helm upgrade --atomic --install --history-max=1 --debug \
-                -n ${projectInfo.cicdMasterNamespace} \
-                -f ${sdlcConfigFile} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
-                ${projectInfo.id} \
+            helm upgrade --atomic --install --history-max=1 --debug \ \n
+                -f ${sdlcConfigFile} \  \n
+                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \  \n
+                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \  \n
+                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \  \n
+                -n ${projectInfo.cicdMasterNamespace} \  \n
+                ${projectInfo.id} \  \n
                 elCicdCharts/elCicdChart
 
-            helm upgrade --wait-for-jobs --install --history-max=1  \
-                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-                -n ${projectInfo.cicdMasterNamespace} \
-                -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
-                jenkins-sync \
+            helm upgrade --wait-for-jobs --install --history-max=1  \  \n
+                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \  \n
+                -n ${projectInfo.cicdMasterNamespace} \  \n
+                -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \  \n
+                jenkins-sync \ \n
                 elCicdCharts/elCicdChart
         """
         
