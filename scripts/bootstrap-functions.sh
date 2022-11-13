@@ -48,32 +48,10 @@ _bootstrap_el_cicd() {
     echo "https://${JENKINS_URL}"
 }
 
-_source_el_cicd_config_files() {
-    set -e 
-    local META_INFO_FILE=/tmp/.el_cicd_config_file
-
-    __create_config_source_file ${META_INFO_FILE} ${INCLUDE_BOOTSTRAP_FILES}
-
-    source ${META_INFO_FILE}
-    set +e +x
-}
-
-_create_el_cicd_meta_info_config_map() {
-    set -e
-    local META_INFO_FILE=/tmp/.el_cicd_meta_info_map_file
-
-    __create_config_source_file ${META_INFO_FILE}
-
-    oc delete --ignore-not-found cm ${EL_CICD_META_INFO_NAME} -n ${ONBOARDING_MASTER_NAMESPACE}
-    sleep 3
-    oc create cm ${EL_CICD_META_INFO_NAME} --from-env-file=${META_INFO_FILE} -n ${ONBOARDING_MASTER_NAMESPACE}
-    set +e
-}
-
-__create_config_source_file() {
-    local META_INFO_FILE=${1}
-    local META_INFO_FILE_TMP=${1}_TMP
-    local ADDITIONAL_FILES=${2}
+_create_meta_info_file() {
+    META_INFO_FILE=/tmp/.el_cicd_meta_info_file
+    local META_INFO_FILE_TMP=.el_cicd_meta_info_tmp_file
+    local ADDITIONAL_FILES=${1}
 
     rm -f ${META_INFO_FILE} ${META_INFO_FILE_TMP}
 
@@ -90,11 +68,12 @@ __create_config_source_file() {
 
     source ${META_INFO_FILE_TMP}
     cat ${META_INFO_FILE_TMP} | envsubst > ${META_INFO_FILE}
+    
+    rm ${META_INFO_FILE_TMP}
 
     sort -o ${META_INFO_FILE} ${META_INFO_FILE}
-
-    rm ${META_INFO_FILE_TMP}
 }
+
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
@@ -112,8 +91,6 @@ __bootstrap_el_cicd_onboarding_server() {
 
     local CREATE_MSG="Creating ${ONBOARDING_MASTER_NAMESPACE}"
     oc new-project ${ONBOARDING_MASTER_NAMESPACE}
-
-    _create_el_cicd_meta_info_config_map
     
     __create_onboarding_automation_server
 }
@@ -188,8 +165,6 @@ __create_onboarding_automation_server() {
     echo
     echo "NOTE: This DOES NOT apply to CICD servers"
     echo
-    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
-    echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
     echo
@@ -198,26 +173,32 @@ __create_onboarding_automation_server() {
     then
         JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' | grep deployer-dockercfg)
     fi
+
+    _create_meta_info_file
     
     _helm_repo_add_and_update_elCicdCharts
     
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
-    helm upgrade --atomic --install --history-max=1 \
-        --set elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
-        --set elCicdDefs.JENKINS_URL=${JENKINS_URL} \
-        --set "elCicdDefs.OPENSHIFT_ENABLE_OAUTH='${JENKINS_OPENSHIFT_ENABLE_OAUTH}'" \
-        --set elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
-        --set elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-        --set elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-        --set elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+    helm upgrade --create-namespace --atomic --install --history-max=1 \
+        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
+        --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
+        --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
+        --set-string elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+        --set-string elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
+        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
+        --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
+        --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${META_INFO_FILE} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
-        -f ${HELM_DIR}/jenkins-values.yaml \
+        -f ${HELM_DIR}/jenkins-config-values.yaml \
         -f ${HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x
+    
+    rm ${META_INFO_FILE}
 
     echo
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
@@ -227,7 +208,7 @@ __create_onboarding_automation_server() {
     helm upgrade --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${HELM_DIR}/pipeline-sync-values.yaml \
+        -f ${HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
         jenkins-sync \
         elCicdCharts/elCicdChart
     set +x
@@ -240,7 +221,6 @@ __create_onboarding_automation_server() {
     echo
     echo "NOTE: This DOES NOT apply to CICD servers"
     echo
-    oc adm policy add-cluster-role-to-user -z jenkins cluster-admin -n ${ONBOARDING_MASTER_NAMESPACE}
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
@@ -249,7 +229,7 @@ __create_onboarding_automation_server() {
 
 _helm_repo_add_and_update_elCicdCharts() {
     echo
-    helm repo add elCicdCharts https://raw.githubusercontent.com/elcicd/el-CICD-deploy/main/charts
+    helm repo add elCicdCharts --force-update ${EL_CICD_HELM_REPOSITORY}
     helm repo update elCicdCharts
 }
 

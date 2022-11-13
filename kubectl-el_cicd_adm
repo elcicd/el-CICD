@@ -169,7 +169,8 @@ do
 done
 
 source ${CONFIG_DIR}/${ROOT_CONFIG_FILE}
-_source_el_cicd_config_files
+_create_meta_info_file ${INCLUDE_BOOTSTRAP_FILES}
+source ${META_INFO_FILE}
 set +e
 
 echo
@@ -191,27 +192,25 @@ then
     echo '============ WARNING!!! =============='
 fi
 
+_verify_scm_secret_files_exist
+
 echo
 case ${CLI_OPTION} in
 
     '--non-prod' | '-N')
         echo "BOOTSTRAPPING NON-PROD"
         
-        _verify_secret_files_exist
         _bootstrap_el_cicd ${SERVER_TYPE_NON_PROD}
     ;;
 
     '--prod' | '-P')
         echo "BOOTSTRAPPING PROD"
         
-        _verify_secret_files_exist
         _bootstrap_el_cicd ${SERVER_TYPE_PROD}
     ;;
 
     '--non-prod-creds' | '-n')
         echo "REFRESH NON-PROD CREDENTIALS"
-        
-        _verify_secret_files_exist
 
         _create_el_cicd_meta_info_config_map
 
@@ -220,8 +219,6 @@ case ${CLI_OPTION} in
 
     '--prod-creds' | '-p')
         echo "REFRESH PROD CREDENTIALS"
-        
-        _verify_secret_files_exist
 
         _create_el_cicd_meta_info_config_map
 
@@ -265,8 +262,6 @@ case ${CLI_OPTION} in
 
     '--setup-dev' | '-D')
         echo "BOOTSTRAPPING EL-CICD DEVELOPMENT ENVIRONMENT"
-        
-        _verify_secret_files_exist
 
         __bootstrap_dev_environment
     ;;

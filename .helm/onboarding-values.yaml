@@ -1,0 +1,14 @@
+templateNames-nfs:
+- templateName: persistentVolume
+  appNames: ${NFS_APP_NAMES}
+  anyProfiles:
+  - nfs
+  storageCapacity: ${STORAGE_CAPACITY}
+  accessModes: ${ACESS_MODES}
+  nfs:
+    path: ${PATH}
+    server: ${SERVER}
+  claimRef:
+    name: ${CLAIM_NAME}
+    namespace: ${NAMESPACE}
+  

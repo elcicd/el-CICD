@@ -9,93 +9,27 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    cicdJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, true)
-
-    stage('refresh automation pipelines') {
-        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
+    stage("Install/upgrade CICD Jenkins if necessary") {
+        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")
         
-        def pipelineFiles
-        dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
-            pipelineFiles = findFiles(glob: "**/*.xml")
-        }
-        
-        jenkinsUtils.createOrUpdatePipelines(projectInfo, el.cicd.NON_PROD_AUTOMATION, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, pipelineFiles)
+        onboardingUtils.createNonProdSdlcNamespacesAndPipelines(projectInfo)
     }
-    
-    onboardingUtils.createNfsPersistentVolumes(projectInfo, true)
 
-    stage('Remove stale namespace environments if requested') {
+    stage('Tear down project SDLC for reinstall requested') {
         loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
 
-        if (args.rebuildNonProd || args.rebuildSandboxes) {
-            def namespacesToDelete = []
-            namespacesToDelete.addAll(projectInfo.sandboxNamespaces.values())
-            if (args.rebuildNonProd) {
-                namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
-                namespacesToDelete.add(projectInfo.hotfixNamespace)
-            }
-
-            onboardingUtils.deleteNamespaces(namespacesToDelete)
+        if (args.reinstallProjectSdlc) {
+            sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
         }
     }
-
-    stage('Add build-to-dev and/or build-artifact pipelines for each Github repo on non-prod Jenkins') {
-        loggingUtils.echoBanner("ADD BUILD AND DEPLOY PIPELINE FOR EACH MICROSERVICE GIT REPO USED BY ${projectInfo.id}")
-
-        onboardingUtils.generateBuildPipelineFiles(projectInfo)
+    
+    stage('Install/upgrade project SDLC resources') {
+        loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
         
-        def buildPipelineFiles
-        dir(el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
-            buildPipelineFiles = findFiles(glob: "**/*-build-*.xml")
-        }
-        
-        jenkinsUtils.createOrUpdatePipelines(projectInfo, projectInfo.id, el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR, buildPipelineFiles)
-        
-        dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
-            sh 'rm -f *-build-*.xml'
-        }
+        onboardingUtils.createSdlcNamespacesAndPipelines(projectInfo)
     }
-
-    stage('Setup OKD namespace environments') {
-        if (projectInfo.components) {
-            loggingUtils.echoBanner("SETUP NAMESPACE ENVIRONMENTS AND JENKINS RBAC FOR ${projectInfo.id}:",
-                                      projectInfo.nonProdNamespaces.values().join(', '))
-
-            def nodeSelectors = projectInfo.NON_PROD_ENVS.collectEntries { ENV ->
-                [ENV.toLowerCase(), el.cicd["${ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: '']
-            }
-
-            projectInfo.nonProdNamespaces.each { env, namespace ->
-                onboardingUtils.createNamepace(projectInfo, namespace, env, nodeSelectors[env])
-
-                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, env)
-
-                def resourceQuotaFile = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas.default
-                onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
-            }
-        }
-        else {
-            loggingUtils.echoBanner("NO MICROSERVICES DEFINED IN PROJECT: NO PROJECT NAMESPACES TO SETUP")
-        }
-    }
-
-    stage('Setup OKD sandbox environment(s)') {
-        if (projectInfo.components && (projectInfo.sandboxEnvs.size() > 0 || projectInfo.hotfixNamespace)) {
-            loggingUtils.echoBanner("Setup OKD sandbox environment(s):", projectInfo.sandboxNamespaces.values().join(', '))
-
-            def devNodeSelector = el.cicd["${projectInfo.DEV_ENV}${el.cicd.NODE_SELECTORS_POSTFIX}"]?.replaceAll(/\s/, '') ?: ''
-            def resourceQuotaFile = projectInfo.resourceQuotas.sandbox ?: projectInfo.resourceQuotas.default
-
-            projectInfo.sandboxNamespaces.each { env, namespace ->
-                onboardingUtils.createNamepace(projectInfo, namespace, projectInfo.devEnv, devNodeSelector)
-
-                onboardingUtils.copyPullSecretsToEnvNamespace(namespace, projectInfo.devEnv)
-
-                onboardingUtils.applyResoureQuota(projectInfo, namespace, resourceQuotaFile)
-            }
-        }
-    }
-
+    
+    jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
     manageDeployKeys([projectInfo: projectInfo, isNonProd: true])
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {

@@ -150,16 +150,6 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    def badReleaseRegions = projectInfo.releaseRegions.findAll { !(it ==~ /[a-z-]+/) }
-    assert !badReleaseRegions : "bad release region name(s) ${badReleaseRegions}, [a-z-]+, ${projectInfo.releaseRegions}"
-
-    projectInfo.resourceQuotas.each { env, resourceQuotaFile ->
-        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv ||  env == 'default' :
-            "resourceQuotas keys must be either an environment or 'default': '${env}'"
-
-        assert resourceQuotaFile && fileExists("${el.cicd.RESOURCE_QUOTA_DIR}/${resourceQuotaFile}")
-    }
-
     projectInfo.nfsShares.each { nfsShare ->
         validateNfsShare(projectInfo, nfsShare)
     }

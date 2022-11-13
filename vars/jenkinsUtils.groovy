@@ -7,31 +7,13 @@
 import groovy.transform.Field
 
 @Field
-def SYSTEM_DOMAIN_CREDS_BASE_PATH = 'credentials/store/system/domain/_'
+def JENKINS_CREDS_BASE_PATH = 'credentials/store/system/domain/_'
 
 @Field
-def CREATE_CREDS_PATH = "${SYSTEM_DOMAIN_CREDS_BASE_PATH}/createCredentials"
+def CREATE_CREDS_PATH = "${JENKINS_CREDS_BASE_PATH}/createCredentials"
 
 @Field
-def SYSTEM_DOMAIN_CREDS_PATH = "${SYSTEM_DOMAIN_CREDS_BASE_PATH}/credential"
-
-@Field
-def CREATE_ITEM = 'createItem'
-
-@Field
-def JOB = 'job'
-
-@Field
-def NAME = 'name'
-
-@Field
-def CONFIG_ITEM = 'config.xml'
-
-@Field
-def FOLDER_ITEM = 'folder.xml'
-
-@Field
-def API_JSON = 'api/json'
+def JENKINS_CREDS_PATH = "${JENKINS_CREDS_BASE_PATH}/credential"
 
 @Field
 def XML_CONTEXT_HEADER = "-H 'Content-Type:text/xml'"
@@ -46,73 +28,11 @@ def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls = [:]
     projectInfo.jenkinsUrls.HOST = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${CREATE_CREDS_PATH}"
-    projectInfo.jenkinsUrls.UPDATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}"
-    projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${SYSTEM_DOMAIN_CREDS_PATH}/doDelete"
-    
-    projectInfo.jenkinsUrls.ACCESS_FOLDER = "${projectInfo.jenkinsUrls.HOST}/${JOB}"
+    projectInfo.jenkinsUrls.UPDATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}"
+    projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}/doDelete"
 }
 
-def createPipelinesFolder(def projectInfo, def folderName) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN', )} ${curlUtils.XML_CONTEXT_HEADER} \
-                ${projectInfo.jenkinsUrls.HOST}/${CREATE_ITEM}?${NAME}=${folderName} \
-                --data-binary @${el.cicd.EL_CICD_PIPELINES_DIR}/${FOLDER_ITEM}
-        """
-    }
-}
- 
-def deletePipelinesFolder(def projectInfo, def folderName) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
-                ${projectInfo.jenkinsUrls.HOST}/${folderName}/
-        """
-    }
-}
-
-def listPipelinesInFolder(def projectInfo, def folderName) {
-    def listOfPipelines = []
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {        
-        def curlScript =  """
-            ${curlUtils.getCmd(curlUtils.GET, 'JENKINS_ACCESS_TOKEN', false)} ${curlUtils.FAIL_SILENT} \
-                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${API_JSON} |  \
-                jq -r '.jobs[].name'
-        """
-        
-        listOfPipelinesArray =  sh(returnStdout: true, script: curlScript).split(/\s+/)
-        listOfPipelines.addAll(listOfPipelinesArray)
-    }
-    return listOfPipelines
-}
-
-def createPipeline(def projectInfo, def folderName, def pipelineFileDir, def pipelineFile) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            PIPELINE_FILE=${pipelineFile.name}
-            ${shCmd.echo 'Creating ${PIPELINE_FILE%.*} pipeline'}
-            
-            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} \
-                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${CREATE_ITEM}?${NAME}=\${PIPELINE_FILE%.*} \
-                --data-binary @${pipelineFileDir}/${pipelineFile.name}
-            
-            ${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} -f ${curlUtils.XML_CONTEXT_HEADER} \
-                ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/\${PIPELINE_FILE%.*}/${CONFIG_ITEM} \
-                --data-binary @${pipelineFileDir}/${pipelineFile.name}
-        """
-    }
-}
-
-def deletePipeline(def projectInfo, def folderName, def pipelineName) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        sh """
-            ${shCmd.echo "Removing pipeline: ${pipelineName}"}
-            ${curlUtils.getCmd(curlUtils.DELETE, 'JENKINS_ACCESS_TOKEN')} ${projectInfo.jenkinsUrls.ACCESS_FOLDER}/${folderName}/${JOB}/${pipelineName}/
-        """
-    }
-}
-
-def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
+def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
@@ -126,8 +46,8 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def ENVS) {
     }
 
     def tokenIds = []
-    ENVS.each { ENV ->
-        def tokenId = el.cicd["${ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"]
+    envs.each { env ->
+        def tokenId = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"]
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
@@ -163,11 +83,11 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
     }
 }
 
-def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def ENVS) {
+def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
     loggingUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
 
-    def pullSecretNames = ENVS.collect { el.cicd["${it}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"] }.toSet()
-    def copyBuildSecrets = ENVS.contains(projectInfo.DEV_ENV)
+    def pullSecretNames = envs.collect { el.cicd["${it.toUpperCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"] }.toSet()
+    def copyBuildSecrets = envs.contains(projectInfo.DEV_ENV)
 
     sh """
         ${shCmd.echo ''}
@@ -220,25 +140,5 @@ def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
 
             rm -f ${JENKINS_CREDS_FILE}
         """
-    }
-}
-
-def createOrUpdatePipelines(def projectInfo, def pipelineFolderName, def pipelineDir, def pipelineFiles) {
-    def msg = ["CREATING/UPDATING PIPELINES FROM THE FOLLOWING FILES IN THE JENKINS ${pipelineFolderName} FOLDER:"]
-    msg.addAll(pipelineFiles.collect { it.name })
-    loggingUtils.echoBanner(msg)
-                
-    def oldAutomationPipelines = listPipelinesInFolder(projectInfo, pipelineFolderName)
-            
-    createPipelinesFolder(projectInfo, pipelineFolderName)
-    
-    pipelineFiles.each { pipelineFile ->
-        def pipelineName = pipelineFile.name.substring(0, pipelineFile.name.lastIndexOf('.'))
-        oldAutomationPipelines.remove(pipelineName)
-        createPipeline(projectInfo, pipelineFolderName, pipelineDir, pipelineFile)
-    }
-    
-    oldAutomationPipelines.each { pipelineName ->
-        deletePipeline(projectInfo, pipelineFolderName, pipelineName)
     }
 }

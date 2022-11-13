@@ -1,0 +1,81 @@
+elCicdDefs:
+  PORT: "5000"
+  REGISTRY_HTTP_ADDR: "0.0.0.0"
+  LIMITS_CPU: 500m
+  LIMITS_MEMORY: 100Mi
+  HTTP_ADDR:
+    name: REGISTRY_HTTP_ADDR
+    value: ${REGISTRY_HTTP_ADDR}:${PORT}
+
+elCicdDefs-htpasswd:
+  ENV:
+  - name: REGISTRY_AUTH
+    value: htpasswd
+  - name: REGISTRY_AUTH_HTPASSWD_REALM
+    value: "Registry Realm"
+  - name: REGISTRY_AUTH_HTPASSWD_PATH
+    value: "/auth/htpasswd"
+  - ${HTTP_ADDR}
+  VOLUME_MNT_HTPASSWD:
+    name: auth-vol
+    mountPath: "/auth"
+    readOnly: true
+  VOLUME_HTPASSWD:
+    name: auth-vol
+    secret:
+      secretName: ${APP_NAME}
+      
+elCicdDefs-nfs:
+  VOLUME_MNT_NFS:
+    name: ${DEMO_IMAGE_REGISTRY}
+    mountPath: /var/lib/registry
+    subPath: ${APP_NAME}
+  VOLUME_NFS:
+    name: ${DEMO_IMAGE_REGISTRY}
+    persistentVolumeClaim:
+      claimName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+
+elCicdTemplates:
+- templateName: deploymentServiceIngress
+  appNames: ${APP_NAMES}
+  image: registry
+  port: ${PORT}
+  env: ${ENV}
+  volumeMounts:
+  - ${VOLUME_MNT_HTPASSWD}
+  - ${VOLUME_MNT_NFS}
+  limitsCpu: ${LIMITS_CPU}
+  limitsMemory: ${LIMITS_MEMORY}
+  volumes:
+  - ${VOLUME_HTPASSWD}
+  - ${VOLUME_NFS}
+  
+- templateName: secret
+  appNames: ${APP_NAMES}
+  stringData:
+    htpasswd: ${${APP_NAME}_HTPASSWD}
+    
+- templateName: persistentVolume
+  appName: ${DEMO_IMAGE_REGISTRY}-nfs
+  anyProfiles:
+  - nfs
+  storageCapacity: 10Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /mnt/${DEMO_IMAGE_REGISTRY}
+    server: ${HOST_IP}
+  claimRef:
+    name: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+    
+- templateName: persistentVolumeClaim
+  appName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+  anyProfiles:
+  - nfs
+  accessMode: ReadWriteMany
+  storageRequest: 10Gi
+    
+  
+    
+
+

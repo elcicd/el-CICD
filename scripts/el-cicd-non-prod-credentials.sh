@@ -36,22 +36,23 @@ _refresh_non_prod_credentials() {
     echo
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
     echo "Creating the image repository pull secrets for each environment: ${CICD_ENVIRONMENTS}"
-    for ENV in ${CICD_ENVIRONMENTS}
-    do
-        _create_env_image_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
-    done
+    # for ENV in ${CICD_ENVIRONMENTS}
+    # do
+    #     _create_env_image_registry_secret ${ENV} ${ONBOARDING_MASTER_NAMESPACE}
+    # done
+    _create_env_image_registry_secrets
 
     echo
     echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
-    for ENV in ${CICD_ENVIRONMENTS}
-    do
-        ACCESS_TOKEN_ID=$(eval echo \${${ENV}${IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}})
-        SECRET_TOKEN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+    # for ENV in ${CICD_ENVIRONMENTS}
+    # do
+    #     ACCESS_TOKEN_ID=$(eval echo \${${ENV}${IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}})
+    #     SECRET_TOKEN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
 
-        echo
-        echo "Pushing ${ENV} image repo access token to Jenkins"
-        _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
-    done
+    #     echo
+    #     echo "Pushing ${ENV} image repo access token to Jenkins"
+    #     _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
+    # done
 
     echo
     echo "Creating ${EL_CICD_BUILD_SECRETS_NAME} secret containing el-CICD build secret(s) in ${ONBOARDING_MASTER_NAMESPACE}"

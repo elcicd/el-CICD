@@ -3,7 +3,7 @@
 
 export GITHUB_REST_API_HDR='Accept: application/vnd.github.v3+json'
 
-_verify_secret_files_exist() {
+_verify_scm_secret_files_exist() {
     if [[ ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
           ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
           ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
@@ -18,24 +18,40 @@ _verify_secret_files_exist() {
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}"
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
         echo "    ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE//${SECRET_FILE_DIR}\//}"
-        echo "ENSURE ALL el-CICD CREDENTIALS FILES EXIST BEFORE RE-RUNNING"
-        exit 1
+        __verify_continue
     fi
-    
-    CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV}"
+}
+
+_verify_pull_secret_files_exist() {    
+    CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
+        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${PULL_TOKEN_FILE_POSTFIX}
         if [[ ! -f ${TKN_FILE} ]]
         then
-            echo
-            echo "ERROR:"
-            echo "  MISSING THE FOLLOWING ENV PULL SECRET TOKEN FILE:"
-            echo "    ${TKN_FILE//${SECRET_FILE_DIR}\//}"
-            echo "ENSURE ALL el-CICD PULL SECRET TOKEN FILES EXIST BEFORE RE-RUNNING"
-            exit 1
+            local TOKEN_FILES=${TOKEN_FILES:+$TOKEN_FILES, }${TKN_FILE}
         fi
     done
+    
+    if [[ ! -z TOKEN_FILES ]]
+    then
+        echo
+        echo "ERROR:"
+        echo "  MISSING THE FOLLOWING ENV PULL SECRET TOKEN FILES:"
+        echo "    ${TOKEN_FILES//${SECRET_FILE_DIR}\//}"
+        __verify_continue
+    fi
+}
+
+__verify_continue() {
+    echo
+    echo "IT IS STRONGLY ADVISED YOU EXIT, FIX THE PROBLEM, AND RE-RUN THE UTILITY"
+    echo
+    CONTINUE=$(_get_yes_no_answer 'ARE YOU SURE YOU WISH TO CONTINUTE? [Y/n] ')
+    if [[ ${CONTINUE} != ${_YES} ]]
+    then
+        exit 1
+    fi
 }
 
 _check_sealed_secrets() {
@@ -134,30 +150,27 @@ _push_deploy_key_to_github() {
     rm -f ${GITHUB_CREDS_FILE}
 }
 
-_create_env_image_registry_secret() {
-    local ENV=${1}
-    local NAMESPACE_NAME=${2}
-
-    local USER_NAME=$(eval echo \${${ENV}${IMAGE_REGISTRY_USERNAME_POSTFIX}})
-    local SECRET_NAME=$(eval echo \${${ENV}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}})
-    local TKN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_FILE_POSTFIX}})
-    local DOMAIN=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
-
-    echo
-    echo "Creating secret ${SECRET_NAME} for SDLC environment ${ENV}"
-    local SECRET_FILE_IN=${SECRET_FILE_TEMP_DIR}/${SECRET_NAME}
-    oc create secret docker-registry ${SECRET_NAME}  \
-        --docker-username=${USER_NAME} \
-        --docker-password=$(cat ${TKN_FILE}) \
-        --docker-server=${DOMAIN} \
-        --dry-run=client \
-        -o yaml > ${SECRET_FILE_IN}
-
-    oc apply -f ${SECRET_FILE_IN} --overwrite -n ${NAMESPACE_NAME}
-
-    local LABEL_NAME=$(echo ${ENV} | tr '[:upper:]' '[:lower:]')-env
-    echo "Applying label ${LABEL_NAME} to secret ${SECRET_NAME}"
-    oc label secret ${SECRET_NAME} --overwrite ${LABEL_NAME}=true -n ${NAMESPACE_NAME}
+_create_env_image_registry_secrets() {
+    local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
+    for ENV in ${CICD_ENVIRONMENTS}
+    do
+        local APP_NAME="${ENV@L}-pull-secret"
+        local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
+        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${PULL_TOKEN_FILE_POSTFIX}"
+        local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
+        local SET_STRING="${SET_STRING:+$SET_STRING }--set-string elCicdDefs.${APP_NAME}${IMAGE_REGISTRY_POSTFIX}=${SERVER}"
+    done
+    
+    set -x
+    helm upgrade --create-namespace --atomic --install --history-max=1 \
+        --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
+        ${SET_FILE} \
+        ${SET_STRING} \
+        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -f ${HELM_DIR}/sdlc-image-registry-secrets-values.yaml \
+        el-cicd-pull-secrets \
+        elCicdCharts/elCicdChart
+    set +x
 }
 
 _push_access_token_to_jenkins() {

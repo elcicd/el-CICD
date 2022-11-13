@@ -36,12 +36,12 @@ elCicdDefs:
                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PROJECT_FOLDER_DATA:
     contentKey: config.xml
-    config.xml: ${FILE|jenkinsFolder.xml}
+    config.xml: ${JENKINS_FOLDER}
     path: ${PROJECT_ID}/config.xml
     optional: 'true'
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: config.xml
-    config.xml: ${FILE|pipelineTemplate.xml}
+    config.xml: ${PIPELINE_TEMPLATE_XML}
     path: ${PROJECT_ID}/jobs/${APP_NAME}/config.xml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
@@ -59,7 +59,7 @@ elCicdTemplates:
   appName: ${}-build-component
   labels: ${BUILD_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${FILE|buildComponentParams.xml}
+    PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS_XML}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
                   componentName: '${BASE_APP_NAME}',
@@ -77,7 +77,7 @@ elCicdTemplates:
   appName: ${}-build-artifact
   labels: ${BUILD_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${FILE|buildArtifactParams.xml}
+    PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS_XML}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
                   artifactName: '${BASE_APP_NAME}',

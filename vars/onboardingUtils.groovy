@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Utility methods for onboading applications into the el-CICD framework
@@ -13,124 +13,6 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml", text: libraryResource('templates/jenkinsTokenCredentials-template.xml')
 }
 
-def deleteNamespaces(def namespaces) {
-    if (namespaces instanceof Collection) {
-        namespaces = namespaces.join(' ')
-    }
-
-    sh """
-        oc delete project --ignore-not-found ${namespaces}
-
-        set +x
-        COUNTER=1
-        until [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespaces}) ]]
-        do
-            yes - | head -\${COUNTER} | paste -s -d '' -
-            sleep 2
-            let "COUNTER++"
-        done
-        set -x
-    """
-}
-
-def createNamepace(def projectInfo, def namespace, def env, def nodeSelectors) {
-    nodeSelectors = nodeSelectors ? "--node-selector='${nodeSelectors}'" : ''
-    sh """
-        if [[ -z \$(oc get projects --no-headers --ignore-not-found ${namespace}) ]]
-        then
-            ${shCmd.echo ''}
-            oc adm new-project ${namespace} ${nodeSelectors}
-
-            oc policy add-role-to-group edit ${projectInfo.rbacGroup} -n ${namespace}
-
-            oc policy add-role-to-user edit system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
-
-            oc adm policy add-cluster-role-to-user sealed-secrets-management \
-                system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
-            oc adm policy add-cluster-role-to-user secrets-unsealer \
-                system:serviceaccount:${projectInfo.cicdMasterNamespace}:jenkins -n ${namespace}
-
-            oc create sa jenkins-tester -n ${namespace}
-        fi
-    """
-}
-
-def applyResoureQuota(def projectInfo, def namespace, def resourceQuotaFile) {
-    sh """
-        ${shCmd.echo ''}
-        QUOTAS=\$(oc get quota --ignore-not-found -l=projectid=${projectInfo.id} -o jsonpath='{.items[*].metadata.name}' -n ${namespace})
-        if [[ ! -z \${QUOTAS} ]]
-        then
-            oc delete quota --wait --ignore-not-found \${QUOTAS} -n ${namespace}
-            sleep 2
-        fi
-    """
-
-    if (resourceQuotaFile) {
-        dir(el.cicd.RESOURCE_QUOTA_DIR) {
-            sh """
-                ${shCmd.echo ''}
-                oc apply -f ${resourceQuotaFile} -n ${namespace}
-                oc label projectid=${projectInfo.id} -f ${resourceQuotaFile} -n ${namespace}
-            """
-        }
-    }
-}
-
-def createNfsPersistentVolumes(def projectInfo, def isNonProd) {
-    def pvNames = [:]
-    if (projectInfo.components && projectInfo.nfsShares) {
-        loggingUtils.echoBanner("SETUP NFS PERSISTENT VOLUMES:", projectInfo.nfsShares.collect { it.claimName }.join(', '))
-
-        dir(el.cicd.OKD_TEMPLATES_DIR) {
-            projectInfo.nfsShares.each { nfsShare ->
-                def envs = isNonProd ? projectInfo.nonProdEnvs : [projectInfo.prodEnv]
-                envs.each { env ->
-                    if (nfsShare.envs.contains(env)) {
-                        namespace = isNonProd ? projectInfo.nonProdNamespaces[env] : projectInfo.prodNamespace
-                        pvName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-                        createNfsShare(projectInfo, namespace, pvName, nfsShare)
-
-                        pvNames[pvName] = true
-                    }
-                }
-            }
-        }
-    }
-
-    loggingUtils.echoBanner("REMOVE UNNEEDED, AVAILABLE AND RELEASED ${projectInfo.id} NFS PERSISTENT VOLUMES, IF ANY")
-    def releasedPvs = sh(returnStdout: true, script: """
-            ${shCmd.echo ''}
-            oc get pv -l projectid=${projectInfo.id} --ignore-not-found | egrep 'Released|Available' | awk '{ print \$1 }'
-        """).split('\n').findAll { it.trim() }
-
-    releasedPvs.each { pvName ->
-        if (!pvNames[pvName]) {
-            sh """
-                ${shCmd.echo ''}
-                oc delete pv ${pvName}
-            """
-        }
-    }
-}
-
-def createNfsShare(def projectInfo, def namespace, def pvName, def nfsShare) {
-    sh """
-        ${shCmd.echo ''}
-        oc process --local \
-                   -f nfs-pv-template.yml \
-                   -l projectid=${projectInfo.id}\
-                   -p PV_NAME=${pvName} \
-                   -p CAPACITY=${nfsShare.capacity} \
-                   -p ACCESS_MODE=${nfsShare.accessMode} \
-                   -p NFS_EXPORT=${nfsShare.exportPath} \
-                   -p NFS_SERVER=${nfsShare.server} \
-                   -p CLAIM_NAME=${nfsShare.claimName} \
-                   -p NAMESPACE=${namespace} \
-            | oc apply -f -
-    """
-}
-
 def copyPullSecretsToEnvNamespace(def namespace, def env) {
     def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
     sh """
@@ -142,32 +24,150 @@ def copyPullSecretsToEnvNamespace(def namespace, def env) {
     """
 }
 
+def createCicdNamespaceAndJenkins(def projectInfo) {
+    stage('Creating CICD namespace and rbacGroup Jenkins Automation Server') {
+        loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} NAMESPACE AND JENKINS FOR THE ${projectInfo.rbacGroup} GROUP")
 
-def generateBuildPipelineFiles(def projectInfo) {
-    dir (el.cicd.NON_PROD_AUTOMATION_PIPELINES_DIR) {
-        projectInfo.components.each { component ->
-            sh """
-                cp build-to-dev.xml.template ${component.name}-build-to-dev.xml
-                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
-                       -e "s/%COMPONENT_NAME%/${component.name}/g" \
-                       -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${component.gitDeployKeyJenkinsId}/g" \
-                       -e "s/%SCM_BRANCH%/${projectInfo.scmBranch}/g" \
-                       -e "s/%CODE_BASE%/${component.codeBase}/g" \
-                       -e "s/%DEV_NAMESPACE%/${projectInfo.devNamespace}/g" \
-                    ${component.name}-build-to-dev.xml
-            """
+        if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
+            el.cicd.JENKINS_IMAGE_PULL_SECRET =
+                sh(returnStdout: true,
+                    script: """
+                        oc get secrets -o custom-columns=:metadata.name -n ${projectInfo.cicdMasterNamespace} | \
+                        grep deployer-dockercfg | \
+                        tr -d '[:space:]'
+                    """
+                )
         }
+
+        def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+        sh """
+            ${shCmd.echo ''}
+            helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+
+            ${shCmd.echo ''}
+            helm upgrade --create-namespace --atomic --install --history-max=1 \
+                --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
+                --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
+                --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
+                --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
+                --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
+                --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
+                --set-string create-namespaces
+                -n ${projectInfo.cicdMasterNamespace} \
+                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
+                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
+                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+                ${PROJECT_ID} \
+                elCicdCharts/elCicdChart
+
+            ${shCmd.echo ''}
+            ${shCmd.echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'}
+            sleep 5
+        """
+    }
+}
+
+
+def createNonProdSdlcNamespacesAndPipelines(def projectInfo, def isNonProd) {
+    stage('Creating SDLC namespaces and pipelines') {
+        loggingUtils.echoBanner("CREATING/UPGRADING THE SLDC ENVIRONMENTS AND RESOURCES FOR PROJECT ${PROJECT_ID}")
+
+        def projectDefs = getSldcConfigValues(projectInfo)
+        def sdlcConfigFile = "sdlc-config-values.yaml"
+        def sdlcConfigValues = writeYaml(text: elCicdDefs, returnText: true)
+        writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
         
-        projectInfo.artifacts.each { artifact ->
-            sh """
-                cp build-artifact.xml.template ${artifact.name}-build-artifact.xml
-                sed -i -e "s/%PROJECT_ID%/${projectInfo.id}/g" \
-                    -e "s/%LIBRARY_NAME%/${artifact.name}/g" \
-                    -e "s/%WEB_TRIGGER_AUTH_TOKEN%/${artifact.gitDeployKeyJenkinsId}/g" \
-                    -e "s/%SCM_BRANCH%/${projectInfo.scmBranch}/g" \
-                    -e "s/%CODE_BASE%/${artifact.codeBase}/g" \
-                    ${artifact.name}-build-artifact.xml
-            """
+        def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+        def helmCommands = """
+            helm upgrade --atomic --install --history-max=1 --debug \
+                -n ${projectInfo.cicdMasterNamespace} \
+                -f ${sdlcConfigFile} \
+                -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
+                -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
+                -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+                ${projectInfo.id} \
+                elCicdCharts/elCicdChart
+
+            helm upgrade --wait-for-jobs --install --history-max=1  \
+                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
+                -n ${projectInfo.cicdMasterNamespace} \
+                -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+                jenkins-sync \
+                elCicdCharts/elCicdChart
+        """
+        
+        echo helmCommands
+                
+        sh """
+            set +x
+            ${helmCommands}
+            set -x
+        """
+    }
+}
+
+def getSldcConfigValues(def projectInfo) {
+    sdlcConfigValues = [:]
+    sdlcConfigValues.createNamespaces = true
+    
+    elCicdDefs = [:]
+    elCicdDefs.SDLC_NAMESPACES = projectInfo.nonProdNamespaces
+    
+    elCicdDefs.PROJECT_ID = projectInfo.id
+    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
+    elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
+    elCicdDefs.EL_CICD_GIT_REPO = projectInfo.scmRepo
+    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
+    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
+
+    def resourceQuotasFlags = projectInfo.nonProdEnvs.findResults { env ->
+        rqs = projectInfo.resourceQuotas[env]) ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+        rqs?.each { rq ->
+            elCicdDefs["${it}_NAMESPACE"] = "${projectInfo.id}-${env}"
         }
     }
+
+    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
+    elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
+
+    projectInfo.components.each { comp ->
+        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}-${comp.name}-build-to-dev"] = comp.codeBase
+    }
+
+    projectInfo.artifacts.each { art ->
+        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}-${art.name}-build-artifact"] = art.codeBase
+    }
+
+    projectInfo.rbacGroups.each { env, group ->
+        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}.${projectInfo.id}-${env}_GROUP"] = group
+    
+    elCicdDefs.NFS_APP_NAMES = []
+    projectInfo.nfsShares.each { projectInfo. ->
+        nfsShare.envs.each { env ->
+            def namepace = projectInfo.nonProdNamespaces[env]
+            def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+            elCicdDefs.NFS_APP_NAMES << appName
+            
+            nfsMap = [:]
+            nfsMap.CLAIM_NAME = nfsShare.claimName
+            nfsMap.CAPACITY = nfsShare.capacity
+            nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
+            nfsMap.PATH = nfsShare.exportPath
+            nfsMap.SERVER = nfsShare.server
+            nfsMap.NAMESPACE = namepace
+            
+            sdlcConfigValues[appName] = nfsMap
+        }
+    }
+    sdlcConfigValues.elCicdDefs = elCicdDefs
+    
+    sdlcConfigValues.profiles = []
+    sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keys())
+    if (projectInfo.nfsShares) {
+        sdlcConfigValues.profiles << "nfs"
+    }
+    
+    return sdlcConfigValues
 }

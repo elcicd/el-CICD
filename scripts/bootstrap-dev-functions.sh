@@ -289,8 +289,9 @@ __setup_image_registries() {
         --set-string ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         --set createNamespaces=true \
         -n ${DEMO_IMAGE_REGISTRY} \
+        -f ${HELM_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
-        elCicdCharts/elCicdImageRegistry
+        elCicdCharts/elCicdChart
 
     __register_insecure_registries
 

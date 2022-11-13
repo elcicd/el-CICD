@@ -131,3 +131,7 @@ elCicdTemplates:
   appName: ${JENKINS_SERVICE_NAME}-agent-home
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteMany
+  
+- templateName: configMap
+  appName: ${EL_CICD_META_INFO_NAME}
+  data: ${EL_CICD_META_INFO}
