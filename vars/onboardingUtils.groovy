@@ -125,7 +125,7 @@ def getSldcConfigValues(def projectInfo) {
     def resourceQuotasFlags = projectInfo.nonProdEnvs.findResults { env ->
         rqs = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
         rqs?.each { rq ->
-            elCicdDefs["${it}_NAMESPACE"] = "${projectInfo.id}-${env}"
+            elCicdDefs["${rq}_NAMESPACE"] = "${projectInfo.id}-${env}"
         }
     }
 
