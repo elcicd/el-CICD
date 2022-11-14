@@ -32,7 +32,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         sh """
             if [[ -z \$(oc get project ${projectInfo.cicdMasterNamespace} --no-headers --ignore-not-found) ]]
             then
-                oc create project ${projectInfo.cicdMasterNamespace}
+                oc new-project ${projectInfo.cicdMasterNamespace}
                 sleep 3
             fi
         """

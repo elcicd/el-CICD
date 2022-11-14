@@ -88,11 +88,22 @@ __gather_and_confirm_bootstrap_info_with_user() {
 }
 
 __bootstrap_el_cicd_onboarding_server() {
+    echo
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    echo
+    echo "Be aware that the el-CICD Onboarding 'jenkins' service account needs cluster-admin"
+    echo "permissions for managing and creating multiple cluster resources RBAC"
+    echo
+    echo "NOTE: This DOES NOT apply to CICD servers"
+    echo
+    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
+    echo
+    
     if [[ -z $(oc get project ${ONBOARDING_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
     then
-        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
-        sleep 3
+        sh "oc new-project ${ONBOARDING_MASTER_NAMESPACE}"
     fi
+    sleep 2
     
     __create_onboarding_automation_server
 }
@@ -124,14 +135,14 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo "Cluster API hostname? '${CLUSTER_API_HOSTNAME}'"
     echo "Cluster wildcard Domain? '*.${CLUSTER_WILDCARD_DOMAIN}'"
 
-    local DEL_NAMESPACE=$(oc projects -q | grep ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
-    if [[ ! -z "${DEL_NAMESPACE}" ]]
+    local NAMESPACE_EXISTS=$(oc projects -q | grep ${ONBOARDING_MASTER_NAMESPACE} | tr -d '[:space:]')
+    if [[ ! -z "${NAMESPACE_EXISTS}" ]]
     then
         echo
-        echo -n "WARNING: '${ONBOARDING_MASTER_NAMESPACE}' was found, and WILL BE DESTROYED AND REBUILT"
+        echo -n "'${ONBOARDING_MASTER_NAMESPACE}' was found, and the onboarding server environment will be reinstalled"
     else 
         echo
-        echo -n "'${ONBOARDING_MASTER_NAMESPACE}' will be created for the el-CICD master namespace"
+        echo -n "'${ONBOARDING_MASTER_NAMESPACE}' was not found, and the onboarding server environment will be created and installed"
     fi
 
     if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
@@ -158,17 +169,7 @@ _confirm_continue() {
     fi
 }
 
-__create_onboarding_automation_server() {
-    echo
-    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
-    echo
-    echo "Be aware that the el-CICD Onboarding 'jenkins' service account needs cluster-admin"
-    echo "permissions for managing and creating multiple cluster resources RBAC"
-    echo
-    echo "NOTE: This DOES NOT apply to CICD servers"
-    echo
-    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
-    
+__create_onboarding_automation_server() {    
     echo
     set -e    
     if [[ -z ${JENKINS_IMAGE_PULL_SECRET} && ${OKD_VERSION} ]]
@@ -180,6 +181,7 @@ __create_onboarding_automation_server() {
     
     _helm_repo_add_and_update_elCicdCharts
     
+    echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
     helm upgrade --atomic --install --history-max=1 \
@@ -216,17 +218,6 @@ __create_onboarding_automation_server() {
         elCicdCharts/elCicdChart
     set +x
     helm uninstall jenkins-sync
-
-    echo
-    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
-    echo
-    echo "Be aware that the el-CICD Onboarding 'jenkins' service account needs cluster-admin"
-    echo "permissions for managing and creating multiple cluster resources RBAC"
-    echo
-    echo "NOTE: This DOES NOT apply to CICD servers"
-    echo
-    echo
-    echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     
     set +e
 }
