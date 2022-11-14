@@ -153,5 +153,7 @@ elCicdTemplates:
   accessMode: ReadWriteMany
   
 - templateName: configMap
+  anyProfiles:
+  - onboarding
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
