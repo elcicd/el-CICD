@@ -125,9 +125,10 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
+    namespace: ${RELEASE_NAMESPACE}
 
-- templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}_admin
+- templateName: clusterRoleBinding
+  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
   mustHaveProfiles:
   - onboarding
   ignoreAnyProfiles:
@@ -139,6 +140,7 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
+    namespace: ${RELEASE_NAMESPACE}
 
 - templateName: persistentVolumeClaim
   appName: ${JENKINS_SERVICE_NAME}

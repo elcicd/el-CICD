@@ -65,8 +65,8 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             --set-string create-namespaces \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-            -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-            -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/sdlc-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
             ${PROJECT_ID} \
             elCicdCharts/elCicdChart
 
@@ -94,8 +94,8 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             --set-string profiles='{sdlc}' \
             -f ${sdlcConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-            -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
-            -f ${el.cicd.HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/sdlc-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id} \
             elCicdCharts/elCicdChart

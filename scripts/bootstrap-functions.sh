@@ -101,7 +101,7 @@ __bootstrap_el_cicd_onboarding_server() {
     
     if [[ -z $(oc get project ${ONBOARDING_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
     then
-        sh "oc new-project ${ONBOARDING_MASTER_NAMESPACE}"
+        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
     fi
     sleep 2
     
