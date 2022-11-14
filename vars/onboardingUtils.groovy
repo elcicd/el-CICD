@@ -54,6 +54,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         
         ${shCmd.echo ''}
         helm upgrade --create-namespace --atomic --install --history-max=1 \
+            --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
@@ -90,6 +91,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     sh """
         ${shCmd.echo ''}
         helm upgrade --create-namespace --atomic --install --history-max=1 --debug \
+            --set-string profiles='{sdlc}' \
             -f ${sdlcConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
             -f ${el.cicd.HELM_DIR}/sdlc-pipelines-values.yaml \
@@ -100,6 +102,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
 
         ${shCmd.echo ''}
         helm upgrade --wait-for-jobs --install --history-max=1  \
+            --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \

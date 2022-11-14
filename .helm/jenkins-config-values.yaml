@@ -114,10 +114,28 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}_edit
+  mustHaveProfiles:
+  - sdlc
+  ignoreAnyProfiles:
+  - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
     name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICE_NAME}
+
+- templateName: roleBinding
+  appName: ${JENKINS_SERVICE_NAME}_admin
+  mustHaveProfiles:
+  - onboarding
+  ignoreAnyProfiles:
+  - sdlc
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: admin
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
