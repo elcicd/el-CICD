@@ -53,7 +53,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
         
         ${shCmd.echo ''}
-        helm upgrade --create-namespace --atomic --install --history-max=1 \
+        helm upgrade --atomic --install --history-max=1 \
             --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
@@ -63,9 +63,8 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
             -n ${projectInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-pipelines-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
             ${PROJECT_ID} \
             elCicdCharts/elCicdChart
 
@@ -93,7 +92,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             --set-string profiles='{sdlc}' \
             -f ${sdlcConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/sdlc-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id} \
