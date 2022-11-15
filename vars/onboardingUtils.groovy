@@ -89,7 +89,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             
     sh """
         ${shCmd.echo ''}
-        helm upgrade --create-namespace --atomic --install --history-max=1 --debug \
+        helm upgrade --atomic --install --history-max=1 --debug \
             --set-string profiles='{sdlc}' \
             -f ${sdlcConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
