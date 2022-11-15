@@ -79,11 +79,10 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
 
     def projectDefs = getSldcConfigValues(projectInfo)
-    def sdlcConfigValues = writeYaml(data: elCicdDefs, returnText: true)
+    def sdlcConfigValues = writeYaml(data: projectDefs, returnText: true)
     
     def sdlcConfigFile = "sdlc-config-values.yaml"
     writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
-    sh "cat ${sdlcConfigFile}"
     
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
             
@@ -136,15 +135,15 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     projectInfo.components.each { comp ->
-        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}-${comp.name}-build-to-dev"] = comp.codeBase
+        sdlcConfigValues["elCicdDefs-${comp.name}-build-to-dev"] = comp.codeBase
     }
 
     projectInfo.artifacts.each { art ->
-        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}-${art.name}-build-artifact"] = art.codeBase
+        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = art.codeBase
     }
 
     projectInfo.rbacGroups.each { env, group ->
-        elCicdDefs["${el.cicd.EL_CICD_DEFS_TEMPLATE}.${projectInfo.id}-${env}_GROUP"] = group
+        elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
     
     sdlcConfigValues.profiles = []
