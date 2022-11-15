@@ -115,7 +115,8 @@ def getSldcConfigValues(def projectInfo) {
     sdlcConfigValues.createNamespaces = true
     
     elCicdDefs = [:]
-    elCicdDefs.SDLC_NAMESPACES = projectInfo.nonProdNamespaces.values().join(',')
+    elCicdDefs.SDLC_NAMESPACES = []
+    elCicdDefs.SDLC_NAMESPACES.addAll(projectInfo.nonProdNamespaces.values())
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
