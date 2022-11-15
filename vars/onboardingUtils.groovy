@@ -87,10 +87,9 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
             
-    // helm upgrade --atomic --install --history-max=1 --debug
     sh """
         ${shCmd.echo ''}
-        helm template --debug \
+        helm upgrade --atomic --install --history-max=1 --debug
             -f ${sdlcConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-pipelines-values.yaml \
@@ -146,7 +145,8 @@ def getSldcConfigValues(def projectInfo) {
         sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
     }
 
-    projectInfo.rbacGroups.each { env, group ->
+    projectInfo.nonProdEnvs.each { env ->
+        def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
     
