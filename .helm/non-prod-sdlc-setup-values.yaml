@@ -139,4 +139,5 @@ elCicdTemplates:
     namespace: ${JENKINS_SERVICEACCOUNT_NAMESPACE}
   - kind: Group
     name: ${${BASE_NAME_SPACE}_GROUP}
+    namespace: ${NAME_SPACE}
   
