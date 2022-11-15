@@ -115,7 +115,7 @@ def getSldcConfigValues(def projectInfo) {
     sdlcConfigValues.createNamespaces = true
     
     elCicdDefs = [:]
-    elCicdDefs.SDLC_NAMESPACES = projectInfo.nonProdNamespaces
+    elCicdDefs.SDLC_NAMESPACES = projectInfo.nonProdNamespaces.values().join(',')
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
@@ -136,11 +136,11 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     projectInfo.components.each { comp ->
-        sdlcConfigValues["elCicdDefs-${comp.name}-build-to-dev"] = comp.codeBase
+        sdlcConfigValues["elCicdDefs-${comp.name}-build-to-dev"] = ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
-        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = art.codeBase
+        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.rbacGroups.each { env, group ->
@@ -156,18 +156,20 @@ def getSldcConfigValues(def projectInfo) {
         projectInfo.nfsShares.each { nfsShare ->
             nfsShare.envs.each { env ->
                 def namespace = projectInfo.nonProdNamespaces[env]
-                def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-                elCicdDefs.NFS_APP_NAMES << appName
-                
-                nfsMap = [:]
-                nfsMap.CLAIM_NAME = nfsShare.claimName
-                nfsMap.CAPACITY = nfsShare.capacity
-                nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
-                nfsMap.PATH = nfsShare.exportPath
-                nfsMap.SERVER = nfsShare.server
-                nfsMap.NAMESPACE = namespace
-                
-                sdlcConfigValues[appName] = nfsMap
+                if (namespace) {
+                    def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+                    elCicdDefs.NFS_APP_NAMES << appName
+                    
+                    nfsMap = [:]
+                    nfsMap.CLAIM_NAME = nfsShare.claimName
+                    nfsMap.CAPACITY = nfsShare.capacity
+                    nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
+                    nfsMap.PATH = nfsShare.exportPath
+                    nfsMap.SERVER = nfsShare.server
+                    nfsMap.NAMESPACE = namespace
+                    
+                    sdlcConfigValues["elCicdDefs-${appName}"] = nfsMap
+                }
             }
         }
     }
