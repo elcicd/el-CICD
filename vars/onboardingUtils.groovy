@@ -97,7 +97,6 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id} \
             elCicdCharts/elCicdChart
-        exit 1
 
         ${shCmd.echo ''}
         helm upgrade --wait-for-jobs --install --history-max=1  \
