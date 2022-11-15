@@ -140,7 +140,7 @@ def getSldcConfigValues(def projectInfo) {
     }
 
     projectInfo.artifacts.each { art ->
-        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : comp.codeBase ]
+        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
     }
 
     projectInfo.rbacGroups.each { env, group ->
