@@ -83,6 +83,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     
     def sdlcConfigFile = "sdlc-config-values.yaml"
     writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
+    sh "cat ${sdlcConfigFile}"
     
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
             
