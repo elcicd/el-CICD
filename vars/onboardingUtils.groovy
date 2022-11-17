@@ -144,7 +144,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     projectInfo.components.each { comp ->
-        sdlcConfigValues["elCicdDefs-${comp.name}-build-to-dev"] = ['CODE_BASE' : comp.codeBase ]
+        sdlcConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
