@@ -9,8 +9,6 @@ def call(Map args) {
     def isNonProd = args.isNonProd
 
     def envs = isNonProd ? projectInfo.NON_PROD_ENVS : [projectInfo.PRE_PROD_ENV, projectInfo.PROD_ENV]
-    jenkinsUtils.copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(projectInfo, envs)
-
     stage('Push Image Repo Pull Secrets to CICD Jenkins') {
         jenkinsUtils.copyElCicdCredentialsToCicdServer(projectInfo, envs)
     }

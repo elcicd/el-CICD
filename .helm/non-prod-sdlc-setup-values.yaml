@@ -159,6 +159,6 @@ elCicdTemplates:
   appName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${APP_NAME}
+  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
   
   
