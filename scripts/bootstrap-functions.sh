@@ -217,7 +217,8 @@ __create_onboarding_automation_server() {
         jenkins-sync \
         elCicdCharts/elCicdChart
     set +x
-    helm uninstall jenkins-sync
+    sleep 3
+    helm uninstall jenkins-sync -n ${ONBOARDING_MASTER_NAMESPACE}
     
     set +e
 }
