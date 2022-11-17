@@ -53,7 +53,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
         
         ${shCmd.echo ''}
-        helm upgrade --atomic --install --history-max=1  --debug \
+        helm upgrade --atomic --install --history-max=1 \
             --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \

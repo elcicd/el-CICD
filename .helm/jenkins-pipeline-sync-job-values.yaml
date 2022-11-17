@@ -23,9 +23,13 @@ elCicdTemplates:
     tar czf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
     curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/safeRestart;
+    echo;
+    echo "Waiting for Jenkins to come up.";
     sleep 30;
+    echo "Checking if Jenkins is up";
     until [[ $(curl -ksS -o /dev/null -w "%{http_code}" jenkins:8080/login) == 200 ]]
     do
+      gecho "Checking if Jenkins is up";
       sleep 3;
     done;
     echo "el-CICD Jenkins jobs updated";
