@@ -83,37 +83,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
     }
 }
 
-def copyElCicdMetaInfoBuildAndPullSecretsToGroupCicdServer(def projectInfo, def envs) {
-    loggingUtils.echoBanner("COPY el-CICD META-INFO AND ALL PULL SECRETS TO NAMESPACE ENVIRONMENTS FOR ${projectInfo.cicdMasterNamespace}")
-
-    def pullSecretNames = envs.collect { el.cicd["${it.toUpperCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"] }.toSet()
-    def copyBuildSecrets = envs.contains(projectInfo.DEV_ENV)
-
-    sh """
-        ${shCmd.echo ''}
-        oc get cm ${el.cicd.EL_CICD_META_INFO_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
-            ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-            oc apply -f - -n ${projectInfo.cicdMasterNamespace}
-
-        BUILD_SECRETS_NAME=${(copyBuildSecrets && el.cicd.EL_CICD_BUILD_SECRETS_NAME) ? el.cicd.EL_CICD_BUILD_SECRETS_NAME : ''}
-        if [[ ! -z \${BUILD_SECRETS_NAME} ]]
-        then
-            ${shCmd.echo ''}
-            oc get secret \${BUILD_SECRETS_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
-                ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                oc apply -f - -n ${projectInfo.cicdMasterNamespace}
-        fi
-
-        for PULL_SECRET_NAME in ${pullSecretNames.join(' ')}
-        do
-            ${shCmd.echo ''}
-            oc get secrets \${PULL_SECRET_NAME} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | \
-                ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-                oc apply -f - -n ${projectInfo.cicdMasterNamespace}
-        done
-    """
-}
-
 def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """

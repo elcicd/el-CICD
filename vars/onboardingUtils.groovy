@@ -53,7 +53,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
         
         ${shCmd.echo ''}
-        helm upgrade --atomic --install --history-max=1 --debug \
+        helm upgrade --atomic --install --history-max=1 \
             --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
@@ -65,7 +65,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.id}-jenkins \
+            ${projectInfo.defaultRbacGroup}-jenkins \
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
@@ -112,8 +112,8 @@ def getSldcConfigValues(def projectInfo) {
     sdlcConfigValues.createNamespaces = true
     
     elCicdDefs = [:]
-    elCicdDefs.SDLC_NAMESPACES = []
-    elCicdDefs.SDLC_NAMESPACES.addAll(projectInfo.nonProdNamespaces.values())
+    elCicdDefs.SDLC_ENVS = []
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdNamespaces.keys())
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
@@ -122,7 +122,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
-    elCicdDefs.JENKINS_SERVICEACCOUNT_NAMESPACE = projectInfo.cicdMasterNamespace
+    elCicdDefs.CICD_MASTER_NAMESPACE = projectInfo.cicdMasterNamespace
 
     def resourceQuotasFlags = projectInfo.nonProdEnvs.findResults { env ->
         rqs = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]

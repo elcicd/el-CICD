@@ -128,7 +128,8 @@ elCicdTemplates:
   
 - templateName: roleBinding
   appName: ${PROJECT_ID}-edit
-  namespaces: ${SDLC_NAMESPACES}
+  namespaces: ${SDLC_ENVS}
+  namespace: ${PROJECT_ID}-${}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
@@ -136,8 +137,22 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICEACCOUNT_NAME}
-    namespace: ${JENKINS_SERVICEACCOUNT_NAMESPACE}
+    namespace: ${CICD_MASTER_NAMESPACE}
   - kind: Group
     name: ${${BASE_NAME_SPACE}_GROUP}
     namespace: ${NAME_SPACE}
+    
+- templateName: copyResource
+  appName: ${EL_CICD_META_INFO_NAME}
+  kind: Secret
+  fromNamespace: ${CICD_MASTER_NAMESPACE}
+  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
+    
+- templateName: copyResource
+  appNames: ${SDLC_ENVS}
+  appName: el-cicd-${}-pull-secret
+  kind: Secret
+  fromNamespace: ${CICD_MASTER_NAMESPACE}
+  toNamespace: ${PROJECT_ID}-${APP_NAME}
+  
   
