@@ -47,7 +47,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             )
     }
     
-    def jenkinsUrl = "jenkins-${projectInfo.defaultRbacGroup}-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
