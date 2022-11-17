@@ -24,6 +24,7 @@ elCicdTemplates:
     tar czf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
     curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/safeRestart;
+    sleep 30;
     until [[ $(curl -ksS -o /dev/null -w "%{http_code}" jenkins:8080/login) == 200 ]]
     do
       sleep 3;
