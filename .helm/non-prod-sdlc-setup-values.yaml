@@ -146,6 +146,12 @@ elCicdTemplates:
   kind: ConfigMap
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
+    
+- templateName: copyResource
+  appName: ${EL_CICD_BUILD_SECRETS_NAME}
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
   appNames: ${SDLC_ENVS}
