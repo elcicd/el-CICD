@@ -144,7 +144,7 @@ elCicdTemplates:
     
 - templateName: copyResource
   appName: ${EL_CICD_META_INFO_NAME}
-  kind: Secret
+  kind: ConfigMap
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
     
