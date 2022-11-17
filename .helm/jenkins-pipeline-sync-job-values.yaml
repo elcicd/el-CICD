@@ -2,6 +2,7 @@ elCicdTemplates:
 - templateName: job
   appName: jenkins-pipeline-sync
   image: ${JENKINS_SYNC_JOB_IMAGE}
+  ttlSecondsAfterFinished: 5
   projectedVolumeLabels:
   - name: mounted-jenkins-jobs
     mountPath: /mnt/mounted-jobs
