@@ -100,10 +100,9 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
 
         ${shCmd.echo ''}
         helm upgrade --wait-for-jobs --install --history-max=1  \
-            --set-string profiles='{sdlc}' \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -n ${projectInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
             jenkins-sync \
             elCicdCharts/elCicdChart
     """
