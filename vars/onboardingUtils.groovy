@@ -98,14 +98,18 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
+        if [[ ! -z $(oc helm list jenkins-sync -n ${projectInfo.cicdMasterNamespace}) ]]
+        then 
+            helm uninstall jenkins-sync -n ${projectInfo.cicdMasterNamespace}
+        fi
+        
+        ${shCmd.echo ''}
         helm upgrade --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
             jenkins-sync \
             elCicdCharts/elCicdChart
-            
-        oc logs jenkins-pipeline-sync
     """
 }
 
