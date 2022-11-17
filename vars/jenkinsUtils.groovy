@@ -33,7 +33,7 @@ def configureCicdJenkinsUrls(def projectInfo) {
 }
 
 def getImageRegistryPullTokenId(def env) {
-    return "${env.toLowerCase()}${el.clcd.IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
+    return "${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
 }
 
 def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
