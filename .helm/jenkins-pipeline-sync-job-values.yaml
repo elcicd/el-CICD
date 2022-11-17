@@ -2,7 +2,6 @@ elCicdTemplates:
 - templateName: job
   appName: jenkins-pipeline-sync
   image: ${JENKINS_SYNC_JOB_IMAGE}
-  ttlSecondsAfterFinished: 5
   projectedVolumeLabels:
   - name: mounted-jenkins-jobs
     mountPath: /mnt/mounted-jobs
@@ -20,7 +19,7 @@ elCicdTemplates:
     cp -rLv /mnt/mounted-jobs/* jobs;
     chmod 777 -R jobs;
     JENKINS_POD=$(oc get pods -o custom-columns=:.metadata.name | grep jenkins | grep -v sync);
-    oc exec -i $JENKINS_POD -- rm -rf /var/lib/jenkins/jobs;
+    oc exec -i $JENKINS_POD -- rm -rfv /var/lib/jenkins/jobs;
     tar czf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
     curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/reload;
