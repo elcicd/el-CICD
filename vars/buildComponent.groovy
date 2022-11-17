@@ -71,8 +71,8 @@ void call(Map args) {
 
         def tlsVerify = el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS}" : ''
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'DEV_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.devEnv),
+                         variable: 'DEV_IMAGE_REGISTRY_PULL_TOKEN')]) {
             dir(component.workDir) {
                 sh """
                     chmod 777 Dockerfile
@@ -82,7 +82,7 @@ void call(Map args) {
                     echo "\nLABEL SRC_COMMIT_HASH='${component.srcCommitHash}'" >> Dockerfile
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
 
-                    podman login ${tlsVerify} --username ${el.cicd.DEV_IMAGE_REGISTRY_USERNAME} --password \${DEV_IMAGE_REGISTRY_ACCESS_TOKEN} ${imageRepo}
+                    podman login ${tlsVerify} --username ${el.cicd.DEV_IMAGE_REGISTRY_USERNAME} --password \${DEV_IMAGE_REGISTRY_PULL_TOKEN} ${imageRepo}
 
                     podman build --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} --squash \
                                  -t ${imageRepo}/${component.id}:${projectInfo.imageTag} -f ./Dockerfile

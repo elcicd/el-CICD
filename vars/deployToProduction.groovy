@@ -49,14 +49,14 @@ def call(Map args) {
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
-        withCredentials([string(credentialsId: el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(PROMOTION_ENV_FROM),
+                         variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
 
             projectInfo.components.each { component ->
                 if (component.releaseCandidateGitTag) {
                     def copyImageCmd =
-                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_ACCESS_TOKEN', component.id, imageTag)
+                        shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_PULL_TOKEN', component.id, imageTag)
                     def imageFound = sh(returnStdout: true, script: "${copyImageCmd}").trim()
 
                     def msg
@@ -156,15 +156,15 @@ def call(Map args) {
                                  "${projectInfo.componentsInRelease.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN'),
-                             string(credentialsId: el.cicd["${projectInfo.PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN')])
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                             variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN'),
+                             string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.prodEnv),
+                             variable: 'PROD_IMAGE_REGISTRY_PULL_TOKEN')])
             {
                 projectInfo.componentsInRelease.each { component ->
                     def copyImageCmd =
-                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag,
-                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseVersionTag)
+                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag,
+                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseVersionTag)
 
                     sh """
                         ${shCmd.echo ''}

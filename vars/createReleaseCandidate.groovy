@@ -21,11 +21,11 @@ def call(Map args) {
         }
 
         def imageExists = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN')]) {
             imageExists = projectInfo.components.find { component ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag)
                 return sh(returnStdout: true, script: verifyImageCmd)
             }
         }
@@ -103,12 +103,12 @@ def call(Map args) {
         loggingUtils.echoBanner("CONFIRM SELECTED IMAGES EXIST IN PRE-PROD FOR PROMOTION TO PROD")
 
         def imageExists = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN')]) {
             def preProdImageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
             imageMissing = projectInfo.componentsToTag.find { component ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.preProdEnv)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.preProdEnv)
                 return !sh(returnStdout: true, script: "${verifyImageCmd}")
             }
         }
@@ -148,11 +148,11 @@ def call(Map args) {
     stage('Tag all images') {
         loggingUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN')]) {
             projectInfo.componentsToTag.each { component ->
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.preProdEnv, projectInfo.releaseCandidateTag)
                 sh """
                     ${shCmd.echo ''}
                     ${tagImageCmd}

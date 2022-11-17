@@ -43,11 +43,11 @@ _refresh_non_prod_credentials() {
     echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        SECRET_TOKEN_FILE=${ENV@L}${PULL_TOKEN_POSTFIX}
+        SECRET_TOKEN_FILE_NAME=${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}
 
         echo
         echo "Pushing ${ENV} image repo access token to Jenkins"
-        _push_access_token_to_jenkins ${JENKINS_URL} ${SECRET_TOKEN_FILE} ${SECRET_FILE_DIR}/${SECRET_TOKEN_FILE}
+        _push_access_token_to_jenkins ${JENKINS_URL} ${SECRET_TOKEN_FILE_NAME} ${SECRET_FILE_DIR}/${SECRET_TOKEN_FILE_NAME}
     done
 
     echo

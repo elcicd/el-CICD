@@ -26,7 +26,7 @@ _verify_pull_secret_files_exist() {
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${PULL_TOKEN_POSTFIX}
+        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}
         if [[ ! -f ${TKN_FILE} ]]
         then
             local TOKEN_FILES=${TOKEN_FILES:+$TOKEN_FILES, }${TKN_FILE}
@@ -156,7 +156,7 @@ _create_env_image_registry_secrets() {
     do
         local APP_NAME="${ENV@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${PULL_TOKEN_POSTFIX}"
+        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
         local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
         local SET_STRING="${SET_STRING:+$SET_STRING }--set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
         SET_STRING="${SET_STRING} --set-string elCicdDefs.${APP_NAME}${IMAGE_REGISTRY_POSTFIX}=${SERVER}"

@@ -9,12 +9,6 @@ elCicdTemplates:
     - jenkins-folder
     - jenkins-pipeline
   serviceAccountName: jenkins
-  readinessProbe:
-    httpGet:
-      path: /login
-      port: 8080
-    initialDelaySeconds: 10
-    timeoutSeconds: 240
   command: ["/bin/bash"]
   args:
   - -c

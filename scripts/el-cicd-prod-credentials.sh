@@ -38,12 +38,12 @@ _refresh_prod_credentials() {
     echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        ACCESS_TOKEN_ID=$(eval echo \${${ENV}${IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}})
-        SECRET_TOKEN_FILE=$(eval echo \${${ENV}${PULL_TOKEN_POSTFIX}})
+        ACCESS_TOKEN_ID=$(eval echo \${${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}})
+        SECRET_TOKEN_FILE=$(eval echo \${${ENV}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}})
 
         echo
         echo "Pushing ${ENV} image repo access tokens per environment to Jenkins"
-        _push_access_token_to_jenkins ${JENKINS_URL} ${ACCESS_TOKEN_ID} ${SECRET_TOKEN_FILE}
+        _push_access_token_to_jenkins ${JENKINS_URL} ${SECRET_TOKEN_FILE} ${SECRET_TOKEN_FILE}
     done
 
     _run_custom_credentials_script prod

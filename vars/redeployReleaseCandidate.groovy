@@ -39,15 +39,15 @@ def call(Map args) {
                                  projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                                variable: 'IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                                variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
             def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REGISTRY_ACCESS_TOKEN', component.id, imageTag)
+                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REGISTRY_PULL_TOKEN', component.id, imageTag)
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
                 def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${component.name}" :
@@ -92,17 +92,17 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
                                  "${projectInfo.componentsToRedeploy.collect { it.name } .join(', ')}")
 
-        withCredentials([string(credentialsId: el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                         variable: 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+                         variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN')]) {
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
                 def msg = "${component.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
 
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag, imageTag)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag, imageTag)
 
                 def tagImageEnvCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
 
                 sh """
                     ${shCmd.echo ''}

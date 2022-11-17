@@ -32,6 +32,10 @@ def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}/doDelete"
 }
 
+def getImageRegistryPullTokenId(def env) {
+    return "${env.toLowerCase()}${el.clcd.IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"}
+}
+
 def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
@@ -47,7 +51,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
 
     def tokenIds = []
     envs.each { env ->
-        def tokenId = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"]
+        def tokenId = getImageRegistryPullTokenId(env)
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 
@@ -93,7 +97,7 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
 }
 
 def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
-    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REGISTRY_ACCESS_TOKEN'),
+    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REGISTRY_PULL_TOKEN'),
                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials.xml"
         def curlCommand =
@@ -102,7 +106,7 @@ def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
         sh """
             ${shCmd.echo ''}
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | \
-                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REGISTRY_ACCESS_TOKEN}|" > ${JENKINS_CREDS_FILE}
+                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REGISTRY_PULL_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${tokenId}/config.xml

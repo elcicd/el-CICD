@@ -66,11 +66,11 @@ def call(Map args) {
 
             def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
 
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"],
-                             variable: 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN')]) {
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployFromEnv),
+                             variable: 'FROM_IMAGE_REGISTRY_PULL_TOKEN')]) {
                 projectInfo.componentsToPromote.each { component ->
                     def verifyImageCmd =
-                        shCmd.verifyImage(projectInfo.ENV_FROM, 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN', component.id, projectInfo.deployFromEnv)
+                        shCmd.verifyImage(projectInfo.ENV_FROM, 'FROM_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.deployFromEnv)
                     if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
                         def image = "${component.id}:${projectInfo.deployFromEnv}"
                         errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
@@ -148,24 +148,26 @@ def call(Map args) {
             loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                     projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            withCredentials([string(credentialsId: el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'FROM_IMAGE_REGISTRY_ACCESS_TOKEN'),
-                            string(credentialsId: el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_ACCESS_TOKEN_ID_POSTFIX}"], variable: 'TO_IMAGE_REGISTRY_ACCESS_TOKEN')])
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployFromEnv),
+                                    variable: 'FROM_IMAGE_REGISTRY_PULL_TOKEN'),
+                            string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployToEnv),
+                                   variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
             {
                 projectInfo.componentsToPromote.each { component ->
                     def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
                     def copyImage =
                         shCmd.copyImage(projectInfo.ENV_FROM,
-                                                'FROM_IMAGE_REGISTRY_ACCESS_TOKEN',
+                                                'FROM_IMAGE_REGISTRY_PULL_TOKEN',
                                                 component.id,
                                                 projectInfo.deployFromEnv,
                                                 projectInfo.ENV_TO,
-                                                'TO_IMAGE_REGISTRY_ACCESS_TOKEN',
+                                                'TO_IMAGE_REGISTRY_PULL_TOKEN',
                                                 component.id,
                                                 promoteTag)
 
                     def tagImage =
                         shCmd.tagImage(projectInfo.ENV_TO,
-                                               'TO_IMAGE_REGISTRY_ACCESS_TOKEN',
+                                               'TO_IMAGE_REGISTRY_PULL_TOKEN',
                                                component.id,
                                                promoteTag,
                                                projectInfo.deployToEnv)
