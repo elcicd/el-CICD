@@ -107,7 +107,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
         fi
         
         ${shCmd.echo ''}
-        helm upgradeg--wait --wait-for-jobs --install --history-max=1 \
+        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
