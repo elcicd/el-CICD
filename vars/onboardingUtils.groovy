@@ -101,7 +101,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
-        if [[ ! -z \$(helm list jenkins-sync -n ${projectInfo.cicdMasterNamespace}) ]]
+        if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-sync) ]]
         then 
             helm uninstall jenkins-sync -n ${projectInfo.cicdMasterNamespace}
         fi
