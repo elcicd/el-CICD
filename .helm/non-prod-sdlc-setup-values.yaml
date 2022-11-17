@@ -139,7 +139,7 @@ elCicdTemplates:
     name: ${JENKINS_SERVICEACCOUNT_NAME}
     namespace: ${RELEASE_NAMESPACE}
   - kind: Group
-    name: ${${BASE_NAME_SPACE}_GROUP}
+    name: ${${NAME_SPACE}_GROUP}
     namespace: ${NAME_SPACE}
     
 - templateName: copyResource

@@ -96,6 +96,15 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-sdlc \
             elCicdCharts/elCicdChart
+            
+        helm upgrade --atomic --install --history-max=1 \
+            -f ${sdlcConfigFile} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -n ${projectInfo.cicdMasterNamespace} \
+            ${projectInfo.id}-sdlc \
+            elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
         helm upgrade --wait-for-jobs --install --history-max=1 \
