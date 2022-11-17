@@ -34,5 +34,5 @@ def SILENT = '-o /dev/null'
 def FAIL_SILENT = '-f 2>/dev/null'
 
 def getCmd(def httpVerb, String tokenName, def silent = true) {    
-    return """curl -ksS -X ${httpVerb} ${silent ? SILENT : ''} --retry 20 --retry-max-time 120 -H "Authorization: Bearer \${${tokenName}}" """
+    return """curl -ksS -X ${httpVerb} ${silent ? SILENT : ''}  -H "Authorization: Bearer \${${tokenName}}" --retry 20 --retry-max-time 120 """
 }
