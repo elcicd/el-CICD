@@ -113,7 +113,7 @@ def getSldcConfigValues(def projectInfo) {
     
     elCicdDefs = [:]
     elCicdDefs.SDLC_ENVS = []
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdNamespaces.keys())
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdNamespaces.keySet())
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
