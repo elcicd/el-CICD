@@ -58,15 +58,16 @@ elCicdDefs:
       </properties>
       <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
         <script>  
-            node() {
-                def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${EL_CICD_META_INFO_NAME} -o json")))
-
+            node() {          
+                def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+                def elCicdData = elcicdMetaData.data
+                
                 def scmMap = [$class: 'GitSCMSource',
-                              remote: ${EL_CICD_GIT_REPO},
-                              credentialsId: ${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}]
-                library(identifier: "el-CICD@${EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+                            remote: elCicdData.EL_CICD_GIT_REPO,
+                            credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
 
-                el.initMetaData(cicdMetaData.data)
+                el.initMetaData(elCicdData)
             }
 
             ${EL_CICD_API_CALL}
