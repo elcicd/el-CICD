@@ -216,11 +216,7 @@ __create_onboarding_automation_server() {
         -f ${HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
         jenkins-sync \
         elCicdCharts/elCicdChart
-    set +x
-    sleep 3
-    helm uninstall jenkins-sync -n ${ONBOARDING_MASTER_NAMESPACE}
-    
-    set +e
+    set +ex
 }
 
 _helm_repo_add_and_update_elCicdCharts() {

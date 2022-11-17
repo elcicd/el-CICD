@@ -20,7 +20,7 @@ elCicdTemplates:
     chmod 777 -R jobs;
     JENKINS_POD=$(oc get pods -o custom-columns=:.metadata.name | grep jenkins | grep -v sync);
     oc exec -i $JENKINS_POD -- rm -rf /var/lib/jenkins/jobs;
-    tar czvf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
+    tar czf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
     curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/safeRestart;
     until [[ $(curl -ksS -o /dev/null -w "%{http_code}" jenkins:8080/login) == 200 ]]
