@@ -140,7 +140,6 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
   - kind: Group
     name: ${${NAME_SPACE}_GROUP}
-    namespace: ${NAME_SPACE}
     
 - templateName: copyResource
   appName: ${EL_CICD_META_INFO_NAME}
