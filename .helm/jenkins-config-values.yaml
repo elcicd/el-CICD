@@ -130,7 +130,7 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}_edit
-  mustHaveProfiles:
+  anyProfiles:
   - sdlc
   ignoreAnyProfiles:
   - onboarding
