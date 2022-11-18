@@ -49,15 +49,15 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
         pushSshCredentialsToJenkins(projectInfo, keyId, EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
     }
 
-    def tokenIds = []
+    def credsIds = []
     envs.each { env ->
-        def tokenId = getImageRegistryCredentialsId(env)
-        if (!tokenIds.contains(tokenId)) {
-            loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
+        def credsId = getImageRegistryCredentialsId(env)
+        if (!credsIds.contains(credsId)) {
+            loggingUtils.shellEchoBanner("PUSH ${credsId} CREDENTIALS TO CICD SERVER")
 
-            pushImageRepositoryTokenToJenkins(projectInfo, tokenId)
+            pushImageRegistryCredsToJenkins(projectInfo, credsId)
 
-            tokenIds.add(tokenId)
+            credsIds.add(credsId)
         }
     }
 }
@@ -96,8 +96,10 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
     }
 }
 
-def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
-    withCredentials([string(credentialsId: tokenId, variable: 'IMAGE_REGISTRY_PULL_TOKEN'),
+def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
+    withCredentials([usernamePassword(credentialsId: credsId, 
+                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'IMAGE_REGISTRY_PASSWORD'),
                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials.xml"
         def curlCommand =
@@ -105,11 +107,11 @@ def pushImageRepositoryTokenToJenkins(def projectInfo, def tokenId) {
         
         sh """
             ${shCmd.echo ''}
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | \
-                sed "s/%ID%/${tokenId}/; s|%TOKEN%|\${IMAGE_REGISTRY_PULL_TOKEN}|" > ${JENKINS_CREDS_FILE}
+            local SED_EXPR="s/%ID%/${credsId}/; s|%USERNAME%|\${IMAGE_REGISTRY_USERNAME}|; s|%PASSWORD%|\${IMAGE_REGISTRY_PASSWORD}|"
+            cat ${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml | sed "\${SED_EXPR}" > ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
-            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${tokenId}/config.xml
+            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${credsId}/config.xml
 
             rm -f ${JENKINS_CREDS_FILE}
         """
