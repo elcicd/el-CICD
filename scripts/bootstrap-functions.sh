@@ -40,7 +40,7 @@ _bootstrap_el_cicd() {
     _refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials
 
     echo
-    echo "RUN ALL CUSTOM SCRIPTS '${ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${CONFIG_BOOTSTRAP_DIR}"
+    echo "RUN ALL CUSTOM SCRIPTS '${ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${EL_CICD_CONFIG_BOOTSTRAP_DIR}"
     __run_custom_config_scripts
 
     echo
@@ -58,7 +58,7 @@ _create_meta_info_file() {
     local EXTRA_CONF_FILES=$(echo ${INCLUDE_SYSTEM_FILES}:${ADDITIONAL_FILES} | tr ':' ' ')
     for CONF_FILE in ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}
     do
-        local FOUND_FILES="${FOUND_FILES} $(find ${CONFIG_DIR} ${CONFIG_BOOTSTRAP_DIR} -maxdepth 1 -name ${CONF_FILE})"
+        local FOUND_FILES="${FOUND_FILES} $(find ${EL_CICD_CONFIG_DIR} ${EL_CICD_CONFIG_BOOTSTRAP_DIR} -maxdepth 1 -name ${CONF_FILE})"
     done
     awk -F= '!line[$1]++' ${SYSTEM_DEFAULT_CONFIG_FILE} ${FOUND_FILES} >> ${META_INFO_FILE_TMP}
 
@@ -172,9 +172,13 @@ _confirm_continue() {
 __create_onboarding_automation_server() {    
     echo
     set -e    
-    if [[ -z ${JENKINS_IMAGE_PULL_SECRET} && ${OKD_VERSION} ]]
+    if [[ ${OKD_VERSION} ]]
     then
-        JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' -n ${ONBOARDING_MASTER_NAMESPACE} | grep deployer-dockercfg)
+        oc apply -f ${EL_CICD_RESOURCES_DIR}/nonroot-builder.yaml
+        if [[ -z ${JENKINS_IMAGE_PULL_SECRET} ]]
+        then
+            JENKINS_IMAGE_PULL_SECRET=$(oc get secrets -o custom-columns=:'metadata.name' -n ${ONBOARDING_MASTER_NAMESPACE} | grep deployer-dockercfg)
+        fi
     fi
 
     _create_meta_info_file
@@ -196,9 +200,9 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${META_INFO_FILE} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
-        -f ${HELM_DIR}/jenkins-config-values.yaml \
-        -f ${HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${EL_CICD_CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x
@@ -213,7 +217,7 @@ __create_onboarding_automation_server() {
     helm upgrade --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
         jenkins-sync \
         elCicdCharts/elCicdChart
     set +ex
@@ -262,7 +266,7 @@ __build_jenkins_agents_if_necessary() {
 }
 
 __run_custom_config_scripts() {
-    local SCRIPTS=$(find "${CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "${ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
+    local SCRIPTS=$(find "${EL_CICD_CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "${ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
     if [[ ! -z ${SCRIPTS} ]]
     then
         for FILE in ${SCRIPTS}

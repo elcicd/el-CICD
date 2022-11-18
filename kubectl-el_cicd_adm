@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+CLI_OPTION=${1}
+
+ROOT_CONFIG_FILE=${2}
+
 set -E
 
 trap 'ERRO_LINENO=$LINENO' ERR
@@ -107,15 +111,11 @@ _REGULAR=$(tput sgr0)
 
 set -o allexport
 
-BOOTSTRAP_DIR=$(pwd)
+EL_CICD_DIR=$(pwd)
 
-EL_CICD_HOME=$(dirname ${BOOTSTRAP_DIR})
+EL_CICD_HOME=$(dirname ${EL_CICD_DIR})
 
-CLI_OPTION=${1}
-
-ROOT_CONFIG_FILE=${2}
-
-CONFIG_DIR=${BOOTSTRAP_DIR}/../el-CICD-config
+EL_CICD_CONFIG_DIR=${EL_CICD_HOME}/el-CICD-config
 
 case "${CLI_OPTION}" in
     '')
@@ -136,39 +136,32 @@ SERVER_TYPE_NON_PROD=non-prod
 echo "${WARNING_MSG}"
 sleep 2
 
-SCRIPTS_DIR=${BOOTSTRAP_DIR}/scripts
-SCRIPTS_RESOURCES_DIR=${SCRIPTS_DIR}/resources
-SYSTEM_DEFAULT_CONFIG_FILE=${SCRIPTS_RESOURCES_DIR}/system-default.conf
+EL_CICD_SCRIPTS_DIR=${EL_CICD_DIR}/scripts
+EL_CICD_SCRIPTS_RESOURCES_DIR=${EL_CICD_SCRIPTS_DIR}/resources
+SYSTEM_DEFAULT_CONFIG_FILE=${EL_CICD_SCRIPTS_RESOURCES_DIR}/system-default.conf
 
-RESOURCES_DIR=${BOOTSTRAP_DIR}/resources
-PIPELINES_DIR=${RESOURCES_DIR}/pipelines
-TEMPLATES_DIR=${RESOURCES_DIR}/templates
-HELM_DIR=${BOOTSTRAP_DIR}/.helm
+EL_CICD_RESOURCES_DIR=${EL_CICD_DIR}/resources
+EL_CICD_TEMPLATES_DIR=${EL_CICD_RESOURCES_DIR}/templates
+EL_CICD_HELM_DIR=${EL_CICD_DIR}/.helm
 
-NON_PROD_ONBOARDING_PIPELINES_DIR=${PIPELINES_DIR}/non-prod-onboarding
-NON_PROD_AUTOMATION_PIPELINES_DIR=${PIPELINES_DIR}/non-prod-automation
+EL_CICD_CONFIG_HELM_DIR=${EL_CICD_CONFIG_DIR}/.helm
+EL_CICD_CONFIG_BOOTSTRAP_DIR=${EL_CICD_CONFIG_DIR}/bootstrap
+EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins
 
-PROD_ONBOARDING_PIPELINES_DIR=${PIPELINES_DIR}/prod-onboarding
-PROD_AUTOMATION_PIPELINES_DIR=${PIPELINES_DIR}/prod-automation
-
-CONFIG_HELM_DIR=${CONFIG_DIR}/.helm
-CONFIG_BOOTSTRAP_DIR=${CONFIG_DIR}/bootstrap
-CONFIG_JENKINS_DIR=${CONFIG_DIR}/jenkins
-
-TARGET_JENKINS_BUILD_DIR=${BOOTSTRAP_DIR}/../jenkins-target
+TARGET_JENKINS_BUILD_DIR=${EL_CICD_HOME}/jenkins-target
 
 echo
 echo 'Loading el-CICD environment...'
 
 set -e
 echo
-for FILE in $(ls ${SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
+for FILE in $(ls ${EL_CICD_SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
 do
     echo "Sourcing file: ${FILE}"
-    source "${SCRIPTS_DIR}/${FILE}"
+    source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
 done
 
-source ${CONFIG_DIR}/${ROOT_CONFIG_FILE}
+source ${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}
 _create_meta_info_file ${INCLUDE_BOOTSTRAP_FILES}
 source ${META_INFO_FILE}
 set +e

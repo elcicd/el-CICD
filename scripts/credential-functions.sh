@@ -97,7 +97,7 @@ _install_sealed_secrets() {
         echo
         echo "Create custom cluster role for the management of sealedsecrets resources by Jenkins service accounts"
         echo "NOTE: Without custom cluster role, only cluster admins could manage sealedsecrets."
-        oc apply -f ${TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
+        oc apply -f ${EL_CICD_TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
 
         echo
         echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed."
@@ -138,7 +138,7 @@ _push_deploy_key_to_github() {
 
     local TEMPLATE_FILE='githubDeployKey-template.json'
     local GITHUB_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
-    cp ${TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
+    cp ${EL_CICD_TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
     sed -i -e "s/%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}/g" ${GITHUB_CREDS_FILE}
     GITHUB_CREDS=$(<${GITHUB_CREDS_FILE})
     echo "${GITHUB_CREDS//%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${GITHUB_CREDS_FILE}
@@ -168,7 +168,7 @@ _create_env_image_registry_secrets() {
         ${SET_FILE} \
         ${SET_STRING} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${HELM_DIR}/sdlc-image-registry-secrets-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/sdlc-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
     set +x
@@ -182,7 +182,7 @@ _push_access_token_to_jenkins() {
     local SECRET_TOKEN=$(cat ${TKN_FILE})
 
     local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    cat ${TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${JENKINS_CREDS_FILE}
+    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${JENKINS_CREDS_FILE}
 
     __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${JENKINS_CREDS_FILE}
 
@@ -195,7 +195,7 @@ _push_ssh_creds_to_jenkins() {
     
     local TEMPLATE_FILE='jenkinsSshCredentials-template.xml'
     local JENKINS_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
-    cp ${TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
+    cp ${EL_CICD_TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
     sed -i -e "s/%UNIQUE_ID%/${CREDS_ID}/g" ${JENKINS_CREDS_FILE}
     JENKINS_CREDS=$(<${JENKINS_CREDS_FILE})
     echo "${JENKINS_CREDS//%PRIVATE_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${JENKINS_CREDS_FILE}
@@ -227,11 +227,11 @@ _run_custom_credentials_script() {
     local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
 
     echo
-    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${CONFIG_BOOTSTRAP_DIR}..."
-    if [[ -f ${CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
+    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${EL_CICD_CONFIG_BOOTSTRAP_DIR}..."
+    if [[ -f ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
     then
         echo "Found ${CUSTOM_CREDENTIALS_SCRIPT}; running..."
-        ${CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT}
+        ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT}
         echo "Custom script ${CUSTOM_CREDENTIALS_SCRIPT} completed"
     else
         echo "Custom script '${CUSTOM_CREDENTIALS_SCRIPT}' not found."

@@ -112,6 +112,22 @@ elCicdTemplates:
   annotations:
     serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}/
 
+- templateName: clusterRoleBinding
+  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
+  mustHaveProfiles:
+  - sdlc
+  - okd
+  ignoreAnyProfiles:
+  - onboarding
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: system:openshift:scc:nonroot-builder
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICE_NAME}
+    namespace: ${RELEASE_NAMESPACE}
+
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}_edit
   mustHaveProfiles:
@@ -157,3 +173,5 @@ elCicdTemplates:
   - onboarding
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
+  
+  

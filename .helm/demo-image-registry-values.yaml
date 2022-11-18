@@ -52,6 +52,8 @@ elCicdTemplates:
   
 - templateName: secret
   appNames: ${APP_NAMES}
+  anyProfiles:
+  - htpasswd
   stringData:
     htpasswd: ${${APP_NAME}_HTPASSWD}
     

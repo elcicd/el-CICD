@@ -9,7 +9,7 @@ __bootstrap_dev_environment() {
 
     __summarize_and_confirm_dev_setup_info
 
-    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
@@ -24,6 +24,10 @@ __bootstrap_dev_environment() {
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
         _remove_image_registry
+        until [[ -z $(oc get project --ignore-not-found --no-headers ${DEMO_IMAGE_REGISTRY}) ]]
+        do
+            sleep 2
+        done
 
         __setup_image_registries
     fi
@@ -227,7 +231,7 @@ __additional_cluster_config() {
     if [[ -z $(oc get secrets -n kube-system | grep sealed-secrets-key) ]]
     then
         echo "Creating Sealed Secrets master key"
-        oc create -f ${SCRIPTS_RESOURCES_DIR}/master.key
+        oc create -f ${EL_CICD_SCRIPTS_RESOURCES_DIR}/master.key
         oc delete pod --ignore-not-found -n kube-system -l name=sealed-secrets-controller
     else
         echo "Sealed Secrets master key found. Apply manually if still required.  Skipping..."
@@ -260,7 +264,6 @@ __create_image_registry_nfs_share() {
 
 __setup_image_registries() {
     set -e
-    DEMO_IMAGE_REGISTRY_PROFILES=htpasswd
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
         __create_image_registry_nfs_share
@@ -270,26 +273,27 @@ __setup_image_registries() {
 
     _helm_repo_add_and_update_elCicdCharts
         
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local APP_NAME=${DEMO_IMAGE_REGISTRY}-${REGISTRY_NAME}
+        local APP_NAME=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}
         local APP_NAMES=${APP_NAMES:+${APP_NAMES},}${APP_NAME}
-        local HTPASSWDS=${HTPASSWDS:+${HTPASSWDS},}elCicdDefs-htpasswd.${APP_NAME}_HTPASSWD=${DEMO_IMAGE_REGISTRY_USER_PWD}
+        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_IMAGE_REGISTRY_USER_PWD})
+        local HTPASSWDS="${HTPASSWDS:+${HTPASSWDS} } --set-string elCicdDefs-htpasswd.${APP_NAME}_HTPASSWD=${HTPASSWD}"
     done
     
     DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
     
     helm upgrade --install --atomic --create-namespace --history-max=1 \
-        --set "profiles={${DEMO_IMAGE_REGISTRY_PROFILES}}" \
+        --set-string profiles='{htpasswd}' \
         --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
-        --set-string ${HTPASSWDS} \
+        ${HTPASSWDS} \
         --set-string ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         --set createNamespaces=true \
         -n ${DEMO_IMAGE_REGISTRY} \
-        -f ${HELM_DIR}/demo-image-registry-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
 
@@ -312,7 +316,7 @@ __register_insecure_registries() {
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
 
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
         local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
@@ -355,13 +359,13 @@ __create_credentials() {
 }
 
 __init_el_cicd_repos() {
-    __set_config_value EL_CICD_ORGANIZATION ${EL_CICD_ORGANIZATION} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
-    __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
-    __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_ORGANIZATION ${EL_CICD_ORGANIZATION} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
-    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
-    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
-    find ${CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
 
     local ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO} ${EL_CICD_CONFIG_REPO} ${EL_CICD_DEPLOY_REPO} ${EL_CICD_DOCS_REPO} ${EL_CICD_TEST_PROJECTS}")
     for EL_CICD_REPO_dir in ${ALL_EL_CICD_REPOS}

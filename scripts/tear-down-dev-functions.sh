@@ -133,7 +133,7 @@ _remove_image_registry() {
         helm uninstall ${DEMO_IMAGE_REGISTRY} -n ${DEMO_IMAGE_REGISTRY}
         oc delete project ${DEMO_IMAGE_REGISTRY}
 
-        local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_USER_NAMES} | tr ':' ' ')
+        local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
         local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
         for REGISTRY_NAME in ${REGISTRY_NAMES}
         do
@@ -184,9 +184,9 @@ __remove_whitelisted_image_registry_host_names() {
 __delete_remote_el_cicd_git_repos() {
     echo
     local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS_REPO}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
-    for EL_CICD_DIR in ${ALL_EL_CICD_DIRS}
+    for GIT_REPO_DIR in ${ALL_EL_CICD_DIRS}
     do
-        __remove_git_repo ${EL_CICD_DIR}
+        __remove_git_repo ${GIT_REPO_DIR}
     done
 }
 
