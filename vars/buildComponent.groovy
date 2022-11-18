@@ -73,7 +73,7 @@ void call(Map args) {
 
         withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.devEnv),
                          usernameVariable: 'DEV_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'DEV_IMAGE_REGISTRY_PWD')]]) {
+                         passwordVariable: 'DEV_IMAGE_REGISTRY_PWD')]) {
             dir(component.workDir) {
                 sh """
                     chmod 777 Dockerfile
