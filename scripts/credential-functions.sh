@@ -26,7 +26,7 @@ _verify_pull_secret_files_exist() {
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}
+        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}
         if [[ ! -f ${TKN_FILE} ]]
         then
             local TOKEN_FILES=${TOKEN_FILES:+$TOKEN_FILES, }${TKN_FILE}
@@ -156,7 +156,7 @@ _create_env_image_registry_secrets() {
     do
         local APP_NAME="${ENV@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.el-cicd-${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
+        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.el-cicd-${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
         local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
         local SET_STRING="${SET_STRING:+$SET_STRING }--set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
         SET_STRING="${SET_STRING} --set-string elCicdDefs.${APP_NAME}${IMAGE_REGISTRY_POSTFIX}=${SERVER}"
@@ -179,7 +179,23 @@ _push_access_token_to_jenkins() {
     local CREDS_ID=${2}
     local TKN_FILE=${3}
 
-    IFS=':' read -ra USERNAME_PWD <<< $(cat ${TKN_FILE})
+    local SECRET_TOKEN=$(cat ${TKN_FILE})
+
+    # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
+    local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
+    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
+
+    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${SECRET_FILE} 
+
+    rm -f ${SECRET_FILE}
+}
+
+_push_username_pwd_to_jenkins() {
+    local JENKINS_DOMAIN=${1}
+    local CREDS_ID=${2}
+    local TKN_FILE=${3}
+
+    IFS=':' read -ra USERNAME_PWD <<< $(cat ${TKN_FILE} | tr -d '[:space:]')
 
     local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
     local SED_EXPR="s/%ID%/${CREDS_ID}/; s|%USERNAME%|${USERNAME_PWD[0]}|; s|%PASSWORD%|${USERNAME_PWD[1]}|"

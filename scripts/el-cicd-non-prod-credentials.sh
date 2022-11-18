@@ -13,7 +13,7 @@ _refresh_non_prod_credentials() {
     echo
     echo "Adding read only deploy key for el-CICD-config"
     _push_deploy_key_to_github el-CICD-config ${EL_CICD_CONFIG_SSH_READ_ONLY_PUBLIC_DEPLOY_KEY_TITLE} ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
-    
+
     echo
     echo 'Pushing OKD TOKEN to Jenkins'
     local SA_SECRET_NAME=$(oc get secrets -o custom-columns=:.metadata.name -n ${ONBOARDING_MASTER_NAMESPACE} | grep -m 1 jenkins-token)
@@ -43,11 +43,11 @@ _refresh_non_prod_credentials() {
     echo "Pushing the image repository access tokens for each environment to Jenkins: ${CICD_ENVIRONMENTS}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        SECRET_TOKEN_FILE_NAME=${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}
+        USERNAME_PWD_FILE_NAME=${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}
 
         echo
         echo "Pushing ${ENV} image repo access token to Jenkins"
-        _push_access_token_to_jenkins ${JENKINS_URL} ${SECRET_TOKEN_FILE_NAME} ${SECRET_FILE_DIR}/${SECRET_TOKEN_FILE_NAME}
+        _push_username_pwd_to_jenkins ${JENKINS_URL} ${USERNAME_PWD_FILE_NAME} ${SECRET_FILE_DIR}/${USERNAME_PWD_FILE_NAME}
     done
 
     echo

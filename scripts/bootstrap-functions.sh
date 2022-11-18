@@ -71,6 +71,7 @@ _create_meta_info_file() {
     rm ${META_INFO_FILE_TMP}
 
     sort -o ${META_INFO_FILE} ${META_INFO_FILE}
+    echo
     echo "Config files processed for el-cicd-meta-info (${META_INFO_FILE}):"
     echo "    $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
 }
@@ -174,6 +175,8 @@ __create_onboarding_automation_server() {
     set -e    
     if [[ ${OKD_VERSION} ]]
     then
+        echo
+        echo "RUNNING ON OKD.  APPLYING SCC nonroot-builder:"
         oc apply -f ${EL_CICD_RESOURCES_DIR}/nonroot-builder.yaml
         if [[ -z ${JENKINS_IMAGE_PULL_SECRET} ]]
         then

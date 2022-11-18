@@ -33,7 +33,7 @@ def configureCicdJenkinsUrls(def projectInfo) {
 }
 
 def getImageRegistryCredentialsId(def env) {
-    return "${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
+    return "${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 }
 
 def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
@@ -76,7 +76,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyVar})}" > ${JENKINS_CREDS_FILE}
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${sshKeyVar})}" > ${JENKINS_CREDS_FILE}
             set -x
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
@@ -101,7 +101,7 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PASSWORD'),
                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsTokenCredentials.xml"
+        def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsUserNamePwdCredentials.xml"
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
