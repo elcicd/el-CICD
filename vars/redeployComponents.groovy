@@ -91,7 +91,7 @@ def call(Map args) {
 
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployToEnv),
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
                                 variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"
@@ -125,7 +125,7 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.componentsToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.ENV_TO),
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.ENV_TO),
                                 variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"

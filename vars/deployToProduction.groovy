@@ -49,7 +49,7 @@ def call(Map args) {
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(PROMOTION_ENV_FROM),
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(PROMOTION_ENV_FROM),
                          variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
 
@@ -156,9 +156,9 @@ def call(Map args) {
                                  "${projectInfo.componentsInRelease.collect { it.name } .join(', ')}")
 
         if (!projectInfo.hasBeenReleased) {
-            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.preProdEnv),
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
                              variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN'),
-                             string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.prodEnv),
+                             string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.prodEnv),
                              variable: 'PROD_IMAGE_REGISTRY_PULL_TOKEN')])
             {
                 projectInfo.componentsInRelease.each { component ->

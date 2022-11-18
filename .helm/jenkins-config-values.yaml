@@ -117,8 +117,6 @@ elCicdTemplates:
   mustHaveProfiles:
   - sdlc
   - okd
-  ignoreAnyProfiles:
-  - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole

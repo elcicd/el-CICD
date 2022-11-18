@@ -156,7 +156,7 @@ _create_env_image_registry_secrets() {
     do
         local APP_NAME="${ENV@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
+        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.el-cicd-${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
         local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
         local SET_STRING="${SET_STRING:+$SET_STRING }--set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
         SET_STRING="${SET_STRING} --set-string elCicdDefs.${APP_NAME}${IMAGE_REGISTRY_POSTFIX}=${SERVER}"
@@ -179,10 +179,11 @@ _push_access_token_to_jenkins() {
     local CREDS_ID=${2}
     local TKN_FILE=${3}
 
-    local SECRET_TOKEN=$(cat ${TKN_FILE})
+    IFS=':' read -ra USERNAME_PWD <<< $(cat ${TKN_FILE})
 
     local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${JENKINS_CREDS_FILE}
+    local SED_EXPR="s/%ID%/${CREDS_ID}/; s|%USERNAME%|${USERNAME_PWD[0]}|; s|%PASSWORD%|${USERNAME_PWD[1]}|"
+    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml | sed "${SED_EXPR}" > ${JENKINS_CREDS_FILE}
 
     __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${JENKINS_CREDS_FILE}
 

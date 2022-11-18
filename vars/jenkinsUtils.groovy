@@ -32,7 +32,7 @@ def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}/doDelete"
 }
 
-def getImageRegistryPullTokenId(def env) {
+def getImageRegistryCredentialsId(def env) {
     return "${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_TOKEN_ID_POSTFIX}"
 }
 
@@ -51,7 +51,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
 
     def tokenIds = []
     envs.each { env ->
-        def tokenId = getImageRegistryPullTokenId(env)
+        def tokenId = getImageRegistryCredentialsId(env)
         if (!tokenIds.contains(tokenId)) {
             loggingUtils.shellEchoBanner("PUSH ${tokenId} CREDENTIALS TO CICD SERVER")
 

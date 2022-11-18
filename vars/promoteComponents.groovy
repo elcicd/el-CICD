@@ -66,7 +66,7 @@ def call(Map args) {
 
             def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
 
-            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployFromEnv),
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                              variable: 'FROM_IMAGE_REGISTRY_PULL_TOKEN')]) {
                 projectInfo.componentsToPromote.each { component ->
                     def verifyImageCmd =
@@ -148,9 +148,9 @@ def call(Map args) {
             loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                     projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployFromEnv),
+            withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                     variable: 'FROM_IMAGE_REGISTRY_PULL_TOKEN'),
-                            string(credentialsId: jenkinsUtils.getImageRegistryPullTokenId(projectInfo.deployToEnv),
+                            string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
                                    variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
             {
                 projectInfo.componentsToPromote.each { component ->
