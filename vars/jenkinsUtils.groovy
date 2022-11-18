@@ -53,7 +53,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     envs.each { env ->
         def credsId = getImageRegistryCredentialsId(env)
         if (!credsIds.contains(credsId)) {
-            loggingUtils.shellEchoBanner("PUSH ${credsId} CREDENTIALS TO CICD SERVER")
+            loggingUtils.echoBanner("PUSH ${credsId} CREDENTIALS TO CICD SERVER")
 
             pushImageRegistryCredsToJenkins(projectInfo, credsId)
 
@@ -107,7 +107,7 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
         
         sh """
             ${shCmd.echo ''}
-            local SED_EXPR="s/%ID%/${credsId}/; s|%USERNAME%|\${IMAGE_REGISTRY_USERNAME}|; s|%PASSWORD%|\${IMAGE_REGISTRY_PASSWORD}|"
+            SED_EXPR="s/%ID%/${credsId}/; s|%USERNAME%|\${IMAGE_REGISTRY_USERNAME}|; s|%PASSWORD%|\${IMAGE_REGISTRY_PASSWORD}|"
             cat ${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml | sed "\${SED_EXPR}" > ${JENKINS_CREDS_FILE}
 
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
