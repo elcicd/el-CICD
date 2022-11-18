@@ -71,7 +71,7 @@ void call(Map args) {
 
         def tlsVerify = el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS}" : ''
 
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.devEnv),
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.devEnv),
                          usernameVariable: 'DEV_IMAGE_REGISTRY_USERNAME',
                          passwordVariable: 'DEV_IMAGE_REGISTRY_PWD')]) {
             dir(component.workDir) {
