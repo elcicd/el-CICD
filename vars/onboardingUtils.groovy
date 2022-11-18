@@ -157,7 +157,7 @@ def getSldcConfigValues(def projectInfo) {
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
     
-    sdlcConfigValues.profiles = []
+    sdlcConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
     sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
     if (projectInfo.nfsShares) {
         sdlcConfigValues.profiles << "nfs"
@@ -182,10 +182,6 @@ def getSldcConfigValues(def projectInfo) {
                 }
             }
         }
-    }
-    
-    if (el.cicd.OKD_VERSION) {
-        sdlcConfigValues.profiles << "nfs"
     }
     
     sdlcConfigValues.elCicdDefs = elCicdDefs
