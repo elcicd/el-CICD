@@ -214,7 +214,7 @@ __create_onboarding_automation_server() {
     sleep 5
     
     set -x
-    helm upgrade --wait-for-jobs --install --history-max=1  \
+    helm upgrade --wait --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
