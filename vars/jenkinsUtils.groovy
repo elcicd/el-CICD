@@ -77,8 +77,12 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
             if [[ -z \${${sshKeyEnvVar}:+x} ]]
             then
+                echo "foo"
+                sleep 1
                 echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyEnvVar})}" > ${JENKINS_CREDS_FILE}
             else
+                echo "bar"
+                sleep 1
                 echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${${sshKeyEnvVar}})}" > ${JENKINS_CREDS_FILE}
             fi
             
