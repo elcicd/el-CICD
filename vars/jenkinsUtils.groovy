@@ -72,7 +72,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
         
         sh """
             ${shCmd.echo ''}
-            set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
@@ -82,7 +81,6 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
             else
                 echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${${sshKeyEnvVar}})}" > ${JENKINS_CREDS_FILE}
             fi
-            set -x
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
