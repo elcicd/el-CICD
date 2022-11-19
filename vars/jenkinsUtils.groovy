@@ -62,7 +62,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     }
 }
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar, def isKeyGenFile = false) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -76,7 +76,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS="\$(<${JENKINS_CREDS_FILE})"
 
-            if [[ -f '${sshKeyEnvVar}' ]]
+            if [[ -f '${isKeyGenFile}' ]]
             then
                 echo "foo"
                 sleep 1
