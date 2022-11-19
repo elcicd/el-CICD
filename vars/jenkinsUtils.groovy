@@ -80,11 +80,11 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
             then
                 echo "foo"
                 sleep 1
-                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${${sshKeyEnvVar}})}" > ${JENKINS_CREDS_FILE}
+                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyEnvVar})}" > ${JENKINS_CREDS_FILE}
             else
                 echo "bar"
                 sleep 1
-                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/${sshKeyEnvVar}}" > ${JENKINS_CREDS_FILE}
+                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${${sshKeyEnvVar}}" > ${JENKINS_CREDS_FILE}
             fi
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
