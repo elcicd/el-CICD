@@ -75,20 +75,11 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar) {
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            echo
-            ls -al
-            echo
-            echo 'sshKeyEnvVar: ${sshKeyEnvVar}'
-            echo "sshKeyEnvVar[env]: \${${sshKeyEnvVar}}"
-            echo
-            if [[ -z \${${sshKeyEnvVar}:+x} ]]
+
+            if [[ -f '${sshKeyEnvVar}' ]]
             then
-                echo "foo"
-                sleep 1
                 echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyEnvVar})}" > ${JENKINS_CREDS_FILE}
             else
-                echo "bar"
-                sleep 1
                 echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<\${${sshKeyEnvVar}})}" > ${JENKINS_CREDS_FILE}
             fi
             
