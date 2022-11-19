@@ -61,30 +61,22 @@ def deployMicroservices(def projectInfo, def components) {
                 done
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
 
-                helm dependency update .
-
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
 
-                VALUES_FILE=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
-
-                SECRET_NAME=\$(oc get secret --ignore-not-found --no-headers -l name=${component.name},status!=deployed \
-                              -o custom-columns=:.metadata.name \
-                              -n ${projectInfo.deployToNamespace})
-                if [[ ! -z \${SECRET_NAME} ]]
-                then
-                    oc patch secret \${SECRET_NAME} \
-                        -p '{"metadata":{"labels":{"status":"deployed"}}}' \
-                        --type=merge \
-                        -n ${projectInfo.deployToNamespace}
-                fi
+                VALUES_FILES=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
+                
+                ${shCmd.echo ''}
+                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 
                 set +e
-                if helm upgrade --force --install --history-max=1 --cleanup-on-fail --debug ${component.name} . \
+                if helm upgrade --atomic --install --history-max=1   . \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
                     --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
-                    -n ${projectInfo.deployToNamespace}
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    elCicdCharts/elCicdChart                    
                 then
                     ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
                 else

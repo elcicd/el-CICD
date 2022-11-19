@@ -284,8 +284,14 @@ __setup_image_registries() {
     
     DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
     
+    if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+    then
+        local PROFILES='htpasswd,nfs'
+    else
+        local PROFILES='htpasswd'
+    fi
     helm upgrade --install --atomic --create-namespace --history-max=1 \
-        --set-string profiles='{htpasswd}' \
+        --set-string profiles="{${PROFILES}}" \
         --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
