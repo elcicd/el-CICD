@@ -40,13 +40,13 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     def keyId = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
+        pushSshCredentialsToJenkins(projectInfo, keyId, EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
     }
 
     keyId = el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     loggingUtils.echoBanner("PUSH ${keyId} CREDENTIALS TO CICD SERVER")
     withCredentials([sshUserPrivateKey(credentialsId: keyId, keyFileVariable: 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')]) {
-        pushSshCredentialsToJenkins(projectInfo, keyId, 'EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID')
+        pushSshCredentialsToJenkins(projectInfo, keyId, EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID)
     }
 
     def credsIds = []
@@ -62,7 +62,7 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
     }
 }
 
-def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar, def isKeyGenFile = false) {
+def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyVar) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -74,18 +74,8 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyEnvVar, de
             ${shCmd.echo ''}
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
-            JENKINS_CREDS="\$(<${JENKINS_CREDS_FILE})"
-
-            if [[ -f '${isKeyGenFile}' ]]
-            then
-                echo "foo"
-                sleep 1
-                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyEnvVar})}" > ${JENKINS_CREDS_FILE}
-            else
-                echo "bar"
-                sleep 1
-                echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\${${sshKeyEnvVar}}" > ${JENKINS_CREDS_FILE}
-            fi
+            JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
+            echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyVar})}" > ${JENKINS_CREDS_FILE}
             
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml

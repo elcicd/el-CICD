@@ -35,7 +35,7 @@ def call(Map args) {
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
                 
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.gitDeployKeyJenkinsId, module.gitDeployKeyJenkinsId, true)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.gitDeployKeyJenkinsId, module.gitDeployKeyJenkinsId)
                 
                 githubUtils.addProjectDeployKey(projectInfo, module, "${module.gitDeployKeyJenkinsId}.pub")
                 
