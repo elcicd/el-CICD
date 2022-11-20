@@ -52,8 +52,6 @@ def deployMicroservices(def projectInfo, def components) {
             msCommonValues.addAll(commonValues)
 
             sh """
-                rm -rf charts
-
                 for KUST_DIR in resources generators transformers validators
                 do
                     mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR}
@@ -63,6 +61,7 @@ def deployMicroservices(def projectInfo, def components) {
 
                 chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh
 
+                ls -al
                 VALUES_FILES=\$(if [[ -f values.yml ]]; then echo values.yml; else echo values.yaml; fi)
                 
                 ${shCmd.echo ''}
