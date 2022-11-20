@@ -71,14 +71,14 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
         
         sh """
-            set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
             
             if [[ ! -f ${sshKeyGenVar} ]]
-            then 
+            then
                 cat \${sshKeyGenVar} > ${sshKeyGenVar}
+                ${sshKeyGenVar}
             fi
             
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyGenVar})}" > ${JENKINS_CREDS_FILE}

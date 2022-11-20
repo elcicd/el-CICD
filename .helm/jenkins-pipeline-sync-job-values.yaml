@@ -29,7 +29,7 @@ elCicdTemplates:
     echo "Checking if Jenkins is up";
     until [[ $(curl -ksS -o /dev/null -w "%{http_code}" jenkins:8080/login) == 200 ]]
     do
-      gecho "Checking if Jenkins is up";
+      echo "Checking if Jenkins is up";
       sleep 3;
     done;
     echo "el-CICD Jenkins jobs updated";
