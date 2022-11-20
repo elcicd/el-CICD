@@ -58,6 +58,7 @@ def deployMicroservices(def projectInfo, def components) {
                     cp -v ${el.cicd.EL_CICD_HELM_DIR}/\${KUST_DIR}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR} 2>/dev/null || :
                 done
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
+                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh                
 
                 VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -exec echo '-f {}' \\;)
                 
