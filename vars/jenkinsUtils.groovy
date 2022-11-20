@@ -84,7 +84,10 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
                 echo
                 echo \${${sshKeyGenVar}}
                 echo
-                cat {${sshKeyGenVar}
+                ls -al
+                echo
+                echo
+                cat ${sshKeyGenVar}
                 echo
                 echo '================= end'
                 echo
