@@ -59,7 +59,6 @@ def deployMicroservices(def projectInfo, def components) {
                 done
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
 
-                ls -al
                 VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -exec echo '-f {} \' \;)
                 
                 ${shCmd.echo ''}
