@@ -69,7 +69,7 @@ def deployMicroservices(def projectInfo, def components) {
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 
                 set +e
-                if helm upgrade --atomic --install --history-max=1   . \
+                if helm upgrade --atomic --install --history-max=1 \
                     -f \${VALUES_FILE} \
                     -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-values.yaml \
                     --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
@@ -85,7 +85,7 @@ def deployMicroservices(def projectInfo, def components) {
                     echo 'HELM ERROR'
                     echo 'Attempting to generate template output...'
                     echo
-                    helm template --debug ${component.name} . \
+                    helm template --debug ${component.name} \
                         -f \${VALUES_FILE} \
                         -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-values.yaml \
                         --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
