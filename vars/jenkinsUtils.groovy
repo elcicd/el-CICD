@@ -77,8 +77,14 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
             
             if [[ ! -f ${sshKeyGenVar} ]]
             then
-                ${sshKeyGenVar}=\${${sshKeyGenVar}}
+                cp \${${sshKeyGenVar}} ${sshKeyGenVar}
             fi
+            set -x
+            echo
+            echo '================ start'
+            cat ${sshKeyGenVar}
+            echo '================ end'
+            echo            
             
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyGenVar})}" > ${JENKINS_CREDS_FILE}
             
