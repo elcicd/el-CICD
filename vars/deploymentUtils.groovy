@@ -59,7 +59,7 @@ def deployMicroservices(def projectInfo, def components) {
                 done
                 cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
 
-                VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -exec echo '-f {} \' \;)
+                VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -exec echo '-f {}' \;)
                 
                 ${shCmd.echo ''}
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
