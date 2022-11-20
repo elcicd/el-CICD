@@ -65,10 +65,12 @@ def deployMicroservices(def projectInfo, def components) {
                 ${shCmd.echo ''}
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 
+                ls -al ${el.cicd.CONFIG_HELM_DIR}
+                
                 set +e
                 if helm upgrade --atomic --install --history-max=1 \
                     \${VALUES_FILE} \
-                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-values.yaml \
+                    -f ${el.cicd.CONFIG_HELM_DIR}/default-values.yaml \
                     --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace} \
