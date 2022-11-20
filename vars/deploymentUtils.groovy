@@ -71,7 +71,7 @@ def deployMicroservices(def projectInfo, def components) {
                 set +e
                 if helm upgrade --atomic --install --history-max=1   . \
                     -f \${VALUES_FILE} \
-                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                    -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-default.yaml \
                     --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace} \
@@ -87,7 +87,7 @@ def deployMicroservices(def projectInfo, def components) {
                     echo
                     helm template --debug ${component.name} . \
                         -f \${VALUES_FILE} \
-                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/values-default.yaml \
+                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-default.yaml \
                         --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                         -n ${projectInfo.deployToNamespace}
                     set -ex
