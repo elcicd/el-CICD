@@ -75,10 +75,19 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
             
+            echo
+            echo '================= start'
+            echo
             if [[ ! -f ${sshKeyGenVar} ]]
             then
                 cat \${sshKeyGenVar} > ${sshKeyGenVar}
-                ${sshKeyGenVar}
+                echo
+                echo \${${sshKeyGenVar}}
+                echo
+                cat {${sshKeyGenVar}
+                echo
+                echo '================= end'
+                echo
             fi
             
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyGenVar})}" > ${JENKINS_CREDS_FILE}
