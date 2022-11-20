@@ -19,7 +19,7 @@ def deployMicroservices(def projectInfo, def components) {
     def commonValues = ["projectId=${projectInfo.id}",
                         "elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "global.defaultImagePullSecret=${imagePullSecret}",
+                        "defaultImagePullSecret=${imagePullSecret}",
                         "ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "buildNumber=\${BUILD_NUMBER}",
                         "profiles='{${projectInfo.deployToEnv}}'",
@@ -44,7 +44,7 @@ def deployMicroservices(def projectInfo, def components) {
             def msCommonValues = ["appName=${component.name}",
                                   "component=${component.name}",
                                   "elCicdDefs.COMPONENT_NAME=${component.name}",
-                                  "global.defaultImage=${componentImage}",
+                                  "defaultImage=${componentImage}",
                                   "scmRepoName=${component.scmRepoName}",
                                   "srcCommitHash=${component.srcCommitHash}",
                                   "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
@@ -69,7 +69,7 @@ def deployMicroservices(def projectInfo, def components) {
                 if helm upgrade --atomic --install --history-max=1 \
                     \${VALUES_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-values.yaml \
-                    --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                    --set-string elCicdChart.${msCommonValues.join(' --set-string ')} \
                     --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
