@@ -11,8 +11,9 @@ sed -i '/__VALUES_START__/,/__VALUES_END__/d' ./resources/all.yaml
 COMMENTS=$(awk '/# EXCLUDED/||/# Profiles:/ {print $0}' ./resources/all.yaml)
 RENDERED=$(awk '/# Rendered ->/ {print $0}' ./resources/all.yaml)
 
-helm template -f values.yaml kustomize . > kustomization.yaml
+helm install -f values.yaml kustomize . > kustomization.yaml
 kustomize build .
+helm uninstall kustomize
 echo "${COMMENTS}"
 echo '---'
 echo "${RENDERED}"
