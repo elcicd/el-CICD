@@ -39,9 +39,9 @@ def deployMicroservices(def projectInfo, def components) {
         
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             sh """
-                VALUES_FILES=\$(find . -maxdepth 1 -type f \( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \) -printf '-f %f ')
+                VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
                 
-                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \( -name *.yaml -o -name *.yml -o -name *.json \) -printf '%f ')
+                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
                 ENV_FILES=\$(for FILE in \$ENV_FILES; do echo "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\./_/g )=./${projectInfo.deployToEnv}/\$FILE \\ "; done)
                 
                 ${shCmd.echo ''}
