@@ -65,12 +65,15 @@ def deployMicroservices(def projectInfo, def components) {
                     echo 'HELM ERROR'
                     echo 'Attempting to generate template output...'
                     echo
-                    helm template --debug ${component.name} \
-                        -f \${VALUES_FILE} \
-                        --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
+                    helm template --debug \
+                        --set-string ${msCommonValues.join(' --set-string ')} \
+                        \${VALUES_FILES} \
+                        \${ENV_FILES} \
                         -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                         -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                        -n ${projectInfo.deployToNamespace}
+                        -n ${projectInfo.deployToNamespace} \
+                        ${component.name} \
+                        elCicdCharts/elCicdChart 
                     set -ex
                     exit 1
                 fi
