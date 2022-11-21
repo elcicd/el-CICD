@@ -149,7 +149,7 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}_edit
+  appName: ${JENKINS_SERVICE_NAME}-edit
   anyProfiles:
   - cicd
   ignoreAnyProfiles:
@@ -164,7 +164,7 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}_edit
+  appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
   anyProfiles:
   - cicd
   ignoreAnyProfiles:
