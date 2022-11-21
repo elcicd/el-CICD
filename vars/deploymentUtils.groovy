@@ -19,7 +19,6 @@ def deployMicroservices(def projectInfo, def components) {
     def commonValues = ["elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
-                        "elCicdDefs.DEPLOY_TIME=${BUILD_NUMBER}",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "profiles='{${projectInfo.deployToEnv}}'",
@@ -48,7 +47,7 @@ def deployMicroservices(def projectInfo, def components) {
                 set +e
                 if helm upgrade --atomic --install --history-max=1 \
                     --set-string ${msCommonValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \\
+                    \${VALUES_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
