@@ -133,6 +133,21 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
+- templateName: clusterRoleBinding
+  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
+  mustHaveProfiles:
+  - onboarding
+  ignoreAnyProfiles:
+  - cicd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICE_NAME}
+    namespace: ${RELEASE_NAMESPACE}
+
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}_edit
   anyProfiles:
@@ -148,16 +163,16 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: clusterRoleBinding
-  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
-  mustHaveProfiles:
-  - onboarding
-  ignoreAnyProfiles:
+- templateName: roleBinding
+  appName: ${JENKINS_SERVICE_NAME}_edit
+  anyProfiles:
   - cicd
+  ignoreAnyProfiles:
+  - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: cluster-admin
+    name: sealed-secrets-management
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
