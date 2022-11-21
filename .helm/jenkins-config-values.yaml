@@ -163,7 +163,7 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: roleBinding
+- templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
   anyProfiles:
   - cicd

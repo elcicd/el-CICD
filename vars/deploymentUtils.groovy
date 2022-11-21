@@ -39,9 +39,9 @@ def deployMicroservices(def projectInfo, def components) {
         
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             sh """
-                VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -o -name *values*.yml -o *values*.json -exec echo '-f {} ' \;)
+                VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -o -name *values*.yml -o *values*.json -exec echo '-f {} ' \\;)
                 
-                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name *.yaml -o -name *.yml -o *.json -exec echo '--set-file elCicdRawYaml.{}={} ' \;)
+                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name *.yaml -o -name *.yml -o *.json -exec echo '--set-file elCicdRawYaml.{}={} ' \\;)
                 
                 ${shCmd.echo ''}
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
