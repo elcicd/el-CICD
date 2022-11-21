@@ -56,7 +56,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.defaultRbacGroup}-jenkins \
+            ${projectInfo.defaultRbacGroup}-cicd-server \
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
@@ -88,7 +88,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
-            ${projectInfo.id}-cicd \
+            ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
