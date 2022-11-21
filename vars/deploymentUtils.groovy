@@ -11,7 +11,7 @@ def deployMicroservices(def projectInfo, def components) {
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-    def imagePullSecret = "el-cicd-${ENV_TO}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 
     def defaultIngressHostDomain =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
