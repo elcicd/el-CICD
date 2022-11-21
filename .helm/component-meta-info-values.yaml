@@ -1,0 +1,21 @@
+elCicdDefs:
+  EL_CICD_COMPONENT_META_INFO:  
+    projectid: ${PROJECT_ID}
+    component: ${COMPONENT_NAME}
+    elcicd-profiles: ${EL_CICD_PROFILES}
+    scm-repo: ${SCM_REPO}
+    src-commit-hash: ${SRC_COMMIT_HASH}
+    deployment-branch: ${DEPLOYMENT_BRANCH}
+    deployment-commit-hash: ${DEPLOYMENT_COMMIT_HASH}
+    release-version: ${RELEASE_VERSION}
+    build-number: ${BUILD_NUMBER}
+    deploy-time: ${EL_CICD_DEPLOYMENT_TIME}
+    profiles: ${PROFILES}
+
+defaultLabels:
+  ${EL_CICD_COMPONENT_META_INFO}
+
+elCicdTemplates-componentMetaInfo:
+- templateName: configMap
+  appName: ${COMPONENT_NAME}-meta-info
+  data: ${EL_CICD_COMPONENT_META_INFO}

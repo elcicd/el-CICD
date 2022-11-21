@@ -10,56 +10,34 @@ def deployMicroservices(def projectInfo, def components) {
     assert projectInfo; assert components
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
-    def imageRepository = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-    def imagePullSecret = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
+    def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+    def imagePullSecret = "${ENV_TO}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 
-    def ingressHostDomain =
+    def defaultIngressHostDomain =
         (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
-
-    def commonValues = ["projectId=${projectInfo.id}",
-                        "elCicdDefs.PROJECT_ID=${projectInfo.id}",
-                        "releaseVersionTag=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+    
+    def commonValues = ["elCicdDefs.PROJECT_ID=${projectInfo.id}",
+                        "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
+                        "elCicdDefs.DEPLOY_TIME=${BUILD_NUMBER}",
                         "defaultImagePullSecret=${imagePullSecret}",
-                        "ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
-                        "buildNumber=\${BUILD_NUMBER}",
+                        "defaultIngressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "profiles='{${projectInfo.deployToEnv}}'",
-                        "renderValuesForKust=true"]
-
-    def kustomizeSh = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-    def kustomizationChart = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/Chart.yaml"
-    def kustomizationTemplate = libraryResource "${el.cicd.DEFAULT_KUSTOMIZE}/templates/kustomization.yaml"
+                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}"]
 
     components.each { component ->
-        dir ("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}") {
-            writeFile text: kustomizeSh, file: "${el.cicd.DEFAULT_KUSTOMIZE}.sh"
-            writeFile text: kustomizationChart, file: "Chart.yaml"
-        }
-
-        dir ("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}/${el.cicd.DEFAULT_KUSTOMIZE}/templates") {
-            writeFile text: kustomizationTemplate, file: "kustomization.yaml"
-        }
-
+        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+        def msCommonValues = ["elCicdDefs.APP_NAME=${component.name}",
+                              "elCicdDefs.COMPONENT_NAME=${component.name}",
+                              "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                              "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                              "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
+                              "defaultImage=${componentImage}"]
+        msCommonValues.addAll(commonValues)
+        
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            def componentImage = "${imageRepository}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-            def msCommonValues = ["appName=${component.name}",
-                                  "component=${component.name}",
-                                  "elCicdDefs.COMPONENT_NAME=${component.name}",
-                                  "defaultImage=${componentImage}",
-                                  "scmRepoName=${component.scmRepoName}",
-                                  "srcCommitHash=${component.srcCommitHash}",
-                                  "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "deploymentCommitHash=${component.deploymentCommitHash}"]
-            msCommonValues.addAll(commonValues)
-
             sh """
-                for KUST_DIR in resources generators transformers validators
-                do
-                    mkdir -p ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR}
-                    cp -v ${el.cicd.EL_CICD_HELM_DIR}/\${KUST_DIR}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/\${KUST_DIR} 2>/dev/null || :
-                done
-                cp -v ${projectInfo.deployToEnv}/* ./${el.cicd.DEFAULT_KUSTOMIZE}/resources 2>/dev/null || :
-                chmod +x ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh                
-
                 VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -exec echo '-f {}' \\;)
                 
                 ${shCmd.echo ''}
@@ -67,10 +45,10 @@ def deployMicroservices(def projectInfo, def components) {
                 
                 set +e
                 if helm upgrade --atomic --install --history-max=1 \
+                    --set-string ${msCommonValues.join(' --set-string ')} \
                     \${VALUES_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-values.yaml \
-                    --set-string elCicdChart.${msCommonValues.join(' --set-string ')} \
-                    --post-renderer ./${el.cicd.DEFAULT_KUSTOMIZE}/${el.cicd.DEFAULT_KUSTOMIZE}.sh \
+                    -f ${el.cicd.CONFIG_HELM_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     elCicdCharts/elCicdChart                    
