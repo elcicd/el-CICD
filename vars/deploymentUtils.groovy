@@ -37,8 +37,8 @@ def deployMicroservices(def projectInfo, def components) {
                               "elCicdDefaults.image=${componentImage}"]
         msCommonValues.addAll(commonValues)
         
-        def fileNameValuesSearch = '-name *values*.yaml -o -name *values*.yml -o *values*.json'
-        def fileNameYamlSearch = '-name *.yaml -o -name *.yml -o name *.json'
+        def fileNameValuesSearch = '-name *values*.yaml -o -name *values*.yml -o -name *values*.json'
+        def fileNameYamlSearch = '-name *.yaml -o -name *.yml -o -name *.json'
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             sh """
                 VALUES_FILES=\$(find . -maxdepth 1 ${fileNameValuesSearch} -exec echo '-f {} ' \\;)
