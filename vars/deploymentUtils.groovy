@@ -62,7 +62,7 @@ def deployMicroservices(def projectInfo, def components) {
                     echo
                     helm template --debug ${component.name} \
                         -f \${VALUES_FILE} \
-                        -f ${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}/default-values.yaml \
+                        -f ${el.cicd.EL_CICD_HELM_DIR}/default-values.yaml \
                         --set-string elCicdChart.${msCommonValues.join(' --set-string elCicdChart.')} \
                         -n ${projectInfo.deployToNamespace}
                     set -ex

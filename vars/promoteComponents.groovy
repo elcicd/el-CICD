@@ -94,7 +94,7 @@ def call(Map args) {
             def jsonPathSingle = '''jsonpath='{.data.component}{":"}{.data.src-commit-hash}{" "}' '''
             def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.component}{":"}{.data.src-commit-hash}{" "}{end}' '''
 
-            def msNames = projectInfo.componentsToPromote.collect { "${it.id}-${el.cicd.CM_META_INFO_POSTFIX}" }
+            def msNames = projectInfo.componentsToPromote.collect { "${it.id}-${el.cicd.META_INFO_POSTFIX}" }
             def jsonPath =  (msNames.size() > 1) ? jsonPathMulti : jsonPathSingle
             def script = "oc get cm --ignore-not-found ${msNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
 

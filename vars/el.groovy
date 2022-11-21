@@ -17,11 +17,10 @@ def initMetaData(Map metaData) {
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
-        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.EL_CICD_DIR}/.helm"
-        el.cicd.DEFAULT_KUSTOMIZE = "kustomize"
+        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.DEFAULT_HELM_DIR}"
         
-        el.cicd.CONFIG_DIR = "${WORKSPACE}/el-CICD-config"
-        el.cicd.CONFIG_HELM_DIR = "${el.cicd.CONFIG_DIR}/.helm"
+        el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
+        el.cicd.CONFIG_HELM_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
@@ -49,14 +48,6 @@ def initMetaData(Map metaData) {
         el.cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
 
         el.cicd.OKD_CLEANUP_RESOURCE_LIST='deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
-
-        el.cicd.CM_META_INFO_POSTFIX = 'meta-info'
-
-        el.cicd.RELEASE_VERSION_PREFIX = 'v'
-
-        el.cicd.DEFAULT = 'default'
-
-        el.cicd.EL_CICD_DEFS_TEMPLATE = '--set-string elCicdDefs'
     }
 }
 

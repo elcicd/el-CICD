@@ -95,17 +95,17 @@ def call(Map args) {
         loggingUtils.echoBanner("COLLECT DEPLOYMENT HASHES AND PRUNE UNNECESSARY DEPLOYMENTS")
 
         def metaInfoReleaseShell =
-            "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
+            "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
         def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.releaseVersionTag
 
         def metaInfoRegionShell =
-            "oc get cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
+            "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
         def metaInfoRegionChanged = sh(returnStdout: true, script: metaInfoRegionShell) != projectInfo.releaseRegion
         projectInfo.componentsToDeploy = projectInfo.componentsInRelease.findAll { component ->
             dir(component.workDir) {
                 def deploymentCommitHashChanged = false
                 if (!deployAll && !metaInfoRegionChanged && !metaInfoReleaseChanged) {
-                    def depCommitHashScript = "oc get cm ${component.id}-${el.cicd.CM_META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
+                    def depCommitHashScript = "oc get cm ${component.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.deployment-commit-hash }' -n ${projectInfo.prodNamespace} || :"
                     deploymentCommitHashChanged = sh(returnStdout: true, script: depCommitHashScript) != component.deploymentCommitHash
                 }
 

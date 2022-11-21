@@ -46,12 +46,12 @@ def updateProjectMetaInfo(def projectInfo) {
         def componentNames = projectInfo.components.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
         sh """
-            ${loggingUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX}")}
+            ${loggingUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX}")}
 
-            oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
+            oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
 
             ${shCmd.echo ''}
-            oc create cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
+            oc create cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} \
                 --from-literal=projectid=${projectInfo.id} \
                 --from-literal=release-version=${projectInfo.releaseVersionTag} \
                 --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
@@ -60,7 +60,7 @@ def updateProjectMetaInfo(def projectInfo) {
                 -n ${projectInfo.prodNamespace}
 
             ${shCmd.echo ''}
-            oc label cm ${projectInfo.id}-${el.cicd.CM_META_INFO_POSTFIX} \
+            oc label cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} \
                 projectid=${projectInfo.id} \
                 release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
                 release-version=${projectInfo.releaseVersionTag} \

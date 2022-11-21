@@ -14,17 +14,6 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml", text: libraryResource('templates/jenkinsUsernamePasswordCreds-template.xml')
 }
 
-def copyPullSecretsToEnvNamespace(def namespace, def env) {
-    def secretName = el.cicd["${env.toUpperCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"]
-    sh """
-        ${shCmd.echo ''}
-        oc get secrets ${secretName} -o yaml -n ${el.cicd.ONBOARDING_MASTER_NAMESPACE} | ${el.cicd.CLEAN_K8S_RESOURCE_COMMAND} | \
-            oc apply -f - -n ${namespace}
-
-        ${shCmd.echo ''}
-    """
-}
-
 def createCicdNamespaceAndJenkins(def projectInfo) {
     def rbacGroups = projectInfo.rbacGroups.toMapString()
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
