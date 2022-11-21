@@ -23,7 +23,7 @@ def deployMicroservices(def projectInfo, def components) {
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "profiles='{${projectInfo.deployToEnv}}'",
-                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}"
+                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
