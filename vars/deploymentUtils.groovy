@@ -39,9 +39,10 @@ def deployMicroservices(def projectInfo, def components) {
         
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             sh """
-                VALUES_FILES=\$(find . -maxdepth 1 -name *values*.yaml -o -name *values*.yml -o -name *values*.json -exec echo '-f {} ' \\;)
+                VALUES_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f -name *values*.yaml -o -name *values*.yml -o -name *values*.json -printf '-f %f ')
                 
-                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -name *.yaml -o -name *.yml -o -name *.json -exec echo '--set-file elCicdRawYaml.{}={} ' \\;)
+                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f -name *.yaml -o -name *.yml -o -name *.json -printf '%f ')
+                ENV_FILES=\$(for FILE in \$ENV_FILES; do echo "--set-file=elCicdRawYaml.$(echo \$FILE | sed s/\\./_/g )=./${projectInfo.deployToEnv}/\$FILE \\"; done)
                 
                 ${shCmd.echo ''}
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
@@ -50,6 +51,7 @@ def deployMicroservices(def projectInfo, def components) {
                 if helm upgrade --atomic --install --history-max=1 \
                     --set-string ${msCommonValues.join(' --set-string ')} \
                     \${VALUES_FILES} \
+                    \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
