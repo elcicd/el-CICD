@@ -122,7 +122,7 @@ elCicdTemplates:
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
   mustHaveProfiles:
-  - sdlc
+  - cicd
   - okd
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -136,7 +136,7 @@ elCicdTemplates:
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}_edit
   anyProfiles:
-  - sdlc
+  - cicd
   ignoreAnyProfiles:
   - onboarding
   roleRef:
@@ -153,7 +153,7 @@ elCicdTemplates:
   mustHaveProfiles:
   - onboarding
   ignoreAnyProfiles:
-  - sdlc
+  - cicd
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole

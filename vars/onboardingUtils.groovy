@@ -38,7 +38,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
     }
     
     def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def profiles = el.cicd.OKD_VERSION ? 'sdlc,okd' : 'sdlc'
+    def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
@@ -70,25 +70,25 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
     loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
 
     def projectDefs = getSldcConfigValues(projectInfo)
-    def sdlcConfigValues = writeYaml(data: projectDefs, returnText: true)
+    def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
     
-    def sdlcConfigFile = "sdlc-config-values.yaml"
-    writeFile(file: sdlcConfigFile, text: sdlcConfigValues)
+    def cicdConfigFile = "cicd-config-values.yaml"
+    writeFile(file: cicdConfigFile, text: cicdConfigValues)
     
     
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
             
     sh """
-        cat ${sdlcConfigFile}
+        cat ${cicdConfigFile}
         
         ${shCmd.echo ''}            
         helm upgrade --atomic --install --history-max=1 \
-            -f ${sdlcConfigFile} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/default-project-sdlc-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-pipelines-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-sdlc-setup-values.yaml \
+            -f ${cicdConfigFile} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
-            ${projectInfo.id}-sdlc \
+            ${projectInfo.id}-cicd \
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
@@ -108,8 +108,8 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
 }
 
 def getSldcConfigValues(def projectInfo) {
-    sdlcConfigValues = [:]
-    sdlcConfigValues.createNamespaces = true
+    cicdConfigValues = [:]
+    cicdConfigValues.createNamespaces = true
     
     elCicdDefs = [:]
     elCicdDefs.SDLC_ENVS = []
@@ -136,11 +136,11 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     projectInfo.components.each { comp ->
-        sdlcConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
+        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
-        sdlcConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
+        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
     }
 
     projectInfo.nonProdEnvs.each { env ->
@@ -148,10 +148,10 @@ def getSldcConfigValues(def projectInfo) {
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
     
-    sdlcConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
-    sdlcConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
+    cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
+    cicdConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
     if (projectInfo.nfsShares) {
-        sdlcConfigValues.profiles << "nfs"
+        cicdConfigValues.profiles << "nfs"
         
         elCicdDefs.NFS_APP_NAMES = []
         projectInfo.nfsShares.each { nfsShare ->
@@ -169,13 +169,13 @@ def getSldcConfigValues(def projectInfo) {
                     nfsMap.SERVER = nfsShare.server
                     nfsMap.NAMESPACE = namespace
                     
-                    sdlcConfigValues["elCicdDefs-${appName}"] = nfsMap
+                    cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
                 }
             }
         }
     }
     
-    sdlcConfigValues.elCicdDefs = elCicdDefs
+    cicdConfigValues.elCicdDefs = elCicdDefs
     
-    return sdlcConfigValues
+    return cicdConfigValues
 }

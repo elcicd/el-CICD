@@ -168,7 +168,7 @@ _create_env_image_registry_secrets() {
         ${SET_FILE} \
         ${SET_STRING} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_HELM_DIR}/sdlc-image-registry-secrets-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/cicd-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
     set +x
