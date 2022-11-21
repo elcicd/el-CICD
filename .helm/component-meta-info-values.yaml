@@ -12,10 +12,10 @@ elCicdDefs:
     deploy-time: ${EL_CICD_DEPLOYMENT_TIME}
     profiles: ${PROFILES}
 
-defaultLabels:
-  ${EL_CICD_COMPONENT_META_INFO}
+elCicdDefaults:
+  labels: ${EL_CICD_COMPONENT_META_INFO}
 
 elCicdTemplates-componentMetaInfo:
 - templateName: configMap
-  appName: ${COMPONENT_NAME}-${META_INTO_POSTFIX}
+  appName: ${COMPONENT_NAME}-${META_INFO_POSTFIX}
   data: ${EL_CICD_COMPONENT_META_INFO}

@@ -72,7 +72,7 @@ _create_meta_info_file() {
 
     sort -o ${META_INFO_FILE} ${META_INFO_FILE}
     echo
-    echo "Config files processed for el-cicd-meta-info (${META_INFO_FILE}):"
+    echo "Config files processed for el-cicd-${META_INFO_POSTFIX} (${META_INFO_FILE}):"
     echo "    $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
 }
 
@@ -216,12 +216,18 @@ __create_onboarding_automation_server() {
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
     sleep 5
     
+    if [[ ! -z $(helm list -n ${ONBOARDING_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
+    then 
+        echo
+        helm uninstall jenkins-pipeline-sync -n ${ONBOARDING_MASTER_NAMESPACE}
+    fi
+    
     set -x
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
-        jenkins-sync \
+        jenkins-pipeline-sync \
         elCicdCharts/elCicdChart
     set +ex
 }

@@ -20,20 +20,22 @@ def deployMicroservices(def projectInfo, def components) {
                         "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
                         "elCicdDefs.DEPLOY_TIME=${BUILD_NUMBER}",
-                        "defaultImagePullSecret=${imagePullSecret}",
-                        "defaultIngressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "elCicdDefaults.imagePullSecret=${imagePullSecret}",
+                        "elCicdDefaults.ingressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "profiles='{${projectInfo.deployToEnv}}'",
-                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}"]
+                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}"
+                        "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
+                        "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
     components.each { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-        def msCommonValues = ["elCicdDefs.APP_NAME=${component.name}",
+        def msCommonValues = ["elCicdDefaults.appName=${component.name}",
                               "elCicdDefs.COMPONENT_NAME=${component.name}",
                               "elCicdDefs.SCM_REPO=${component.scmRepoName}",
                               "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
                               "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
                               "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                              "defaultImage=${componentImage}"]
+                              "elCicdDefaults.image=${componentImage}"]
         msCommonValues.addAll(commonValues)
         
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {

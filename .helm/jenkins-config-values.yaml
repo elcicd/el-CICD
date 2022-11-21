@@ -21,11 +21,26 @@ elCicdTemplates:
   appName: ${JENKINS_SERVICE_NAME}
   labels:
     name: ${JENKINS_SERVICE_NAME}
-  elCicdDefs-non-prod:
-    # override non-prod values here
-  elCicdDefs-prod:
-    # override prod values here
   image: ${JENKINS_IMAGE}
+  command: ["/bin/bash"]
+  args:
+  - -c
+  - if [[ -f $JENKINS_PLUGINS_FILE ]];
+    then 
+        echo "Installing Jenkins Plugins:" | tee -a /var/log/jenkins-startup.log;
+        cat $JENKINS_PLUGINS_FILE | tee -a /var/log/jenkins-startup.log;
+
+        echo;
+        java -jar /usr/share/java/jenkins-plugin-manager.jar
+            --war /usr/share/java/jenkins.war
+            -f $JENKINS_PLUGINS_FILE
+            --plugin-download-directory $JENKINS_HOME/plugins | tee -a /var/log/jenkins-startup.log;
+    fi;
+
+    java -Djenkins.install.runSetupWizard=false
+                -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
+                $JENKINS_JAVA_OVERRIDES
+                -jar /usr/share/java/jenkins.war >> /var/log/jenkins-startup.log;
   strategyType: Recreate
   imagePullPolicy: Always
   imagePullSecret: ${JENKINS_IMAGE_PULL_SECRET}
@@ -49,8 +64,6 @@ elCicdTemplates:
     value: ${ENABLE_FATAL_ERROR_LOG_FILE}
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
-  - name: CONFIG_MAP_JOBS_DIR
-    value: /var/lib/jenkins/mounted-jenkins-jobs
   ports:
     - name: httpport
       containerPort: 8080
@@ -79,12 +92,6 @@ elCicdTemplates:
       memory: ${MEMORY_REQUEST}
   volumeMounts: ${JENKINS_VOLUME_MNTS}
   volumes: ${JENKINS_VOLUMES}
-  projectedVolumeLabels:
-  - name: mounted-jenkins-jobs
-    mountPath: /var/lib/jenkins/mounted-jenkins-jobs
-    labels:
-    - jenkins-folder
-    - jenkins-pipeline
 
 - templateName: configMap
   appName: openshift-jenkins-login-plugin-config
