@@ -224,6 +224,7 @@ __create_onboarding_automation_server() {
         helm uninstall jenkins-pipeline-sync -n ${ONBOARDING_MASTER_NAMESPACE}
     fi
     
+    echo
     set -x
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
