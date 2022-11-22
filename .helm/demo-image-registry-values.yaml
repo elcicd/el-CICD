@@ -26,6 +26,7 @@ elCicdDefs-htpasswd:
       secretName: ${APP_NAME}
       
 elCicdDefs-nfs:
+  STORAGE_CLASS_NAME: demo-image-registry-nfs
   VOLUME_MNT_NFS:
     name: ${DEMO_IMAGE_REGISTRY}
     mountPath: /var/lib/registry
@@ -61,19 +62,20 @@ elCicdTemplates:
   appName: ${DEMO_IMAGE_REGISTRY}-nfs
   anyProfiles:
   - nfs
+  storageClassName: ${STORAGE_CLASS_NAME}
   storageCapacity: 10Gi
   accessModes:
   - ReadWriteMany
   nfs:
     path: /mnt/${DEMO_IMAGE_REGISTRY}
     server: ${HOST_IP}
-  claimRef:
-    name: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
     
 - templateName: persistentVolumeClaim
   appName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
   anyProfiles:
   - nfs
+  storageClassName: ${STORAGE_CLASS_NAME}
+  volumeName: ${DEMO_IMAGE_REGISTRY}-nfs
   accessMode: ReadWriteMany
   storageRequest: 10Gi
     

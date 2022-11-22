@@ -296,15 +296,13 @@ __setup_image_registries() {
         --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
         ${HTPASSWDS} \
-        --set-string defaultIngressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
+        --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         --set createNamespaces=true \
         -n ${DEMO_IMAGE_REGISTRY} \
         -f ${EL_CICD_HELM_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
-
     __register_insecure_registries
-
     set +e
 
     echo

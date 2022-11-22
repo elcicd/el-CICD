@@ -13,14 +13,13 @@ def deployComponents(def projectInfo, def components) {
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 
-    def defaultIngressHostDomain =
-        (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
+    def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
     
     def commonValues = ["elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
-                        "elCicdDefaults.ingressHostDomain='${defaultIngressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "profiles='{${projectInfo.deployToEnv}}'",
                         "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",

@@ -131,7 +131,6 @@ _remove_image_registry() {
         echo
         echo "Uninstalling ${DEMO_IMAGE_REGISTRY}..."
         helm uninstall ${DEMO_IMAGE_REGISTRY} -n ${DEMO_IMAGE_REGISTRY}
-        oc delete project ${DEMO_IMAGE_REGISTRY}
 
         local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
         local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
@@ -143,6 +142,7 @@ _remove_image_registry() {
         done
         echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
     fi
+    oc delete project --ignore-not-found ${DEMO_IMAGE_REGISTRY}
 }
 
 __remove_image_registry_nfs_share() {
