@@ -6,7 +6,7 @@
  * @see the projectid-onboard pipeline for example on how to use
  */
 
-def deployMicroservices(def projectInfo, def components) {
+def deployComponents(def projectInfo, def components) {
     assert projectInfo; assert components
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()

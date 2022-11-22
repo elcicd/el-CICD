@@ -154,19 +154,20 @@ _create_env_image_registry_secrets() {
     local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
-        local APP_NAME="${ENV@L}-pull-secret"
+        local APP_NAME="el-cicd-${ENV@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-        local SET_FILE="${SET_FILE:+$SET_FILE }--set-file elCicdDefs.el-cicd-${APP_NAME}=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        
+        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        local SET_FLAGS="${SET_FLAGS:+$SET_FLAGS }--set-file elCicdDefs-${APP_NAME}.USERNAME_PWD=${USERNAME_PWD_FILE}"
         local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
-        local SET_STRING="${SET_STRING:+$SET_STRING }--set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
-        SET_STRING="${SET_STRING} --set-string elCicdDefs.${APP_NAME}${IMAGE_REGISTRY_POSTFIX}=${SERVER}"
+        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER}"
+        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
     done
     
     set -x
     helm upgrade --create-namespace --atomic --install --history-max=1 \
         --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
-        ${SET_FILE} \
-        ${SET_STRING} \
+        ${SET_FLAGS} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_HELM_DIR}/cicd-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \

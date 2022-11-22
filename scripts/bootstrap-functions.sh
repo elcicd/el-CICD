@@ -202,6 +202,8 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${META_INFO_FILE} \
+        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-jenkins-casc.yaml \
+        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-plugins.txt \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         -f ${EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
