@@ -68,46 +68,25 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
-apiVersion: "v1"
-kind: "Pod"
-spec:
-  securityContext:
-    fsGroup: 1001    
-  containers:
-  - image: "default-route-openshift-image-registry.apps-crc.testing/openshift/el-cicd-jenkins-agent-base:latest"
-    imagePullPolicy: "Always"
-    name: "jnlp"
-    resources:
-      limits:
-        memory: "1Gi"
-        cpu: "1"
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-    tty: false
-    volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "volume-1"
-      readOnly: false
-    - mountPath: "/home/jenkins"
-      name: "volume-0"
-      readOnly: false
-  restartPolicy: "Never"
-  serviceAccountName: "jenkins"
-  volumes:
-  - name: "volume-0"
-    persistentVolumeClaim:
-      claimName: "jenkins-agent-home"
-      readOnly: false
-  - emptyDir:
-      medium: "Memory"
-    name: "volume-1"
-  - emptyDir:
-      medium: ""
-    name: "workspace-volume"
-    '''
+            spec:
+              securityContext:
+                fsGroup: 1001    
+        '''
+        containers: [
+            containerTemplate(
+                name: 'jnlp',
+                image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                alwaysPullImage: true,
+                args: '${computer.jnlpmac} ${computer.name}',
+                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
+                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
+                resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
+                resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
+            )
+        ],
+        volumes: volumeDefs
     ]) {
         node(args.agent) {
             try {           
