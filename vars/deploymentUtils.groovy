@@ -14,7 +14,7 @@ def deployComponents(def projectInfo, def components) {
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
-    
+
     def commonValues = ["elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
@@ -35,19 +35,19 @@ def deployComponents(def projectInfo, def components) {
                               "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
                               "elCicdDefaults.image=${componentImage}"]
         msCommonValues.addAll(commonValues)
-        
+
         dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
             sh """
                 VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
-                
+
                 ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
                 ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
-                
+
                 ${shCmd.echo ''}
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-                
-                set +e
-                if helm upgrade --atomic --install --history-max=1 \
+
+                ${shCmd.echo ''}
+                helm template --debug \
                     --set-string ${msCommonValues.join(' --set-string ')} \
                     \${VALUES_FILES} \
                     \${ENV_FILES} \
@@ -55,28 +55,29 @@ def deployComponents(def projectInfo, def components) {
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    elCicdCharts/elCicdChart                    
-                then
-                    ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
-                else
-                    set +x
-                    echo 
-                    echo 'HELM ERROR'
-                    echo 'Attempting to generate template output...'
-                    echo
-                    helm template --debug \
-                        --set-string ${msCommonValues.join(' --set-string ')} \
-                        \${VALUES_FILES} \
-                        \${ENV_FILES} \
-                        -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
-                        -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                        -n ${projectInfo.deployToNamespace} \
-                        ${component.name} \
-                        elCicdCharts/elCicdChart 
-                    set -ex
-                    exit 1
-                fi
-                set -e
+                    elCicdCharts/elCicdChart
+                
+                ${shCmd.echo ''}
+                helm upgrade --atomic --install --history-max=1 \
+                    --set-string ${msCommonValues.join(' --set-string ')} \
+                    \${VALUES_FILES} \
+                    \${ENV_FILES} \
+                    -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
+                    -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
+                    -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    elCicdCharts/elCicdChart 
+                    
+                ${shCmd.echo ''}
+                helm upgrade --install --history-max=1  \
+                    --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+                    -n ${projectInfo.deployToNamespace} \ \
+                    -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-agent-pvc-values.yaml \
+                    jenkins-agent-home \
+                    elCicdCharts/elCicdChart
+                
+                ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
             """
         }
     }
