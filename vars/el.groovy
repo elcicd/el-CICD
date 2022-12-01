@@ -73,7 +73,7 @@ def node(Map args, Closure body) {
             spec:
               securityContext:
                 fsGroup: 1001    
-        '''
+        ''',
         containers: [
             containerTemplate(
                 name: 'jnlp',
