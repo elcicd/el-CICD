@@ -64,7 +64,7 @@ def node(Map args, Closure body) {
     }
 
     podTemplate(
-        cloud 'openshift',
+        cloud: 'openshift',
         yaml: '''
 apiVersion: "v1"
 kind: "Pod"
