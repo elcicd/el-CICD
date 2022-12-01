@@ -73,10 +73,10 @@ def node(Map args, Closure body) {
 apiVersion: "v1"
 kind: "Pod"
 spec:
+  securityContext:
+    fsGroup: 1001    
   containers:
-  - securityContext:
-      fsGroup: 1001
-    image: "default-route-openshift-image-registry.apps-crc.testing/openshift/el-cicd-jenkins-agent-base:latest"
+  - image: "default-route-openshift-image-registry.apps-crc.testing/openshift/el-cicd-jenkins-agent-base:latest"
     imagePullPolicy: "Always"
     name: "jnlp"
     resources:
