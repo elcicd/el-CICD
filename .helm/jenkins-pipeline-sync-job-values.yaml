@@ -1,3 +1,6 @@
+elCicdDefs:
+  JENKINS_SERVICE_NAME: jenkins
+
 elCicdTemplates:
 - templateName: job
   appName: jenkins-pipeline-sync
@@ -8,7 +11,14 @@ elCicdTemplates:
     labels:
     - jenkins-folder
     - jenkins-pipeline
-  serviceAccountName: jenkins
+  serviceAccountName: ${JENKINS_SERVICE_NAME}
+  volumeMounts: 
+  - mountPath: /home/${JENKINS_SERVICE_NAME}
+    name: ${JENKINS_SERVICE_NAME}-agent-home
+  volumes:
+  - name: ${JENKINS_SERVICE_NAME}-agent-home
+    persistentVolumeClaim:
+      claimName: ${JENKINS_SERVICE_NAME}-agent-home
   command: ["/bin/bash"]
   args:
   - -c
@@ -39,3 +49,8 @@ elCicdTemplates:
     done;
     echo;
     echo "el-CICD Jenkins jobs updated";
+  
+- templateName: persistentVolumeClaim
+  appName: ${JENKINS_SERVICE_NAME}-agent-home
+  storageRequest: ${VOLUME_CAPACITY}
+  accessMode: ReadWriteMany
