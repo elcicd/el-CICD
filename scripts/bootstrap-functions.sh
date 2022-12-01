@@ -240,7 +240,7 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_HELM_DIR}/jenkins-agent-pvc-values.yaml \
-        jenkins-pipeline-sync \
+        jenkins-agent-home \
         elCicdCharts/elCicdChart
     set +ex
 }
