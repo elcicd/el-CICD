@@ -228,9 +228,18 @@ __create_onboarding_automation_server() {
     set -x
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
-        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+        jenkins-pipeline-sync \
+        elCicdCharts/elCicdChart
+    set +ex
+    
+    echo
+    set -x
+    helm upgrade --install --history-max=1  \
+        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -f ${EL_CICD_HELM_DIR}/jenkins-agent-pvc-values.yaml \
         jenkins-pipeline-sync \
         elCicdCharts/elCicdChart
     set +ex
