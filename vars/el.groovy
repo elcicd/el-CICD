@@ -63,28 +63,70 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
 
-    podTemplate([
-        label: "${args.agent}",
-        cloud: 'openshift',
-        serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
-        podRetention: onFailure(),
-        idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        runAsUser: 'jenkins',
-        runAsGroup: 'root',
-        containers: [
-            containerTemplate(
-                name: 'jnlp',
-                image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
-                alwaysPullImage: true,
-                args: '${computer.jnlpmac} ${computer.name}',
-                resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
-                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
-                resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
-            )
-        ],
-        volumes: volumeDefs
-    ]) {
+    podTemplate(yaml: '''
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+  annotations:
+    buildUrl: "http://10.217.5.249:8080/job/project-onboarding/11/"
+    runUrl: "job/project-onboarding/11/"
+  labels:
+    jenkins: "slave"
+    jenkins/label-digest: "1405df66cbe219b0bf6355bc3d60361a8376b6b4"
+    jenkins/label: "base"
+  name: "base-37kh8-ss65s"
+spec:
+  containers:
+  - args:
+    - "********"
+    - "base-37kh8-ss65s"
+    env:
+    - name: "JENKINS_SECRET"
+      value: "********"
+    - name: "JENKINS_TUNNEL"
+      value: ":"
+    - name: "JENKINS_AGENT_NAME"
+      value: "base-37kh8-ss65s"
+    - name: "JENKINS_NAME"
+      value: "base-37kh8-ss65s"
+    - name: "JENKINS_AGENT_WORKDIR"
+      value: "/home/jenkins/agent"
+    - name: "JENKINS_URL"
+      value: "http://10.217.5.249:8080/"
+    image: "default-route-openshift-image-registry.apps-crc.testing/openshift/el-cicd-jenkins-agent-base:latest"
+    imagePullPolicy: "Always"
+    name: "jnlp"
+    resources:
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+    tty: false
+    volumeMounts:
+    - mountPath: "/home/jenkins/agent"
+      name: "volume-1"
+      readOnly: false
+    - mountPath: "/home/jenkins"
+      name: "volume-0"
+      readOnly: false
+  nodeSelector:
+    kubernetes.io/os: "linux"
+  restartPolicy: "Never"
+  serviceAccountName: "jenkins"
+  volumes:
+  - name: "volume-0"
+    persistentVolumeClaim:
+      claimName: "jenkins-agent-home"
+      readOnly: false
+  - emptyDir:
+      medium: "Memory"
+    name: "volume-1"
+  - emptyDir:
+      medium: ""
+    name: "workspace-volume"
+    ''') {
         node(args.agent) {
             try {           
                 initializePipeline()
