@@ -66,15 +66,6 @@ def node(Map args, Closure body) {
     podTemplate(yaml: '''
 apiVersion: "v1"
 kind: "Pod"
-metadata:
-  annotations:
-    buildUrl: "http://10.217.5.249:8080/job/project-onboarding/11/"
-    runUrl: "job/project-onboarding/11/"
-  labels:
-    jenkins: "slave"
-    jenkins/label-digest: "1405df66cbe219b0bf6355bc3d60361a8376b6b4"
-    jenkins/label: "base"
-  name: "base-37kh8-ss65s"
 spec:
   containers:
   - args:
@@ -82,19 +73,6 @@ spec:
     - "base-37kh8-ss65s"
     securityContext:
       fsGroup: 1001
-    env:
-    - name: "JENKINS_SECRET"
-      value: "********"
-    - name: "JENKINS_TUNNEL"
-      value: ":"
-    - name: "JENKINS_AGENT_NAME"
-      value: "base-37kh8-ss65s"
-    - name: "JENKINS_NAME"
-      value: "base-37kh8-ss65s"
-    - name: "JENKINS_AGENT_WORKDIR"
-      value: "/home/jenkins/agent"
-    - name: "JENKINS_URL"
-      value: "http://10.217.5.249:8080/"
     image: "default-route-openshift-image-registry.apps-crc.testing/openshift/el-cicd-jenkins-agent-base:latest"
     imagePullPolicy: "Always"
     name: "jnlp"
@@ -113,8 +91,6 @@ spec:
     - mountPath: "/home/jenkins"
       name: "volume-0"
       readOnly: false
-  nodeSelector:
-    kubernetes.io/os: "linux"
   restartPolicy: "Never"
   serviceAccountName: "jenkins"
   volumes:
