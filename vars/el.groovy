@@ -63,8 +63,12 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
 
-    podTemplate(
+    podTemplate([
+        label: "${args.agent}",
         cloud: 'openshift',
+        serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
+        podRetention: onFailure(),
+        idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
 apiVersion: "v1"
 kind: "Pod"
@@ -103,7 +107,8 @@ spec:
   - emptyDir:
       medium: ""
     name: "workspace-volume"
-    ''') {
+    '''
+    ]) {
         node(args.agent) {
             try {           
                 initializePipeline()
