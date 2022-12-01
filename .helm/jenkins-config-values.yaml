@@ -11,10 +11,15 @@ elCicdDefs:
   JENKINS_VOLUME_MNTS:
   - mountPath: /var/lib/jenkins
     name: ${JENKINS_SERVICE_NAME}-data
+  - mountPath: /mnt/jenkins
+    name: ${JENKINS_SERVICE_NAME}-data
   JENKINS_VOLUMES:
   - name: ${JENKINS_SERVICE_NAME}-data
     persistentVolumeClaim:
       claimName: ${JENKINS_SERVICE_NAME}
+  - name: ${JENKINS_SERVICE_NAME}-agent-home
+    persistentVolumeClaim:
+      claimName: ${JENKINS_SERVICE_NAME}-agent-home
 
 elCicdTemplates:
 - templateName: deployment
@@ -181,7 +186,7 @@ elCicdTemplates:
   appName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteOnce
-      
+  
 - templateName: persistentVolumeClaim
   appName: ${JENKINS_SERVICE_NAME}-agent-home
   storageRequest: ${VOLUME_CAPACITY}
