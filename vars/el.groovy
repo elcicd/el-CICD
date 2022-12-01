@@ -80,6 +80,8 @@ spec:
   - args:
     - "********"
     - "base-37kh8-ss65s"
+    securityContext:
+      fsGroup: 1001
     env:
     - name: "JENKINS_SECRET"
       value: "********"
