@@ -69,8 +69,8 @@ def node(Map args, Closure body) {
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
         idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        runAsUser: jenkins,
-        runAsGroup: root,
+        runAsUser: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
+        runAsGroup: 'root',
         containers: [
             containerTemplate(
                 name: 'jnlp',
