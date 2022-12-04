@@ -1,11 +1,18 @@
 elCicdDefs:
-  BUILD_PIPELINE_LABELS:
+  BUILD_COMPONENT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     component: ${BASE_APP_NAME}
     jenkins-pipeline: 'true'  
+    jenkins-build-pipeline: 'true'  
+  BUILD_ARTIFACT_PIPELINE_LABELS:
+    projectid: ${PROJECT_ID}
+    artifact: ${BASE_APP_NAME}
+    jenkins-pipeline: 'true'  
+    jenkins-build-pipeline: 'true'  
   SHARED_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
+    jenkins-shared-pipeline: 'true'  
   COMMON_BUILD_ARGS: |-
     agent: '${CODE_BASE}',
     isBuild: true,
@@ -57,7 +64,7 @@ elCicdTemplates:
 - templateName: configMap
   appNames: ${BUILD_COMPONENT_PIPELINES}
   appName: ${}-build-component
-  labels: ${BUILD_PIPELINE_LABELS}
+  labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS_XML}
     EL_CICD_API_CALL: |-
@@ -75,7 +82,7 @@ elCicdTemplates:
 - templateName: configMap
   appNames: ${BUILD_ARTIFACT_PIPELINES}
   appName: ${}-build-artifact
-  labels: ${BUILD_PIPELINE_LABELS}
+  labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS_XML}
     EL_CICD_API_CALL: |-
