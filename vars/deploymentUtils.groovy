@@ -72,7 +72,7 @@ def deployComponents(def projectInfo, def components) {
                 ${shCmd.echo ''}
                 helm upgrade --install --history-max=1  \
                     --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-                    -n ${projectInfo.deployToNamespace} \ \
+                    -n ${projectInfo.deployToNamespace} \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-agent-pvc-values.yaml \
                     jenkins-agent-home \
                     elCicdCharts/elCicdChart
