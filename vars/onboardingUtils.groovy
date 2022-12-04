@@ -49,7 +49,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         ${shCmd.echo ''}
         helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
-            --set-string SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
+            --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
