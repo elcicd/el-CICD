@@ -72,7 +72,7 @@ def node(Map args, Closure body) {
         yaml: '''
             spec:
               securityContext:
-                fsGroup: 1001
+                fsGroup: 0
         ''',
         containers: [
             containerTemplate(
