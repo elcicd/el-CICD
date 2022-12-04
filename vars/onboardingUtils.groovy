@@ -50,7 +50,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
             --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
-            --set-string elCicdDefs.ONBOARDING_MASTER_NAMESPACE='{el.cicd.ONBOARDING_MASTER_NAMESPACE}' \
+            --set-string elCicdDefs.ONBOARDING_MASTER_NAMESPACE='{${el.cicd.ONBOARDING_MASTER_NAMESPACE}}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
