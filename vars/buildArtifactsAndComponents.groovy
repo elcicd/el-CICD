@@ -8,7 +8,7 @@
 
 def call(Map args) {
     echo '========================'
-    echo args
+    echo "${args}"
     echo'============================'
     
     def projectInfo = args.projectInfo
