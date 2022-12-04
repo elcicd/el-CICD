@@ -103,7 +103,8 @@ elCicdTemplates:
     ARGS: |-
       def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                   pipelineName: '${BASE_APP_NAME}',
-                  projectId: ${PROJECT_ID}]
+                  projectId: '${PROJECT_ID}',
+                  ${EXTRA_ARGS}]
     EL_CICD_API_CALL: |-
       ${ARGS}
       el.node(args) {
@@ -118,20 +119,12 @@ elCicdTemplates:
   elCicdDefs-redeploy-or-remove-components:
     EL_CICD_API_METHOD: redeployComponents
   elCicdDefs-create-release-candidate:
-    ARGS: |-
-      def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_APP_NAME}',
-                  projectId: ${PROJECT_ID},
-                  releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')"
   elCicdDefs-redeploy-release-candidate:
-    ARGS: |-
-      def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_APP_NAME}',
-                  projectId: ${PROJECT_ID},
-                  releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
   data: ${PIPELINE_CONFIG_MAP_DATA}
