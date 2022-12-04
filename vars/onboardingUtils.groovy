@@ -44,7 +44,7 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
         
         ${shCmd.echo ''}
-        helm upgrade --atomic --install --history-max=1 \
+        helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
@@ -58,7 +58,8 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-cicd-server \
             elCicdCharts/elCicdChart
-
+        oc rollout status deploy/jenkins    
+        
         ${shCmd.echo ''}
         ${shCmd.echo 'Jenkins CICD Server up, sleep for 5 more seconds to make sure server REST api is ready'}
         sleep 5

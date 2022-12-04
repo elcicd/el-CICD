@@ -284,12 +284,12 @@ __setup_image_registries() {
     
     DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
     
+    local PROFILES='htpasswd'
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
-        local PROFILES='htpasswd,nfs'
-    else
-        local PROFILES='htpasswd'
+        PROFILES="${PROFILES},nfs"
     fi
+    
     helm upgrade --install --atomic --create-namespace --history-max=1 \
         --set-string profiles="{${PROFILES}}" \
         --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
@@ -302,7 +302,9 @@ __setup_image_registries() {
         -f ${EL_CICD_HELM_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
+        
     __register_insecure_registries
+    
     set +e
 
     echo

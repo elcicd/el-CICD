@@ -134,7 +134,7 @@ elCicdTemplates:
 
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
-  mustHaveProfiles:
+  anyProfiles:
   - onboarding
   ignoreAnyProfiles:
   - cicd
@@ -178,6 +178,15 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: persistentVolumeClaim
+  anyProfiles:
+  - jenkinsAgentPersistent
+  appName: jenkins-agent-home
+  storageRequest: ${VOLUME_CAPACITY}
+  accessMode: ReadWriteOnce
+
+- templateName: persistentVolumeClaim
+  anyProfiles:
+  - jenkinsPersistent
   appName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteOnce
@@ -187,5 +196,30 @@ elCicdTemplates:
   - onboarding
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
+
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appNames: ${SDLC_ENVS}
+  appName: el-cicd-${}-pull-secret
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
+    
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: ${EL_CICD_META_INFO_NAME}
+  kind: ConfigMap
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
+    
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: ${EL_CICD_BUILD_SECRETS_NAME}
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
   
   

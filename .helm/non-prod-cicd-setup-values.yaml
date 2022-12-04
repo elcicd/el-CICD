@@ -140,25 +140,6 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
   - kind: Group
     name: ${${NAME_SPACE}_GROUP}
-    
-- templateName: copyResource
-  appName: ${EL_CICD_META_INFO_NAME}
-  kind: ConfigMap
-  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
-    
-- templateName: copyResource
-  appName: ${EL_CICD_BUILD_SECRETS_NAME}
-  kind: Secret
-  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
-
-- templateName: copyResource
-  appNames: ${SDLC_ENVS}
-  appName: el-cicd-${}-pull-secret
-  kind: Secret
-  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
   appNames: ${SDLC_ENVS}

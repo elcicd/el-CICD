@@ -191,8 +191,8 @@ __create_onboarding_automation_server() {
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
-    helm upgrade --atomic --install --history-max=1 \
-        --set-string profiles='{onboarding}' \
+    helm upgrade --install --history-max=1 \
+        --set-string profiles="{onboarding${JENKINS_PERSISTENT:+,jenkinsPersistent}${JENKINS_AGENT_PERSISTENT:+,jenkinsAgentPersistent}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
@@ -211,6 +211,7 @@ __create_onboarding_automation_server() {
         jenkins \
         elCicdCharts/elCicdChart
     set +x
+    oc rollout status deploy/jenkins
     
     rm ${META_INFO_FILE}
 
@@ -225,24 +226,23 @@ __create_onboarding_automation_server() {
     fi
     
     echo
-    set -x
-    helm upgrade --wait --wait-for-jobs --install --history-max=1  \
-        --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
-        -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
-        jenkins-pipeline-sync \
-        elCicdCharts/elCicdChart
-    set +ex
-    
-    echo
-    set -x
-    helm upgrade --install --history-max=1  \
-        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
-        -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_HELM_DIR}/jenkins-agent-pvc-values.yaml \
-        jenkins-agent-home \
-        elCicdCharts/elCicdChart
-    set +ex
+    set -x +e
+    if [[ ! $(helm upgrade --wait --wait-for-jobs --install --history-max=1  \
+                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
+                -n ${ONBOARDING_MASTER_NAMESPACE} \
+                -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+                jenkins-pipeline-sync \
+                elCicdCharts/elCicdChart) \
+    ]]
+    then
+        set +x
+        echo '================================== ERROR ===================================='
+        echo
+        echo '      UNABLE TO CONFIRM PIPELINES FOR ONBOARDING SERVER WERE UPDATED'
+        echo
+        echo '================================== ERROR ===================================='
+    fi
+    set +x
 }
 
 _helm_repo_add_and_update_elCicdCharts() {
