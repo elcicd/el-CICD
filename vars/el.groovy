@@ -80,8 +80,7 @@ def node(Map args, Closure body) {
                 resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
                 resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
             )
-        ],
-        volumes: volumeDefs
+        ]
     ]) {
         node(args.agent) {
             try {           
