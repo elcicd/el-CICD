@@ -240,7 +240,7 @@ __additional_cluster_config() {
 
 __create_image_registry_nfs_share() {
     echo
-    if [[ ! -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} || -z $(printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
+    if [[ ! -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} || -z $(cat /etc/exports | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
     then
         echo "Creating NFS share on host for developer image registries, if necessary: ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}"
         if [[ -z $(cat /etc/exports | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
