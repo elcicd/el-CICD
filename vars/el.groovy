@@ -55,7 +55,7 @@ def node(Map args, Closure body) {
     assert args.agent
     
     def volumeDefs = [
-        persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins'),
+        persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins', readOnly: false),
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
 
@@ -69,6 +69,7 @@ def node(Map args, Closure body) {
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
         idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        runAsGroup: '1001',
         containers: [
             containerTemplate(
                 name: 'jnlp',
