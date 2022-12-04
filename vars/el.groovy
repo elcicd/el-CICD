@@ -70,8 +70,11 @@ def node(Map args, Closure body) {
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
-            spec:
-              securityContext: {}
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
         ''',
         containers: [
             containerTemplate(
