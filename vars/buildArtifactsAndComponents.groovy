@@ -6,11 +6,7 @@
  *
  */
 
-def call(Map args) {
-    echo '========================'
-    echo "${args}"
-    echo'============================'
-    
+def call(Map args) {    
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
