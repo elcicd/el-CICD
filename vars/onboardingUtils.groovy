@@ -39,6 +39,9 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
     
     def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
+    profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
+    profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
+    
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
