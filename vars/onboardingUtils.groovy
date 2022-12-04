@@ -49,6 +49,8 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
         ${shCmd.echo ''}
         helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
+            --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
+            --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
             --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
             --set-string elCicdDefs.ONBOARDING_MASTER_NAMESPACE=${el.cicd.ONBOARDING_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
