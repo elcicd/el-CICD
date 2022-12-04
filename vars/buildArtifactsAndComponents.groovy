@@ -7,6 +7,10 @@
  */
 
 def call(Map args) {
+    echo '========================'
+    echo args
+    echo'============================'
+    
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
