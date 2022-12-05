@@ -73,8 +73,6 @@ def node(Map args, Closure body) {
           spec:
             securityContext:
               runAsNonRoot: true
-              seccompProfile:
-                type: RuntimeDefault
         ''',
         containers: [
             containerTemplate(
