@@ -38,7 +38,9 @@ def call(Map args) {
         sh(returnStdout: true,
            script: "oc get cm -l jenkins-build-pipeline --no-headers -o custom-columns=:.metadata.name -n ${projectInfo.cicdMasterNamespace}")
            .split('\n')
-           .collate(3)
+           
+    echo "${pipelines}"
+    pipelines = pipelines.collate(3)
     if (pipelines) {
         parallel(
             firstBucket: {
