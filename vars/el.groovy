@@ -68,13 +68,11 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        runAsUser: 'jenkins',
-        runAsGroup: '0',
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
-          spec:
-            securityContext:
-              fsGroup: 1001
+            spec:
+              securityContext:
+                fsGroup: 1001    
         ''',
         containers: [
             containerTemplate(
