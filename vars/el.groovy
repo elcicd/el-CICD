@@ -73,6 +73,9 @@ def node(Map args, Closure body) {
           spec:
             securityContext:
               runAsNonRoot: true
+              runAsUser: 1001
+              runAsGroup: 1001
+              fsGroup: 1001
         ''',
         containers: [
             containerTemplate(
