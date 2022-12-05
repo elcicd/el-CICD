@@ -16,16 +16,16 @@ def call(Map args) {
                        booleanParam(name: 'buildAll', description: 'Build all components'),
                        booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
 
-        inputs += projectInfo.components.collect { component ->
+        inputs += projectInfo.modules.collect { component ->
             booleanParam(name: component.name, description: "status: ${component.status}")
         }
 
-        def cicdInfo = input(message: "Select namepsace and components to build to:", parameters: inputs)
+        def cicdInfo = input(message: "Select artifacts and components to build:", parameters: inputs)
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
-        projectInfo.components.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
+        projectInfo.modules.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
     }
 
     stage('Clean environment if requested') {
@@ -34,25 +34,24 @@ def call(Map args) {
         }
     }
 
-    def pipelines =
-        sh(returnStdout: true,
-           script: "oc get cm -l jenkins-build-pipeline --no-headers -o custom-columns=:.metadata.name -n ${projectInfo.cicdMasterNamespace}")
-           .split('\n')
-           .toList()
-           .collate(3)
-    if (pipelines) {
+    def buildModules = [[],[],[]]
+    projectInfo.modules.findAll { it.build }.eachWithIndex { module, i ->
+        buildModules[i%3].add(module)
+    }
+    
+    if (buildModules) {
         parallel(
             firstBucket: {
                 stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                    pipelines[0].each { component ->
+                    buildModules[0].each { component ->
                         build(job: "../${projectInfo.id}/${component.name}-build-component", wait: true)
                     }
                 }
             },
             secondBucket: {
                 stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (pipelines.size() > 1) {
-                        pipelines[1].each { component ->
+                    if (buildModules[1]) {
+                        buildModules[1].each { component ->
                             build(job: "../${projectInfo.id}/${component.name}-build-artifact", wait: true)
                         }
                     }
@@ -60,8 +59,8 @@ def call(Map args) {
             },
             thirdBucket: {
                 stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (pipelines.size() > 2) {
-                        pipelines[2].each { component ->
+                    if (buildModules[2]) {
+                        buildModules[2].each { component ->
                             build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
                         }
                     }
