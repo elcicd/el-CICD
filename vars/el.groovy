@@ -69,7 +69,7 @@ def node(Map args, Closure body) {
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        runAsUser: 1001,
+        runAsUser: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         yaml: '''
             spec:
               securityContext:
