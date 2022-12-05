@@ -34,17 +34,12 @@ def call(Map args) {
         }
     }
 
-    def components = [[],[],[]]
-    projectInfo.components.findAll { it.build }.eachWithIndex { component, i ->
-        components[i%3].add(component)
-    }
-
     def pipelines =
         sh(returnStdOut: true,
            script: "oc get cm -l jenkins-build-pipeline --no-headers -o custom-columns=:.metadata.name -n ${projectInfo.cicdMasterNamespace}")
            .split('\n')
            .collate(3)
-    if (components) {
+    if (pipelines) {
         parallel(
             firstBucket: {
                 stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
