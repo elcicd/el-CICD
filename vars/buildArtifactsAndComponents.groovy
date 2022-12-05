@@ -43,24 +43,22 @@ def call(Map args) {
         buildModules[i%3].add(module)
     }
     
-    echo "=================================="
-    echo "${buildModules}"
-    echo "=================================="
-    
     if (buildModules) {
         parallel(
             firstBucket: {
                 stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                    buildModules[0].each { component ->
-                        build(job: "../${projectInfo.id}/${component.name}-build-component", wait: true)
+                    buildModules[0].each { module ->
+                        pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                        build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
                     }
                 }
             },
             secondBucket: {
                 stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
                     if (buildModules[1]) {
-                        buildModules[1].each { component ->
-                            build(job: "../${projectInfo.id}/${component.name}-build-artifact", wait: true)
+                        buildModules[1].each { module ->
+                            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
                         }
                     }
                 }
@@ -68,8 +66,9 @@ def call(Map args) {
             thirdBucket: {
                 stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
                     if (buildModules[2]) {
-                        buildModules[2].each { component ->
-                            build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
+                        buildModules[2].each { module ->
+                            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
                         }
                     }
                 }
