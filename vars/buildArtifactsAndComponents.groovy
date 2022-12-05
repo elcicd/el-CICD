@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the build-and-deploy-components pipeline.  Called inline from the
@@ -6,7 +6,7 @@
  *
  */
 
-def call(Map args) {    
+def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
@@ -39,28 +39,33 @@ def call(Map args) {
         components[i%3].add(component)
     }
 
+    def pipelines =
+        sh(returnStdOut: true,
+           script: "oc get cm -l jenkins-build-pipeline --no-headers -o custom-columns=:.metadata.name -n ${projectInfo.cicdMasterNamespace}")
+           .split('\n')
+           .collate(3)
     if (components) {
         parallel(
             firstBucket: {
                 stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                    components[0].each { component ->
-                        build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
+                    pipelines[0].each { component ->
+                        build(job: "../${projectInfo.id}/${component.name}-build-component", wait: true)
                     }
                 }
             },
             secondBucket: {
                 stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (components[1]) {
-                        components[1].each { component ->
-                            build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
+                    if (pipelines.size() > 1) {
+                        pipelines[1].each { component ->
+                            build(job: "../${projectInfo.id}/${component.name}-build-artifact", wait: true)
                         }
                     }
                 }
             },
             thirdBucket: {
                 stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (components[2]) {
-                        components[2].each { component ->
+                    if (pipelines.size() > 2) {
+                        pipelines[2].each { component ->
                             build(job: "../${projectInfo.id}/${component.name}-build-to-dev", wait: true)
                         }
                     }
