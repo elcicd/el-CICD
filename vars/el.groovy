@@ -72,7 +72,6 @@ def node(Map args, Closure body) {
         yaml: '''
           spec:
             securityContext:
-              runAsNonRoot: true
               runAsUser: 1001
               runAsGroup: 1001
               fsGroup: 1001
