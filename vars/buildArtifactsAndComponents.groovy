@@ -11,14 +11,18 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select sandbox, component, and branch") {
+        def BUILD_SELECTED = 'Build Selected'
+        def BUILD_ALL = 'Build All'
+        def BUILD_ALL_COMPONENTS = 'Build All Components'
+        def BUILD_ALL_ARTIFACTS = 'Build All Artifacts'
+        def buildChoices = [BUILD_SELECTED, BUILD_ALL, BUILD_ALL_COMPONENTS, BUILD_ALL_ARTIFACTS]
         List inputs = [choice(name: 'buildToNamespace', description: 'The Namespace to build and deploy to', choices: projectInfo.builderNamespaces),
-                       string(name: 'scmBranch',  defaultValue: projectInfo.scmBranch, description: 'The branch to build', trim: true),
-                       booleanParam(name: 'buildAll', description: 'Build all components'),
+                       choice(name: 'buildChoice', description: 'What to build', choices: buildChoices),
                        booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
 
         inputs += projectInfo.buildModules.collect { module ->
             def moduleType = module.isComponent ? 'Component' : 'Artifact'
-            booleanParam(name: component.name, description: "status: ${module.status}\ntype: ${moduleType}")
+            booleanParam(name: module.name, description: "${moduleType} status: ${module.status}")
         }
 
         def cicdInfo = input(message: "Select artifacts and components to build:", parameters: inputs)
@@ -26,7 +30,13 @@ def call(Map args) {
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
-        projectInfo.modules.each { it.build = cicdInfo.buildAll || cicdInfo[it.name] }
+        projectInfo.modules.each { module ->
+            module.build =
+                (cicdInfo.buildChoice == BUILD_ALL) ||
+                (cicdInfo.buildChoice == BUILD_ALL_COMPONENTS && module.isComponent) ||
+                (cicdInfo.buildChoice == BUILD_ALL_ARTIFACTS && module.isArtifact) ||
+                (cicdInfo.buildChoice == BUILD_SELECTED && cicdInfo[it.name])
+        }
     }
 
     stage('Clean environment if requested') {
