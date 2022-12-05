@@ -52,8 +52,7 @@ def deployComponents(def projectInfo, def components) {
                 ${shCmd.echo ''}
                 helm template --debug \
                     --set-string ${msCommonValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \
-                    \${ENV_FILES} \
+                    \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
@@ -63,8 +62,7 @@ def deployComponents(def projectInfo, def components) {
                 ${shCmd.echo ''}
                 helm upgrade --atomic --install --history-max=1 \
                     --set-string ${msCommonValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \
-                    \${ENV_FILES} \
+                    \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
