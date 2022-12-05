@@ -50,6 +50,10 @@ def gatherProjectInfoStage(def projectId) {
 
             module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
             module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
+            
+            module.isComponent = projectInfo.components.contains(module)
+            module.isArtifact = projectInfo.artifacts.contains(module)
+            module.isTestModule = projectInfo.testModules.contains(module)
         }
         
         projectInfo.buildModules = []

@@ -16,12 +16,9 @@ def call(Map args) {
                        booleanParam(name: 'buildAll', description: 'Build all components'),
                        booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
 
-        inputs += projectInfo.components.collect { component ->
-            booleanParam(name: component.name, description: "status: ${component.status}")
-        }
-        
-        inputs += projectInfo.artifacts.collect { artifact ->
-            booleanParam(name: artifact.name, description: "status: ${artifact.status}")
+        inputs += projectInfo.buildModules.collect { module ->
+            def moduleType = module.isComponent ? 'Component' : 'Artifact'
+            booleanParam(name: component.name, description: "status: ${module.status}\ntype: ${moduleType}")
         }
 
         def cicdInfo = input(message: "Select artifacts and components to build:", parameters: inputs)
