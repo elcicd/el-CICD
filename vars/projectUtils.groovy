@@ -31,7 +31,6 @@ def gatherProjectInfoStage(def projectId) {
         }
 
         projectInfo.id = projectId
-
         
         projectInfo.components = projectInfo.components ?: []
         projectInfo.artifacts = projectInfo.artifacts ?: []
@@ -52,6 +51,11 @@ def gatherProjectInfoStage(def projectId) {
             module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
             module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
         }
+        
+        projectInfo.buildModules = []
+        projectInfo.buildModules.addAll(projectInfo.components)
+        projectInfo.buildModules.addAll(projectInfo.artifacts)
+        
         projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
 
         projectInfo.devEnv = el.cicd.devEnv

@@ -39,9 +39,13 @@ def call(Map args) {
     }
 
     def buildModules = [[],[],[]]
-    projectInfo.modules.findAll { it.build }.eachWithIndex { module, i ->
+    projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
         buildModules[i%3].add(module)
     }
+    
+    echo "=================================="
+    echo "${buildModules}"
+    echo "=================================="
     
     if (buildModules) {
         parallel(
