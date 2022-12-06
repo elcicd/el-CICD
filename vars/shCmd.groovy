@@ -5,9 +5,8 @@
  */
 
 /* When executed, command will echo either the image name and sha, or null if image doesn't exist. */
-def verifyImage(String env, String tokenVar, String image, String tag) {
-    def user = el.cicd["${env}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
-    def creds = "--creds ${user}:\${${tokenVar}}"
+def verifyImage(String env, String username, String password, String image, String tag) {
+    def creds = "--creds \${${username}}:\${${password}}"
 
     def tlsVerify = el.cicd["${env}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
     tlsVerify = tlsVerify ? "--tls-verify=${tlsVerify}" : ''
@@ -18,20 +17,17 @@ def verifyImage(String env, String tokenVar, String image, String tag) {
     return "skopeo inspect --format '{{.Name}}({{.Digest}})' ${tlsVerify} ${creds} ${imageUrl} 2> /dev/null || :"
 }
 
-def copyImage(String fromEnv, String fromTokenVar, String fromImage, String fromTag,
-              String toEnv, String toTokenVar, String toImage, String toTag)
+def copyImage(String fromEnv, String fromUsername, String fromPwd, String fromImage, String fromTag,
+              String toEnv, String toUsername, String toPwd, String toImage, String toTag)
 {
-    def user = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
-    def srcCreds = "--src-creds ${user}:\${${fromTokenVar}}"
-
-    user = el.cicd["${toEnv}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
-    def destCreds = "--dest-creds ${user}:\${${toTokenVar}}"
+    def fromCreds = "--src-creds \${${fromTokenVar}}:\${${fromTokenVar}}"
+    def toCreds = "--dest-creds \${${toUsername}}:\${${toPwd}}"
 
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
-    def srcTlsVerify = tlsVerify ? "--src-tls-verify=${tlsVerify}" : ''
+    def fromTlsVerify = tlsVerify ? "--from-tls-verify=${tlsVerify}" : ''
 
     tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
-    def destTlsVerify = tlsVerify ? "--dest-tls-verify=${tlsVerify}" : ''
+    def toTlsVerify = tlsVerify ? "--to-tls-verify=${tlsVerify}" : ''
 
     def fromImageRepo = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def fromImageUrl = "docker://${fromImageRepo}/${fromImage}:${fromTag}"
@@ -39,11 +35,11 @@ def copyImage(String fromEnv, String fromTokenVar, String fromImage, String from
     def toImageRepo = el.cicd["${toEnv}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def toImgUrl = "docker://${toImageRepo}/${toImage}:${toTag}"
 
-    return "skopeo copy ${srcCreds} ${destCreds} ${srcTlsVerify} ${destTlsVerify} ${fromImageUrl} ${toImgUrl}"
+    return "skopeo copy ${fromCreds} ${toCreds} ${fromTlsVerify} ${toTlsVerify} ${fromImageUrl} ${toImgUrl}"
 }
 
-def tagImage(String env, String tokenVar, String image, String fromTag, String toTag) {
-    return copyImage(env, tokenVar, image, fromTag, env, tokenVar, image, toTag)
+def tagImage(String env, String username, String pwd, String image, String fromTag, String toTag) {
+    return copyImage(env, username, pwd, image, fromTag, env, username, pwd, image, toTag)
 }
 
 def sshAgentBash(def sshKeyId, def ... commands) {
