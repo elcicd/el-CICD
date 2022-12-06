@@ -24,10 +24,10 @@ def copyImage(String fromEnv, String fromUsername, String fromPwd, String fromIm
     def toCreds = "--dest-creds \${${toUsername}}:\${${toPwd}}"
 
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
-    def fromTlsVerify = tlsVerify ? "--from-tls-verify=${tlsVerify}" : ''
+    def fromTlsVerify = tlsVerify ? "--src-tls-verify=${tlsVerify}" : ''
 
     tlsVerify = el.cicd["${toEnv}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
-    def toTlsVerify = tlsVerify ? "--to-tls-verify=${tlsVerify}" : ''
+    def toTlsVerify = tlsVerify ? "--dest-tls-verify=${tlsVerify}" : ''
 
     def fromImageRepo = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def fromImageUrl = "docker://${fromImageRepo}/${fromImage}:${fromTag}"
