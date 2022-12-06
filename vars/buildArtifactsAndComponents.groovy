@@ -35,7 +35,7 @@ def call(Map args) {
                 (cicdInfo.buildChoice == BUILD_ALL) ||
                 (cicdInfo.buildChoice == BUILD_ALL_COMPONENTS && module.isComponent) ||
                 (cicdInfo.buildChoice == BUILD_ALL_ARTIFACTS && module.isArtifact) ||
-                (cicdInfo.buildChoice == BUILD_SELECTED && cicdInfo[it.name])
+                (cicdInfo.buildChoice == BUILD_SELECTED && cicdInfo[module.name])
         }
     }
 
