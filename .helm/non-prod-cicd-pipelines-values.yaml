@@ -63,8 +63,8 @@ elCicdDefs:
                 def elCicdData = elcicdMetaData.data
                 
                 def scmMap = [$class: 'GitSCMSource',
-                            remote: elCicdData.EL_CICD_GIT_REPO,
-                            credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                              remote: elCicdData.EL_CICD_GIT_REPO,
+                              credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
                 library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
 
                 el.initMetaData(elCicdData)

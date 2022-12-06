@@ -9,7 +9,7 @@
 void call(Map args) {
 
     def projectInfo = args.projectInfo
-    def artifact = projectInfo.artifacts.find { it.name == args.libraryName }
+    def artifact = projectInfo.artifacts.find { it.name == args.artifactName }
 
     artifact.scmBranch = args.scmBranch
     artifact.isSnapshot = args.isSnapshot
