@@ -100,9 +100,9 @@ def call(Map args) {
             def jsonPathSingle = '''jsonpath='{.data.component}{":"}{.data.src-commit-hash}{" "}' '''
             def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.component}{":"}{.data.src-commit-hash}{" "}{end}' '''
 
-            def msNames = projectInfo.componentsToPromote.collect { "${it.id}-${el.cicd.META_INFO_POSTFIX}" }
-            def jsonPath =  (msNames.size() > 1) ? jsonPathMulti : jsonPathSingle
-            def script = "oc get cm --ignore-not-found ${msNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
+            def compNames = projectInfo.componentsToPromote.collect { "${it.id}-${el.cicd.META_INFO_POSTFIX}" }
+            def jsonPath =  (compNames.size() > 1) ? jsonPathMulti : jsonPathSingle
+            def script = "oc get cm --ignore-not-found ${compNames.join(' ')} -o ${jsonPath} -n ${projectInfo.deployFromNamespace}"
 
             def commitHashMap =  sh(returnStdout: true, script: script).trim()
             commitHashMap = commitHashMap.split(' ').collectEntries { entry ->

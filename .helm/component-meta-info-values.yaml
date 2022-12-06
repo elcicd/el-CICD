@@ -17,5 +17,5 @@ elCicdDefaults:
 
 elCicdTemplates-componentMetaInfo:
 - templateName: configMap
-  appName: ${COMPONENT_NAME}-${META_INFO_POSTFIX}
+  appName: ${PROJECT_ID}-${COMPONENT_NAME}-${META_INFO_POSTFIX}
   data: ${EL_CICD_COMPONENT_META_INFO}
