@@ -30,7 +30,7 @@ def call(Map args) {
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch
         projectInfo.recreateAll = cicdInfo.recreateAll
-        projectInfo.modules.each { module ->
+        projectInfo.buildModules.each { module ->
             module.build =
                 (cicdInfo.buildChoice == BUILD_ALL) ||
                 (cicdInfo.buildChoice == BUILD_ALL_COMPONENTS && module.isComponent) ||
