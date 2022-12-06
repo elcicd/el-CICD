@@ -20,7 +20,7 @@ def verifyImage(String env, String username, String password, String image, Stri
 def copyImage(String fromEnv, String fromUsername, String fromPwd, String fromImage, String fromTag,
               String toEnv, String toUsername, String toPwd, String toImage, String toTag)
 {
-    def fromCreds = "--src-creds \${${fromTokenVar}}:\${${fromTokenVar}}"
+    def fromCreds = "--src-creds \${${fromUsername}}:\${${fromPwd}}"
     def toCreds = "--dest-creds \${${toUsername}}:\${${toPwd}}"
 
     def tlsVerify = el.cicd["${fromEnv}${el.cicd.IMAGE_REGISTRY_ENABLE_TLS_POSTFIX}"]
