@@ -64,7 +64,6 @@ def node(Map args, Closure body) {
     }
 
     node() {
-        echo 'Running with:'
         sh 'oc whoami'
     }
     
@@ -73,7 +72,14 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: 30, //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: 30, "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        yaml: '''
+          spec:
+            template:
+              spec: 
+                securityContext:
+                  allowPrivilegeEscalation: false
+        ''',
         containers: [
             containerTemplate(
                 name: 'jnlp',
