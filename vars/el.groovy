@@ -153,8 +153,9 @@ def initializePipeline() {
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
             ${shCmd.echo "\n=======================\n"}
-            ${shCmd.echo 'OCP version information'}
+            ${shCmd.echo 'OCP Runtime'}
             oc version
+            ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP Service Account'}
             oc whoami
             ${shCmd.echo "\n======================="}
