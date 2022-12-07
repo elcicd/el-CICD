@@ -74,16 +74,11 @@ def node(Map args, Closure body) {
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        yaml: '''
-          spec:
-            securityContext:
-              fsGroup: 1001
-        ''',
         containers: [
             containerTemplate(
                 name: 'jnlp',
                 image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
-                alwaysPullImage: true,
+                alwayOr sPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
