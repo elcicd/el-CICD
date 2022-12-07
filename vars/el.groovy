@@ -75,19 +75,16 @@ def node(Map args, Closure body) {
         idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
           spec:
-            template:
-              spec:
-                securityContext:
-                  runAsNonRoot: true
-                  seccompProfile:
-                    type: RuntimeDefault
-                containers:
-                - securityContext:
-                    allowPrivilegeEscalation: false
-                    capabilities:
-                      drop:
-                      - ALL
-
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+            - securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL
         ''',
         containers: [
             containerTemplate(
