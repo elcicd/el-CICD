@@ -207,7 +207,7 @@ __create_onboarding_automation_server() {
         -n ${ONBOARDING_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_HELM_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
         -f ${EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
-        -f ${EL_CICD_HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${EL_CICD_HELM_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-pipeline-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x

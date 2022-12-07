@@ -26,7 +26,7 @@ elCicdTemplates:
   args:
   - -c
   - if [[ -f $JENKINS_PLUGINS_FILE ]];
-    then 
+    then
         echo "Installing Jenkins Plugins:" | tee -a /var/log/jenkins-startup.log;
         cat $JENKINS_PLUGINS_FILE | tee -a /var/log/jenkins-startup.log;
 
@@ -134,8 +134,23 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: clusterRoleBinding
-  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
+# - templateName: clusterRoleBinding
+#   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
+#   anyProfiles:
+#   - onboarding
+#   ignoreAnyProfiles:
+#   - cicd
+#   roleRef:
+#     apiGroup: rbac.authorization.k8s.io
+#     kind: ClusterRole
+#     name: cluster-admin
+#   subjects:
+#   - kind: ServiceAccount
+#     name: ${JENKINS_SERVICE_NAME}
+#     namespace: ${RELEASE_NAMESPACE}
+
+- templateName: roleBinding
+  appName: ${JENKINS_SERVICE_NAME}-admin
   anyProfiles:
   - onboarding
   ignoreAnyProfiles:
@@ -143,9 +158,9 @@ elCicdTemplates:
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: cluster-admin
+    name: admin
   subjects:
-  - kind: ServiceAccount
+  - ockind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
@@ -192,7 +207,7 @@ elCicdTemplates:
   appName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteMany
-  
+
 - templateName: configMap
   anyProfiles:
   - onboarding
@@ -207,7 +222,7 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-    
+
 - templateName: copyResource
   anyProfiles:
   - cicd
@@ -215,7 +230,7 @@ elCicdTemplates:
   kind: ConfigMap
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-    
+
 - templateName: copyResource
   anyProfiles:
   - cicd
@@ -223,5 +238,5 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-  
-  
+
+

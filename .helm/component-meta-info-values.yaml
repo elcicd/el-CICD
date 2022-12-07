@@ -1,5 +1,5 @@
 elCicdDefs:
-  EL_CICD_COMPONENT_META_INFO:  
+  EL_CICD_COMPONENT_META_INFO:
     projectid: ${PROJECT_ID}
     component: ${COMPONENT_NAME}
     elcicd-profiles: ${EL_CICD_PROFILES}
