@@ -63,7 +63,10 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
 
-    sh 'oc whoami'
+    node() {
+        sh 'oc whoami'
+    }
+    
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
