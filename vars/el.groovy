@@ -76,10 +76,18 @@ def node(Map args, Closure body) {
         yaml: '''
           spec:
             template:
-              spec: 
-                runAsNonRoot: true
-                seccompProfile:
+              spec:
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
                     type: RuntimeDefault
+                containers:
+                - securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+
         ''',
         containers: [
             containerTemplate(
