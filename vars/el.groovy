@@ -78,7 +78,7 @@ def node(Map args, Closure body) {
             containerTemplate(
                 name: 'jnlp',
                 image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
-                alwayOr sPullImage: true,
+                alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
                 resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
