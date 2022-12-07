@@ -79,12 +79,6 @@ def node(Map args, Closure body) {
               runAsNonRoot: true
               seccompProfile:
                 type: RuntimeDefault
-            containers:
-            - securityContext:
-                allowPrivilegeEscalation: false
-                capabilities:
-                  drop:
-                  - ALL
         ''',
         containers: [
             containerTemplate(
