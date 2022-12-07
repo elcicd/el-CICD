@@ -77,8 +77,9 @@ def node(Map args, Closure body) {
           spec:
             template:
               spec: 
-                securityContext:
-                  allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                seccompProfile:
+                    type: RuntimeDefault
         ''',
         containers: [
             containerTemplate(
