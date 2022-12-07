@@ -62,23 +62,17 @@ def node(Map args, Closure body) {
     if (args.isBuild) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
-
-    node() {
-        sh 'oc whoami'
-    }
     
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: '''
           spec:
             securityContext:
-              runAsNonRoot: true
-              seccompProfile:
-                type: RuntimeDefault
+              fsGroup: 1001
         ''',
         containers: [
             containerTemplate(
@@ -95,7 +89,7 @@ def node(Map args, Closure body) {
         volumes: volumeDefs
     ]) {
         node(args.agent) {
-            try {           
+            try {                
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
@@ -161,6 +155,8 @@ def initializePipeline() {
             ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP version information'}
             oc version
+            ${shCmd.echo 'OCP Service Account'}
+            oc whoami
             ${shCmd.echo "\n======================="}
         """
 
