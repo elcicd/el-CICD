@@ -136,7 +136,7 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroups : 'missing rbacGroups'
     
     echo ''
-    echo "el-CICD USER: ${currentBuild.getBuildCauses()[0].userId}"
+    echo "el-CICD USER: ${currentBuild.getBuildCauses()}"
     echo ''
     
     def errMsg = "missing ${projectInfo.devEnv} rbacGroup: this is the default RBAC group for all environments if not otherwise specified"
