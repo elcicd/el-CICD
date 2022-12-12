@@ -94,7 +94,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
         
         ${shCmd.echo ''}            
-        helm template \
+        helm upgrade --atomic --install --history-max=1 \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
