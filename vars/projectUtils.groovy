@@ -1,143 +1,174 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * General pipeline utilities
  */
 
-def gatherProjectInfoStage(def projectId) {
-    assert projectId
+def validateBuildUserPermissions(def projectInfo) {
+    def userName = ${currentBuild.getBuildCauses()[0].userName}
+    def group = projectInfo.rbacGroups[projectInfo.deploymentEnv]
+    def isAllowedToRunPipeline = sh(returnStdout: true, script: """
+        set +x
+        VALIDATED=\$(oc get group ${group} -o jsonpath='{.users[?(@=="${userName}")]}')
 
+        if [[ -z \${VALIDATED} ]]
+        then
+            JSONPATH='.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")'
+            VALIDATED=\$(oc get clusterrolebindings -o json | jq \${JSONPATH})
+        fi
+
+        echo \${VALIDATED}
+        set -x
+    """)
+
+    if (!isAllowedToRunPipeline) {
+        loggingUtils.errorBanner("User ${userName} is forbidden from running a pipeline that deploys to ${projectInfo.deploymentEnv}")
+    }
+}
+
+def gatherProjectInfoStage(def projectId) {
     def projectInfo
     stage('Gather project information') {
         loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
-
-        dir (el.cicd.PROJECT_DEFS_DIR) {
-            def projectFile = findFiles(glob: "**/${projectId}.json")
-            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
-            projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yaml")
-
-            if (projectFile) {
-                projectFile = projectFile[0].path
-                try {
-                    projectInfo = readYaml file: projectFile
-                }
-                catch (Exception e) {
-                    projectInfo = readJSON file: projectFile
-                }
-            }
-            else {
-                loggingUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
-            }
-        }
+        
+        projectInfo = readProjectYaml(projectId)
 
         projectInfo.id = projectId
         
-        projectInfo.components = projectInfo.components ?: []
-        projectInfo.artifacts = projectInfo.artifacts ?: []
-        projectInfo.testModules = projectInfo.testModules ?: []
-
-        projectInfo.modules = []
-        projectInfo.modules.addAll(projectInfo.components)
-        projectInfo.modules.addAll(projectInfo.artifacts)
-        projectInfo.modules.addAll(projectInfo.testModules)
-
-        projectInfo.modules.each { module ->
-            module.projectId = projectInfo.id
-            module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
-            module.id = "${projectInfo.id}-${module.name}"
-
-            module.workDir = "${WORKSPACE}/${module.scmRepoName}"
-
-            module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
-            module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
-            
-            module.isComponent = projectInfo.components.contains(module)
-            module.isArtifact = projectInfo.artifacts.contains(module)
-            module.isTestModule = projectInfo.testModules.contains(module)
-        }
-        
-        projectInfo.buildModules = []
-        projectInfo.buildModules.addAll(projectInfo.components)
-        projectInfo.buildModules.addAll(projectInfo.artifacts)
-        
         projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
-
-        projectInfo.devEnv = el.cicd.devEnv
-
-        projectInfo.hotfixEnv = el.cicd.hotfixEnv
-
-        projectInfo.testEnvs = (el.cicd.testEnvs && projectInfo.enabledTestEnvs) ?
-            el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) } : []
-
-        projectInfo.preProdEnv = el.cicd.preProdEnv
-        projectInfo.prodEnv = el.cicd.prodEnv
-
-        projectInfo.nonProdEnvs = [projectInfo.devEnv]
-        if (projectInfo.allowsHotfixes) {
-            projectInfo.nonProdEnvs << projectInfo.hotfixEnv
-        }
-        projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
-        projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
-
-        projectInfo.DEV_ENV = el.cicd.DEV_ENV
-        projectInfo.HOTFIX_ENV = el.cicd.HOTFIX_ENV
-        projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
-        projectInfo.PROD_ENV = el.cicd.PROD_ENV
-
-        projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
-        projectInfo.NON_PROD_ENVS = projectInfo.nonProdEnvs.collect { it.toUpperCase() }
-
-        projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
-        projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"
-        projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}"
-
-        projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
-
-        projectInfo.nonProdNamespaces = [(projectInfo.devEnv): projectInfo.devNamespace]
-        if (projectInfo.allowsHotfixes) {
-            projectInfo.nonProdNamespaces[projectInfo.hotfixEnv] = projectInfo.hotfixNamespace
-        }
-
-        projectInfo.testEnvs.each { env ->
-            projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}"
-        }
-        projectInfo.nonProdNamespaces[projectInfo.preProdEnv] = projectInfo.preProdNamespace
-
-        def sandboxes = projectInfo.sandboxEnvs ?: 0
-        projectInfo.sandboxEnvs = []
-        projectInfo.sandboxNamespaces = [:]
-        if (sandboxes) {
-            (1..sandboxes).each { i ->
-                def sandboxEnv = "${el.cicd.SANDBOX_NAMESPACE_PREFIX}-${i}"
-                projectInfo.sandboxEnvs << sandboxEnv
-                projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
-            }
-        }
-
-        projectInfo.builderNamespaces = [projectInfo.devNamespace]
-        projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
-        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
-
-        projectInfo.releaseRegions = projectInfo.releaseRegions ?: []
+        
+        initProjectModuleData(projectInfo)
+        
+        initProjectEnvNamespaceData(projectInfo)
+        
+        initProjectSandboxData(projectInfo)
 
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
-        
-        projectInfo.defaultRbacGroup = projectInfo.rbacGroups[projectInfo.devEnv]
+
+        projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
         projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
     }
 
     validateProjectInfo(projectInfo)
+    
+    return projectInfo
+}
+
+def readProjectYaml(def projectId) {
+    assert projectId
+    
+    def projectInfo
+    dir (el.cicd.PROJECT_DEFS_DIR) {
+        def projectFile = findFiles(glob: "**/${projectId}.y?ml")
+
+        if (projectFile) {
+            projectInfo = readYaml file: projectFile[0].path
+        }
+        else {
+            loggingUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
+        }
+    }
 
     return projectInfo
 }
 
+def initProjectModuleData(def projectInfo) {
+    projectInfo.components = projectInfo.components ?: []
+    projectInfo.artifacts = projectInfo.artifacts ?: []
+    projectInfo.testModules = projectInfo.testModules ?: []
+
+    projectInfo.buildModules = []
+    projectInfo.buildModules.addAll(projectInfo.components)
+    projectInfo.buildModules.addAll(projectInfo.artifacts)
+
+    projectInfo.modules = []
+    projectInfo.modules.addAll(projectInfo.components)
+    projectInfo.modules.addAll(projectInfo.artifacts)
+    projectInfo.modules.addAll(projectInfo.testModules)
+
+    projectInfo.buildModules = []
+    projectInfo.buildModules.addAll(projectInfo.components)
+    projectInfo.buildModules.addAll(projectInfo.artifacts)
+
+    projectInfo.modules.each { module ->
+        module.projectId = projectInfo.id
+        module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+        module.id = "${projectInfo.id}-${module.name}"
+
+        module.workDir = "${WORKSPACE}/${module.scmRepoName}"
+
+        module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+        module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
+
+        module.isComponent = projectInfo.components.contains(module)
+        module.isArtifact = projectInfo.artifacts.contains(module)
+        module.isTestModule = projectInfo.testModules.contains(module)
+    }
+}
+
+def initProjectEnvNamespaceData(def projectInfo) {
+    projectInfo.devEnv = el.cicd.devEnv
+
+    projectInfo.hotfixEnv = el.cicd.hotfixEnv
+
+    projectInfo.testEnvs = (el.cicd.testEnvs && projectInfo.enabledTestEnvs) ?
+        el.cicd.testEnvs.findAll { projectInfo.enabledTestEnvs.contains(it) } : []
+
+    projectInfo.preProdEnv = el.cicd.preProdEnv
+    projectInfo.prodEnv = el.cicd.prodEnv
+
+    projectInfo.nonProdEnvs = [projectInfo.devEnv]
+    if (projectInfo.allowsHotfixes) {
+        projectInfo.nonProdEnvs << projectInfo.hotfixEnv
+    }
+    projectInfo.nonProdEnvs.addAll(projectInfo.testEnvs)
+    projectInfo.nonProdEnvs.add(projectInfo.preProdEnv)
+
+    projectInfo.DEV_ENV = el.cicd.DEV_ENV
+    projectInfo.HOTFIX_ENV = el.cicd.HOTFIX_ENV
+    projectInfo.PRE_PROD_ENV = el.cicd.PRE_PROD_ENV
+    projectInfo.PROD_ENV = el.cicd.PROD_ENV
+
+    projectInfo.TEST_ENVS = projectInfo.testEnvs.collect { it.toUpperCase() }
+    projectInfo.NON_PROD_ENVS = projectInfo.nonProdEnvs.collect { it.toUpperCase() }
+
+    projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
+    projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"
+    projectInfo.prodNamespace = "${projectInfo.id}-${projectInfo.prodEnv}"
+
+    projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
+
+    projectInfo.nonProdNamespaces = [(projectInfo.devEnv): projectInfo.devNamespace]
+    if (projectInfo.allowsHotfixes) {
+        projectInfo.nonProdNamespaces[projectInfo.hotfixEnv] = projectInfo.hotfixNamespace
+    }
+
+    projectInfo.testEnvs.each { env ->
+        projectInfo.nonProdNamespaces[env] = "${projectInfo.id}-${env}"
+    }
+    projectInfo.nonProdNamespaces[projectInfo.preProdEnv] = projectInfo.preProdNamespace
+
+    projectInfo.builderNamespaces = [projectInfo.devNamespace]
+    projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
+    projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+}
+
+def initProjectSandboxData(def projectInfo) {
+    def sandboxes = projectInfo.sandboxEnvs ?: 0
+    projectInfo.sandboxEnvs = []
+    projectInfo.sandboxNamespaces = [:]
+    if (sandboxes) {
+        (1..sandboxes).each { i ->
+            def sandboxEnv = "${el.cicd.SANDBOX_NAMESPACE_PREFIX}-${i}"
+            projectInfo.sandboxEnvs << sandboxEnv
+            projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
+        }
+    }
+}
+
 def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroups : 'missing rbacGroups'
-    
-    echo ''
-    echo "el-CICD USER: ${currentBuild.getBuildCauses()[0].userName}"
-    echo ''
     
     def errMsg = "missing ${projectInfo.devEnv} rbacGroup: this is the default RBAC group for all environments if not otherwise specified"
     assert projectInfo.defaultRbacGroup : errMsg

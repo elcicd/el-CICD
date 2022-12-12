@@ -216,18 +216,6 @@ _start_crc() {
 
 __additional_cluster_config() {
     echo
-    for GROUP in ${CRC_TEST_RBAC_GROUPS}
-    do
-        if [[ -z $(oc get groups ${GROUP} --no-headers --ignore-not-found) ]]
-        then
-            echo "Creating test RBAC group '${GROUP}'"
-            oc adm groups new ${GROUP}
-        else
-            echo "RBAC group '${GROUP}' found. Skipping..."
-        fi
-    done
-
-    echo
     if [[ -z $(oc get secrets -n kube-system | grep sealed-secrets-key) ]]
     then
         echo "Creating Sealed Secrets master key"

@@ -9,24 +9,23 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    stage('Tear down project SDLC for reinstall requested') {
-        loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
-
+    stage('Uninstall project SDLC for baseline reinstall, if requested') {
         if (args.reinstallProjectSdlc) {
+            loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
+
             sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
         }
     }
 
     stage("Install/upgrade CICD Jenkins if necessary") {
-        onboardingUtils.createCicdNamespaceAndJenkins(projectInfo)
+        onboardingUtils.setupClusterWithProjecCicdServer(projectInfo)
     }
     
     stage('Install/upgrade project SDLC resources') {        
-        onboardingUtils.createNonProdSdlcNamespacesAndPipelines(projectInfo)
+        onboardingUtils.setupClusterWithProjectCicdResources(projectInfo)
     }
     
-    jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
-    manageDeployKeys([projectInfo: projectInfo, isNonProd: true])
+    manageCicdCredentials([projectInfo: projectInfo, isNonProd: true])
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")

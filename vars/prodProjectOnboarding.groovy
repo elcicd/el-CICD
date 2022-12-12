@@ -11,9 +11,7 @@ def call(Map args) {
     
     cicdJenkinsCreationUtils.verifyCicdJenkinsExists(projectInfo, false)
 
-    stage('refresh automation pipelines') {
-        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
-        
+    stage('refresh automation pipelines') {        
         def pipelineFiles
         dir(el.cicd.PROD_AUTOMATION_PIPELINES_DIR) {
             pipelineFiles = findFiles(glob: "**/*.xml")
@@ -37,5 +35,5 @@ def call(Map args) {
         onboardingUtils.applyResoureQuota(projectInfo, projectInfo.prodNamespace, resourceQuotaFile)
     }
 
-    manageDeployKeys([projectInfo: projectInfo, isNonProd: false])
+    manageCicdCredentials([projectInfo: projectInfo, isNonProd: false])
 }

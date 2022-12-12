@@ -14,7 +14,7 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml", text: libraryResource('templates/jenkinsUsernamePasswordCreds-template.xml')
 }
 
-def createCicdNamespaceAndJenkins(def projectInfo) {
+def setupClusterWithProjecCicdServer(def projectInfo) {
     def rbacGroups = projectInfo.rbacGroups.toMapString()
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
@@ -74,15 +74,19 @@ def createCicdNamespaceAndJenkins(def projectInfo) {
 }
 
 
-def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
-    loggingUtils.echoBanner("INSTALL/UPGRADE PROJECT ${projectInfo.id} SDLC RESOURCES")
+def setupClusterWithProjectCicdResources(def projectInfo) {
+    loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
+    
+    def cicdNamespaces = projectInfo.nonProdNamespaces.join(',')
+    if (projectInfo.sandboxNamespaces) {
+        cicdNamespaces += ',' + projectInfo.sandboxNamespaces.join(',')
+    }
 
     def projectDefs = getSldcConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
     
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
-    
     
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
             
@@ -91,6 +95,7 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
         
         ${shCmd.echo ''}            
         helm upgrade --atomic --install --history-max=1 \
+            --set elCicdNamespaces='{${cicdNamespaces}'} \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
@@ -117,7 +122,6 @@ def createNonProdSdlcNamespacesAndPipelines(def projectInfo) {
 
 def getSldcConfigValues(def projectInfo) {
     cicdConfigValues = [:]
-    cicdConfigValues.createNamespaces = true
     
     elCicdDefs = [:]
     elCicdDefs.SDLC_ENVS = []
@@ -133,10 +137,22 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
-    def resourceQuotasFlags = projectInfo.nonProdEnvs.findResults { env ->
-        rqs = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
-        rqs?.each { rq ->
-            elCicdDefs["${rq}_NAMESPACE"] = "${projectInfo.id}-${env}"
+    projectInfo.nonProdEnvs.each { env ->
+        def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+        if (rqNames) {
+            rqNames?.each { rqName ->
+                elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
+                elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.nonProdNamespaces[env]
+            }
+        }
+    }
+    
+    def sandboxRqs = projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+    if (sandboxRqs) {
+        projectInfo.sandboxNamespaces.each { ns ->
+            sandboxRqs?.each { rqName ->
+                elCicdDefs["${rqName}_NAMESPACES"] = ns
+            }
         }
     }
 
