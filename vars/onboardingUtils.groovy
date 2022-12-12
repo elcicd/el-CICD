@@ -79,7 +79,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
     
     def cicdNamespaces = projectInfo.nonProdNamespaces.values().join(',')
     if (projectInfo.sandboxNamespaces) {
-        cicdNamespaces += ',' + projectInfo.sandboxNamespaces..values().join(',')
+        cicdNamespaces += ',' + projectInfo.sandboxNamespaces.values().join(',')
     }
 
     def projectDefs = getSldcConfigValues(projectInfo)
