@@ -104,6 +104,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
+        exit 1
 
         ${shCmd.echo ''}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
