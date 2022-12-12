@@ -166,7 +166,7 @@ def initProjectSandboxData(def projectInfo) {
             projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
         }
         
-        projectInfo.builderNamespaces.putAll(projectInfo.sandboxNamespaces.values())
+        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
     }
 }
 
