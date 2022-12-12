@@ -153,7 +153,6 @@ def initProjectEnvNamespaceData(def projectInfo) {
 
     projectInfo.builderNamespaces = [projectInfo.devNamespace]
     projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
-    projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
 }
 
 def initProjectSandboxData(def projectInfo) {
@@ -166,6 +165,8 @@ def initProjectSandboxData(def projectInfo) {
             projectInfo.sandboxEnvs << sandboxEnv
             projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
         }
+        
+        projectInfo.builderNamespaces.putAll(projectInfo.sandboxNamespaces.values())
     }
 }
 
