@@ -177,7 +177,6 @@ def getSldcConfigValues(def projectInfo) {
     
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
     cicdConfigValues.profiles.addAll(rqProfiles.keySet())
-    cicdConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
     if (projectInfo.nfsShares) {
         cicdConfigValues.profiles << "nfs"
         
