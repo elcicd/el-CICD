@@ -77,9 +77,9 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
 def setupClusterWithProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
     
-    def cicdNamespaces = projectInfo.nonProdNamespaces.join(',')
+    def cicdNamespaces = projectInfo.nonProdNamespaces.values().join(',')
     if (projectInfo.sandboxNamespaces) {
-        cicdNamespaces += ',' + projectInfo.sandboxNamespaces.join(',')
+        cicdNamespaces += ',' + projectInfo.sandboxNamespaces..values().join(',')
     }
 
     def projectDefs = getSldcConfigValues(projectInfo)
