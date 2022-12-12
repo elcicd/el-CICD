@@ -60,7 +60,9 @@ def readProjectYaml(def projectId) {
     
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def projectFile = findFiles(glob: "**/${projectId}.y?ml")
+        def projectFile = findFiles(glob: "**/${projectId}.yaml")
+        projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
+        projectFile = projectFile ?: findFiles(glob: "**/${projectId}.json")
 
         if (projectFile) {
             projectInfo = readYaml file: projectFile[0].path
