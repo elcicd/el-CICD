@@ -94,7 +94,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
         
         ${shCmd.echo ''}            
-        helm upgrade --atomic --install --history-max=1 --debug \
+        helm upgrade --atomic --install --history-max=1 \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
@@ -104,7 +104,6 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
-        exit 1
 
         ${shCmd.echo ''}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
@@ -139,13 +138,13 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
+    def rqProfiles = [:]
     projectInfo.nonProdEnvs.each { env ->
         def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
-        if (rqNames) {
-            rqNames?.each { rqName ->
-                elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-                elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.nonProdNamespaces[env]
-            }
+        rqNames?.each { rqName ->
+            elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
+            elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.nonProdNamespaces[env]
+            rqProfiles[rqName] = 'foo'
         }
     }
     
@@ -155,6 +154,7 @@ def getSldcConfigValues(def projectInfo) {
             sandboxRqs.each { rqName ->
                 elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
                 elCicdDefs["${rqName}_NAMESPACES"] += sandboxNamespace
+                rqProfiles[rqName] = 'foo'
             }
         }
     }
@@ -176,6 +176,7 @@ def getSldcConfigValues(def projectInfo) {
     }
     
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
+    cicdConfigValues.profiles.addAll(rqProfiles.keySet())
     cicdConfigValues.profiles.addAll(projectInfo.resourceQuotas.keySet())
     if (projectInfo.nfsShares) {
         cicdConfigValues.profiles << "nfs"
