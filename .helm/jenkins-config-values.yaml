@@ -149,23 +149,23 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: clusterRole
-  appName: ${JENKINS_SERVICE_NAME}-group-reader
-  anyProfiles:
-  - cicd
-  - okd
-  ignoreAnyProfiles:
-  - onboarding
-  rules:
-  - apiGroups:
-     - ""
-     - authorization.openshift.io
-    resources:
-    - groups
-    verbs:
-    - get
-    - list
-    - watch
+# - templateName: clusterRole
+#   appName: ${JENKINS_SERVICE_NAME}-group-reader
+#   anyProfiles:
+#   - cicd
+#   - okd
+#   ignoreAnyProfiles:
+#   - onboarding
+#   rules:
+#   - apiGroups:
+#      - ""
+#      - authorization.openshift.io
+#     resources:
+#     - groups
+#     verbs:
+#     - get
+#     - list
+#     - watch
 
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-group-reader
@@ -177,7 +177,7 @@ elCicdTemplates:
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: ${JENKINS_SERVICE_NAME}-group-reader
+    name: el-cicd-jenkins-group-reader
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
@@ -197,23 +197,6 @@ elCicdTemplates:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
-
-- templateName: clusterRole
-  appName: ${JENKINS_SERVICE_NAME}-group-reader
-  anyProfiles:
-  - cicd,okd
-  ignoreAnyProfiles:
-  - onboarding
-  rules:
-  - apiGroups:
-     - ""
-     - authorization.openshift.io
-    resources:
-    - groups
-    verbs:
-    - get
-    - list
-    - watch
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-basic-user
