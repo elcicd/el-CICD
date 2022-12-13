@@ -6,7 +6,7 @@
 
 def validateBuildUserPermissions(def projectInfo) {
     def userName = currentBuild.getBuildCauses()[0].userName
-    def group = projectInfo.rbacGroups[projectInfo.deployToEnv] : projectInfo.rbacGroups[el.cicd.DEFAULT]
+    def group = projectInfo.rbacGroups[projectInfo.deployToEnv] ?: projectInfo.rbacGroups[el.cicd.DEFAULT]
     echo group
     if (group) {
         def isAllowedToRunPipeline = sh(returnStdout: true, script: """
