@@ -15,8 +15,8 @@ def validateBuildUserPermissions(def projectInfo) {
         if (!isAllowedToRunPipeline) {
             isAllowedToRunPipeline = sh(returnStdout: true, script: """
                 set +x
-                JSONPATH='.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")'
-                VALIDATED=\$(oc get clusterrolebindings -o json | jq "\${JSONPATH}")
+                VALIDATED=\$(oc get clusterrolebindings -o json | \
+                    jq '.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")')
                 
                 echo \${VALIDATED}
                 set -x
