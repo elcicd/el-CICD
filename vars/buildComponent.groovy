@@ -23,6 +23,8 @@ void call(Map args) {
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
                                   projectInfo.builderNamespaces.join(' '))
     }
+    
+    loggingUtils.echoBanner("${userName} validated to build ${component.name} and deploy to ${projectInfo.deployToNamespace}")
 
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")
