@@ -5,7 +5,7 @@
  */
 
 def validateBuildUserPermissions(def projectInfo) {
-    def userName = ${currentBuild.getBuildCauses()[0].userName}
+    def userName = currentBuild.getBuildCauses()[0].userName
     def group = projectInfo.rbacGroups[projectInfo.deploymentEnv]
     def isAllowedToRunPipeline = sh(returnStdout: true, script: """
         set +x
@@ -22,7 +22,7 @@ def validateBuildUserPermissions(def projectInfo) {
     """)
 
     if (!isAllowedToRunPipeline) {
-        loggingUtils.errorBanner("User ${userName} is forbidden from running a pipeline that deploys to ${projectInfo.deploymentEnv}")
+        loggingUtils.errorBanner("User ${userName} is forbidden from running a pipeline that deploys to ${projectInfo.deployToNamespace}")
     }
 }
 
