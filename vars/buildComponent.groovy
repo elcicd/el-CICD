@@ -14,7 +14,7 @@ void call(Map args) {
 
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
-    validateBuildUserPermissions(projectInfo)
+    projectUtils.validateBuildUserPermissions(projectInfo)
 
     if (!projectInfo.builderNamespaces.find{ it == projectInfo.deployToNamespace})
     {
