@@ -6,10 +6,10 @@
 
 def validateBuildUserPermissions(def projectInfo) {
     def userName = currentBuild.getBuildCauses()[0].userName
-    def group = projectInfo.rbacGroups[projectInfo.deployToEnv] ?: projectInfo.rbacGroups[el.cicd.DEFAULT]
+    def groupName = projectInfo.rbacGroups[projectInfo.deployToEnv] ?: projectInfo.rbacGroups[el.cicd.DEFAULT]
     if (group) {
-        def groupYaml = sh(returnStdout: true, script: "set +x; oc get group ${group} -o yaml; set -x")
-        group = readYaml text: groupYaml
+        def groupYaml = sh(returnStdout: true, script: "set +x; oc get group ${groupName} -o yaml; set -x")
+        def group = readYaml text: groupYaml
         
         def isAllowedToRunPipeline = group.users && group.users.contains(userName)
         if (!isAllowedToRunPipeline) {
