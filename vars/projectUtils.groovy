@@ -7,6 +7,7 @@
 def validateBuildUserPermissions(def projectInfo) {
     def userName = currentBuild.getBuildCauses()[0].userName
     def group = projectInfo.rbacGroups[projectInfo.deploymentEnv]
+    echo group
     def isAllowedToRunPipeline = sh(returnStdout: true, script: """
         set +x
         VALIDATED=\$(oc get group ${group} -o jsonpath='{.users[?(@=="${userName}")]}')
