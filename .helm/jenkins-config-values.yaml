@@ -164,6 +164,21 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
+- templateName: roleBinding
+  appName: ${JENKINS_SERVICE_NAME}-basic-user
+  anyProfiles:
+  - cicd
+  ignoreAnyProfiles:
+  - onboarding
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: basic-user
+  subjects:
+  - kind: ServiceAccount
+    name: ${JENKINS_SERVICE_NAME}
+    namespace: ${RELEASE_NAMESPACE}
+
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
   anyProfiles:
