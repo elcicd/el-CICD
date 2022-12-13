@@ -7,21 +7,21 @@
 def validateBuildUserPermissions(def projectInfo) {
     def userName = currentBuild.getBuildCauses()[0].userName
     def group = projectInfo.rbacGroups[projectInfo.deployToEnv] ?: projectInfo.rbacGroups[el.cicd.DEFAULT]
-    echo group
     if (group) {
-        def isAllowedToRunPipeline = sh(returnStdout: true, script: """
-            set +x
-            VALIDATED=\$(oc get group ${group} -o jsonpath='{.users[?(@=="${userName}")]}')
-
-            if [[ -z \${VALIDATED} ]]
-            then
+        def groupYaml = sh(returnStdout: true, script: "set +x; oc get group ${group} -o yaml; set -x")
+        def group = readYaml text: groupYaml
+        
+        def isAllowedToRunPipeline = group.users && group.users.contains(userName)
+        if (!isAllowedToRunPipeline) {
+            isAllowedToRunPipeline = sh(returnStdout: true, script: """
+                set +x
                 JSONPATH='.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")'
                 VALIDATED=\$(oc get clusterrolebindings -o json | jq \${JSONPATH})
-            fi
-
-            echo \${VALIDATED}
-            set -x
-        """)
+                
+                echo \${VALIDATED}
+                set -x
+            """)
+        }
 
         if (!isAllowedToRunPipeline) {
             loggingUtils.errorBanner("User ${userName} is forbidden from running a pipeline that deploys to ${projectInfo.deployToNamespace}")
