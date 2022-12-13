@@ -14,10 +14,12 @@ def validateBuildUserPermissions(def projectInfo) {
         def isAllowedToRunPipeline = group.users && group.users.contains(userName)
         if (!isAllowedToRunPipeline) {
             isAllowedToRunPipeline = sh(returnStdout: true, script: """
-                VALIDATED=\$(oc get clusterrolebindings -o json | \
-                    jq '.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")')
+                set +x
+                JSONPATH='.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")'
+                VALIDATED=\$(oc get clusterrolebindings -o json | jq "\${JSONPATH}")
                 
                 echo \${VALIDATED}
+                set -x
             """)
         }
 

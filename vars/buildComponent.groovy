@@ -24,6 +24,7 @@ void call(Map args) {
                                   projectInfo.builderNamespaces.join(' '))
     }
     
+    def userName = currentBuild.getBuildCauses()[0].userName
     loggingUtils.echoBanner("${userName} validated to build ${component.name} and deploy to ${projectInfo.deployToNamespace}")
 
     stage('Checkout code from repository') {
