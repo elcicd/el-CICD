@@ -149,26 +149,9 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-# - templateName: clusterRole
-#   appName: ${JENKINS_SERVICE_NAME}-group-reader
-#   anyProfiles:
-#   - cicd
-#   - okd
-#   ignoreAnyProfiles:
-#   - onboarding
-#   rules:
-#   - apiGroups:
-#      - ""
-#      - authorization.openshift.io
-#     resources:
-#     - groups
-#     verbs:
-#     - get
-#     - list
-#     - watch
-
-- templateName: clusterRoleBinding
-  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-group-reader
+- templateName: roleBinding
+  appNames: ${VIEW_GROUPS}
+  appName: ${PROJECT_ID}-${}-view-permissions
   anyProfiles:
   - cicd
   - okd
@@ -177,10 +160,11 @@ elCicdTemplates:
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: el-cicd-jenkins-group-reader
+    name: view
   subjects:
-  - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
+  - apiVersion: user.openshift.io
+    kind: group
+    name: ${BASE_APP_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
@@ -193,21 +177,6 @@ elCicdTemplates:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
     name: edit
-  subjects:
-  - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
-    namespace: ${RELEASE_NAMESPACE}
-
-- templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}-basic-user
-  anyProfiles:
-  - cicd
-  ignoreAnyProfiles:
-  - onboarding
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: basic-user
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
@@ -241,7 +210,7 @@ elCicdTemplates:
   appName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteMany
-  
+
 - templateName: configMap
   anyProfiles:
   - onboarding

@@ -14,7 +14,6 @@ void call(Map args) {
 
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
-    projectUtils.validateBuildUserPermissions(projectInfo)
 
     if (!projectInfo.builderNamespaces.find{ it == projectInfo.deployToNamespace})
     {
@@ -26,6 +25,8 @@ void call(Map args) {
     
     def userName = currentBuild.getBuildCauses()[0].userName
     loggingUtils.echoBanner("${userName} validated to build ${component.name} and deploy to ${projectInfo.deployToNamespace}")
+    
+    loggingUtils.errorBanner('exiting for testing")
 
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")

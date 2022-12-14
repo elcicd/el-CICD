@@ -3,32 +3,7 @@
  *
  * General pipeline utilities
  */
-
-def validateBuildUserPermissions(def projectInfo) {
-    def userName = currentBuild.getBuildCauses()[0].userName
-    def groupName = projectInfo.rbacGroups[projectInfo.deployToEnv] ?: projectInfo.rbacGroups[el.cicd.DEFAULT]
-    if (groupName) {
-        def groupYaml = sh(returnStdout: true, script: "set +x; oc get group ${groupName} -o yaml; set -x")
-        def group = readYaml text: groupYaml
-        
-        def isAllowedToRunPipeline = group.users && group.users.contains(userName)
-        if (!isAllowedToRunPipeline) {
-            isAllowedToRunPipeline = sh(returnStdout: true, script: """
-                set +x
-                JSONPATH='.items[] | select (.roleRef.name == "cluster-admin") | select (.subjects[].name=="${userName}")'
-                VALIDATED=\$(oc get clusterrolebindings -o json | jq "\${JSONPATH}")
-                
-                echo \${VALIDATED}
-                set -x
-            """)
-        }
-
-        if (!isAllowedToRunPipeline) {
-            loggingUtils.errorBanner("User ${userName} is forbidden from running a pipeline that deploys to ${projectInfo.deployToNamespace}")
-        }
-    }
-}
-
+ 
 def gatherProjectInfoStage(def projectId) {
     def projectInfo
     stage('Gather project information') {
