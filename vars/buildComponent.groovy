@@ -22,11 +22,6 @@ void call(Map args) {
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
                                   projectInfo.builderNamespaces.join(' '))
     }
-    
-    def userName = currentBuild.getBuildCauses()[0].userName
-    loggingUtils.echoBanner("${userName} validated to build ${component.name} and deploy to ${projectInfo.deployToNamespace}")
-    
-    loggingUtils.errorBanner('exiting for testing")
 
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")

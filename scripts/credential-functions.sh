@@ -22,7 +22,7 @@ _verify_scm_secret_files_exist() {
     fi
 }
 
-_verify_pull_secret_files_exist() {    
+_verify_pull_secret_files_exist() {
     CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
@@ -32,7 +32,7 @@ _verify_pull_secret_files_exist() {
             local TOKEN_FILES=${TOKEN_FILES:+$TOKEN_FILES, }${TKN_FILE}
         fi
     done
-    
+
     if [[ ! -z ${TOKEN_FILES} ]]
     then
         echo
@@ -55,58 +55,54 @@ __verify_continue() {
 }
 
 _check_sealed_secrets() {
-    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
+    echo
+    local CURRENT_SS_VERSION=$(helm list -f 'sealed-secrets' -o json -n kube-system | jq -r '.[0].app_version' )
+    if [[ ! -z ${CURRENT_SS_VERSION} ]]
     then
-        # install latest Sealed Secrets
-        local SS_CONTROLLER_EXISTS=$(oc get Deployment sealed-secrets-controller --ignore-not-found -n kube-system)
-        if [[ -f /usr/local/bin/kubeseal && ! -z "${SS_CONTROLLER_EXISTS}" ]]
-        then
-            local OLD_VERSION=$(kubeseal --version)
-            echo
-            local MSG="Do you wish to reinstall/upgrade sealed-secrets, kubeseal and controller from  ${OLD_VERSION} to ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
-        else
-            local MSG="Do you wish to install sealed-secrets, kubeseal and controller, version ${SEALED_SECRET_RELEASE_VERSION}? [Y/n] "
-        fi
-        INSTALL_KUBESEAL=$(_get_yes_no_answer "${MSG}")
+        echo "CURRENT INSTALLED SEALED SECRETS VERSION: ${CURRENT_SS_VERSION}"
+    else
+        echo 'NO CURRENTLY INSTALLED SEALED SECRETS FOUND'
     fi
+    
+    local LATEST_SS_VERSION=$(helm show chart sealed-secrets --repo https://bitnami-labs.github.io/sealed-secrets | grep appVersion | tr -d 'appVersion: ')
+    echo "LATEST RELEASED SEALED SECRETS VERSION INFO: ${LATEST_SS_VERSION}"
+
+    echo
+    local MSG="Do you wish to reinstall/upgrade sealed-secrets and kubeseal to the latest release version? [Y/n] "
+    INSTALL_KUBESEAL=$(_get_yes_no_answer "${MSG}")
 }
 
 _install_sealed_secrets() {
-    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
-    then
-        local SEALED_SECRETS_DIR=/tmp/sealedsecrets
-        local SEALED_SECRETS_URL=https://github.com/bitnami-labs/sealed-secrets/releases/download/${SEALED_SECRET_RELEASE_VERSION}
-        mkdir -p ${SEALED_SECRETS_DIR}
-        echo
-        echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
-        sudo rm -f /usr/local/bin/kubeseal /tmp/kubseal
-        wget -q --show-progress ${SEALED_SECRETS_URL}/kubeseal-${SEALED_SECRET_RELEASE_VERSION#v}-linux-amd64.tar.gz -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
-        tar xvfz ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
-        sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
+    set -e
+    
+    echo
+    echo 'Installing latest Sealed Secrets Helm chart'
+    echo
+    echo '==============================='
+    helm upgrade --install --atomic sealed-secrets --history-max 2 -n kube-system \
+                 --set-string fullnameOverride=sealed-secrets-controller \
+                 --repo https://bitnami-labs.github.io/sealed-secrets \
+                 sealed-secrets
+    echo
+    echo '==============================='
 
-        echo "kubeseal version ${SEALED_SECRET_RELEASE_VERSION} installed"
+    echo
+    echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
+    local SEALED_SECRETS_DIR=/tmp/sealedsecrets
+    mkdir -p ${SEALED_SECRETS_DIR}
+    local SS_VERSION=$(helm list -o json | jq -r '.[] | select (.name == "sealed-secrets") | .app_version' | tr -d v)
+    local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${SS_VERSION}/kubeseal-${SS_VERSION}-linux-amd64.tar.gz"
+    rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
+    wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
+    tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
+    sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
 
-        echo
-        echo 'Deploying Sealed Secrets controller to cluster.'
-        wget -q --show-progress ${SEALED_SECRETS_URL}/controller.yaml -O ${SEALED_SECRETS_DIR}/controller.yaml
-
-        #HACK: REMOVE v1beta1 FOR K8S >=1.22 (v1beta1 apiVersion NOT supported; will remove when assured everyone is on later version)
-        sed -i -e 's/v1beta1/v1/g' ${SEALED_SECRETS_DIR}/controller.yaml #TODO: REMOVE HACK FOR K8S >=1.22 (no more v1beta1 apiVersion supported)
-        oc apply -f ${SEALED_SECRETS_DIR}/controller.yaml
-
-        echo
-        echo "Create custom cluster role for the management of sealedsecrets resources by Jenkins service accounts"
-        echo "NOTE: Without custom cluster role, only cluster admins could manage sealedsecrets."
-        oc apply -f ${EL_CICD_TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
-
-        echo
-        echo "Sealed Secrets Controller Version ${SEALED_SECRET_RELEASE_VERSION} installed."
-
-        rm -rf ${SEALED_SECRETS_DIR}
-    else
-        echo 'ERROR: SEALED_SECRET_RELEASE_VERSION undefined.'
-        exit 1
-    fi
+    echo
+    echo "Create custom cluster role for the management of sealedsecrets resources by Jenkins' service accounts"
+    echo "NOTE: Without custom cluster role, only cluster admins could manage sealedsecrets."
+    oc apply -f ${EL_CICD_TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
+    
+    set +e
 }
 
 _push_deploy_key_to_github() {
@@ -133,7 +129,7 @@ _push_deploy_key_to_github() {
         curl -fksS -X DELETE -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | \
             jq 'del(.key)'
     else
-        echo "Adding key  ${DEPLOY_KEY_TITLE} to GitHub for first time" 
+        echo "Adding key  ${DEPLOY_KEY_TITLE} to GitHub for first time"
     fi
 
     local TEMPLATE_FILE='githubDeployKey-template.json'
@@ -142,7 +138,7 @@ _push_deploy_key_to_github() {
     sed -i -e "s/%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}/g" ${GITHUB_CREDS_FILE}
     GITHUB_CREDS=$(<${GITHUB_CREDS_FILE})
     echo "${GITHUB_CREDS//%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${GITHUB_CREDS_FILE}
-    
+
     local RESULT=$(curl -fksS -X POST -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL} | \
         jq 'del(.key)')
     printf "New GitHub key created:\n${RESULT}\n"
@@ -156,14 +152,14 @@ _create_env_image_registry_secrets() {
     do
         local APP_NAME="el-cicd-${ENV@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-        
+
         local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
         local SET_FLAGS="${SET_FLAGS:+$SET_FLAGS }--set-file elCicdDefs-${APP_NAME}.USERNAME_PWD=${USERNAME_PWD_FILE}"
         local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
         SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER}"
         SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
     done
-    
+
     set -x
     helm upgrade --create-namespace --atomic --install --history-max=1 \
         --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
@@ -186,7 +182,7 @@ _push_access_token_to_jenkins() {
     local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
     cat ${EL_CICD_TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
 
-    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${SECRET_FILE} 
+    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${SECRET_FILE}
 
     rm -f ${SECRET_FILE}
 }
@@ -210,7 +206,7 @@ _push_username_pwd_to_jenkins() {
 _push_ssh_creds_to_jenkins() {
     local CREDS_ID=${2}
     local DEPLOY_KEY_FILE=${3}
-    
+
     local TEMPLATE_FILE='jenkinsSshCredentials-template.xml'
     local JENKINS_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
     cp ${EL_CICD_TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
@@ -218,7 +214,7 @@ _push_ssh_creds_to_jenkins() {
     JENKINS_CREDS=$(<${JENKINS_CREDS_FILE})
     echo "${JENKINS_CREDS//%PRIVATE_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${JENKINS_CREDS_FILE}
 
-    __push_creds_file_to_jenkins ${JENKINS_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE} 
+    __push_creds_file_to_jenkins ${JENKINS_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE}
 
     rm -f ${JENKINS_CREDS_FILE}
 }

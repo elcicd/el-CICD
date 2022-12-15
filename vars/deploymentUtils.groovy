@@ -25,55 +25,61 @@ def deployComponents(def projectInfo, def components) {
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
+    def deploymentStages = [failFast: true]
     components.each { component ->
-        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-        def msCommonValues = ["elCicdDefaults.appName=${component.name}",
-                              "elCicdDefs.COMPONENT_NAME=${component.name}",
-                              "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                              "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                              "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                              "elCicdDefaults.image=${componentImage}"]
-        msCommonValues.addAll(commonValues)
+        deploymentStages[component.name] = {
+            stage("Deploying ${component.name}") {
+                def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+                def compValues = ["elCicdDefaults.appName=${component.name}",
+                                    "elCicdDefs.COMPONENT_NAME=${component.name}",
+                                    "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                                    "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                                    "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                    "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
+                                    "elCicdDefaults.image=${componentImage}"]
+                compValues.addAll(commonValues)
 
-        dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-            sh """
-                VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
+                dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
+                    sh """
+                        VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
-                if [[ -d ./${projectInfo.deployToEnv} ]]
-                then
-                    ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
-                    ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
-                fi
+                        if [[ -d ./${projectInfo.deployToEnv} ]]
+                        then
+                            ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
+                            ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
+                        fi
 
-                ${shCmd.echo ''}
-                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+                        ${shCmd.echo ''}
+                        helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
-                ${shCmd.echo ''}
-                helm template --debug \
-                    --set-string ${msCommonValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \${ENV_FILES} \
-                    -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                    -n ${projectInfo.deployToNamespace} \
-                    ${component.name} \
-                    elCicdCharts/elCicdChart
-                
-                ${shCmd.echo ''}
-                helm upgrade --atomic --install --history-max=1 \
-                    --set-string ${msCommonValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \${ENV_FILES} \
-                    -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
-                    -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                    -n ${projectInfo.deployToNamespace} \
-                    ${component.name} \
-                    elCicdCharts/elCicdChart
-                
-                ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
-            """
+                        ${shCmd.echo ''}
+                        helm template --debug \
+                            --set-string ${compValues.join(' --set-string ')} \
+                            \${VALUES_FILES} \${ENV_FILES} \
+                            -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
+                            -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
+                            -n ${projectInfo.deployToNamespace} \
+                            ${component.name} \
+                            elCicdCharts/elCicdChart
+                        
+                        ${shCmd.echo ''}
+                        helm upgrade --atomic --install --history-max=1 \
+                            --set-string ${compValues.join(' --set-string ')} \
+                            \${VALUES_FILES} \${ENV_FILES} \
+                            -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
+                            -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
+                            -n ${projectInfo.deployToNamespace} \
+                            ${component.name} \
+                            elCicdCharts/elCicdChart
+                        
+                        ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
+                    """
+                }
+            }
         }
     }
+    
+    parallel(deploymentStages)
 }
 
 def confirmDeployments(def projectInfo, def components) {

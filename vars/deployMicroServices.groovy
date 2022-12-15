@@ -24,13 +24,11 @@ def call(Map args) {
         }
     }
 
-    stage('Deploy components') {
-        if (components) {
-            deploymentUtils.deployComponents(projectInfo, components)
-        }
-        else {
-            echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOYMENT"
-        }
+    if (components) {
+        deploymentUtils.deployComponents(projectInfo, components)
+    }
+    else {
+        echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOYMENT"
     }
 
     stage('Confirm successful deployment in namespace from artifact repository') {
