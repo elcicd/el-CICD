@@ -138,7 +138,8 @@ elCicdTemplates:
   
 - templateName: roleBinding
   appName: ${PROJECT_ID}-edit
-  namespaces: ${SDLC_NAMESPACES}
+  namespaces: ${SDLC_ENVS}
+  namespace: ${PROJECT_ID}-${}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
