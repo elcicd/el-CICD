@@ -142,6 +142,17 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
+    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
+    elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
+
+    projectInfo.components.each { comp ->
+        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
+    }
+
+    projectInfo.artifacts.each { art ->
+        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
+    }
+
     elCicdDefs.SDLC_ENVS = []
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
@@ -155,18 +166,7 @@ def getSldcConfigValues(def projectInfo) {
         }
     }
 
-    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
-    elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
-
-    projectInfo.components.each { comp ->
-        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
-    }
-
-    projectInfo.artifacts.each { art ->
-        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
-    }
-
-    projectInfo.nonProdEnvs.each { env ->
+    elCicdDefs.SDLC_ENVS.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
