@@ -126,7 +126,8 @@ def getSldcConfigValues(def projectInfo) {
     
     elCicdDefs = [:]
     elCicdDefs.SDLC_ENVS = []
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdNamespaces.keySet())
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
@@ -139,23 +140,12 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
     def rqProfiles = [:]
-    projectInfo.nonProdEnvs.each { env ->
-        def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+    projectInfo.SDLC_ENVS.each { env ->
+        def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
         rqNames?.each { rqName ->
             elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-            elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.nonProdNamespaces[env]
-            rqProfiles[rqName] = 'foo'
-        }
-    }
-    
-    def sandboxRqs = projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
-    if (sandboxRqs) {
-        projectInfo.sandboxNamespaces.values().each { sandboxNamespace ->
-            sandboxRqs.each { rqName ->
-                elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-                elCicdDefs["${rqName}_NAMESPACES"] += sandboxNamespace
-                rqProfiles[rqName] = 'foo'
-            }
+            elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] : projectInfo.sandboxNamespaces[env]
+            rqProfiles[rqName] = 'placeHolder'
         }
     }
 
@@ -174,6 +164,8 @@ def getSldcConfigValues(def projectInfo) {
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
+    
+    projectInfo.san
     
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
     cicdConfigValues.profiles.addAll(rqProfiles.keySet())

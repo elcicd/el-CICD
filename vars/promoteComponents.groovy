@@ -222,12 +222,12 @@ def call(Map args) {
     }
 
     if (projectInfo.componentsToPromote) {
-        deployMicroServices(projectInfo: projectInfo,
+        deployComponents(projectInfo: projectInfo,
                             components: projectInfo.componentsToPromote,
                             componentsToRemove: projectInfo.componentsToRemove,
                             imageTag: projectInfo.deployToEnv)
     }
     else {
-        deployMicroServices(projectInfo: projectInfo, componentsToRemove: projectInfo.componentsToRemove)
+        deployComponents(projectInfo: projectInfo, componentsToRemove: projectInfo.componentsToRemove)
     }
 }

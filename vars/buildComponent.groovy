@@ -103,7 +103,7 @@ void call(Map args) {
         }
     }
 
-    deployMicroServices(projectInfo: projectInfo,
+    deployComponents(projectInfo: projectInfo,
                         components: [component],
                         imageTag: projectInfo.imageTag,
                         recreate: args.recreate)

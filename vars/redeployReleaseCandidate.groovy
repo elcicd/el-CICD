@@ -117,7 +117,7 @@ def call(Map args) {
         }
     }
 
-    deployMicroServices(projectInfo: projectInfo,
+    deployComponents(projectInfo: projectInfo,
                         components: projectInfo.componentsToRedeploy,
                         imageTag: projectInfo.preProdEnv,
                         recreateAll: true)
