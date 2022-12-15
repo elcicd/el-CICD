@@ -156,11 +156,11 @@ elCicdTemplates:
   appName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}}_GROUP}
+  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
 
 - templateName: copyResource
   appNames: ${SANDBOX_ENVS}
-  appName: el-cicd-${DEV_ENV}-pull-secret
+  appName: el-cicd-${}-pull-secret
   srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
