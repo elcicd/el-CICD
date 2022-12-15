@@ -128,6 +128,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.SDLC_ENVS = []
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
+    elCicdDefs.DEV_ENV = projectInfo.devEnv
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
@@ -164,8 +165,6 @@ def getSldcConfigValues(def projectInfo) {
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
-    
-    projectInfo.san
     
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['okd'] : []
     cicdConfigValues.profiles.addAll(rqProfiles.keySet())

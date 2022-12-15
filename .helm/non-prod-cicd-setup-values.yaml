@@ -138,8 +138,7 @@ elCicdTemplates:
   
 - templateName: roleBinding
   appName: ${PROJECT_ID}-edit
-  namespaces: ${SDLC_ENVS}
-  namespace: ${PROJECT_ID}-${}
+  namespaces: ${SDLC_NAMESPACES}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
@@ -156,6 +155,15 @@ elCicdTemplates:
   appName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}}_GROUP}
+
+- templateName: copyResource
+  appNames: ${SANDBOXES}
+  appName: el-cicd-${DEV_ENV}-pull-secret
+  srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
+  
   
   
