@@ -144,7 +144,7 @@ def getSldcConfigValues(def projectInfo) {
         def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
         rqNames?.each { rqName ->
             elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-            elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] : projectInfo.sandboxNamespaces[env]
+            elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env])
             rqProfiles[rqName] = 'placeHolder'
         }
     }
