@@ -125,10 +125,12 @@ def getSldcConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     
     elCicdDefs = [:]
-    elCicdDefs.SDLC_ENVS = []
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
+    elCicdDefs.NONPROD_ENVS = []
+    elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.DEV_ENV = projectInfo.devEnv
+    
+    elCicdDefs.SANDBOX_ENVS = []
+    elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
     
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
@@ -140,9 +142,12 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
+    elCicdDefs.SDLC_ENVS = [] = []
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
+    elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
     def rqProfiles = [:]
-    projectInfo.SDLC_ENVS.each { env ->
-        def rqNames = projectInfo.resourceQuotas[env] ?: projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+    elCicdDefs.SDLC_ENVS.each { env ->
+        def rqNames = projectInfo.resourceQuotas[env] ?: (projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT])
         rqNames?.each { rqName ->
             elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
             elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env])
