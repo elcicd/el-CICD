@@ -142,7 +142,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
-    elCicdDefs.SDLC_ENVS = [] = []
+    elCicdDefs.SDLC_ENVS = []
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
     def rqProfiles = [:]
