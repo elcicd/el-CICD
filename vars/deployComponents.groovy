@@ -30,7 +30,7 @@ def call(Map args) {
     
     if (components) {
         echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
-        echoBanner += component.collect { it.name }.join(', ')
+        echoBanner += components.collect { it.name }.join(', ')
         deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
     }
     
