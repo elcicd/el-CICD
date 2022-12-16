@@ -85,7 +85,7 @@ def createComponentRemovalStages(def projectInfo, def components) {
         removalStages[component.name] = {
             stage("Uninstalling ${component.name}") {
                 sh """
-                    if [[ ! -z $(helm list -q | grep ${component.name})
+                    if [[ ! -z \$(helm list -q | grep ${component.name})
                     then
                         helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
                     fi
