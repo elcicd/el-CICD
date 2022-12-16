@@ -155,6 +155,7 @@ def initializePipeline() {
             ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP Runtime'}
             oc version
+            helm version
             ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP Service Account'}
             oc whoami
