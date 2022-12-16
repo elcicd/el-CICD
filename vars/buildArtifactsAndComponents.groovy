@@ -40,7 +40,7 @@ def call(Map args) {
     }
 
     stage('Remove all components, if selected') {
-        if (args.recreateAll) {
+        if (projectInfo.recreateAll) {
             def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, projectInfo.components)
             parallel(removalStages)
         }
