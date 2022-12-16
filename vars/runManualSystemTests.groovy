@@ -64,7 +64,7 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE FOR TESTING IN ${projectInfo.testModuleEnv}")
+            loggingUtils.errorBanner("NO COMPONENTS AVAILABLE FOR TESTING IN ${projectInfo.testModuleEnv}")
         }
 
         def cicdInfo = input(message: "Select components to test in ${projectInfo.testModuleEnv}",
@@ -83,7 +83,7 @@ def call(Map args) {
         }
 
         if (!projectInfo.componentsToTest) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR TESTING IN ${projectInfo.testModuleEnv}")
+            loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR TESTING IN ${projectInfo.testModuleEnv}")
         }
     }
 

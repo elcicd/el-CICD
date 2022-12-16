@@ -28,7 +28,7 @@ def call(Map args) {
     }
 
     stage ('Select components and environment to redeploy to or remove from') {
-        loggingUtils.echoBanner("SELECT WHICH MICROSERVICES TO REDEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
 
         def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
@@ -81,7 +81,7 @@ def call(Map args) {
         }
 
         if (!willRedeployOrRemove) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
+            loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
         }
     }
 

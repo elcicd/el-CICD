@@ -53,7 +53,7 @@ def call(Map args) {
     }
 
     stage ('Select components to tag as release candidate') {
-        loggingUtils.echoBanner("SELECT MICROSERVICES TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
+        loggingUtils.echoBanner("SELECT COMPONENTS TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
 
         def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
@@ -80,7 +80,7 @@ def call(Map args) {
         }
 
         if (!inputs) {
-            loggingUtils.errorBanner("NO MICROSERVICES AVAILABLE TO TAG!")
+            loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
         }
 
         def cicdInfo = input( message: "Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
@@ -95,7 +95,7 @@ def call(Map args) {
         }
 
         if (!projectInfo.componentsToTag) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED TO TAG!")
+            loggingUtils.errorBanner("NO COMPONENTS SELECTED TO TAG!")
         }
     }
 
@@ -132,7 +132,7 @@ def call(Map args) {
             "-> Release Candidate Tag: ${projectInfo.releaseCandidateTag}",
             promotionNames,
             '',
-            '-> THE FOLLOWING MICROSERVICES WILL BE MARKED FOR REMOVAL FROM PROD:',
+            '-> THE FOLLOWING COMPONENTS WILL BE MARKED FOR REMOVAL FROM PROD:',
             removalNames,
             '',
             '===========================================',

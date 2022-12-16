@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select components to promote and remove') {
-        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND COMPONENTS TO DEPLOY OR REMOVE")
 
         def ENV_DELIMITER = ' to '
         def fromEnv = projectInfo.devEnv
@@ -53,7 +53,7 @@ def call(Map args) {
         }
 
         if (!promoteOrRemove) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
+            loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
         }
 
         projectInfo.componentsToPromote = projectInfo.components.findAll{ it.promote }

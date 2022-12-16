@@ -21,7 +21,7 @@ def call(Map args) {
             parallel(removalStages)
         }
         else {
-            echo "RECREATE NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED"
+            echo "RECREATE NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
         }
     }
 
@@ -49,7 +49,7 @@ def call(Map args) {
         parallel(deployAndRemoveStages)
     }
     else {
-        loggingUtils.echoBanner("NO MICROSERVICES TO REMOVE OR DEPLOY: SKIPPING")
+        loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
     }
     
     if (components.find { it.deploymentBranch}) {

@@ -39,12 +39,16 @@ def call(Map args) {
         }
     }
 
-    stage('Clean environment if requested') {
-        if (projectInfo.recreateAll) {
-            deploymentUtils.removeAllMicroservices(projectInfo)
+    stage('Remove all components, if selected') {
+        if (args.recreateAll) {
+            def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, projectInfo.components)
+            parallel(removalStages)
+        }
+        else {
+            echo "RECREATE NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
         }
     }
-
+    
     def buildModules = [[],[],[]]
     projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
         buildModules[i%3].add(module)

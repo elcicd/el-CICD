@@ -123,7 +123,7 @@ def call(Map args) {
             "CONFIRM PROMOTION AND DEPLOYMENT OF RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}"
 
         def deployAllMsg = (projectInfo.hasBeenReleased && deployAll) ?
-            '-> YOU HAVE ELECTED TO REDEPLOY ALL MICROSERVICES:' :
+            '-> YOU HAVE ELECTED TO REDEPLOY ALL COMPONENTS:' :
             '-> Microservices to be deployed:'
 
         def msg = loggingUtils.createBanner(
