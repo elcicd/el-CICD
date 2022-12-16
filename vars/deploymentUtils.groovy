@@ -60,7 +60,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
 
             ${shCmd.echo ''}
             HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
-            for FLAGS in "${HELM_FLAGS[@]}"
+            for FLAGS in "\${HELM_FLAGS[@]}"
             do
                 ${shCmd.echo ''}
                 helm ${FLAGS} \
