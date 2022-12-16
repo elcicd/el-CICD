@@ -57,6 +57,8 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                 ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
                 ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
             fi
+            
+            helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
             ${shCmd.echo ''}
             HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
@@ -68,10 +70,9 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                    --repo ${el.cicd.EL_CICD_HELM_REPOSITORY} \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    elCicdChart
+                    elCicdCharts/elCicdChart
             done
             
             ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
