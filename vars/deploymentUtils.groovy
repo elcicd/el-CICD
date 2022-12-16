@@ -63,7 +63,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
             for FLAGS in "\${HELM_FLAGS[@]}"
             do
                 ${shCmd.echo ''}
-                helm ${FLAGS} \
+                helm \${FLAGS} \
                     --set-string ${compValues.join(' --set-string ')} \
                     \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
