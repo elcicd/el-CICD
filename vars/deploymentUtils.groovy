@@ -83,6 +83,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
 def createComponentRemovalStages(def projectInfo, def components) {
     assert projectInfo; assert components
     
+    def removalStages = [failFast: true]
     components.each { component ->
         removalStages[component.name] = {
             stage("Uninstalling ${component.name}") {
