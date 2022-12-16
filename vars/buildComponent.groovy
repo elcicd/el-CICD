@@ -103,8 +103,9 @@ void call(Map args) {
         }
     }
 
-    deployComponents(projectInfo: projectInfo,
-                        components: [component],
-                        imageTag: projectInfo.imageTag,
-                        recreate: args.recreate)
+    def deployStage = createComponentDeployStages(projectInfo: projectInfo,
+                                                  components: [component],
+                                                  imageTag: projectInfo.imageTag,
+                                                  recreate: args.recreate)
+    parallel(deployStage)
 }

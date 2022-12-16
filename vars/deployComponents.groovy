@@ -12,43 +12,46 @@ def call(Map args) {
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
 
-    stage('Remove selected components, if selected') {
-        if (args.recreate) {
-            deploymentUtils.removeMicroservices(projectInfo)
-        }
-        else if (args.recreateAll) {
-            deploymentUtils.removeMicroservices(projectInfo, components)
+    stage('Remove selected components to be redeployed from scratch, if selected') {
+        def removalStages
+        def recreateComponents = args.recreate ? components : (args.recreateAll ? projectInfo.components : null)
+        
+        if (recreateComponents) {
+            removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, recreateComponents)
+            parallel(removalStages)
         }
         else {
             echo "RECREATE NOT SELECTED: SKIPPING REMOVE ALL MICROSERVICES TO BE DEPLOYED"
         }
     }
 
+    def deployAndRemoveStages = [:]
+    def echoBanner = []
+    
     if (components) {
-        deploymentUtils.deployComponents(projectInfo, components)
+        echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
+        echoBanner += component.collect { it.name }.join(', ')
+        deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
+    }
+    
+    if (componentsToRemove) {
+        if (echoBanner) {
+            echoBanner += ''
+        }
+        echoBanner += "REMOVING THE FOLLOWING COMPONENTS:"
+        echoBanner += componentsToRemove.collect { it.name }.join(', ')
+        deployAndRemoveStages.putAll(deploymentUtils.createComponentRemovalStages(projectInfo, componentsToRemove))
+    }
+    
+    if (deployAndRemoveStages) {
+        loggingUtils.echoBanner(echoBanner)
+        
+        parallel(deployAndRemoveStages)
     }
     else {
-        echo "NO MICROSERVICES TO DEPLOY: SKIPPING DEPLOYMENT"
+        loggingUtils.echoBanner("NO MICROSERVICES TO REMOVE OR DEPLOY: SKIPPING")
     }
-
-    stage('Confirm successful deployment in namespace from artifact repository') {
-        if (components) {
-            deploymentUtils.confirmDeployments(projectInfo, components)
-        }
-        else {
-            echo "NO DEPLOYMENTS OF MICROSERVICES TO CONFIRM: SKIPPING DEPLOY IMAGE IN ${envCaps} FROM ARTIFACT REPOSITORY"
-        }
-    }
-
-    stage('Remove components selected for removal') {
-        if (componentsToRemove) {
-            deploymentUtils.removeMicroservices(projectInfo, componentsToRemove)
-        }
-        else {
-            echo "NO MICROSERVICES TO REMOVE: SKIPPING REMOVE MICROSERVICES SELECTED FOR REMOVAL"
-        }
-    }
-
+    
     if (components.find { it.deploymentBranch}) {
         stage('Inform users of success') {
             def checkoutMsgs = []

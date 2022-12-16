@@ -5,8 +5,8 @@
  *
  * @see the projectid-onboard pipeline for example on how to use
  */
-
-def deployComponents(def projectInfo, def components) {
+ 
+def createComponentDeployStages(def projectInfo, def components)
     assert projectInfo; assert components
 
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
@@ -39,102 +39,60 @@ def deployComponents(def projectInfo, def components) {
                                     "elCicdDefaults.image=${componentImage}"]
                 compValues.addAll(commonValues)
 
-                dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-                    sh """
-                        VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
-
-                        if [[ -d ./${projectInfo.deployToEnv} ]]
-                        then
-                            ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
-                            ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
-                        fi
-
-                        ${shCmd.echo ''}
-                        helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-
-                        ${shCmd.echo ''}
-                        helm template --debug \
-                            --set-string ${compValues.join(' --set-string ')} \
-                            \${VALUES_FILES} \${ENV_FILES} \
-                            -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
-                            -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                            -n ${projectInfo.deployToNamespace} \
-                            ${component.name} \
-                            elCicdCharts/elCicdChart
-                        
-                        ${shCmd.echo ''}
-                        helm upgrade --atomic --install --history-max=1 \
-                            --set-string ${compValues.join(' --set-string ')} \
-                            \${VALUES_FILES} \${ENV_FILES} \
-                            -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
-                            -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
-                            -n ${projectInfo.deployToNamespace} \
-                            ${component.name} \
-                            elCicdCharts/elCicdChart
-                        
-                        ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
-                    """
-                }
+                runDeploymentShell(projectInfo, component, compValues)
             }
         }
     }
     
-    parallel(deploymentStages)
+    return deploymentStages
 }
 
-def confirmDeployments(def projectInfo, def components) {
-    assert projectInfo; assert components
+def runDeploymentShell(def projectInfo, def component, def compValues) {
+    dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
+        sh """
+            VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
-    def componentNames = components.collect { component -> component.name }.join(' ')
-    loggingUtils.shellEchoBanner("CONFIRM DEPLOYMENT IN ${projectInfo.deployToNamespace} FROM ARTIFACT REPOSITORY:",
-                                 "${componentNames}")
-
-    sh """
-        for COMPONENT_NAME in ${componentNames}
-        do
-            DEPLOYS=\$(oc get deploy -l component=\${COMPONENT_NAME} -o name -n ${projectInfo.deployToNamespace})
-            if [[ ! -z \${DEPLOYS} ]]
+            if [[ -d ./${projectInfo.deployToEnv} ]]
             then
-                echo \${DEPLOYS} | xargs -n1 -t oc rollout status -n ${projectInfo.deployToNamespace}
+                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
+                ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
             fi
-        done
-    """
 
-    waitingForPodsToTerminate(projectInfo.deployToNamespace)
+            ${shCmd.echo ''}
+            HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
+            for FLAGS in "${HELM_FLAGS[@]}"
+            do
+                ${shCmd.echo ''}
+                helm ${FLAGS} \
+                    --set-string ${compValues.join(' --set-string ')} \
+                    \${VALUES_FILES} \${ENV_FILES} \
+                    -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
+                    -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    ${el.cicd.EL_CICD_HELM_REPOSITORY}/elCicdChart
+            done
+            
+            ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
+        """
+    }
 }
 
-def removeMicroservices(def projectInfo) {
-    removeMicroservices(projectInfo, projectInfo.components)
-}
-
-def removeMicroservices(def projectInfo, def components) {
+def createComponentRemovalStages(def projectInfo, def components) {
     assert projectInfo; assert components
-
-    def componentNames = components.collect { component -> component.name }.join(' ')
-
-    loggingUtils.echoBanner("REMOVING SELECTED MICROSERVICES AND ALL ASSOCIATED RESOURCES FROM ${projectInfo.deployToNamespace}:", "${componentNames}")
-
-    sh """
-        for COMPONENT_NAME in ${componentNames}
-        do
-            helm uninstall \${COMPONENT_NAME} -n ${projectInfo.deployToNamespace}
-        done
-    """
-
-    waitingForPodsToTerminate(projectInfo.deployToNamespace)
-}
-
-def waitingForPodsToTerminate(def deployToNamespace) {
-    sh """
-        ${shCmd.echo '', 'Confirming component pods have finished terminating...'}
-        set +x
-        COUNTER=1
-        until [[ -z \$(oc get pods -n ${deployToNamespace} | grep 'Terminating') ]]
-        do
-            yes - | head -\${COUNTER} | paste -s -d '' -
-            sleep 2
-            let "COUNTER++"
-        done
-        set -x
-    """
+    
+    components.each { component ->
+        removalStages[component.name] = {
+            stage("Uninstalling ${component.name}") {
+                sh """
+                    if [[ ! -z $(helm list -q | grep ${component.name})
+                    then
+                        helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                    fi
+                """
+            }
+        }
+    }
+    
+    return removalStages
 }

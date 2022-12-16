@@ -222,12 +222,12 @@ def call(Map args) {
     }
 
     if (projectInfo.componentsToPromote) {
-        deployComponents(projectInfo: projectInfo,
+        createComponentDeployStages(projectInfo: projectInfo,
                             components: projectInfo.componentsToPromote,
                             componentsToRemove: projectInfo.componentsToRemove,
                             imageTag: projectInfo.deployToEnv)
     }
     else {
-        deployComponents(projectInfo: projectInfo, componentsToRemove: projectInfo.componentsToRemove)
+        createComponentDeployStages(projectInfo: projectInfo, componentsToRemove: projectInfo.componentsToRemove)
     }
 }
