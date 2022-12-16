@@ -68,9 +68,10 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_HELM_DIR}/default-component-values.yaml \
                     -f ${el.cicd.EL_CICD_HELM_DIR}/component-meta-info-values.yaml \
+                    --repo ${el.cicd.EL_CICD_HELM_REPOSITORY} \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    ${el.cicd.EL_CICD_HELM_REPOSITORY}/elCicdChart
+                    elCicdChart
             done
             
             ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
