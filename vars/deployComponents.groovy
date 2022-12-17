@@ -20,7 +20,7 @@ def call(Map args) {
             then
                 for COMPONENT_NAME in ${componentNames}
                 do
-                    helm uninstall -n ${projectInfo.deployToNamespace} ${COMPONENT_NAME} --no-hooks
+                    helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
                 done
             fi
 
