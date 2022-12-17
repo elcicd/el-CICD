@@ -58,7 +58,6 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                 ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
             fi
             
-            CURRENT_PODS=\$(oc get pods -l component=${component.name} -o name -n ${projectInfo.deployToNamespace}  | tr '\n' ' ')
             
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
@@ -77,6 +76,10 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     elCicdCharts/elCicdChart
             done
             
+            CURRENT_PODS=\$(oc get pods -l component=${component.name} \
+                                        --field-selector='status.phase=Terminating' \
+                                        -o name -n ${projectInfo.deployToNamespace} | \
+                                        tr '\n' ' ')
             if [[ ! -z \${CURRENT_PODS} ]]
             then 
                 oc wait --for=delete \${CURRENT_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
