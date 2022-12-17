@@ -94,12 +94,17 @@ def call(Map args) {
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
         withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
+                                usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"
             projectInfo.componentsToRedeploy.each { component ->
                 def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_PULL_TOKEN', component.id, component.deploymentImageTag)
+                    shCmd.verifyImage(projectInfo.ENV_TO,
+                                     'TO_IMAGE_REGISTRY_USERNAME',
+                                     'TO_IMAGE_REGISTRY_PWD',
+                                     component.id,
+                                     component.deploymentImageTag)
 
                 if (!sh(returnStdout: true, script: verifyImageCmd).trim()) {
                     errorMsgs << "    ${component.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
