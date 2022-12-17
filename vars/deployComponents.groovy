@@ -16,7 +16,7 @@ def call(Map args) {
         def componentNames = components ? components.collect { it.name } .join(' ') : ''
         componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
         sh """
-            if [[ ! -z \$(helm list --uninstalling --failed  -q) ]]
+            if [[ ! -z \$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace}) ]]
             then
                 for COMPONENT_NAME in ${componentNames}
                 do
