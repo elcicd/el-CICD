@@ -49,7 +49,7 @@ def createComponentDeployStages(def projectInfo, def components) {
 
 def runDeploymentShell(def projectInfo, def component, def compValues) {
     dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
-        sh """
+        sh """            
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
             if [[ -d ./${projectInfo.deployToEnv} ]]

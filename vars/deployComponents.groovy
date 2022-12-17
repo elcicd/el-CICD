@@ -11,6 +11,21 @@ def call(Map args) {
     def componentsToRemove = args.componentsToRemove
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
+    
+    stage("Purge all failed helm chart installs") {
+        def componentNames = components ? components.collect { it.name } .join(' ') : ''
+        componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
+        sh """
+            if [[ ! -z $(helm --failed --installing -q) ]]
+            then
+                for COMPONENT_NAME in ${componentNames}
+                do
+                    helm uninstall -n ${projectInfo.deployToNamespace} ${COMPONENT_NAME} --no-hooks
+                done
+            fi
+            
+        """
+    }
 
     stage('Remove one or more selected components prior to rebuild, if selected') {
         def removalStages
