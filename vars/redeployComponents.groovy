@@ -126,13 +126,19 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.componentsToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.ENV_TO),
-                                variable: 'TO_IMAGE_REGISTRY_PULL_TOKEN')])
+        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
+                                usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"
             projectInfo.componentsToRedeploy.each { component ->
                 def tagImageCmd =
-                    shCmd.tagImage(projectInfo.ENV_TO, 'TO_IMAGE_REGISTRY_PULL_TOKEN', component.id, component.deploymentImageTag, projectInfo.deployToEnv)
+                    shCmd.tagImage(projectInfo.ENV_TO,
+                                   'TO_IMAGE_REGISTRY_USERNAME',
+                                   'TO_IMAGE_REGISTRY_PWD',
+                                   component.id,
+                                   component.deploymentImageTag,
+                                   projectInfo.deployToEnv)
                 sh """
                     ${shCmd.echo '', "--> Tagging image '${component.id}:${component.deploymentImageTag}' as '${component.id}:${projectInfo.deployToEnv}'"}
 
