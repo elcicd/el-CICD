@@ -141,8 +141,8 @@ def call(Map args) {
         }
     }
 
-    createComponentDeployStages(projectInfo: projectInfo,
-                        components: projectInfo.componentsToRedeploy,
-                        componentsToRemove: projectInfo.components.findAll { it.remove },
-                        imageTag: projectInfo.deployToEnv)
+    deployComponents(projectInfo: projectInfo,
+                     components: projectInfo.componentsToRedeploy,
+                     componentsToRemove: projectInfo.components.findAll { it.remove },
+                     imageTag: projectInfo.deployToEnv)
 }

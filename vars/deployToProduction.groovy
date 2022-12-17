@@ -208,10 +208,10 @@ def call(Map args) {
         }
     }
 
-    createComponentDeployStages(projectInfo: projectInfo,
-                        components: projectInfo.componentsToDeploy,
-                        componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateGitTag },
-                        imageTag: projectInfo.releaseVersionTag)
+    deployComponents(projectInfo: projectInfo,
+                     components: projectInfo.componentsToDeploy,
+                     componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateGitTag },
+                     imageTag: projectInfo.releaseVersionTag)
 
     deployToProductionUtils.updateProjectMetaInfo(projectInfo)
 
