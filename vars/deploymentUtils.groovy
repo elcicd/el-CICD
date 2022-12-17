@@ -75,15 +75,11 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     ${component.name} \
                     elCicdCharts/elCicdChart
             done
-            
-            sleep 3
-            CURRENT_PODS=\$(oc get pods -l component=${component.name} \
-                                        --field-selector='status.phase=Terminating' \
-                                        -o name -n ${projectInfo.deployToNamespace} | \
-                                        tr '\n' ' ')
-            if [[ ! -z \${CURRENT_PODS} ]]
+
+            DELETED_PODS=\$(oc get pods -l component=${component.name} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}')
+            if [[ ! -z \${DELETED_PODS} ]]
             then 
-                oc wait --for=delete \${CURRENT_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+                oc wait --for=delete \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
             fi
             
             ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
