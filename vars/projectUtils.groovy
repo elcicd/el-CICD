@@ -220,7 +220,8 @@ def createCloneRepoStages(def modules, Closure postCheckoutProcessing = null) {
     modules.each { module ->
         cloneRepoStages["Checkout ${module.name}"] = {
             stage("Checkout ${module.name}") {
-                projectUtils.cloneGitRepo(module, (module.gitReference ?: module.scmBranch))
+                def gitReference = module.gitReference ?: module.scmBranch
+                cloneGitRepo(module, gitReference)
                 
                 if (postCheckoutProcessing) {
                     postCheckoutProcessing(module)
