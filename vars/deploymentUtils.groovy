@@ -79,7 +79,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
             
             if [[ ! -z \${CURRENT_PODS} ]]
             then 
-                oc wait --for=delete pods \${CURRENT_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+                oc wait --for=delete \${CURRENT_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
             fi
             
             ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
