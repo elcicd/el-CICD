@@ -17,6 +17,8 @@ def call(Map args) {
         def recreateComponents = args.recreate ? components : (args.recreateAll ? projectInfo.components : null)
         
         if (recreateComponents) {
+            loggingUtils.echoBanner("REMOVING THE FOLLOWING COMPONENTS BEFORE BUILDING:", componentsToRemove.collect { it.name }.join(', '))
+            
             removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, recreateComponents)
             parallel(removalStages)
         }
@@ -44,9 +46,10 @@ def call(Map args) {
     }
     
     if (deployAndRemoveStages) {
-        loggingUtils.echoBanner(echoBanner)
-        
-        parallel(deployAndRemoveStages)
+        stage ("Adding and/or removing components") {
+            loggingUtils.echoBanner(echoBanner)
+            parallel(deployAndRemoveStages)
+        }
     }
     else {
         loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
