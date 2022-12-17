@@ -49,41 +49,46 @@ def call(Map args) {
         }
     }
     
-    def buildModules = [[],[],[]]
-    projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
-        buildModules[i%3].add(module)
-    }
-    
-    if (buildModules) {
-        parallel(
-            firstBucket: {
-                stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                    buildModules[0].each { module ->
-                        pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                        build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-                    }
-                }
-            },
-            secondBucket: {
-                stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (buildModules[1]) {
-                        buildModules[1].each { module ->
+    stage("Building selected modules") {
+        def buildModules = [[],[],[]]
+        projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
+            buildModules[i%3].add(module)
+        }
+        
+        if (buildModules) {
+            parallel(
+                firstBucket: {
+                    stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
+                        buildModules[0].each { module ->
                             pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
                             build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
                         }
                     }
-                }
-            },
-            thirdBucket: {
-                stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
-                    if (buildModules[2]) {
-                        buildModules[2].each { module ->
-                            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+                },
+                secondBucket: {
+                    stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
+                        if (buildModules[1]) {
+                            buildModules[1].each { module ->
+                                pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+                            }
+                        }
+                    }
+                },
+                thirdBucket: {
+                    stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
+                        if (buildModules[2]) {
+                            buildModules[2].each { module ->
+                                pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+                            }
                         }
                     }
                 }
-            }
-        )
+            )
+        }
+        else {
+            echo "No modules selected for building"
+        }
     }
 }

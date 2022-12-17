@@ -27,32 +27,32 @@ def call(Map args) {
         }
     }
 
-    def deployAndRemoveStages = [:]
-    def echoBanner = []
-    
-    if (components) {
-        echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
-        echoBanner += components.collect { it.name }.join(', ')
-        deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
-    }
-    
-    if (componentsToRemove) {
-        if (echoBanner) {
-            echoBanner += ''
+    stage ("Adding and/or removing components") {
+        def deployAndRemoveStages = [:]
+        def echoBanner = []
+        
+        if (components) {
+            echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
+            echoBanner += components.collect { it.name }.join(', ')
+            deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
         }
-        echoBanner += "REMOVING THE FOLLOWING COMPONENTS:"
-        echoBanner += componentsToRemove.collect { it.name }.join(', ')
-        deployAndRemoveStages.putAll(deploymentUtils.createComponentRemovalStages(projectInfo, componentsToRemove))
-    }
-    
-    if (deployAndRemoveStages) {
-        stage ("Adding and/or removing components") {
-            loggingUtils.echoBanner(echoBanner)
-            parallel(deployAndRemoveStages)
+        
+        if (componentsToRemove) {
+            if (echoBanner) {
+                echoBanner += ''
+            }
+            echoBanner += "REMOVING THE FOLLOWING COMPONENTS:"
+            echoBanner += componentsToRemove.collect { it.name }.join(', ')
+            deployAndRemoveStages.putAll(deploymentUtils.createComponentRemovalStages(projectInfo, componentsToRemove))
         }
-    }
-    else {
-        loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
+        
+        if (deployAndRemoveStages) {
+                loggingUtils.echoBanner(echoBanner)
+                parallel(deployAndRemoveStages)
+        }
+        else {
+            loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
+        }
     }
     
     if (components.find { it.deploymentBranch}) {
