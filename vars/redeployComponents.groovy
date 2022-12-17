@@ -93,9 +93,9 @@ def call(Map args) {
 
         def allImagesExist = true
         def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployToNamespace} TO REDEPLOY:"]
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
-                                passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
+                                          usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                          passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"
             projectInfo.componentsToRedeploy.each { component ->
@@ -132,9 +132,9 @@ def call(Map args) {
         loggingUtils.echoBanner("TAG IMAGES FOR REPLOYMENT IN ENVIRONMENT TO ${projectInfo.deployToEnv}:",
                                  projectInfo.componentsToRedeploy.collect { "${it.id}:${it.deploymentImageTag}" }.join(', '))
 
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
-                                passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
+                                          usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                          passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
         {
             def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${TO_IMAGE_REGISTRY_PULL_TOKEN}"
             projectInfo.componentsToRedeploy.each { component ->
