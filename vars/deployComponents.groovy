@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Deploys component into enviroment.
@@ -11,7 +11,7 @@ def call(Map args) {
     def componentsToRemove = args.componentsToRemove
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
-    
+
     stage("Purge all failed helm chart installs") {
         def componentNames = components ? components.collect { it.name } .join(' ') : ''
         componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
@@ -23,17 +23,17 @@ def call(Map args) {
                     helm uninstall -n ${projectInfo.deployToNamespace} ${COMPONENT_NAME} --no-hooks
                 done
             fi
-            
+
         """
     }
 
     stage('Remove one or more selected components prior to rebuild, if selected') {
         def removalStages
         def recreateComponents = args.recreate ? components : (args.recreateAll ? projectInfo.components : null)
-        
+
         if (recreateComponents) {
             loggingUtils.echoBanner("REMOVING THE FOLLOWING COMPONENTS BEFORE BUILDING:", componentsToRemove.collect { it.name }.join(', '))
-            
+
             removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, recreateComponents)
             parallel(removalStages)
         }
@@ -45,13 +45,13 @@ def call(Map args) {
     stage ("Adding and/or removing components") {
         def deployAndRemoveStages = [:]
         def echoBanner = []
-        
+
         if (components) {
             echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
             echoBanner += components.collect { it.name }.join(', ')
             deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
         }
-        
+
         if (componentsToRemove) {
             if (echoBanner) {
                 echoBanner += ''
@@ -60,7 +60,7 @@ def call(Map args) {
             echoBanner += componentsToRemove.collect { it.name }.join(', ')
             deployAndRemoveStages.putAll(deploymentUtils.createComponentRemovalStages(projectInfo, componentsToRemove))
         }
-        
+
         if (deployAndRemoveStages) {
                 loggingUtils.echoBanner(echoBanner)
                 parallel(deployAndRemoveStages)
@@ -69,7 +69,7 @@ def call(Map args) {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
         }
     }
-    
+
     if (components.find { it.deploymentBranch}) {
         stage('Inform users of success') {
             def checkoutMsgs = []
