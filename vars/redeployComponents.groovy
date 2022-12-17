@@ -72,7 +72,7 @@ def call(Map args) {
             component.redeploy = (answer && answer != el.cicd.REMOVE)
 
             if (component.redeploy) {
-                component.deploymentImageTag = answer - deployedMarker).trim()
+                component.deploymentImageTag = answer - deployedMarker.trim()
                 echo "answer/component.deploymentImageTag: '${answer}/${component.deploymentImageTag}'"
                 component.srcCommitHash = component.deploymentImageTag.split('-')[1]
                 component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${component.deploymentImageTag}"
