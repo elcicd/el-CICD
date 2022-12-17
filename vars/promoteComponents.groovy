@@ -138,7 +138,9 @@ def call(Map args) {
 
                     def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
                     if (ref) {
-                        sh "git checkout ${ref}"
+                        dir(component.workDir) {
+                            sh "git checkout ${ref}"
+                        }
                     }
 
                     component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
