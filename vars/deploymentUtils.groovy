@@ -91,6 +91,7 @@ def createComponentRemovalStages(def projectInfo, def components) {
                     if [[ ! -z \$(helm list -q -n ${projectInfo.deployToNamespace} | grep ${component.name}) ]]
                     then
                         helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                        oc wait --for=delete -l component=${component.name} --timeout=600s
                     fi
                 """
             }
