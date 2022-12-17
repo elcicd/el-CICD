@@ -128,7 +128,21 @@ def call(Map args) {
         stage('Checkout all component repositories') {
             loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            def cloneRepoStages = createCloneRepoStages(projectInfo)
+            def components = projectInfo.components.find { it.promote }
+            def cloneRepoStages = projectUtils.createCloneRepoStages(components) { component ->
+                component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+                component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+
+                component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                component.deployBranchExists = !component.deployBranchExists.isEmpty()
+
+                def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+                if (ref) {
+                    sh "git checkout ${ref}"
+                }
+
+                component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+            }
             
             parallel(cloneRepoStages)
         }
