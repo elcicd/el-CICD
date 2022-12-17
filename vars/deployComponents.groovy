@@ -16,7 +16,7 @@ def call(Map args) {
         def componentNames = components ? components.collect { it.name } .join(' ') : ''
         componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
         sh """
-            if [[ ! -z $(helm --failed --installing -q) ]]
+            if [[ ! -z \$(helm --failed --installing -q) ]]
             then
                 for COMPONENT_NAME in ${componentNames}
                 do
