@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select components to promote and remove') {
-        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND MICROSERVICES TO DEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND COMPONENTS TO DEPLOY OR REMOVE")
 
         def ENV_DELIMITER = ' to '
         def fromEnv = projectInfo.devEnv
@@ -53,7 +53,7 @@ def call(Map args) {
         }
 
         if (!promoteOrRemove) {
-            loggingUtils.errorBanner("NO MICROSERVICES SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
+            loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR PROMOTION OR REMOVAL FOR ${projectInfo.deployToEnv}")
         }
 
         projectInfo.componentsToPromote = projectInfo.components.findAll{ it.promote }
@@ -126,25 +126,29 @@ def call(Map args) {
         }
 
         stage('Checkout all component repositories') {
-            loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
+            if (projectInfo.componentsToPromote) {
+                loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            def components = projectInfo.components.find { it.promote }
-            def cloneRepoStages = projectUtils.createCloneRepoStages(components) { component ->
-                component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-                component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+                def cloneRepoStages = projectUtils.createCloneRepoStages(projectInfo.componentsToPromote) { component ->
+                    component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+                    component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
 
-                component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
-                component.deployBranchExists = !component.deployBranchExists.isEmpty()
+                    component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                    component.deployBranchExists = !component.deployBranchExists.isEmpty()
 
-                def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
-                if (ref) {
-                    sh "git checkout ${ref}"
+                    def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+                    if (ref) {
+                        sh "git checkout ${ref}"
+                    }
+
+                    component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
                 }
-
-                component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+                
+                parallel(cloneRepoStages)
             }
-            
-            parallel(cloneRepoStages)
+            else {
+                loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")
+            }
         }
 
         stage("promote images") {
