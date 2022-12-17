@@ -12,7 +12,7 @@ def call(Map args) {
 
     def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
 
-    stage('Remove selected components to be redeployed from scratch, if selected') {
+    stage('Remove one or more selected components prior to rebuild, if selected') {
         def removalStages
         def recreateComponents = args.recreate ? components : (args.recreateAll ? projectInfo.components : null)
         
