@@ -79,6 +79,7 @@ def initProjectModuleData(def projectInfo) {
         module.workDir = "${WORKSPACE}/${module.scmRepoName}"
 
         module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+        module.scmBranch = projectInfo.scmBranch
         module.gitDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
 
         module.isComponent = projectInfo.components.contains(module)
@@ -219,7 +220,7 @@ def createCloneRepoStages(def modules, Closure postCheckoutProcessing = null) {
     modules.each { module ->
         cloneRepoStages["Checkout ${module.name}"] = {
             stage("Checkout ${module.name}") {
-                projectUtils.cloneGitRepo(module, projectInfo.scmBranch)
+                projectUtils.cloneGitRepo(module, (module.gitReference ?: module.scmBranch))
                 
                 if (postCheckoutProcessing) {
                     postCheckoutProcessing(module)
