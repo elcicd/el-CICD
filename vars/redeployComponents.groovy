@@ -35,6 +35,7 @@ def call(Map args) {
         def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
 
         def inputs = []
+        def deployedMarker = '<DEPLOYED>'
         projectInfo.components.each { component ->
             def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
             def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
@@ -53,7 +54,7 @@ def call(Map args) {
                 branchesAndTimes.split('\n').each { line ->
                     deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
                 }
-                branchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} <DEPLOYED>") : branchesAndTimes
+                branchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
 
                 inputs += choice(name: component.name,
                                  description: "status: ${component.status}",
@@ -71,7 +72,7 @@ def call(Map args) {
             component.redeploy = (answer && answer != el.cicd.REMOVE)
 
             if (component.redeploy) {
-                component.deploymentImageTag = (answer =~ "${projectInfo.deployToEnv}-[0-9a-z]{7}")[0]
+                component.deploymentImageTag = (answer - ${deployedMarker}).trim()
                 component.srcCommitHash = component.deploymentImageTag.split('-')[1]
                 component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${component.deploymentImageTag}"
             }

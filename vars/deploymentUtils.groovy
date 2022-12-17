@@ -39,7 +39,7 @@ def createComponentDeployStages(def projectInfo, def components) {
                                     "elCicdDefaults.image=${componentImage}"]
                 compValues.addAll(commonValues)
 
-                runDeploymentShell(projectInfo, component, compValues)
+                runHelmDeployment(projectInfo, component, compValues)
             }
         }
     }
@@ -47,7 +47,7 @@ def createComponentDeployStages(def projectInfo, def components) {
     return deploymentStages
 }
 
-def runDeploymentShell(def projectInfo, def component, def compValues) {
+def runHelmDeployment(def projectInfo, def component, def compValues) {
     dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
         sh """            
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
