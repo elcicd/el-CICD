@@ -82,7 +82,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                 oc wait --for=delete \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
             fi
             
-            ${shCmd.echo '', 'Helm UPGRADE/INSTALL COMPLETE', ''}
+            ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
     }
 }
