@@ -13,7 +13,7 @@ def call(Map args) {
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
-        def cloneRepoStages = createCloneRepoStages(projectInfo.components)
+        def cloneRepoStages = projectUtils.createCloneRepoStages(projectInfo.components)
         
         parallel(cloneRepoStages)
     }
