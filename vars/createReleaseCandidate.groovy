@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the bulk of the project onboarding pipeline.  Called inline from the
@@ -83,7 +83,7 @@ def call(Map args) {
             loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
         }
 
-        def cicdInfo = input( message: "Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}", parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}", inputs)
 
         projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
             def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo

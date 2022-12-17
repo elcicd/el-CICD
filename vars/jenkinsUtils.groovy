@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Utility methods for pushing credentials to servers and external tools.
@@ -24,7 +24,7 @@ def CURL_FAIL_FLAG = "-H 'Content-Type:text/xml'"
 @Field
 def CURL_NO_OUTPUT = '-o /dev/null'
 
-def configureCicdJenkinsUrls(def projectInfo) {        
+def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls = [:]
     projectInfo.jenkinsUrls.HOST = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${CREATE_CREDS_PATH}"
@@ -65,25 +65,25 @@ def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
 def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
-    
+
     withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
-        
+
         sh """
             set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
             sed -i -e 's/%UNIQUE_ID%/${keyId}/g' ${JENKINS_CREDS_FILE}
             JENKINS_CREDS=\$(<${JENKINS_CREDS_FILE})
-            
+
             if [[ ! -f ${sshKeyGenVar} ]]
             then
                 cp \${${sshKeyGenVar}} ${sshKeyGenVar}
             fi
-            
+
             echo "\${JENKINS_CREDS//%PRIVATE_KEY%/\$(<${sshKeyGenVar})}" > ${JENKINS_CREDS_FILE}
             set -x
-            
+
             ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
             ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${keyId}/config.xml
 
@@ -102,14 +102,14 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
 }
 
 def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
-    withCredentials([usernamePassword(credentialsId: credsId, 
+    withCredentials([usernamePassword(credentialsId: credsId,
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PASSWORD'),
                      string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsUserNamePwdCredentials.xml"
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
-        
+
         sh """
             ${shCmd.echo ''}
             SED_EXPR="s/%ID%/${credsId}/; s|%USERNAME%|\${IMAGE_REGISTRY_USERNAME}|; s|%PASSWORD%|\${IMAGE_REGISTRY_PASSWORD}|"
@@ -121,4 +121,19 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
             rm -f ${JENKINS_CREDS_FILE}
         """
     }
+}
+
+def displayInputWithTimeout(def inputMsg, def inputs) {
+    def cicdInfo
+    def timeoutMins = 2
+    try {
+        timeout(time: timeoutMins) {
+            cicdInfo = input(message: inputMsg, parameters: inputs)
+        }
+    }
+    catch (err) {
+        loggingUtils.errorBanner("${timeoutMins} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT.  EXITING PIPELINE...")
+    }
+
+    return cicdInfo
 }

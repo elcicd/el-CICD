@@ -33,7 +33,7 @@ def call(Map args) {
                    choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")
         }
 
-        def cicdInfo = input(message: "Select components to promote and environment to promote from/to:", parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to promote and environment to promote from/to:", inputs)
 
         def promoteOrRemove
         def promotionEnvs = cicdInfo.promotionEnvs.split(ENV_DELIMITER)

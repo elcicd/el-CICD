@@ -26,7 +26,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
                 sleep 3
             fi
         """
-        
+
         el.cicd.JENKINS_IMAGE_PULL_SECRET =
             sh(returnStdout: true,
                 script: """
@@ -36,16 +36,16 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
                 """
             )
     }
-    
+
     def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
     profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
     profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
-    
+
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-        
+
         ${shCmd.echo ''}
         helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
@@ -65,8 +65,8 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-cicd-server \
             elCicdCharts/elCicdChart
-        oc rollout status deploy/jenkins    
-        
+        oc rollout status deploy/jenkins
+
         ${shCmd.echo ''}
         ${shCmd.echo 'Jenkins CICD Server up, sleep for 5 more seconds to make sure server REST api is ready'}
         sleep 5
@@ -76,7 +76,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
 
 def setupClusterWithProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
-    
+
     def cicdNamespaces = projectInfo.nonProdNamespaces.values().join(',')
     if (projectInfo.sandboxNamespaces) {
         cicdNamespaces += ',' + projectInfo.sandboxNamespaces.values().join(',')
@@ -84,16 +84,16 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
 
     def projectDefs = getSldcConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
-    
+
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
-    
+
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-            
+
     sh """
         cat ${cicdConfigFile}
-        
-        ${shCmd.echo ''}            
+
+        ${shCmd.echo ''}
         helm upgrade --atomic --install --history-max=1 \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
@@ -107,10 +107,10 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
 
         ${shCmd.echo ''}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
-        then 
+        then
             helm uninstall jenkins-pipeline-sync -n ${projectInfo.cicdMasterNamespace}
         fi
-        
+
         ${shCmd.echo ''}
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
@@ -123,15 +123,15 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
 
 def getSldcConfigValues(def projectInfo) {
     cicdConfigValues = [:]
-    
+
     elCicdDefs = [:]
     elCicdDefs.NONPROD_ENVS = []
     elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.DEV_ENV = projectInfo.devEnv
-    
+
     elCicdDefs.SANDBOX_ENVS = []
     elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
-    
+
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
@@ -170,12 +170,12 @@ def getSldcConfigValues(def projectInfo) {
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
     }
-    
+
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']
     cicdConfigValues.profiles.addAll(rqProfiles.keySet())
     if (projectInfo.nfsShares) {
         cicdConfigValues.profiles << "nfs"
-        
+
         elCicdDefs.NFS_APP_NAMES = []
         projectInfo.nfsShares.each { nfsShare ->
             nfsShare.envs.each { env ->
@@ -183,7 +183,7 @@ def getSldcConfigValues(def projectInfo) {
                 if (namespace) {
                     def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
                     elCicdDefs.NFS_APP_NAMES << appName
-                    
+
                     nfsMap = [:]
                     nfsMap.CLAIM_NAME = nfsShare.claimName
                     nfsMap.CAPACITY = nfsShare.capacity
@@ -191,14 +191,14 @@ def getSldcConfigValues(def projectInfo) {
                     nfsMap.PATH = nfsShare.exportPath
                     nfsMap.SERVER = nfsShare.server
                     nfsMap.NAMESPACE = namespace
-                    
+
                     cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
                 }
             }
         }
     }
-    
+
     cicdConfigValues.elCicdDefs = elCicdDefs
-    
+
     return cicdConfigValues
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Defines the implementation of the redeploy component pipeline.  Called inline from the
@@ -8,6 +8,7 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
+    def timeoutSeconds = 120
 
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
@@ -20,7 +21,7 @@ def call(Map args) {
     stage ('Select the environment to redeploy to or remove from') {
         def inputs = [choice(name: 'redeployEnv', description: '', choices: "${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}")]
 
-        def cicdInfo = input(message: "Select environment to redeploy or remove components from/to:", parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select environment to redeploy or remove components:", inputs)
 
         projectInfo.deployToEnv = cicdInfo
         projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
@@ -62,18 +63,17 @@ def call(Map args) {
             }
         }
 
-        def cicdInfo = input(message: "Select components to redeploy in ${projectInfo.deployToEnv}",
-                             parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to redeploy in ${projectInfo.deployToEnv}", inputs)
 
         def willRedeployOrRemove = false
         projectInfo.componentsToRedeploy = projectInfo.components.findAll { component ->
             def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
             component.remove = (answer == el.cicd.REMOVE)
-            component.redeploy = (answer && answer != el.cicd.REMOVE)
+            component.redeploy = (answer != el.cicd.IGNORE && answer != el.cicd.REMOVE)
+            
 
             if (component.redeploy) {
                 component.deploymentImageTag = answer - deployedMarker.trim()
-                echo "answer/component.deploymentImageTag: '${answer}/${component.deploymentImageTag}'"
                 component.srcCommitHash = component.deploymentImageTag.split('-')[1]
                 component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${component.deploymentImageTag}"
             }

@@ -17,7 +17,7 @@ def call(Map args) {
 
         inputs.addAll(projectInfo.testModules.collect { booleanParam(name: "${it.scmRepoName}/${it.codeBase}") } )
 
-        def cicdInfo = input(message: "Select environment and test types to run:", parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select environment and test types to run:", inputs)
 
         projectInfo.testModuleEnv = cicdInfo[TEST_ENV]
         projectInfo.SYSTEM_TEST_ENV = projectInfo.testModuleEnv.toUpperCase()
@@ -67,8 +67,7 @@ def call(Map args) {
             loggingUtils.errorBanner("NO COMPONENTS AVAILABLE FOR TESTING IN ${projectInfo.testModuleEnv}")
         }
 
-        def cicdInfo = input(message: "Select components to test in ${projectInfo.testModuleEnv}",
-                             parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to test in ${projectInfo.testModuleEnv}", inputs)
 
         projectInfo.componentsToTest = msTestPossibilities.findAll { component ->
             return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[component.name]) : cicdInfo

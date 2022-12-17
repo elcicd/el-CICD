@@ -25,7 +25,7 @@ def call(Map args) {
             booleanParam(name: module.name, description: "${moduleType} status: ${module.status}")
         }
 
-        def cicdInfo = input(message: "Select artifacts and components to build:", parameters: inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", inputs)
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch
@@ -48,13 +48,13 @@ def call(Map args) {
             echo "RECREATE NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
         }
     }
-    
+
     stage("Building selected modules") {
         def buildModules = [[],[],[]]
         projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
             buildModules[i%3].add(module)
         }
-        
+
         if (buildModules) {
             parallel(
                 firstBucket: {
