@@ -76,6 +76,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     elCicdCharts/elCicdChart
             done
             
+            sleep 3
             CURRENT_PODS=\$(oc get pods -l component=${component.name} \
                                         --field-selector='status.phase=Terminating' \
                                         -o name -n ${projectInfo.deployToNamespace} | \
