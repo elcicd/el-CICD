@@ -128,26 +128,9 @@ def call(Map args) {
         stage('Checkout all component repositories') {
             loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            projectInfo.components.each { component ->
-                if (component.promote) {
-                    dir(component.workDir) {
-                        projectUtils.cloneGitRepo(component, component.srcCommitHash)
-
-                        component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-                        component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
-
-                        component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
-                        component.deployBranchExists = !component.deployBranchExists.isEmpty()
-
-                        def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
-                        if (ref) {
-                            sh "git checkout ${ref}"
-                        }
-
-                        component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-                    }
-                }
-            }
+            def cloneRepoStages = createCloneRepoStages(projectInfo)
+            
+            parallel(cloneRepoStages)
         }
 
         stage("promote images") {
@@ -225,4 +208,34 @@ def call(Map args) {
                      components: projectInfo.componentsToPromote,
                      componentsToRemove: projectInfo.componentsToRemove,
                      imageTag: projectInfo.deployToEnv)
+}
+
+def createCloneRepoStages(projectInfo) {
+    def components = projectInfo.components.find { it.promote }
+        
+    def cloneRepoStages = [:]
+    components.each { component ->
+        cloneRepoStages[component.name] = {
+            stage("Checkout ${component.name}") {
+                dir(component.workDir) {
+                    projectUtils.cloneGitRepo(component, component.srcCommitHash)
+
+                    component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+                    component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+
+                    component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                    component.deployBranchExists = !component.deployBranchExists.isEmpty()
+
+                    def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+                    if (ref) {
+                        sh "git checkout ${ref}"
+                    }
+
+                    component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+                }
+            }
+        }
+    }
+    
+    return cloneRepoStages
 }

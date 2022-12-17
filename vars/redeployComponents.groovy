@@ -13,9 +13,9 @@ def call(Map args) {
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
-        projectInfo.components.each { component ->
-            projectUtils.cloneGitRepo(component, projectInfo.scmBranch)
-        }
+        def cloneRepoStages = createCloneRepoStages(projectInfo.components)
+        
+        parallel(cloneRepoStages)
     }
 
     stage ('Select the environment to redeploy to or remove from') {

@@ -214,6 +214,23 @@ def cloneGitRepo(def module, def gitReference) {
     }
 }
 
+def createCloneRepoStages(def modules, Closure postCheckoutProcessing = null) {
+    def cloneRepoStages = [:]
+    modules.each { module ->
+        cloneRepoStages["Checkout ${module.name}"] = {
+            stage("Checkout ${module.name}") {
+                projectUtils.cloneGitRepo(module, projectInfo.scmBranch)
+                
+                if (postCheckoutProcessing) {
+                    postCheckoutProcessing(module)
+                }
+            }
+        }
+    }
+    
+    return cloneRepoStages
+}
+
 def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymentEnv) {
     return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
         "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${component.srcCommitHash}" : null
