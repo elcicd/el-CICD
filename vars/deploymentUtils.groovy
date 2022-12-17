@@ -76,7 +76,7 @@ def runDeploymentShell(def projectInfo, def component, def compValues) {
                     elCicdCharts/elCicdChart
             done
 
-            DELETED_PODS=\$(oc get pods -l component=${component.name} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}')
+            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l component=${component.name} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}')
             if [[ ! -z \${DELETED_PODS} ]]
             then 
                 oc wait --for=delete \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
