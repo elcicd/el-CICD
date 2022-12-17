@@ -73,7 +73,7 @@ def call(Map args) {
             
 
             if (component.redeploy) {
-                component.deploymentImageTag = answer - deployedMarker.trim()
+                component.deploymentImageTag = (answer =~ "${projectInfo.deployToEnv}-[0-9a-z]{7}")[0]
                 component.srcCommitHash = component.deploymentImageTag.split('-')[1]
                 component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${component.deploymentImageTag}"
             }
@@ -101,10 +101,12 @@ def call(Map args) {
             projectInfo.componentsToRedeploy.each { component ->
                 def verifyImageCmd =
                     shCmd.verifyImage(projectInfo.ENV_TO,
-                                     'TO_IMAGE_REGISTRY_USERNAME',
-                                     'TO_IMAGE_REGISTRY_PWD',
-                                     component.id,
-                                     component.deploymentImageTag)
+                                      'TO_IMAGE_REGISTRY_USERNAME',
+                                      'TO_IMAGE_REGISTRY_PWD',
+                                      component.id,
+                                      component.deploymentImageTag)
+                                      
+                echo verifyImageCmd
 
                 if (!sh(returnStdout: true, script: verifyImageCmd).trim()) {
                     errorMsgs << "    ${component.id}:${projectInfo.deploymentImageTag} NOT FOUND IN ${projectInfo.deployToEnv} (${projectInfo.deployToNamespace})"
