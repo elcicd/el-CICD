@@ -114,9 +114,9 @@ _remove_existing_crc() {
     then
         echo
         echo 'Cleaning up old OpenShift Local install'
-        ${CRC_EXEC} stop
-        ${CRC_EXEC} delete
-        ${CRC_EXEC} cleanup
+        ${CRC_EXEC} stop 2>/dev/null
+        ${CRC_EXEC} delete  2>/dev/null
+        ${CRC_EXEC} cleanup  2>/dev/null
     fi
 
     echo

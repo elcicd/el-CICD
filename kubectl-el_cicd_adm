@@ -1,11 +1,5 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
-
-set -E
-
-trap 'ERRO_LINENO=$LINENO' ERR
-trap '_failure' EXIT
-
 cd "$(dirname ${0})"
 
 
@@ -35,13 +29,15 @@ TARGET_JENKINS_BUILD_DIR=${EL_CICD_HOME}/jenkins-target
 
 set -e
 echo
-echo 'Loading el-CICD environment...'
+echo -n 'Loading el-CICD scripts...'
 echo
 for FILE in $(ls ${EL_CICD_SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
 do
-    echo "Sourcing bootstrap scripts: ${FILE}"
     source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
 done
+echo 'Loaded'
+
+_load_kubectl_msgs
 
 KUBECTL_ADM_ARGS=()
 while [[ $# -gt 0 ]]
@@ -56,6 +52,7 @@ do
     ;;
     
     '--bootstrap' | '-b')
+        BOOTSTRAP='true'
         ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
         ROOT_CONFIG_FILE=${2}
 
@@ -79,6 +76,7 @@ do
     ;;
 
     '--help' | '-h')
+        echo
         echo "${HELP_MSG}"
         exit 0
     ;;
@@ -123,6 +121,7 @@ do
 
     '--start-crc')
         ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
+        EL_CICD_LAB_INSTALL='true'
         ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=('_start_crc')
@@ -138,6 +137,7 @@ do
     ;;
 
     -*|--*)
+        echo
         echo "ERROR: Unknown command option '${1}'"
         echo
         echo "${HELP_MSG}"
@@ -152,41 +152,6 @@ set +e
 
 if [[ ! -z ${EL_CICD_ADM_COMMANDS} ]]
 then
-    echo
-    echo 'el-CICD environment loaded'
-
-    _load_kubectl_msgs
-
-    echo
-    echo "${WARNING_MSG}"
-    sleep 2
-    
-    echo
-    echo ${ELCICD_ADM_MSG}
-
-    set +o allexport
-
-    if [[ ! -z $(command -v crc) ]]
-    then
-        CRC_EXEC=$(which crc)
-        CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
-    elif [[ -z $(which oc --skip-alias 2>/dev/null) ]]
-    then
-        echo
-        echo '============ WARNING!!! =============='
-        echo
-        echo 'IF NOT INSTALLING OPENSHIFT LOCAL, YOU MUST INSTALL THE OKD CLI!'
-        echo
-        echo '============ WARNING!!! =============='
-    fi
-
-    _verify_scm_secret_files_exist
-
-    _verify_pull_secret_files_exist
-
-    for COMMAND in ${EL_CICD_ADM_COMMANDS[@]}
-    do
-        eval ${COMMAND}
-    done
+    _execute_kubectl_el_cicd_adm
 fi
 
