@@ -54,6 +54,15 @@ __verify_continue() {
     fi
 }
 
+_check_upgrade_sealed_secrets() {
+    _check_sealed_secrets
+
+    if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
+    then
+        _install_sealed_secrets
+    fi
+}
+
 _check_sealed_secrets() {
     echo
     local CURRENT_SS_VERSION=$(helm list -f 'sealed-secrets' -o json -n kube-system | jq -r '.[0].app_version' )
@@ -96,11 +105,6 @@ _install_sealed_secrets() {
     wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
     sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
-
-    echo
-    echo "Create custom cluster role for the management of sealedsecrets resources by Jenkins' service accounts"
-    echo "NOTE: Without custom cluster role, only cluster admins could manage sealedsecrets."
-    oc apply -f ${EL_CICD_TEMPLATES_DIR}/sealed-secrets-management.yml -n ${ONBOARDING_MASTER_NAMESPACE}
     
     set +e
 }

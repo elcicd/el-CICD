@@ -155,9 +155,11 @@ def initializePipeline() {
             ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'OCP Runtime'}
             oc version
+            ${shCmd.echo "\n=======================\n"}
+            ${shCmd.echo 'Helm Version'}
             helm version
             ${shCmd.echo "\n=======================\n"}
-            ${shCmd.echo 'OCP Service Account'}
+            ${shCmd.echo 'Jenkins Service Account'}
             oc whoami
             ${shCmd.echo "\n======================="}
         """

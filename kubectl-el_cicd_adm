@@ -1,110 +1,13 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-CLI_OPTION=${1}
-
-ROOT_CONFIG_FILE=${2}
-
 set -E
 
 trap 'ERRO_LINENO=$LINENO' ERR
 trap '_failure' EXIT
 
-_failure() {
-   ERR_CODE=$?
-   set +xv
-   if [[  $- =~ e && ${ERR_CODE} != 0 ]] 
-   then
-       echo
-       echo "========= CATASTROPHIC COMMAND FAIL ========="
-       echo
-       echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE}"
-       echo
-       LEN=${#BASH_LINENO[@]}
-       for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
-       do
-           echo '---'
-           echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
-           echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
-           if [[ ${INDEX} > 0 ]]
-           then
-               echo "  COMMAND: ${FUNCNAME[${INDEX}]}"
-               echo "  LINE: ${BASH_LINENO[${INDEX}]}"
-           else
-               echo "  COMMAND: ${BASH_COMMAND}"
-               echo "  LINE: ${ERRO_LINENO}"
-           fi
-       done
-       echo
-       echo "======= END CATASTROPHIC COMMAND FAIL ======="
-       echo
-   fi
-}
-
 cd "$(dirname ${0})"
 
-read -r -d '' WARNING_MSG << EOM
-===================================================================
-WARNING:
-SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED WHEN USING THIS UTILITY
-
-ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER ADMINS
-===================================================================
-EOM
-
-read -r -d '' HELP_MSG << EOM
-Usage: oc el-cicd-adm [OPTION] [root-config-file]
-
-el-CICD Admin Utility
-
-Options:
-    -N,   --non-prod:        bootstraps Non-prod el-CICD Onboarding CICD Server
-    -n,   --non-prod-creds:  refresh Non-prod el-CICD Onboarding CICD Server credentials
-    -P,   --prod:            bootstraps Prod el-CICD Onboarding CICD Server
-    -p,   --prod-creds:      refresh Prod el-CICD Onboarding CICD Server credentials
-    -c,   --cicd-creds:      run the refresh-credentials pipeline
-    -s,   --sealed-secrets:  reinstall/upgrade Sealed Secrets
-    -j,   --jenkins:         only build el-CICD Jenkins image
-    -a,   --agents:          only build el-CICD Jenkins agent images
-    -A,   --jenkins-agents:  build el-CICD Jenkins and Jenkins agent images
-    -D,   --setup-dev:       setup an environment for developing el-CICD
-          --start-crc:       start OpenShift Local development cluster
-    -T,   --tear-down-dev:   tear down an environment for developing el-CICD
-          --help:            display this help text and exit
-
-root-config-file:
-    file name or path to a root configuration file relative the root of the el-CICD-config directory
-EOM
-
-read -r -d '' DEV_SETUP_WELCOME_MSG << EOM
-Welcome to the el-CICD setup utility for developing with or on el-CICD.
-
-el-CICD will perform the necessary setup for running the tutorial or developing with el-CICD:
-  - Optionally setup OpenShift Local, if downloaded to the el-CICD home directory and not currently installed.
-  - Optionally setup up an image registry to mimic an external registry, with or without an NFS share.
-  - Clone and push all el-CICD and sample project Git repositories into your Git host (only GitHub is supported currently).
-  - Install the Sealed Secrets controller onto your cluster
-
-NOTES: Red Hat OpenShift Local may be downloaded from here:
-       https://developers.redhat.com/products/openshift-local/overview
-EOM
-
-read -r -d '' DEV_TEAR_DOWN_WELCOME_MSG << EOM
-Welcome to the el-CICD dev environment tear down utility.
-Before beginning to tear down your environment, please make sure of the following:
-
-1) Log into an OKD cluster as cluster admin, or you can use Red Hat OpenShift Local:
-   https://developers.redhat.com/products/openshift-local/overview
-   NOTE: el-CICD can setup OpenShift Local for you if requested.
-
-2) Have root priveleges on this machine. sudo password is required to complete setup.
-
-el-CICD will optionally tear down:
-    - OpenShift Local
-    - The cluster image registry
-    - The NFS registry directory
-    - Remove el-CICD repositories pushed to your Git host
-EOM
 
 _BOLD=$(tput bold)
 _REGULAR=$(tput sgr0)
@@ -112,33 +15,13 @@ _REGULAR=$(tput sgr0)
 set -o allexport
 
 EL_CICD_DIR=$(pwd)
+EL_CICD_SCRIPTS_DIR=${EL_CICD_DIR}/scripts
 
 EL_CICD_HOME=$(dirname ${EL_CICD_DIR})
 
 EL_CICD_CONFIG_DIR=${EL_CICD_HOME}/el-CICD-config
 
-case "${CLI_OPTION}" in
-    '')
-         echo "Usage: oc el-cicd-adm [OPTION] [root-config-file]"
-         echo "Try 'el-cicd-adm --help' for more information."
-         exit 1
-    ;;
-
-    '--help')
-        echo "${HELP_MSG}"
-        exit 0
-    ;;
-esac
-
-SERVER_TYPE_PROD=prod
-SERVER_TYPE_NON_PROD=non-prod
-
-echo "${WARNING_MSG}"
-sleep 2
-
-EL_CICD_SCRIPTS_DIR=${EL_CICD_DIR}/scripts
 EL_CICD_SCRIPTS_RESOURCES_DIR=${EL_CICD_SCRIPTS_DIR}/resources
-SYSTEM_DEFAULT_CONFIG_FILE=${EL_CICD_SCRIPTS_RESOURCES_DIR}/system-default.conf
 
 EL_CICD_RESOURCES_DIR=${EL_CICD_DIR}/resources
 EL_CICD_TEMPLATES_DIR=${EL_CICD_RESOURCES_DIR}/templates
@@ -150,133 +33,161 @@ EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=${EL_CICD_HOME}/jenkins-target
 
+set -e
 echo
 echo 'Loading el-CICD environment...'
-
-set -e
 echo
 for FILE in $(ls ${EL_CICD_SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
 do
-    echo "Sourcing file: ${FILE}"
+    echo "Sourcing bootstrap scripts: ${FILE}"
     source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
 done
 
-source ${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}
-_create_meta_info_file ${INCLUDE_BOOTSTRAP_FILES}
-source ${META_INFO_FILE}
-set +e
+KUBECTL_ADM_ARGS=()
+while [[ $# -gt 0 ]]
+do
+  case "${1}" in
+    '--agents' | '-a')
+        ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
+        ROOT_CONFIG_FILE=${2}
 
-echo
-echo 'el-CICD environment loaded'
+        EL_CICD_ADM_COMMANDS=('_build_el_cicd_jenkins_agent_images_image')
+        shift 2
+    ;;
+    
+    '--bootstrap' | '-B')
+        echo "foo: ${2}"
+        ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
+        ROOT_CONFIG_FILE=${2}
 
-set +o allexport
-
-if [[ ! -z $(command -v crc) ]]
-then
-    CRC_EXEC=$(which crc)
-    CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
-elif [[ -z $(which oc --skip-alias 2>/dev/null) ]]
-then
-    echo
-    echo '============ WARNING!!! =============='
-    echo
-    echo 'IF NOT INSTALLING OPENSHIFT LOCAL, YOU MUST INSTALL THE OKD CLI!'
-    echo 
-    echo '============ WARNING!!! =============='
-fi
-
-_verify_scm_secret_files_exist
-
-_verify_pull_secret_files_exist
-
-echo
-case ${CLI_OPTION} in
-
-    '--non-prod' | '-N')
-        echo "BOOTSTRAPPING NON-PROD"
-        
-        _bootstrap_el_cicd ${SERVER_TYPE_NON_PROD}
+        EL_CICD_ADM_COMMANDS=('_bootstrap_el_cicd')
+        shift 2
     ;;
 
-    '--prod' | '-P')
-        echo "BOOTSTRAPPING PROD"
-        
-        _bootstrap_el_cicd ${SERVER_TYPE_PROD}
+    '--cicd-creds' | '-C')
+        ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
+        ROOT_CONFIG_FILE=${2}
+
+        EL_CICD_ADM_COMMANDS=("oc start-build refresh-credentials --wait --follow -n ${ONBOARDING_MASTER_NAMESPACE}")
+        shift 2
+    ;;
+    
+    '--config')
+        ROOT_CONFIG_FILE=${2}
+
+        EL_CICD_ADM_COMMANDS=('')
+        shift 2
     ;;
 
-    '--non-prod-creds' | '-n')
-        echo "REFRESH NON-PROD CREDENTIALS"
-
-        _create_el_cicd_meta_info_config_map
-
-        _refresh_non_prod_credentials
-    ;;
-
-    '--prod-creds' | '-p')
-        echo "REFRESH PROD CREDENTIALS"
-
-        _create_el_cicd_meta_info_config_map
-
-        _refresh_prod_credentials
-    ;;
-
-    '--cicd-creds' | '-c')
-        echo "REFRESH ALL CICD SERVERS CREDENTIALS"
-
-        echo
-        echo "Refreshing all CICD Servers in the cluster managed by ${ONBOARDING_MASTER_NAMESPACE}"
-        oc start-build refresh-credentials --wait --follow -n ${ONBOARDING_MASTER_NAMESPACE}
-    ;;
-
-    '--sealed-secrets' | '-s')
-        echo "INSTALL SEALED SECRETS"
-        _check_sealed_secrets
-
-        if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
-        then
-            _install_sealed_secrets
-        fi
+    '--help' | '-h')
+        echo "${HELP_MSG}"
+        exit 0
     ;;
 
     '--jenkins' | '-j')
-        echo "BUILD JENKINS IMAGE"
-        _build_el_cicd_jenkins_image
+        ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
+        ROOT_CONFIG_FILE=${2}
+
+        EL_CICD_ADM_COMMANDS=('_build_el_cicd_jenkins_image')
+        shift 2
+    ;;
+    
+    '--lab' | '-l')
+        EL_CICD_LAB_INSTALL='true'
+        shift
+        ;;
+
+    '--onboarding-creds' | '-c')
+        ELCICD_ADM_MSG="REFRESH CREDENTIALS"
+        ROOT_CONFIG_FILE=${2}
+
+        EL_CICD_ADM_COMMANDS=('_refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials')
+        shift 2
+    ;;
+    
+    '--sealed-secrets' | '-s')
+        ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
+        ROOT_CONFIG_FILE=${2}
+
+        EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets')
+        shift 2
     ;;
 
-    '--agents' | '-a')
-        echo "BUILD JENKINS AGENT IMAGES"
-        _build_el_cicd_jenkins_agent_images_image
-    ;;
+    '--setup-lab' | '-L')
+        ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
+        EL_CICD_LAB_INSTALL='true'
+        ROOT_CONFIG_FILE=${2}
 
-    '--jenkins-agents' | '-A')
-        echo "UPDATE JENKINS IMAGE AND BUILD JENKINS AGENT IMAGES"
-        _build_el_cicd_jenkins_image
-
-        _build_el_cicd_jenkins_agent_images_image
-    ;;
-
-    '--setup-dev' | '-D')
-        echo "BOOTSTRAPPING EL-CICD DEVELOPMENT ENVIRONMENT"
-
-        __bootstrap_dev_environment
+        EL_CICD_ADM_COMMANDS=('__bootstrap_dev_environment')
+        shift 2
     ;;
 
     '--start-crc')
-        echo "STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
+        ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
+        ROOT_CONFIG_FILE=${2}
 
-        _start_crc
+        EL_CICD_ADM_COMMANDS=('_start_crc')
+        shift 2
     ;;
 
     '--tear-down-dev' | '-T')
-        echo "TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
+        ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
+        ROOT_CONFIG_FILE=${2}
 
-        __tear_down_dev_environment
+        EL_CICD_ADM_COMMANDS=('_tear_down_dev_environment')
+        shift 2
     ;;
 
-    *)
-        echo "ERROR: Unknown command option '${CLI_OPTION}'"
+    -*|--*)
+        echo "ERROR: Unknown command option '${1}'"
         echo
         echo "${HELP_MSG}"
         exit 1
     ;;
-esac
+  esac
+done
+
+_create_and_source_meta_info_file
+set +e
+
+
+if [[ ! -z ${EL_CICD_ADM_COMMANDS} ]]
+then
+    echo
+    echo 'el-CICD environment loaded'
+
+    _load_kubectl_msgs
+
+    echo
+    echo "${WARNING_MSG}"
+    sleep 2
+    
+    echo
+    echo ${ELCICD_ADM_MSG}
+
+    set +o allexport
+
+    if [[ ! -z $(command -v crc) ]]
+    then
+        CRC_EXEC=$(which crc)
+        CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
+    elif [[ -z $(which oc --skip-alias 2>/dev/null) ]]
+    then
+        echo
+        echo '============ WARNING!!! =============='
+        echo
+        echo 'IF NOT INSTALLING OPENSHIFT LOCAL, YOU MUST INSTALL THE OKD CLI!'
+        echo
+        echo '============ WARNING!!! =============='
+    fi
+
+    _verify_scm_secret_files_exist
+
+    _verify_pull_secret_files_exist
+
+    for COMMAND in ${EL_CICD_ADM_COMMANDS[@]}
+    do
+        eval ${COMMAND}
+    done
+fi
+

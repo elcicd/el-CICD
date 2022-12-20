@@ -1,9 +1,7 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the implementation of the redeploy component pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/redeploy-removal-pipeline-template
- *
+ * Defines the implementation of the redeploy component pipeline.
  */
 
 def call(Map args) {

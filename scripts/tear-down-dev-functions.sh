@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-__tear_down_dev_environment() {
+_tear_down_dev_environment() {
     echo
     echo "${DEV_TEAR_DOWN_WELCOME_MSG}"
 

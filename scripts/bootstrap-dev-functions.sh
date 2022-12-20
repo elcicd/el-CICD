@@ -219,7 +219,7 @@ __additional_cluster_config() {
     if [[ -z $(oc get secrets -n kube-system | grep sealed-secrets-key) ]]
     then
         echo "Creating Sealed Secrets master key"
-        oc create -f ${EL_CICD_SCRIPTS_RESOURCES_DIR}/master.key
+        oc create -f ${EL_CICD_SCRIPTS_RESOURCES_DIR}/test-projects-sealed-secrets-master.key
         oc delete pod --ignore-not-found -n kube-system -l name=sealed-secrets-controller
     else
         echo "Sealed Secrets master key found. Apply manually if still required.  Skipping..."

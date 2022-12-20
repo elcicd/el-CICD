@@ -86,5 +86,5 @@ def call(Map args) {
         }
     }
 
-    runPostDeploymentTests(projectInfo: projectInfo, testModulesToRun: projectInfo.testModulesToRun, componentsToTest: projectInfo.componentsToTest)
+    runSystemTests(projectInfo: projectInfo, testModulesToRun: projectInfo.testModulesToRun, componentsToTest: projectInfo.componentsToTest)
 }

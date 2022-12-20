@@ -8,8 +8,6 @@ export _YES='Yes'
 export _NO='No'
 
 _bootstrap_el_cicd() {
-    ONBOARDING_SERVER_TYPE=${1}
-
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
         echo "el-CICD ${ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
@@ -48,32 +46,76 @@ _bootstrap_el_cicd() {
     echo "https://${JENKINS_URL}"
 }
 
-_create_meta_info_file() {
-    META_INFO_FILE=/tmp/.el_cicd_meta_info_file
+_create_and_source_meta_info_file() {    
+    echo
+    echo "GENERATING CONFIG FILES (found in /tmp)"
+    
+    source ${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}
+    
+    local EL_CICD_SCRIPTS_CONFIG_DIR=${EL_CICD_SCRIPTS_DIR}/config
+    
+    local EL_CICD_SYSTEM_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-system.conf
+    
+    local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-${ONBOARDING_SERVER_TYPE}.conf
+    
+    local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-bootstrap.conf
+    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/default-bootstrap.conf
+    
+    local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-runtime.conf
+    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/default-runtime.conf
+    
+    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-${ONBOARDING_SERVER_TYPE}-lab-setup.conf
+    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${ONBOARDING_SERVER_TYPE}-lab-setup.conf
+    
+    EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
+    EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
+    
+    CONFIG_FILE_LIST="${EL_CICD_SYSTEM_CONF}"
+    if [[ ! -z ${EL_CICD_LAB_INSTALL} ]]
+    then
+        CONFIG_FILE_LIST="${CONFIG_FILE_LIST} ${EL_CICD_CONFIG_LAB_CONF} ${EL_CICD_LAB_CONF}"
+    fi
+    
+    local CONFIG_FILE_LIST="${EL_CICD_SYSTEM_CONF} ${ROOT_CONFIG_FILE} ${EL_CICD_CONF} ${EL_CICD_CONFIG_RUNTIME_CONF} ${EL_CICD_RUNTIME_CONF}"
+    __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_META_INFO_FILE}
+    
+    local BOOTSTRAP_CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${EL_CICD_CONFIG_BOOTSTRAP_CONF} ${EL_CICD_BOOTSTRAP_CONF}"
+    __create_meta_info_file "${BOOTSTRAP_CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
+    
+    source "${EL_CICD_BOOTSTRAP_META_INFO_FILE}"
+}
+
+__create_meta_info_file() {        
+    local CONF_FILE_LIST=${1}
+    local META_INFO_FILE=${2}
+    
     local META_INFO_FILE_TMP=.el_cicd_meta_info_tmp_file
-    local ADDITIONAL_FILES=${1}
-
+    
     rm -f ${META_INFO_FILE} ${META_INFO_FILE_TMP}
-
-    local EXTRA_CONF_FILES=$(echo ${INCLUDE_SYSTEM_FILES}:${ADDITIONAL_FILES} | tr ':' ' ')
-    for CONF_FILE in ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}
-    do
-        local FOUND_FILES="${FOUND_FILES} $(find ${EL_CICD_CONFIG_DIR} ${EL_CICD_CONFIG_BOOTSTRAP_DIR} -maxdepth 1 -name ${CONF_FILE})"
-    done
-    awk -F= '!line[$1]++' ${SYSTEM_DEFAULT_CONFIG_FILE} ${FOUND_FILES} >> ${META_INFO_FILE_TMP}
-
+    
+    # ignore duplicate values: config file precedence is left to right
+    awk -F= '!line[$1]++' ${CONF_FILE_LIST} >> ${META_INFO_FILE_TMP}
+    
+    # remove blank lines, comments, and any trailing whitespace
+    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}        
+    
+    # realize properties referencing values defined in other files
     echo "CLUSTER_API_HOSTNAME=${CLUSTER_API_HOSTNAME}" >> ${META_INFO_FILE_TMP}
-    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
-
     source ${META_INFO_FILE_TMP}
     cat ${META_INFO_FILE_TMP} | envsubst > ${META_INFO_FILE}
     
-    rm ${META_INFO_FILE_TMP}
-
+    rm -f ${META_INFO_FILE_TMP}
+    
     sort -o ${META_INFO_FILE} ${META_INFO_FILE}
+
     echo
-    echo "Config files processed for el-cicd-${META_INFO_POSTFIX} (${META_INFO_FILE}):"
-    echo "    $(basename ${SYSTEM_DEFAULT_CONFIG_FILE}) ${ROOT_CONFIG_FILE} ${EXTRA_CONF_FILES}"
+    echo "$(basename ${META_INFO_FILE}) created from the following config files:"
+    echo -n '    '
+    for CONF_FILE in ${CONF_FILE_LIST}
+    do
+        echo -n "$(basename ${CONF_FILE}) "
+    done
+    echo
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
@@ -184,7 +226,7 @@ __create_onboarding_automation_server() {
         fi
     fi
 
-    _create_meta_info_file
+    _create_and_source_meta_info_file
     
     _helm_repo_add_and_update_elCicdCharts
     
@@ -201,7 +243,7 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${JENKINS_IMAGE_PULL_SECRET} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
-        --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${META_INFO_FILE} \
+        --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
         --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-jenkins-casc.yaml \
         --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-plugins.txt \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
@@ -213,7 +255,7 @@ __create_onboarding_automation_server() {
     set +x
     oc rollout status deploy/jenkins
     
-    rm ${META_INFO_FILE}
+    rm ${EL_CICD_META_INFO_FILE}
 
     echo
     echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
@@ -338,4 +380,35 @@ _compare_ignore_case_and_extra_whitespace() {
 
 _is_true() {
     _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
+}
+
+_failure() {
+   ERR_CODE=$?
+   set +xv
+   if [[  $- =~ e && ${ERR_CODE} != 0 ]]
+   then
+       echo
+       echo "========= ${_BOLD}CATASTROPHIC COMMAND FAIL${_REGULAR} ========="
+       echo
+       echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE}"
+       echo
+       LEN=${#BASH_LINENO[@]}
+       for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
+       do
+           echo '---'
+           echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
+           echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
+           if [[ ${INDEX} > 0 ]]
+           then
+               echo "  COMMAND: ${FUNCNAME[${INDEX}]}"
+               echo "  LINE: ${BASH_LINENO[${INDEX}]}"
+           else
+               echo "  COMMAND: ${BASH_COMMAND}"
+               echo "  LINE: ${ERRO_LINENO}"
+           fi
+       done
+       echo
+       echo "======= END CATASTROPHIC COMMAND FAIL ======="
+       echo
+   fi
 }

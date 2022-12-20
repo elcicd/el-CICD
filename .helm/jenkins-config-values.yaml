@@ -163,11 +163,22 @@ elCicdTemplates:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
+    
+- templateName: clusterRole
+  appName: sealed-secrets-management
+  anyProfiles:
+  - cicd
+  - sealed-secrets
+  rules:
+  - apiGroups: ["bitnami.com"]
+    resources: ["sealedsecrets"]
+    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
 
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
   anyProfiles:
   - cicd
+  - sealed-secrets
   ignoreAnyProfiles:
   - onboarding
   roleRef:

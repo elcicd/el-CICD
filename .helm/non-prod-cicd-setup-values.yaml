@@ -122,7 +122,7 @@ elCicdTemplates:
   elCicdDefs-promote-or-remove-components:
     EL_CICD_API_METHOD: promoteComponents
   elCicdDefs-run-post-deployment-tests:
-    EL_CICD_API_METHOD: runPostDeploymentTests
+    EL_CICD_API_METHOD: runSystemTests
   elCicdDefs-redeploy-or-remove-components:
     EL_CICD_API_METHOD: redeployComponents
   elCicdDefs-create-release-candidate:

@@ -125,14 +125,13 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
 
 def displayInputWithTimeout(def inputMsg, def inputs) {
     def cicdInfo
-    def timeoutMins = 2
     try {
-        timeout(time: timeoutMins) {
+        timeout(time: el.cicd.JENKINS_INPUT_TIMEOUT) {
             cicdInfo = input(message: inputMsg, parameters: inputs)
         }
     }
     catch (err) {
-        loggingUtils.errorBanner("${timeoutMins} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT.  EXITING PIPELINE...")
+        loggingUtils.errorBanner("${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT.  EXITING PIPELINE...")
     }
 
     return cicdInfo
