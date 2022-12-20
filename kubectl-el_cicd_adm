@@ -55,8 +55,7 @@ do
         shift 2
     ;;
     
-    '--bootstrap' | '-B')
-        echo "foo: ${2}"
+    '--bootstrap' | '-b')
         ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
         ROOT_CONFIG_FILE=${2}
 
