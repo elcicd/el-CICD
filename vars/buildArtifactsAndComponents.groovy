@@ -59,17 +59,17 @@ def call(Map args) {
             parallel(
                 firstBucket: {
                     stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                        triggerPipelines(projectInfo, buibuildModules[0])
+                        triggerPipelines(projectInfo, buildModules[0])
                     }
                 },
                 secondBucket: {
                     stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
-                        triggerPipelines(projectInfo, buibuildModules[1])
+                        triggerPipelines(projectInfo, buildModules[1])
                     }
                 },
                 thirdBucket: {
                     stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
-                        triggerPipelines(projectInfo, buibuildModules[2])
+                        triggerPipelines(projectInfo, buildModules[2])
                     }
                 }
             )
