@@ -42,7 +42,7 @@ elCicdTemplates:
          $JENKINS_JAVA_OVERRIDES
          -jar /usr/share/java/jenkins.war >> /var/log/jenkins-startup.log;
   strategyType: RollingUpdate
-  imagePullSecret: ${JENKINS_IMAGE_PULL_SECRET}
+  imagePullSecret: el-cicd-jenkins-pull-secret
   serviceAccountName: ${JENKINS_SERVICE_NAME}
   env:
   - name: JENKINS_JAVA_OVERRIDES
@@ -209,6 +209,14 @@ elCicdTemplates:
   - onboarding
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
+
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: el-cicd-jenkins-pull-secret
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
   anyProfiles:

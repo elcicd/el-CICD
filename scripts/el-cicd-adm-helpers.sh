@@ -5,10 +5,11 @@ _load_kubectl_msgs() {
 
 WARNING_MSG=$(cat <<-EOM
 ===================================================================
-WARNING:
-SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED WHEN USING THIS UTILITY
+
+${_BOLD}WARNING:${_REGULAR} SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED WHEN USING THIS UTILITY
 
 ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER ADMINS
+
 ===================================================================
 EOM
 )
@@ -94,7 +95,6 @@ _execute_kubectl_el_cicd_adm() {
         if [[ ! -z $(command -v crc) ]]
         then
             CRC_EXEC=$(which crc)
-            CLUSTER_API_HOSTNAME=$(oc whoami --show-server | awk -F '://' '{ print $2 }')
         elif [[ -z $(which oc --skip-alias 2>/dev/null) ]]
         then
             echo

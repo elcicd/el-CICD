@@ -342,7 +342,7 @@ __create_credentials() {
     echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}"
     echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}
 
-    CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
+    local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
         echo

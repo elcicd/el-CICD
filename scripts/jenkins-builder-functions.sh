@@ -7,11 +7,6 @@ _build_el_cicd_jenkins_image() {
     __init_jenkins_build
 
     set -e
-    echo
-    echo -n 'Podman: '
-    ENABLE_TLS=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS:-true}
-    podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REGISTRY}
-    
     podman build --squash \
         --build-arg OKD_VERSION=${OKD_VERSION} \
         --build-arg CONFIG_FILE_PATH=${JENKINS_CONTAINER_CONFIG_DIR} \
@@ -20,7 +15,7 @@ _build_el_cicd_jenkins_image() {
         -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
         
-    podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
+    podman push --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
     set +e
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
@@ -44,7 +39,7 @@ __init_jenkins_build() {
     fi
 }
 
-_build_el_cicd_jenkins_agent_images_image() {
+_build_el_cicd_jenkins_agent_images() {
     if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} ]]
     then
         echo
@@ -63,16 +58,13 @@ _build_el_cicd_jenkins_agent_images_image() {
             echo '==========================================='
             echo
 
-            set -e
-            echo -n 'Podman: '
-            ENABLE_TLS=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS:-true}
-            podman login --tls-verify=${ENABLE_TLS} -u $(oc whoami) -p $(oc whoami -t) ${JENKINS_IMAGE_REGISTRY}
-            
+            set -e            
             podman build --squash \
+                --build-arg JENKINS_IMAGE_REGISTRY=${JENKINS_IMAGE_REGISTRY} \
                 -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
                 -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
 
-            podman push --tls-verify=${ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
+            podman push --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
             set +e
         done
 

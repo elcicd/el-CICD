@@ -17,25 +17,6 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
     def rbacGroups = projectInfo.rbacGroups.toMapString()
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
-    if (!el.cicd.JENKINS_IMAGE_PULL_SECRET && el.cicd.OKD_VERSION) {
-        sh """
-            if [[ -z \$(oc get project ${projectInfo.cicdMasterNamespace} --no-headers --ignore-not-found) ]]
-            then
-                oc new-project ${projectInfo.cicdMasterNamespace}
-                sleep 3
-            fi
-        """
-
-        el.cicd.JENKINS_IMAGE_PULL_SECRET =
-            sh(returnStdout: true,
-                script: """
-                    oc get secrets -o custom-columns=:metadata.name -n ${projectInfo.cicdMasterNamespace} | \
-                    grep deployer-dockercfg | \
-                    tr -d '[:space:]'
-                """
-            )
-    }
-
     def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
     profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
@@ -59,7 +40,6 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
             --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-            --set-string elCicdDefs.JENKINS_IMAGE_PULL_SECRET=${el.cicd.JENKINS_IMAGE_PULL_SECRET} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \

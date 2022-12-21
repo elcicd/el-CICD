@@ -45,34 +45,29 @@ do
   case "${1}" in
     '--agents' | '-a')
         ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
-        ROOT_CONFIG_FILE=${2}
 
-        EL_CICD_ADM_COMMANDS=('_build_el_cicd_jenkins_agent_images_image')
-        shift 2
+        EL_CICD_ADM_COMMANDS=('_podman_login' '_build_el_cicd_jenkins_agent_images')
+        shift 1
     ;;
     
     '--bootstrap' | '-b')
         BOOTSTRAP='true'
         ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
-        ROOT_CONFIG_FILE=${2}
 
-        EL_CICD_ADM_COMMANDS=('_bootstrap_el_cicd')
-        shift 2
+        EL_CICD_ADM_COMMANDS=('_podman_login' '_bootstrap_el_cicd')
+        shift 1
     ;;
 
     '--cicd-creds' | '-C')
         ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
-        ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=("oc start-build refresh-credentials --wait --follow -n ${ONBOARDING_MASTER_NAMESPACE}")
-        shift 2
+        shift 1
     ;;
     
     '--config')
-        ROOT_CONFIG_FILE=${2}
-
         EL_CICD_ADM_COMMANDS=('')
-        shift 2
+        shift 1
     ;;
 
     '--help' | '-h')
@@ -83,10 +78,9 @@ do
 
     '--jenkins' | '-j')
         ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
-        ROOT_CONFIG_FILE=${2}
 
-        EL_CICD_ADM_COMMANDS=('_build_el_cicd_jenkins_image')
-        shift 2
+        EL_CICD_ADM_COMMANDS=('_podman_login' '_build_el_cicd_jenkins_image')
+        shift 1
     ;;
     
     '--lab' | '-l')
@@ -96,44 +90,39 @@ do
 
     '--onboarding-creds' | '-c')
         ELCICD_ADM_MSG="REFRESH CREDENTIALS"
-        ROOT_CONFIG_FILE=${2}
 
-        EL_CICD_ADM_COMMANDS=('_refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials')
-        shift 2
+        EL_CICD_ADM_COMMANDS=('_create_env_image_registry_secrets' '_refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials')
+        shift 1
     ;;
     
     '--sealed-secrets' | '-s')
         ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
-        ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets')
-        shift 2
+        shift 1
     ;;
 
     '--setup-lab' | '-L')
         ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
         EL_CICD_LAB_INSTALL='true'
-        ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=('__bootstrap_dev_environment')
-        shift 2
+        shift 1
     ;;
 
     '--start-crc')
         ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
         EL_CICD_LAB_INSTALL='true'
-        ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=('_start_crc')
-        shift 2
+        shift 1
     ;;
 
     '--tear-down-dev' | '-T')
         ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
-        ROOT_CONFIG_FILE=${2}
 
         EL_CICD_ADM_COMMANDS=('_tear_down_dev_environment')
-        shift 2
+        shift 1
     ;;
 
     -*|--*)
@@ -143,10 +132,22 @@ do
         echo "${HELP_MSG}"
         exit 1
     ;;
+    
+    *)
+        if [[ ! -z ${ROOT_CONFIG_FILE} ]]
+        then
+            __error_msg_and_exit
+        fi
+        
+        ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${1}
+        shift 1
+    ;;
   esac
 done
 
 _create_and_source_meta_info_file
+
+_helm_repo_add_and_update_elCicdCharts
 set +e
 
 
@@ -154,4 +155,12 @@ if [[ ! -z ${EL_CICD_ADM_COMMANDS} ]]
 then
     _execute_kubectl_el_cicd_adm
 fi
+
+__error_msg_and_exit() {
+    echo
+    echo "ERROR: Unknown command option '${1}'"
+    echo
+    echo "${HELP_MSG}"
+    exit 1
+}
 

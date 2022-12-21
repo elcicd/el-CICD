@@ -23,22 +23,28 @@ _verify_scm_secret_files_exist() {
 }
 
 _verify_pull_secret_files_exist() {
-    CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
-    for ENV in ${CICD_ENVIRONMENTS}
+    local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
+    for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
     do
-        local TKN_FILE=${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}
-        if [[ ! -f ${TKN_FILE} ]]
+        if [[ ${PULL_SECRET_TYPE} == 'jenkins' ]]
         then
-            local TOKEN_FILES=${TOKEN_FILES:+$TOKEN_FILES, }${TKN_FILE}
+            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${ONBOARDING_SERVER_TYPE}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        else
+            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        fi
+    
+        if [[ ! -f ${USERNAME_PWD_FILE} ]]
+        then
+            local PULL_SECRET_FILES=${PULL_SECRET_FILES:+$PULL_SECRET_FILES, }${TKN_FILE}
         fi
     done
 
-    if [[ ! -z ${TOKEN_FILES} ]]
+    if [[ ! -z ${PULL_SECRET_FILES} ]]
     then
         echo
         echo "ERROR:"
-        echo "  MISSING THE FOLLOWING ENV PULL SECRET TOKEN FILES:"
-        echo "    '${TOKEN_FILES//${SECRET_FILE_DIR}\//}'"
+        echo "  MISSING THE FOLLOWING PULL SECRET FILES:"
+        echo "    '${PULL_SECRET_FILES//${SECRET_FILE_DIR}\//}'"
         __verify_continue
     fi
 }
@@ -85,21 +91,22 @@ _install_sealed_secrets() {
     set -e
     
     echo
+    echo '================= SEALED SECRETS ================='
+    echo
     echo 'Installing latest Sealed Secrets Helm chart'
     echo
-    echo '==============================='
     helm upgrade --install --atomic sealed-secrets --history-max 2 -n kube-system \
                  --set-string fullnameOverride=sealed-secrets-controller \
                  --repo https://bitnami-labs.github.io/sealed-secrets \
                  sealed-secrets
     echo
-    echo '==============================='
+    echo '================= SEALED SECRETS ================='
 
     echo
     echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
     local SEALED_SECRETS_DIR=/tmp/sealedsecrets
     mkdir -p ${SEALED_SECRETS_DIR}
-    local SS_VERSION=$(helm list -o json | jq -r '.[] | select (.name == "sealed-secrets") | .app_version' | tr -d v)
+    local SS_VERSION=$(helm list -o json -n kube-system | jq -r '.[] | select (.name == "sealed-secrets") | .app_version' | tr -d v)
     local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${SS_VERSION}/kubeseal-${SS_VERSION}-linux-amd64.tar.gz"
     rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
     wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
@@ -151,20 +158,29 @@ _push_deploy_key_to_github() {
 }
 
 _create_env_image_registry_secrets() {
-    local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
-    for ENV in ${CICD_ENVIRONMENTS}
+    local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
+    echo
+    echo "Creating the image repository pull secrets for each environment and Jenkins: ${PULL_SECRET_TYPES}"
+    
+    for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
     do
-        local APP_NAME="el-cicd-${ENV@L}-pull-secret"
+        local APP_NAME="el-cicd-${PULL_SECRET_TYPE@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
 
-        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        if [[ ${PULL_SECRET_TYPE} == 'jenkins' ]]
+        then
+            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${ONBOARDING_SERVER_TYPE}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        else
+            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        fi
+        
         local SET_FLAGS="${SET_FLAGS:+$SET_FLAGS }--set-file elCicdDefs-${APP_NAME}.USERNAME_PWD=${USERNAME_PWD_FILE}"
-        local SERVER=$(eval echo \${${ENV}${IMAGE_REGISTRY_POSTFIX}})
-        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER}"
-        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.ENV=${ENV@L}"
+        local SERVER=$(eval echo \${${PULL_SECRET_TYPE}${IMAGE_REGISTRY_POSTFIX}})
+        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER:-${JENKINS_IMAGE_REGISTRY}}"
+        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.PULL_SECRET_TYPE=${PULL_SECRET_TYPE@L}"
     done
 
-    set -x
+    set -ex
     helm upgrade --create-namespace --atomic --install --history-max=1 \
         --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
         ${SET_FLAGS} \
@@ -172,7 +188,7 @@ _create_env_image_registry_secrets() {
         -f ${EL_CICD_HELM_DIR}/cicd-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
-    set +x
+    set +ex
 }
 
 _push_access_token_to_jenkins() {
@@ -253,5 +269,19 @@ _run_custom_credentials_script() {
         echo "Custom script ${CUSTOM_CREDENTIALS_SCRIPT} completed"
     else
         echo "Custom script '${CUSTOM_CREDENTIALS_SCRIPT}' not found."
+    fi
+}
+
+_podman_login() {
+    echo
+    echo -n 'Podman: '
+    JENKINS_USERNAME_PWD_FILE="jenkins-${ONBOARDING_SERVER_TYPE}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    IFS=':' read -r -a JENKINS_USERNAME_PWD <<< $(cat ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE})
+    if [[ ! -z ${JENKINS_USERNAME_PWD} ]]
+    then
+        podman login --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} -u ${JENKINS_USERNAME_PWD[0]} -p ${JENKINS_USERNAME_PWD[1]} ${JENKINS_IMAGE_REGISTRY}
+    else
+        echo "ERROR: UNABLE TO FIND JENKINS IMAGE REGISTRY USERNAME/PASSWORD FILE: ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE}"
+        exit 1
     fi
 }

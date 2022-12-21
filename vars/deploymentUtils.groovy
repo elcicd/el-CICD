@@ -29,12 +29,12 @@ def createComponentDeployStages(def projectInfo, def components) {
             stage("Deploying ${component.name}") {
                 def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
                 def compValues = ["elCicdDefaults.appName=${component.name}",
-                                    "elCicdDefs.COMPONENT_NAME=${component.name}",
-                                    "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                                    "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                                    "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                    "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                                    "elCicdDefaults.image=${componentImage}"]
+                                  "elCicdDefs.COMPONENT_NAME=${component.name}",
+                                  "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                                  "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                                  "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                  "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
+                                  "elCicdDefaults.image=${componentImage}"]
                 compValues.addAll(commonValues)
 
                 runHelmDeployment(projectInfo, component, compValues)
