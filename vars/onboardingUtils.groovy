@@ -46,7 +46,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-cicd-server \
             elCicdCharts/elCicdChart
-        oc rollout status deploy/jenkins
+        # oc rollout status deploy/jenkins
         exit 1
 
         ${shCmd.echo ''}
