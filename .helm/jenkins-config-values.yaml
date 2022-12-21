@@ -210,37 +210,37 @@ elCicdTemplates:
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
 
-# - templateName: copyResource
-#   anyProfiles:
-#   - cicd
-#   appName: el-cicd-jenkins-pull-secret
-#   kind: Secret
-#   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-#   toNamespace: ${RELEASE_NAMESPACE}
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: el-cicd-jenkins-pull-secret
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
 
-# - templateName: copyResource
-#   anyProfiles:
-#   - cicd
-#   appNames: ${SDLC_ENVS}
-#   appName: el-cicd-${}-pull-secret
-#   kind: Secret
-#   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-#   toNamespace: ${RELEASE_NAMESPACE}
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appNames: ${SDLC_ENVS}
+  appName: el-cicd-${}-pull-secret
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
     
-# - templateName: copyResource
-#   anyProfiles:
-#   - cicd
-#   appName: ${EL_CICD_META_INFO_NAME}
-#   kind: ConfigMap
-#   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-#   toNamespace: ${RELEASE_NAMESPACE}
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: ${EL_CICD_META_INFO_NAME}
+  kind: ConfigMap
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
     
-# - templateName: copyResource
-#   anyProfiles:
-#   - cicd
-#   appName: ${EL_CICD_BUILD_SECRETS_NAME}
-#   kind: Secret
-#   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
-#   toNamespace: ${RELEASE_NAMESPACE}
+- templateName: copyResource
+  anyProfiles:
+  - cicd
+  appName: ${EL_CICD_BUILD_SECRETS_NAME}
+  kind: Secret
+  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
   
   

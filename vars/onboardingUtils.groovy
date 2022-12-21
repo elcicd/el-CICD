@@ -28,8 +28,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
-        #helm upgrade --install --history-max=1 --debug
-        helm template --debug \
+        helm helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
@@ -46,8 +45,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-cicd-server \
             elCicdCharts/elCicdChart
-        # oc rollout status deploy/jenkins
-        exit 1
+        oc rollout status deploy/jenkins
 
         ${shCmd.echo ''}
         ${shCmd.echo 'Jenkins CICD Server up, sleep for 5 more seconds to make sure server REST api is ready'}
