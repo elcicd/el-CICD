@@ -59,30 +59,17 @@ def call(Map args) {
             parallel(
                 firstBucket: {
                     stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
-                        buildModules[0].each { module ->
-                            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-                        }
+                        triggerPipelines(projectInfo, buibuildModules[0)
                     }
                 },
                 secondBucket: {
                     stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
-                        if (buildModules[1]) {
-                            buildModules[1].each { module ->
-                                pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-                            }
-                        }
+                        triggerPipelines(projectInfo, buibuildModules[1)
                     }
                 },
                 thirdBucket: {
                     stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
-                        if (buildModules[2]) {
-                            buildModules[2].each { module ->
-                                pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-                            }
-                        }
+                        triggerPipelines(projectInfo, buibuildModules[2])
                     }
                 }
             )
@@ -90,5 +77,16 @@ def call(Map args) {
         else {
             echo "No modules selected for building"
         }
+    }
+}
+
+def triggerPipelines(def projectInfo, def buildModules) {
+    if (buildModules) {
+        buildModules.each { module ->
+            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+        }
+                                
+        loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
     }
 }
