@@ -28,7 +28,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
-        helm helm upgrade --install --history-max=1 \
+        helm upgrade --install --history-max=1 \
             --set-string profiles='{${profiles}}' \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
