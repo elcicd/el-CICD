@@ -29,7 +29,7 @@ _bootstrap_el_cicd() {
         sleep 2
     fi
 
-    __build_jenkins_agents_if_necessary
+    _build_jenkins_agents_if_necessary
 
     __bootstrap_el_cicd_onboarding_server
 
@@ -195,7 +195,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "${_BOLD}el-CICD Jenkins WILL BE BUILT.${_REGULAR}"
     fi
 
-    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(__base_jenkins_agent_exists) == ${_FALSE} ]]
+    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(_base_jenkins_agent_exists) == ${_FALSE} ]]
     then
         echo
         echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}' image was not found,"
@@ -326,24 +326,6 @@ _delete_namespace() {
     fi
 }
 
-__build_jenkins_agents_if_necessary() {
-    if [[ ${MUST_BUILD_JENKINS_AGENTS} == ${_TRUE} ]]
-    then
-        _build_el_cicd_jenkins_agent_images
-    fi
-}
-
-__base_jenkins_agent_exists() {
-    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
-    local HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    if [[ -z ${HAS_BASE_AGENT} ]]
-    then
-        echo ${_FALSE}
-    else
-        echo ${_TRUE}
-    fi
-}
-
 __run_custom_config_scripts() {
     local SCRIPTS=$(find "${EL_CICD_CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "${ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
     if [[ ! -z ${SCRIPTS} ]]
@@ -358,62 +340,4 @@ __run_custom_config_scripts() {
     else
         echo 'No custom config scripts found...'
     fi
-}
-
-_get_yes_no_answer() {
-    read -p "${1}" -n 1 USER_ANSWER
-    >&2 echo
-
-    if [[ ${USER_ANSWER} == 'Y' ]]
-    then
-        echo ${_YES}
-    else
-        echo ${_NO}
-    fi
-}
-
-_compare_ignore_case_and_extra_whitespace() {
-    local FIRST=$(echo "${1}" | xargs)
-    local SECOND=$(echo "${2}" | xargs)
-    if [[ -z $(echo "${FIRST}" | grep --ignore-case "^${SECOND}$") ]]
-    then
-        echo ${_FALSE}
-    else
-        echo ${_TRUE}
-    fi
-}
-
-_is_true() {
-    _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
-}
-
-_failure() {
-   ERR_CODE=$?
-   set +xv
-   if [[  $- =~ e && ${ERR_CODE} != 0 ]]
-   then
-       echo
-       echo "========= ${_BOLD}CATASTROPHIC COMMAND FAIL${_REGULAR} ========="
-       echo
-       echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE}"
-       echo
-       LEN=${#BASH_LINENO[@]}
-       for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
-       do
-           echo '---'
-           echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
-           echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
-           if [[ ${INDEX} > 0 ]]
-           then
-               echo "  COMMAND: ${FUNCNAME[${INDEX}]}"
-               echo "  LINE: ${BASH_LINENO[${INDEX}]}"
-           else
-               echo "  COMMAND: ${BASH_COMMAND}"
-               echo "  LINE: ${ERRO_LINENO}"
-           fi
-       done
-       echo
-       echo "======= END CATASTROPHIC COMMAND FAIL ======="
-       echo
-   fi
 }

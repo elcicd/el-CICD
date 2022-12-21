@@ -118,3 +118,61 @@ _execute_kubectl_el_cicd_adm() {
         eval ${COMMAND}
     done
 }
+
+_failure() {
+   ERR_CODE=$?
+   set +xv
+   if [[  $- =~ e && ${ERR_CODE} != 0 ]]
+   then
+       echo
+       echo "========= ${_BOLD}CATASTROPHIC COMMAND FAIL${_REGULAR} ========="
+       echo
+       echo "el-CICD EXITED ON ERROR CODE: ${ERR_CODE}"
+       echo
+       LEN=${#BASH_LINENO[@]}
+       for (( INDEX=0; INDEX<$LEN-1; INDEX++ ))
+       do
+           echo '---'
+           echo "FILE: $(basename ${BASH_SOURCE[${INDEX}+1]})"
+           echo "  FUNCTION: ${FUNCNAME[${INDEX}+1]}"
+           if [[ ${INDEX} > 0 ]]
+           then
+               echo "  COMMAND: ${FUNCNAME[${INDEX}]}"
+               echo "  LINE: ${BASH_LINENO[${INDEX}]}"
+           else
+               echo "  COMMAND: ${BASH_COMMAND}"
+               echo "  LINE: ${ERRO_LINENO}"
+           fi
+       done
+       echo
+       echo "======= END CATASTROPHIC COMMAND FAIL ======="
+       echo
+   fi
+}
+
+_get_yes_no_answer() {
+    read -p "${1}" -n 1 USER_ANSWER
+    >&2 echo
+
+    if [[ ${USER_ANSWER} == 'Y' ]]
+    then
+        echo ${_YES}
+    else
+        echo ${_NO}
+    fi
+}
+
+_compare_ignore_case_and_extra_whitespace() {
+    local FIRST=$(echo "${1}" | xargs)
+    local SECOND=$(echo "${2}" | xargs)
+    if [[ -z $(echo "${FIRST}" | grep --ignore-case "^${SECOND}$") ]]
+    then
+        echo ${_FALSE}
+    else
+        echo ${_TRUE}
+    fi
+}
+
+_is_true() {
+    _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
+}

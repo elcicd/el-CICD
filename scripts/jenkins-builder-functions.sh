@@ -75,3 +75,21 @@ _build_el_cicd_jenkins_agent_images() {
     fi
 }
 
+_build_jenkins_agents_if_necessary() {
+    if [[ ${MUST_BUILD_JENKINS_AGENTS} == ${_TRUE} ]]
+    then
+        _build_el_cicd_jenkins_agent_images
+    fi
+}
+
+_base_jenkins_agent_exists() {
+    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
+    local HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    if [[ -z ${HAS_BASE_AGENT} ]]
+    then
+        echo ${_FALSE}
+    else
+        echo ${_TRUE}
+    fi
+}
+
