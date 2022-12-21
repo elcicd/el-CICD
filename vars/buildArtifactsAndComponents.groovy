@@ -85,8 +85,8 @@ def triggerPipelines(def projectInfo, def buildModules) {
         buildModules.each { module ->
             pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
             build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-        }
                                 
-        loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
+            loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
+        }
     }
 }
