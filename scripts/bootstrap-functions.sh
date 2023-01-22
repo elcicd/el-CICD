@@ -47,8 +47,10 @@ _bootstrap_el_cicd() {
 }
 
 _create_and_source_meta_info_file() {
+    set -e -o allexport
+    
     echo
-    echo "GENERATING CONFIG FILES (found in /tmp)"
+    echo "GENERATING CONFIG FILES:"
 
     source ${ROOT_CONFIG_FILE}
 
@@ -70,7 +72,7 @@ _create_and_source_meta_info_file() {
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
 
-    if [[ ! -z ${EL_CICD_LAB_INSTALL} ]]
+    if [[ ! -z ${EL_CICD_USE_LAB_CONFIG} ]]
     then
         LAB_CONFIG_FILE_LIST="${EL_CICD_CONFIG_LAB_CONF} ${EL_CICD_LAB_CONF}"
     fi
@@ -81,14 +83,19 @@ _create_and_source_meta_info_file() {
     local BOOTSTRAP_CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${EL_CICD_CONFIG_BOOTSTRAP_CONF} ${EL_CICD_BOOTSTRAP_CONF}"
     __create_meta_info_file "${BOOTSTRAP_CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
 
-    source "${EL_CICD_BOOTSTRAP_META_INFO_FILE}"
+    source ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
+
+    echo
+    echo 'el-CICD environment loaded'
+    
+    set +e +o allexport
 }
 
 __create_meta_info_file() {
     local CONF_FILE_LIST=${1}
     local META_INFO_FILE=${2}
 
-    local META_INFO_FILE_TMP=.el_cicd_meta_info_tmp_file
+    local META_INFO_FILE_TMP=${META_INFO_FILE}.tmp
 
     rm -f ${META_INFO_FILE} ${META_INFO_FILE_TMP}
 
@@ -98,22 +105,20 @@ __create_meta_info_file() {
     # remove blank lines, comments, and any trailing whitespace
     sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
 
-    # realize properties referencing values defined in other files
+    sort -o ${META_INFO_FILE_TMP} ${META_INFO_FILE_TMP}
+
     source ${META_INFO_FILE_TMP}
     cat ${META_INFO_FILE_TMP} | envsubst > ${META_INFO_FILE}
 
     rm -f ${META_INFO_FILE_TMP}
 
-    sort -o ${META_INFO_FILE} ${META_INFO_FILE}
-
     echo
-    echo "$(basename ${META_INFO_FILE}) created from the following config files:"
-    echo -n '    '
+    echo "${_BOLD}${META_INFO_FILE}${_REGULAR} created from the following config files:"
     for CONF_FILE in ${CONF_FILE_LIST}
     do
-        echo -n "$(basename ${CONF_FILE}) "
+        echo "- $(basename ${CONF_FILE}) "
     done
-    echo
+    sleep 2
 }
 
 __gather_and_confirm_bootstrap_info_with_user() {
@@ -155,8 +160,9 @@ __bootstrap_el_cicd_onboarding_server() {
 
 __summarize_and_confirm_bootstrap_run_with_user() {
     echo
-    echo "SUMMARY:"
+    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
     echo
+    
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
     echo
@@ -214,6 +220,8 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         fi
         echo "To manually rebuild Jenkins Agents, run the 'oc el-cicd-adm --agents <el-CICD config file>'"
     fi
+    echo
+    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
 
     _confirm_continue
 }
@@ -296,9 +304,13 @@ __create_onboarding_automation_server() {
 }
 
 _helm_repo_add_and_update_elCicdCharts() {
+    set -e
+    
     echo
     helm repo add elCicdCharts --force-update ${EL_CICD_HELM_REPOSITORY}
     helm repo update elCicdCharts
+    
+    set +e
 }
 
 _delete_namespace() {

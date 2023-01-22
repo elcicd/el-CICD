@@ -108,7 +108,7 @@ _install_sealed_secrets() {
     mkdir -p ${SEALED_SECRETS_DIR}
     local SS_VERSION=$(helm list -o json -n kube-system | jq -r '.[] | select (.name == "sealed-secrets") | .app_version' | tr -d v)
     local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${SS_VERSION}/kubeseal-${SS_VERSION}-linux-amd64.tar.gz"
-    rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
+    sudo rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
     wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
     sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal

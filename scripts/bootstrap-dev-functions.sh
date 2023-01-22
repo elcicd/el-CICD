@@ -1,13 +1,13 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-__bootstrap_dev_environment() {
+__bootstrap_lab_environment() {
     echo
     echo "${DEV_SETUP_WELCOME_MSG}"
 
-    __gather_dev_setup_info
+    __gather_lab_setup_info
 
-    __summarize_and_confirm_dev_setup_info
+    __summarize_and_confirm_lab_setup_info
 
     __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
@@ -46,7 +46,7 @@ __bootstrap_dev_environment() {
     echo "el-CICD Development environment setup complete."
 }
 
-__gather_dev_setup_info() {
+__gather_lab_setup_info() {
     echo
     CRC_TAR_XZ=$(ls ${EL_CICD_HOME}/crc-*.tar.xz 2>/dev/null | wc -l)
     if [[ ${CRC_TAR_XZ} == '1' && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
@@ -133,10 +133,10 @@ __gather_dev_setup_info() {
     fi
 }
 
-__summarize_and_confirm_dev_setup_info() {
+__summarize_and_confirm_lab_setup_info() {
     echo
-    echo "SUMMARY:"
-    echo
+    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
+    echo 
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
@@ -178,6 +178,9 @@ __summarize_and_confirm_dev_setup_info() {
     fi
 
     echo "Git token verified against ${EL_CICD_GIT_API_URL}/${EL_CICD_ORGANIZATION}."
+    
+    echo
+    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
 
     _confirm_continue
 }

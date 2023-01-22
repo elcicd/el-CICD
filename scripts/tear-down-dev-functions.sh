@@ -1,13 +1,13 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-_tear_down_dev_environment() {
+_tear_down_lab_environment() {
     echo
     echo "${DEV_TEAR_DOWN_WELCOME_MSG}"
 
-    __gather_dev_tear_down_info
+    __gather_lab_tear_down_info
 
-    __summarize_and_confirm_dev_tear_down
+    __summarize_and_confirm_lab_tear_down
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
@@ -32,7 +32,7 @@ _tear_down_dev_environment() {
     fi
 }
 
-__gather_dev_tear_down_info() {
+__gather_lab_tear_down_info() {
     echo
     if [[ -d ${HOME}/.crc ]]
     then
@@ -67,9 +67,9 @@ __gather_dev_tear_down_info() {
     fi
 }
 
-__summarize_and_confirm_dev_tear_down() {
+__summarize_and_confirm_lab_tear_down() {
     echo
-    echo "TEAR DOWN SUMMARY:"
+    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
     echo 
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
@@ -103,6 +103,9 @@ __summarize_and_confirm_dev_tear_down() {
         echo -n "will ${_BOLD}NOT${_REGULAR}"
     fi
     echo " be removed from ${EL_CICD_ORGANIZATION} on the Git host."
+    
+    echo
+    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
 
     _confirm_continue
 }
@@ -113,9 +116,10 @@ _remove_existing_crc() {
     if [[ ! -z ${CRC_EXEC} ]]
     then
         echo
-        echo 'Cleaning up old OpenShift Local install'
+        echo 'Stopping the OpenShift Local cluster'
         ${CRC_EXEC} stop 2>/dev/null
         ${CRC_EXEC} delete  2>/dev/null
+        echo 'Cleaning up the OpenShift Local install'
         ${CRC_EXEC} cleanup  2>/dev/null
     fi
 
@@ -152,7 +156,7 @@ __remove_image_registry_nfs_share() {
         echo "Removing ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
 
         sudo rm -rf ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
-        sudo sed -i "\|${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}|d" /etc/exports
+        sudo cat /etc/exports | sudo grep -v ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} > /etc/exports
         sudo exportfs -a
         sudo systemctl restart nfs-server.service
     else
