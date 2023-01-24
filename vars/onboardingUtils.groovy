@@ -78,7 +78,6 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         helm template --debug \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
