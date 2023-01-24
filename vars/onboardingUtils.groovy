@@ -74,7 +74,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
 
         ${shCmd.echo ''}
-        # helm upgrade --atomic --install --history-max=1 --debug \
+        # helm upgrade --atomic --install --history-max=1 --debug
         helm template --debug \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
@@ -85,7 +85,6 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
-        sleep 5
         exit 1
 
         ${shCmd.echo ''}
