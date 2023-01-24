@@ -85,6 +85,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
+        sleep 5
         exit 1
 
         ${shCmd.echo ''}
