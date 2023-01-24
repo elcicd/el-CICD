@@ -77,13 +77,13 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         helm upgrade --atomic --install --history-max=1 --debug \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
+            -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
-        exit 1
 
         ${shCmd.echo ''}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
