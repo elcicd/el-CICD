@@ -74,7 +74,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
 
         ${shCmd.echo ''}
-        helm upgrade --atomic --install --history-max=1 --debug
+        helm upgrade --atomic --install --history-max=1 --debug \
             --set elCicdNamespaces='{${cicdNamespaces}}' \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
