@@ -92,7 +92,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
         fi
 
         ${shCmd.echo ''}
-        helm upgrade --wait --wait-for-jobs --install --history-max=1 --debug \
+        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
