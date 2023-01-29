@@ -9,16 +9,19 @@ __bootstrap_lab_environment() {
 
     __summarize_and_confirm_lab_setup_info
 
-    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
+    __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${ROOT_CONFIG_FILE}"
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
         __bootstrap_clean_crc
 
         __additional_cluster_config
-    elif [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
-    then
-        _start_crc
+    else
+        CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
+        if [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
+        then
+            _start_crc
+        fi
     fi
 
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
@@ -204,7 +207,9 @@ _start_crc() {
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
     then    
         echo
-        echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}M memory, and ${CRC_DISK}G disk"
+        echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, and ${CRC_DISK}Gi disk"
+        echo "[WARNING: use el-CICD CLI to restart your CRC instance if necessary (--start flag), since it isn't guaranteed to remember these values on restart.]"
+        echo
         ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
 
         eval $(${CRC_EXEC} oc-env)
