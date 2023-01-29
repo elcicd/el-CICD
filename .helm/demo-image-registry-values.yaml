@@ -1,8 +1,7 @@
 elCicdDefs:
   PORT: "5000"
   REGISTRY_HTTP_ADDR: "0.0.0.0"
-  LIMITS_CPU: 500m
-  LIMITS_MEMORY: 100Mi
+  MEMORY: 256Mi
   HTTP_ADDR:
     name: REGISTRY_HTTP_ADDR
     value: ${REGISTRY_HTTP_ADDR}:${PORT}
@@ -45,11 +44,20 @@ elCicdTemplates:
   volumeMounts:
   - ${VOLUME_MNT_HTPASSWD}
   - ${VOLUME_MNT_NFS}
-  limitsCpu: ${LIMITS_CPU}
-  limitsMemory: ${LIMITS_MEMORY}
+  requestsMemory: ${MEMORY}
+  limitsMemory: ${MEMORY}
   volumes:
   - ${VOLUME_HTPASSWD}
   - ${VOLUME_NFS}
+
+- templateName: limitRange
+  appName: demo-image-registry
+  limits:
+  - default:
+      cpu: 1000m
+    defaultRequest:
+      cpu: 200m
+    type: Container
   
 - templateName: secret
   appNames: ${APP_NAMES}

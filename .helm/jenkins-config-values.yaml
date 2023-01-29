@@ -5,7 +5,6 @@ elCicdDefs:
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
 
-  CPU_REQUEST: 500m
   MEMORY_REQUEST: 256Mi
 
   JENKINS_VOLUME_MNTS:
@@ -91,6 +90,15 @@ elCicdTemplates:
       memory: ${MEMORY_REQUEST}
   volumeMounts: ${JENKINS_VOLUME_MNTS}
   volumes: ${JENKINS_VOLUMES}
+
+- templateName: limitRange
+  appName: jenkins
+  limits:
+  - default:
+      cpu: 2000m
+    defaultRequest:
+      cpu: 300m
+    type: Container
 
 - templateName: configMap
   appName: openshift-jenkins-login-plugin-config
