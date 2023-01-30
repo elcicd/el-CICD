@@ -57,7 +57,7 @@ def call(Map args) {
 
         if (buildModules) {
             parallel(
-                firstBucket: {
+                firstBatch: {
                     stage("building first batch of modules to ${projectInfo.deployToNamespace}") {
                         loggingUtils.echoBanner("BUILDING FIRST BATCH OF MODULES:",
                                                  buildModules[0].collect { it.name }.join(', '))
@@ -65,7 +65,7 @@ def call(Map args) {
                         triggerPipelines(projectInfo, buildModules[0])
                     }
                 },
-                secondBucket: {
+                secondBatch: {
                     stage("building second batch of modules to ${projectInfo.deployToNamespace}") {
                         loggingUtils.echoBanner("BUILDING SECOND BATCH OF MODULES:",
                                                  buildModules[1].collect { it.name }.join(', '))
@@ -73,7 +73,7 @@ def call(Map args) {
                         triggerPipelines(projectInfo, buildModules[1])
                     }
                 },
-                thirdBucket: {
+                thirdBatch: {
                     stage("building third batch of modules to ${projectInfo.deployToNamespace}") {
                         loggingUtils.echoBanner("BUILDING THIRD BATCH OF MODULES:",
                                                  buildModules[2].collect { it.name }.join(', '))
