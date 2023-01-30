@@ -253,7 +253,7 @@ __create_onboarding_automation_server() {
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
     helm upgrade --install --history-max=1 \
-        --set-string profiles="{onboarding${JENKINS_PERSISTENT:+,jenkinsPersistent}${JENKINS_AGENT_PERSISTENT:+,jenkinsAgentPersistent}}" \
+        --set-string profiles="{onboarding${JENKINS_PERSISTENT:+,jenkinsPersistent}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \

@@ -58,7 +58,8 @@ def node(Map args, Closure body) {
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
     
-    if (el.cicd.JENKINS_AGENT_PERSISTENT == 'true') {
+    hasPersistentAgent = sh(returnStdout : true, script: 'oc get pvc --ignore-not-found jenkins-agent-home')
+    if (hasPersistentAgent) {
         volumeDefs += persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins', readOnly: false)
     }
 
