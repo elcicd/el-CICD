@@ -37,7 +37,9 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
+            --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_REQUEST} \
             --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
+            --set-string elCicdDefs.MEMORY_REQUEST=${el.cicd.JENKINS_MEMORY_REQUEST} \
             --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \

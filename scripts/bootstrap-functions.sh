@@ -257,7 +257,9 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
+        --set-string elCicdDefs.CPU_REQUEST=${JENKINS_CPU_REQUEST} \
         --set-string elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
+        --set-string elCicdDefs.MEMORY_REQUEST=${JENKINS_MEMORY_REQUEST} \
         --set-string elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \

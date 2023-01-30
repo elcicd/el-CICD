@@ -5,8 +5,6 @@ elCicdDefs:
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
 
-  MEMORY_REQUEST: 256Mi
-
   JENKINS_VOLUME_MNTS:
   - mountPath: /var/lib/jenkins
     name: ${JENKINS_SERVICE_NAME}-data
@@ -83,10 +81,8 @@ elCicdTemplates:
     timeoutSeconds: 240
   resources:
     limits:
-      cpu: ${CPU_LIMIT}
       memory: ${MEMORY_LIMIT}
     requests:
-      cpu: ${CPU_REQUEST}
       memory: ${MEMORY_REQUEST}
   volumeMounts: ${JENKINS_VOLUME_MNTS}
   volumes: ${JENKINS_VOLUMES}
@@ -95,9 +91,9 @@ elCicdTemplates:
   appName: jenkins
   limits:
   - default:
-      cpu: 2000m
+      cpu: ${CPU_LIMIT}
     defaultRequest:
-      cpu: 300m
+      cpu: ${CPU_REQUEST}
     type: Container
 
 - templateName: configMap

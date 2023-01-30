@@ -82,9 +82,7 @@ def node(Map args, Closure body) {
                 alwaysPullImage: true,
                 args: '${computer.jnlpmac} ${computer.name}',
                 resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}",
-                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",
-                resourceRequestCpu: "${el.cicd.JENKINS_AGENT_CPU_REQUEST}",
-                resourceLimitCpu: "${el.cicd.JENKINS_AGENT_CPU_LIMIT}"
+                resourceLimitMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}"
             )
         ],
         volumes: volumeDefs
