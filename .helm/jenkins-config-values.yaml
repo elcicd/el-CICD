@@ -198,7 +198,7 @@ elCicdTemplates:
   anyProfiles:
   - jenkinsAgentPersistent
   appName: jenkins-agent-home
-  storageRequest: ${VOLUME_CAPACITY}
+  storageRequest: ${AGENT_VOLUME_CAPACITY}
   accessMode: ReadWriteMany
 
 - templateName: persistentVolumeClaim
