@@ -58,17 +58,26 @@ def call(Map args) {
         if (buildModules) {
             parallel(
                 firstBucket: {
-                    stage("building first bucket of components to ${projectInfo.deployToNamespace}") {
+                    stage("building first batch of modules to ${projectInfo.deployToNamespace}") {
+                        loggingUtils.echoBanner("BUILDING FIRST BATCH OF MODULES:",
+                                                 buildModules[0].collect { it.name }.join(', '))
+
                         triggerPipelines(projectInfo, buildModules[0])
                     }
                 },
                 secondBucket: {
-                    stage("building second bucket of components to ${projectInfo.deployToNamespace}") {
+                    stage("building second batch of modules to ${projectInfo.deployToNamespace}") {
+                        loggingUtils.echoBanner("BUILDING SECOND BATCH OF MODULES:",
+                                                 buildModules[1].collect { it.name }.join(', '))
+
                         triggerPipelines(projectInfo, buildModules[1])
                     }
                 },
                 thirdBucket: {
-                    stage("building third bucket of components to ${projectInfo.deployToNamespace}") {
+                    stage("building third batch of modules to ${projectInfo.deployToNamespace}") {
+                        loggingUtils.echoBanner("BUILDING THIRD BATCH OF MODULES:",
+                                                 buildModules[2].collect { it.name }.join(', '))
+
                         triggerPipelines(projectInfo, buildModules[2])
                     }
                 }
@@ -85,7 +94,7 @@ def triggerPipelines(def projectInfo, def buildModules) {
         buildModules.each { module ->
             pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
             build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-                                
+
             loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
         }
     }

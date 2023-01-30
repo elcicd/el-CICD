@@ -151,16 +151,16 @@ __summarize_and_confirm_lab_setup_info() {
 
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
-        echo -n "An image registry ${_BOLD}WILL${_REGULAR} be installed on your cluster WITH"
+        echo -n "An image registry ${_BOLD}WILL${_REGULAR} be installed on your cluster ${_BOLD}WITH"
         if [[ ${SETUP_IMAGE_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
         fi
-        echo " an NFS share."
+        echo "${_REGULAR} an NFS share."
 
         if [[ ${SETUP_CRC} != ${_YES} ]]
         then
-            echo "You MUST be currently logged into a cluster as a cluster admin."
+            echo "You ${_BOLD}MUST${_REGULAR} be currently logged into a cluster as a cluster admin."
         fi
     else
         echo "An image registry will ${_BOLD}NOT${_REGULAR} be installed on your cluster."
