@@ -61,12 +61,13 @@ def node(Map args, Closure body) {
     node() {
         hasPersistentAgent = sh(returnStdout : true, script: 'oc get pvc --ignore-not-found jenkins-agent-home')
         if (hasPersistentAgent) {
+            echo 'Found persistent volume for agent'
             volumeDefs += persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins', readOnly: false)
         }
+    }
 
-        if (args.isBuild) {
-            volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
-        }
+    if (args.isBuild) {
+        volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
     
     podTemplate([
