@@ -17,17 +17,27 @@ elCicdDefs:
       <healthMetrics />
       <icon class="com.cloudbees.hudson.plugins.folder.icons.StockFolderIcon" />
     </com.cloudbees.hudson.plugins.folder.Folder>
+    
+  SCM_BRANCH_BUILD_PARAM: |-
+    <hudson.model.StringParameterDefinition>
+        <name>SCM_BRANCH</name>
+        <description>Git branch to build</description>
+        <defaultValue>${SCM_BRANCH}</defaultValue>
+        <trim>true</trim>
+    </hudson.model.StringParameterDefinition>
 
   BUILD_COMPONENT_PARAMS_XML: |-
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         ${SCM_BRANCH_BUILD_PARAM}
-        <hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
           <name>DEPLOY_TO_NAMESPACE</name>
-          <description>Namespace to deploy to (must be the dev environment or sandbox namespace)</description>
+          <description>Namespace to deploy to</description>
           <defaultValue>${DEV_NAMESPACE}</defaultValue>
-          <trim>true</trim>
-        </hudson.model.StringParameterDefinition>
+          <a class="string-array">
+            ${BUILD_NAMESPACE_CHOICES}
+          </a>
+        </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>RECREATE</name>
           <description>From OpenShift Build Environment Variable</description>

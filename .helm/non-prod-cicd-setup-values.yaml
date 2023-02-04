@@ -19,13 +19,6 @@ elCicdDefs:
     pipelineName: '${APP_NAME}',
     projectId: '${PROJECT_ID}',
     scmBranch: params.SCM_BRANCH
-  SCM_BRANCH_BUILD_PARAM: |-
-    <hudson.model.StringParameterDefinition>
-        <name>SCM_BRANCH</name>
-        <description>Git branch to build</description>
-        <defaultValue>${SCM_BRANCH}</defaultValue>
-        <trim>true</trim>
-    </hudson.model.StringParameterDefinition>
   RELEASE_CANDIDATE_PARAMS: |-
     <hudson.model.ParametersDefinitionProperty>
         <parameterDefinitions>
