@@ -252,7 +252,7 @@ __create_onboarding_automation_server() {
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -x
-    helm upgrade --install --history-max=1 \
+    helm upgrade --atomic --install --history-max=1 \
         --set-string profiles="{onboarding${JENKINS_PERSISTENT:+,jenkinsPersistent}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
@@ -273,10 +273,9 @@ __create_onboarding_automation_server() {
         jenkins \
         elCicdCharts/elCicdChart
     set +x
-    oc rollout status deploy/jenkins
 
     echo
-    echo 'Jenkins up, sleep for 5 more seconds to make sure server REST api is ready'
+    echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
 
     if [[ ! -z $(helm list -n ${ONBOARDING_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
@@ -301,6 +300,7 @@ __create_onboarding_automation_server() {
         echo '      UNABLE TO CONFIRM PIPELINES FOR ONBOARDING SERVER WERE UPDATED'
         echo
         echo '================================== ERROR ===================================='
+        exit 1
     fi
     set +x
 }
