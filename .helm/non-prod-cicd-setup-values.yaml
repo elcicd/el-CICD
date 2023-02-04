@@ -69,6 +69,7 @@ elCicdTemplates:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS_XML}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
+                  agentBuildDependencyCache: ${AGENT_BUILD_DEPENDENCY_CACHE},
                   componentName: '${BASE_APP_NAME}',
                   deployToNamespace: params.DEPLOY_TO_NAMESPACE,
                   recreate: params.RECREATE]
@@ -164,6 +165,13 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
+  
+- templateName: persistentVolumeClaim
+  anyProfiles:
+  - jenkinsAgentPersistent
+  appName: jenkins-agent-home
+  storageRequest: ${AGENT_VOLUME_CAPACITY}
+  accessMode: ReadWriteMany
   
   
   

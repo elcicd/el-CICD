@@ -60,11 +60,6 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
 def setupClusterWithProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
 
-    def cicdNamespaces = projectInfo.nonProdNamespaces.values().join(',')
-    if (projectInfo.sandboxNamespaces) {
-        cicdNamespaces += ',' + projectInfo.sandboxNamespaces.values().join(',')
-    }
-
     def projectDefs = getSldcConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
@@ -74,11 +69,11 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
 
     sh """
+        ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${cicdConfigFile}
 
-        ${shCmd.echo ''}
-        helm upgrade --atomic --install --history-max=1 \
-            --set elCicdNamespaces='{${cicdNamespaces}}' \
+        ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
+        helm upgrade --install --history-max=1 \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
@@ -88,7 +83,7 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
 
-        ${shCmd.echo ''}
+        ${shCmd.echo '', "SYNCING pipeline definitions for project ${projectInfo.id}"}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
         then
             helm uninstall jenkins-pipeline-sync -n ${projectInfo.cicdMasterNamespace}
@@ -106,6 +101,12 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
 
 def getSldcConfigValues(def projectInfo) {
     cicdConfigValues = [:]
+
+    cicdConfigValues.elCicdNamespaces = []
+    cicdNamespaces.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+    if (projectInfo.sandboxNamespaces) {
+        cicdNamespaces.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+    }
 
     elCicdDefs = [:]
     elCicdDefs.NONPROD_ENVS = []
@@ -128,12 +129,19 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
+    def hasJenkinsAgentPersistent = false
     projectInfo.components.each { comp ->
-        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] = ['CODE_BASE' : comp.codeBase ]
+        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache
+        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
+            ['CODE_BASE' : comp.codeBase, 
+             'AGENT_BUILD_DEPENDENCY_CACHE' : (projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache) ]
     }
 
     projectInfo.artifacts.each { art ->
-        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] = ['CODE_BASE' : art.codeBase ]
+        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache
+        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
+            ['CODE_BASE' : art.codeBase, 
+             'AGENT_BUILD_DEPENDENCY_CACHE' : (projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache) ]
     }
 
     elCicdDefs.SDLC_ENVS = []
@@ -156,6 +164,11 @@ def getSldcConfigValues(def projectInfo) {
 
     cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']
     cicdConfigValues.profiles.addAll(rqProfiles.keySet())
+    
+    if (hasJenkinsAgentPersistent) {
+        cicdConfigValues.profiles += 'jenkinsAgentPersistent'
+    }
+    
     if (projectInfo.nfsShares) {
         cicdConfigValues.profiles << "nfs"
 

@@ -44,10 +44,6 @@ def initMetaData(Map metaData) {
         el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
 
         el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
-
-        el.cicd.CLEAN_K8S_RESOURCE_COMMAND = "egrep -v -h 'namespace:|creationTimestamp:|uid:|selfLink:|resourceVersion:|generation:'"
-
-        el.cicd.OKD_CLEANUP_RESOURCE_LIST='deploymentconfig,deploy,svc,hpa,configmaps,sealedsecrets,ingress,routes,cronjobs'
     }
 }
 
@@ -58,12 +54,10 @@ def node(Map args, Closure body) {
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
     
-    node() {
-        hasPersistentAgent = sh(returnStdout : true, script: 'oc get pvc --ignore-not-found jenkins-agent-home')
-        if (hasPersistentAgent) {
-            echo 'Found persistent volume for agent'
-            volumeDefs += persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins', readOnly: false)
-        }
+    if (args.agentBuildDependencyCache) {
+        echo 'Using persistent build dependency cache in agent'
+        
+        volumeDefs += persistentVolumeClaim(claimName: 'jenkins-agent-home', mountPath: '/home/jenkins', readOnly: false)
     }
 
     if (args.isBuild) {

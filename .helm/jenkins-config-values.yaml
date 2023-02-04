@@ -4,7 +4,8 @@ elCicdDefs:
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
-
+  
+elCicdDefs-jenkinsPersistent:
   JENKINS_VOLUME_MNTS:
   - mountPath: /var/lib/jenkins
     name: ${JENKINS_SERVICE_NAME}-data
@@ -193,13 +194,6 @@ elCicdTemplates:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
-
-- templateName: persistentVolumeClaim
-  anyProfiles:
-  - jenkinsAgentPersistent
-  appName: jenkins-agent-home
-  storageRequest: ${AGENT_VOLUME_CAPACITY}
-  accessMode: ReadWriteMany
 
 - templateName: persistentVolumeClaim
   anyProfiles:
