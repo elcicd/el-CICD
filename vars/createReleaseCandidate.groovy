@@ -90,8 +90,7 @@ def call(Map args) {
             loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
         }
 
-        def title = "Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}"
-        title += "\nOnly components currently deployed in ${projectInfo.preProdNamespace} can be considered"
+        def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.releaseCandidateTag}"
         def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, inputs)
 
         projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
