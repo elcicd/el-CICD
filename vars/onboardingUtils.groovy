@@ -103,9 +103,9 @@ def getSldcConfigValues(def projectInfo) {
     cicdConfigValues = [:]
 
     cicdConfigValues.elCicdNamespaces = []
-    cicdNamespaces.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
     if (projectInfo.sandboxNamespaces) {
-        cicdNamespaces.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
     }
 
     elCicdDefs = [:]
