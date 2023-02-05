@@ -30,6 +30,7 @@ def createComponentDeployStages(def projectInfo, def components) {
                 def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
                 def compValues = ["elCicdDefaults.appName=${component.name}",
                                   "elCicdDefs.COMPONENT_NAME=${component.name}",
+                                  "elCicdDefs.CODE_BASE=${component.codeBase}",
                                   "elCicdDefs.SCM_REPO=${component.scmRepoName}",
                                   "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
                                   "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",

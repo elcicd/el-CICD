@@ -2,6 +2,7 @@ elCicdDefs:
   EL_CICD_COMPONENT_META_INFO:
     projectid: ${PROJECT_ID}
     component: ${COMPONENT_NAME}
+    codebase: ${CODE_BASE}
     elcicd-profiles: ${EL_CICD_PROFILES}
     scm-repo: ${SCM_REPO}
     src-commit-hash: ${SRC_COMMIT_HASH}
