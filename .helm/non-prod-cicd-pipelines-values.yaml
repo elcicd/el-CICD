@@ -41,7 +41,7 @@ elCicdDefs:
         </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>REINSTALL</name>
-          <description>If true, will uninstall and then reinstall ${BASE_APP_NAME}</description>
+          <description>If checked, will uninstall ${BASE_APP_NAME} completely before reinstalling</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>

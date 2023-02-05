@@ -16,9 +16,12 @@ def call(Map args) {
         def BUILD_ALL_COMPONENTS = 'Build All Components'
         def BUILD_ALL_ARTIFACTS = 'Build All Artifacts'
         def buildChoices = [BUILD_SELECTED, BUILD_ALL, BUILD_ALL_COMPONENTS, BUILD_ALL_ARTIFACTS]
-        List inputs = [choice(name: 'buildToNamespace', description: 'The Namespace to build and deploy to', choices: projectInfo.builderNamespaces),
-                       choice(name: 'buildChoice', description: 'What to build', choices: buildChoices),
-                       booleanParam(name: 'recreateAll', description: 'Delete everything from the environment before deploying')]
+        List inputs = [choice(name: 'buildToNamespace', description: 'The namespace to build and deploy to', choices: projectInfo.builderNamespaces),
+                       choice(name: 'buildChoice', 
+                              description: 'Choose to build selected components, everything, all components, or all artifacts',
+                              choices: buildChoices),
+                       booleanParam(name: 'cleanNamespace',
+                                    description: 'Uninstall all components currently deployed in selected namespace before deploying new builds')]
 
         inputs += projectInfo.buildModules.collect { module ->
             def moduleType = module.isComponent ? 'Component' : 'Artifact'
@@ -29,7 +32,7 @@ def call(Map args) {
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch
-        projectInfo.recreateAll = cicdInfo.recreateAll
+        projectInfo.cleanNamespace = cicdInfo.cleanNamespace
         projectInfo.buildModules.each { module ->
             module.build =
                 (cicdInfo.buildChoice == BUILD_ALL) ||
@@ -39,8 +42,8 @@ def call(Map args) {
         }
     }
 
-    stage('Remove all components, if selected') {
-        if (projectInfo.recreateAll) {
+    stage('Uninstall all components, if selected') {
+        if (projectInfo.cleanNamespace) {
             def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, projectInfo.components)
             parallel(removalStages)
         }
