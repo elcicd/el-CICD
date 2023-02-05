@@ -37,7 +37,7 @@ def call(Map args) {
             parallel(removalStages)
         }
         else {
-            echo "RECREATE NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
+            echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
         }
     }
 

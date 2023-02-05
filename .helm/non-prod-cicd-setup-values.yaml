@@ -65,7 +65,7 @@ elCicdTemplates:
                   agentBuildDependencyCache: ${AGENT_BUILD_DEPENDENCY_CACHE},
                   componentName: '${BASE_APP_NAME}',
                   deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                  recreate: params.RECREATE]
+                  recreate: params.REINSTALL]
       el.node(args) {
           buildComponent(args)
       }

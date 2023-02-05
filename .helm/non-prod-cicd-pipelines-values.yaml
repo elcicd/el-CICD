@@ -40,8 +40,8 @@ elCicdDefs:
           </choices>
         </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>RECREATE</name>
-          <description>From OpenShift Build Environment Variable</description>
+          <name>REINSTALL</name>
+          <description>If true, will uninstall and then reinstall ${BASE_APP_NAME}</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
