@@ -13,7 +13,7 @@ def call(Map args) {
     projectInfo.releaseCandidateTag = args.releaseCandidateTag
 
     stage('Verify image(s) with Release Candidate tags do NOT exist in pre-prod image registry') {
-        loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN  ${projectInfo.preProdEnv} IMAGE REGISTRY AS ${projectInfo.releaseCandidateTag}")
+        loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.releaseCandidateTag}")
 
         if (projectInfo.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX)) {
            loggingUtils.errorBanner("Release Candidate tags cannot start with '${el.cicd.RELEASE_VERSION_PREFIX}'.",
@@ -42,7 +42,7 @@ def call(Map args) {
     }
 
     stage('Verify Release Candidate version tag doesn\'t exist in SCM') {
-        loggingUtils.echoBanner("VERIFY RELEASE CANDIDATE VERSION TAG DOES NOT EXIST IN SCM")
+        loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.releaseCandidateTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
 
         projectInfo.components.each { component ->
             dir(component.workDir) {
@@ -90,7 +90,9 @@ def call(Map args) {
             loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
         }
 
-        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}", inputs)
+        def title = "Select components to tag as Release Candidate ${projectInfo.releaseCandidateTag}"
+        title += "\nOnly components currently deployed in ${projectInfo.preProdNamespace} can be considered"
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, inputs)
 
         projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
             def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
