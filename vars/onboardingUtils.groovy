@@ -51,7 +51,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
         oc rollout status deploy/jenkins
 
         ${shCmd.echo ''}
-        ${shCmd.echo 'Jenkins CICD Server up, sleep for 5 more seconds to make sure server REST api is ready'}
+        ${shCmd.echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'}
         sleep 5
     """
 }
@@ -137,14 +137,14 @@ def getSldcConfigValues(def projectInfo) {
         hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache
         cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
             ['CODE_BASE' : comp.codeBase, 
-             'AGENT_BUILD_DEPENDENCY_CACHE' : (projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache) ]
+             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache)}" ]
     }
 
     projectInfo.artifacts.each { art ->
         hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache
         cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
             ['CODE_BASE' : art.codeBase, 
-             'AGENT_BUILD_DEPENDENCY_CACHE' : (projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache) ]
+             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache)}" ]
     }
 
     elCicdDefs.SDLC_ENVS = []
