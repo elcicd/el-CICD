@@ -139,7 +139,7 @@ def call(Map args) {
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )
 
-        displayInputWithTimeout(msg)
+        jenkinsUtils.displayInputWithTimeout(msg)
     }
 
     stage('Tag all images') {
