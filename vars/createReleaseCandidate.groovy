@@ -118,7 +118,7 @@ def call(Map args) {
             '-> Creating this Release Candidate will result in the following actions:',
             "   - SELECTED COMPONENT IMAGES WILL BE TAGGED AS ${projectInfo.releaseCandidateTag} IN THE PRE_PROD IMAGE REGISTRY",
             "   - SELECTED COMPONENT SCM REPOS WILL BE TAGGED AS ${projectInfo.releaseCandidateTag} AT THE HEAD OF BRANCH ${component.deploymentBranch}",
-            ''
+            '',
             promotionNames,
             '',
             '---',
