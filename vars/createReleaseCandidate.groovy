@@ -108,10 +108,10 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }.join('\n')
-        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }.join('\n')
+        def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }
+        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }
             
-        def msg = loggingUtils.createBanner(
+        def msg = [
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
             '',
             '===========================================',
@@ -119,16 +119,20 @@ def call(Map args) {
             '-> SELECTED COMPONENTS IN THIS VERSION:',
             "   - WILL HAVE THEIR IMAGES TAGGED FROM ${projectInfo.preProdEnv} to ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
             "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES TAGGED PER THE FOLLOWING:",
-            '',
-            promotionNames,
+            ''
+        ]
+        msg +=  promotionNames
+        msg += [
             '',
             '---',
             '',
             '-> IGNORED COMPONENTS IN THIS VERSION:',
             '   - Will NOT be deployed in prod',
             '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
-            '',
-            removalNames,
+            ''
+        ]
+        msg +=  removalNames
+        msg += [
             '',
             '===========================================',
             '',
@@ -137,7 +141,8 @@ def call(Map args) {
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
             '',
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
-        )
+        ]
+        loggingUtils.createBanner(msg)
 
         jenkinsUtils.displayInputWithTimeout(msg)
     }
