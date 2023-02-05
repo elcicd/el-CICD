@@ -33,10 +33,11 @@ elCicdDefs:
         <hudson.model.ChoiceParameterDefinition>
           <name>DEPLOY_TO_NAMESPACE</name>
           <description>Namespace to deploy to</description>
-          <defaultValue>${DEV_NAMESPACE}</defaultValue>
-          <a class="string-array">
-            ${BUILD_NAMESPACE_CHOICES}
-          </a>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              ${BUILD_NAMESPACE_CHOICES}
+            </a>
+          </choices>
         </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>RECREATE</name>
