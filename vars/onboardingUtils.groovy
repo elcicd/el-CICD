@@ -45,7 +45,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.defaultRbacGroup}-cicd-server \
+            ${projectInfo.defaultRbacGroup}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
 
