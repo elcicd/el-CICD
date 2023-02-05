@@ -117,7 +117,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
     
     elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${el.cicd.devNamespace}</string>"
-    elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join()
+    elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
 
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
