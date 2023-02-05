@@ -42,7 +42,6 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
             --set-string elCicdDefs.MEMORY_REQUEST=${el.cicd.JENKINS_MEMORY_REQUEST} \
             --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-            --set-string elCicdDefs.AGENT_VOLUME_CAPACITY=${el.cicd.JENKINS_AGENT_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
@@ -116,7 +115,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.SANDBOX_ENVS = []
     elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
     
-    elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${el.cicd.devNamespace}</string>"
+    elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${projectInfo.devNamespace}</string>"
     elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
 
     elCicdDefs.PROJECT_ID = projectInfo.id
@@ -170,6 +169,7 @@ def getSldcConfigValues(def projectInfo) {
     
     if (hasJenkinsAgentPersistent) {
         cicdConfigValues.profiles += 'jenkinsAgentPersistent'
+        elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
     }
     
     if (projectInfo.nfsShares) {
