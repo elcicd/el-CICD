@@ -110,9 +110,6 @@ def call(Map args) {
     stage('Confirm production manifest for release version') {
         def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }.join('\n')
         def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }.join('\n')
-
-        def deploymentBranchWildCard = "deployment-${projectInfo.preProdEnv}-*"
-        def depBranchMsg =
             
         def msg = loggingUtils.createBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
