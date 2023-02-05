@@ -108,24 +108,26 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.componentsToTag.collect { it.name }.join('\n')
-        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { it.name }.join('\n')
+        def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }.join('\n')
+        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }.join('\n')
 
+        def deploymentBranchWildCard = "deployment-${projectInfo.preProdEnv}-*"
+        def depBranchMsg =
+            
         def msg = loggingUtils.createBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
             '',
             '===========================================',
             '',
-            '-> Creating this Release Candidate will result in the following actions:',
-            "   - SELECTED COMPONENT IMAGES WILL BE TAGGED AS ${projectInfo.releaseCandidateTag} IN THE PRE_PROD IMAGE REGISTRY",
-            "   - SELECTED COMPONENT SCM REPOS WILL BE TAGGED AS ${projectInfo.releaseCandidateTag} AT THE HEAD OF BRANCH ${component.deploymentBranch}",
+            '-> SELECTED COMPONENTS IN THIS VERSION:',
+            "   - WILL HAVE THEIR IMAGES TAGGED FROM ${projectInfo.preProdEnv} to ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
+            "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES TAGGED PER THE FOLLOWING:",
             '',
             promotionNames,
             '',
             '---',
             '',
-            '-> THE FOLLOWING COMPONENTS WILL BE IGNORED',
-            '   IGNORED COMPONENTS IN THIS VERSION:',
+            '-> IGNORED COMPONENTS IN THIS VERSION:',
             '   - Will NOT be deployed in prod',
             '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
             '',
