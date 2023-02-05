@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Image utilities
+ * Generates shell commands from parameters.
  */
 
 /* When executed, command will echo either the image name and sha, or null if image doesn't exist. */

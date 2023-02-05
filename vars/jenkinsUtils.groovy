@@ -123,11 +123,16 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
     }
 }
 
-def displayInputWithTimeout(def inputMsg, def inputs) {
+def displayInputWithTimeout(def inputMsg, def inputs = null) {
     def cicdInfo
     try {
         timeout(time: el.cicd.JENKINS_INPUT_TIMEOUT) {
-            cicdInfo = input(message: inputMsg, parameters: inputs)
+            if (inputs) {
+                cicdInfo = input(message: inputMsg, parameters: inputs)
+            }
+            else {
+                input(inputMsg)
+            }
         }
     }
     catch (err) {
