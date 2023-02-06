@@ -6,7 +6,6 @@
 
 import groovy.transform.Field
 
-import hudson.AbortException
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 @Field
@@ -128,6 +127,7 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
 
 def displayInputWithTimeout(def inputMsg, def inputs = null) {
     def cicdInfo
+    def startTime = System.currentTimeMillis()
     try {
         timeout(time: el.cicd.JENKINS_INPUT_TIMEOUT) {
             if (inputs) {
@@ -138,11 +138,15 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
             }
         }
     }
-    catch(err) {
-        echo "exception: ${err.toString()}"
-        
-        def abortMsg = "${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
-        loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
+    catch(FlowInterruptedException err) {
+        def now = System.currentTimeMillis() 
+        if ((System.currentTimeMillis() - startTime) * 1000 > el.cicd.JENKINS_INPUT_TIMEOUT) {
+            def abortMsg = "${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
+            loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
+        }
+        else {
+            loggingUtils.errorBanner('USER ABORTED PIPELINE.  EXITING PIPELINE...')
+        }
     }
 
     return cicdInfo
