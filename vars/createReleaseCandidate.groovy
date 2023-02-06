@@ -108,8 +108,8 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }
-        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }
+        def promotionNames = projectInfo.componentsToTag.collect { "${it.name}" }
+        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
             
         def msg = loggingUtils.echoBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
@@ -118,7 +118,7 @@ def call(Map args) {
             '',
             '-> SELECTED COMPONENTS IN THIS VERSION:',
             "   - WILL HAVE THEIR IMAGES TAGGED FROM ${projectInfo.preProdEnv} to ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
-            "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES TAGGED PER THE FOLLOWING:",
+            "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-*] TAGGED AS ${projectInfo.releaseCandidateTag}:",
             '',
             promotionNames,
             '',
