@@ -139,7 +139,7 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
         }
     }
     catch(err) {
-        echo "exception: ${err}")
+        echo "exception: ${err}"
         
         def abortMsg = "${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
         loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
