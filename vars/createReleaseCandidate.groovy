@@ -150,7 +150,7 @@ def call(Map args) {
                          passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
             projectInfo.componentsToTag.each { component ->
                 def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV, 
-                                                 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN',
+                                                 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
                                                  'PRE_PROD_IMAGE_REGISTRY_PWD',
                                                  component.id,
                                                  projectInfo.preProdEnv,
