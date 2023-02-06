@@ -6,6 +6,9 @@
 
 import groovy.transform.Field
 
+import hudson.AbortException
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+
 @Field
 def JENKINS_CREDS_BASE_PATH = 'credentials/store/system/domain/_'
 
@@ -135,14 +138,15 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
             }
         }
     }
-    catch (err) {
-        if (err instanceof hudson.AbortException) {
-            def abortMsg = "USER ABORTED PIPELINE RUN OR ${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
-            loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
-        }
-        else {
-            throw err
-        }
+    catch(AbortException ae) {
+        def abortMsg = "${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
+        loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
+    }
+    catch(FlowInterruptedException fie) {
+        loggingUtils.errorBanner('USER ABORTED PIPELINE RUN.  EXITING PIPELINE...')
+    }
+    catch(err) {
+        throw err
     }
 
     return cicdInfo
