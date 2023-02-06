@@ -140,9 +140,9 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
     }
     catch(FlowInterruptedException err) {
         def inputDuration = (System.currentTimeMillis() - startTime) * 1000
-        echo "inputDuration: ${inputDuration}"
-        echo "(el.cicd.JENKINS_INPUT_TIMEOUT * 60): ${(el.cicd.JENKINS_INPUT_TIMEOUT * 60)}"
-        if (inputDuration > (el.cicd.JENKINS_INPUT_TIMEOUT * 60) {
+        def timeoutSeconds = el.cicd.JENKINS_INPUT_TIMEOUT * 60
+        echo "inputDuration: ${inputDuration} / timeoutSeconds: ${timeoutSeconds}"
+        if (inputDuration > timeoutSeconds) {
             def abortMsg = "${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT"
             loggingUtils.errorBanner(abortMsg, '', 'EXITING PIPELINE...')
         }
