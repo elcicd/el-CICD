@@ -142,7 +142,7 @@ def call(Map args) {
             '',
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         ]
-        loggingUtils.createBanner(msg)
+        loggingUtils.echoBanner(msg)
 
         jenkinsUtils.displayInputWithTimeout(msg)
     }
