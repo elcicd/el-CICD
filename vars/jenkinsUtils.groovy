@@ -139,7 +139,7 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
         }
     }
     catch(FlowInterruptedException err) {
-        def inputDuration = (System.currentTimeMillis() - startTime) * 1000
+        def inputDuration = (System.currentTimeMillis() - startTime) / 1000
         def timeoutSeconds = (el.cicd.JENKINS_INPUT_TIMEOUT as Long) * 60
         echo "inputDuration: ${inputDuration} / timeoutSeconds: ${timeoutSeconds}"
         if (inputDuration > timeoutSeconds) {
