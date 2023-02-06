@@ -136,7 +136,12 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
         }
     }
     catch (err) {
-        loggingUtils.errorBanner("${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT.  EXITING PIPELINE...")
+        if ( !(err instanceof AbortException) ) {
+            loggingUtils.errorBanner("${el.cicd.JENKINS_INPUT_TIMEOUT} MINUTE TIMEOUT EXCEEDED WAITING FOR USER INPUT.  EXITING PIPELINE...")
+        }
+        else {
+            throw err
+        }
     }
 
     return cicdInfo
