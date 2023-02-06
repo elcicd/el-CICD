@@ -118,7 +118,7 @@ def call(Map args) {
             '',
             '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
             "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
-            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.releaseCandidateTag}--<src-commit-hash>:",
+            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.releaseCandidateTag}-<src-commit-hash>:",
             '',
             promotionNames,
             '',
