@@ -71,7 +71,7 @@ def pushBuildWebhook(def projectInfo, def module, def buildType) {
                   -e "s|%PROJECT_ID%|${projectInfo.id}|" \
                   -e "s|%COMPONENT_ID%|${module.id}|" \
                   -e "s|%BUILD_TYPE%|${buildType}|" \
-                  -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${module.gitDeployKeyJenkinsId}|" > ${WEBHOOK_FILE}
+                  -e "s|%WEB_TRIGGER_AUTH_TOKEN%|${module.scmDeployKeyJenkinsId}|" > ${WEBHOOK_FILE}
                   
             WEBHOOK=\$(cat ${WEBHOOK_FILE} | jq '.config.url')
                   

@@ -33,15 +33,15 @@ def call(Map args) {
                 echo "Pushing deploy key for ${module.scmRepoName}"
 
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' \
+                    ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
 
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.gitDeployKeyJenkinsId, module.gitDeployKeyJenkinsId)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.scmDeployKeyJenkinsId, module.scmDeployKeyJenkinsId)
 
-                githubUtils.addProjectDeployKey(projectInfo, module, "${module.gitDeployKeyJenkinsId}.pub")
+                githubUtils.addProjectDeployKey(projectInfo, module, "${module.scmDeployKeyJenkinsId}.pub")
 
-                sh "rm -f ${module.gitDeployKeyJenkinsId} ${module.gitDeployKeyJenkinsId}.pub"
+                sh "rm -f ${module.scmDeployKeyJenkinsId} ${module.scmDeployKeyJenkinsId}.pub"
             }
         }
     }

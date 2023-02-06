@@ -79,7 +79,7 @@ def createTestNode(def codeBase, def projectInfo, def testModule, def components
                         dir(testModule.workDir) {
                             git url: testModule.repoUrl,
                                 branch: projectInfo.scmTestBranch,
-                                credentialsId: testModule.gitDeployKeyJenkinsId
+                                credentialsId: testModule.scmDeployKeyJenkinsId
                         }
                     }
 

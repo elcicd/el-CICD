@@ -110,15 +110,15 @@ def call(Map args) {
     stage('Confirm production manifest for release version') {
         def promotionNames = projectInfo.componentsToTag.collect { "${it.name}" }
         def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
-            
+
         def msg = loggingUtils.echoBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
             '',
             '===========================================',
             '',
-            '-> SELECTED COMPONENTS IN THIS VERSION:',
-            "   - WILL HAVE THEIR IMAGES TAGGED FROM ${projectInfo.preProdEnv} to ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
-            "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-*] TAGGED AS ${projectInfo.releaseCandidateTag}:",
+            '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
+            "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
+            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.releaseCandidateTag}--<src-commit-hash>:",
             '',
             promotionNames,
             '',
@@ -149,7 +149,7 @@ def call(Map args) {
                          usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
                          passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
             projectInfo.componentsToTag.each { component ->
-                def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV, 
+                def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
                                                  'PRE_PROD_IMAGE_REGISTRY_USERNAME',
                                                  'PRE_PROD_IMAGE_REGISTRY_PWD',
                                                  component.id,
@@ -172,7 +172,7 @@ def call(Map args) {
         projectInfo.components.each { component ->
             if (component.promote) {
                 dir(component.workDir) {
-                    withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                         def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${component.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`

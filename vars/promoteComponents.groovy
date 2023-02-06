@@ -206,7 +206,7 @@ def call(Map args) {
             projectInfo.components.each { component ->
                 if (component.promote && !component.deployBranchExists) {
                     dir(component.workDir) {
-                        withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
                                 ${shCmd.echo  "-> Creating Deployment Branch for the image ${component.id}: ${component.deploymentBranch}"}
                                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
