@@ -111,7 +111,7 @@ def call(Map args) {
         def promotionNames = projectInfo.componentsToTag.collect { "  ${it.name}: ${it.deploymentBranch} -> ${projectInfo.releaseCandidateTag}" }
         def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "  ${it.name}" }
             
-        def msg = [
+        def msg = loggingUtils.echoBanner(
             "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
             '',
             '===========================================',
@@ -119,20 +119,16 @@ def call(Map args) {
             '-> SELECTED COMPONENTS IN THIS VERSION:',
             "   - WILL HAVE THEIR IMAGES TAGGED FROM ${projectInfo.preProdEnv} to ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
             "   - HAVE THE HEAD OF THEIR DEPLOYMENT BRANCHES TAGGED PER THE FOLLOWING:",
-            ''
-        ]
-        msg +=  promotionNames
-        msg += [
+            '',
+            promotionNames,
             '',
             '---',
             '',
             '-> IGNORED COMPONENTS IN THIS VERSION:',
             '   - Will NOT be deployed in prod',
             '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
-            ''
-        ]
-        msg +=  removalNames
-        msg += [
+            '',
+            removalNames,
             '',
             '===========================================',
             '',
@@ -141,8 +137,7 @@ def call(Map args) {
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
             '',
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
-        ]
-        loggingUtils.echoBanner(msg)
+        )
 
         jenkinsUtils.displayInputWithTimeout(msg)
     }
