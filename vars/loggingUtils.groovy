@@ -8,19 +8,19 @@ def spacedEcho(def msg) {
     echo "\n${msg}\n"
 }
 
-def echoBanner(def... msgs) {
+def echoBanner(def ... msgs) {
     echo createBanner(msgs)
 }
 
-def shellEchoBanner(def... msgs) {
+def shellEchoBanner(def ... msgs) {
     return "{ echo '${createBanner(msgs)}'; } 2> /dev/null"
 }
 
-def errorBanner(def... msgs) {
+def errorBanner(def ... msgs) {
     error(createBanner(msgs))
 }
 
-def createBanner(def... msgs) {
+def createBanner(def ... msgs) {
     return """
         ===========================================
 
