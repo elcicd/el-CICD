@@ -10,7 +10,7 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
 
     projectInfo.hasBeenReleased = false
     projectInfo.components.each { component ->
-        withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
             def gitCmd = "git ls-remote ${component.repoUrl} '**/${projectInfo.releaseCandidateTag}-*' '**/${projectInfo.releaseVersionTag}-*'"
             def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
 
