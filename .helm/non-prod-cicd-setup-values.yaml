@@ -126,6 +126,7 @@ elCicdTemplates:
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')"
   elCicdDefs-redeploy-release-candidate:
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
+    EL_CICD_API_METHOD: redeployReleaseCandidate
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
   data: ${PIPELINE_CONFIG_MAP_DATA}

@@ -185,3 +185,9 @@ def call(Map args) {
         }
     }
 }
+
+withCredentials([sshUserPrivateKey(credentialsId: my-users-private-key-id, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+    sh """
+        ssh-agent bash -c 'ssh-add \$GITHUB_PRIVATE_KEY ; git commit -am "some comment"; git push'
+    """
+}
