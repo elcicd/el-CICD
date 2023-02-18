@@ -151,7 +151,7 @@ def initProjectSandboxData(def projectInfo) {
 
 def setProjectReleaseVersion(def projectInfo, def releaseCandidateTag) {
     assert releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATATE_TAG_REGEX:
-        "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATATE_TAG_REGEX}: ${args.releaseCandidateTag}"
+        "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATATE_TAG_REGEX}: ${releaseCandidateTag}"
         
     projectInfo.releaseCandidateTag = releaseCandidateTag
     projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${releaseCandidateTag}"
