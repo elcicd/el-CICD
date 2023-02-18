@@ -7,10 +7,8 @@
  */
 
 def call(Map args) {
-    assert (args.releaseCandidateTag ==~ /[\w][\w.-]*/)
-
     def projectInfo = args.projectInfo
-    projectInfo.releaseCandidateTag = args.releaseCandidateTag
+    projectInfo.setProjectReleaseVersion(projectInfo, args.releaseCandidateTag)
 
     stage('Verify image(s) with Release Candidate tags do NOT exist in pre-prod image registry') {
         loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.releaseCandidateTag}")

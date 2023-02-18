@@ -8,7 +8,8 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    projectInfo.releaseCandidateTag = args.releaseCandidateTag
+    projectInfo.setProjectReleaseVersion(projectInfo, args.releaseCandidateTag)
+
     projectInfo.deployToEnv = projectInfo.preProdEnv
     projectInfo.deployToNamespace = projectInfo.preProdNamespace
 

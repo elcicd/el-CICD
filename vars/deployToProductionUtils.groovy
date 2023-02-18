@@ -5,9 +5,6 @@
  */
 
 def gatherAllVersionGitTagsAndBranches(def projectInfo) {
-    assert projectInfo.releaseCandidateTag =~ /[\w][\w.-]*/: "projectInfo.releaseCandidateTag must match the pattern [\\w][\\w.-]*: ${projectInfo.releaseCandidateTag}"
-    assert projectInfo.releaseVersionTag =~ /[\w][\w.-]*/: "projectInfo.releaseVersionTag must match the pattern [\\w][\\w.-]*: ${projectInfo.releaseVersionTag}"
-
     projectInfo.hasBeenReleased = false
     projectInfo.components.each { component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
@@ -40,8 +37,6 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
 }
 
 def updateProjectMetaInfo(def projectInfo) {
-    assert projectInfo.id ; assert projectInfo.releaseVersionTag =~ /[\w][\w.-]*/
-
     stage('update project meta-info for production') {
         def componentNames = projectInfo.components.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
 
@@ -71,8 +66,6 @@ def updateProjectMetaInfo(def projectInfo) {
 }
 
 def cleanupPreviousRelease(def projectInfo) {
-    assert projectInfo.id ; assert projectInfo.releaseVersionTag  =~ /[\w][\w.-]*/
-
     sh """
         ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}
 

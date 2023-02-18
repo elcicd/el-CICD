@@ -44,6 +44,8 @@ def initMetaData(Map metaData) {
         el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
 
         el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${el.cicd.CLUSTER_WILDCARD_DOMAIN}".toString()
+        
+        el.cicd.RELEASE_CANDIDATATE_TAG_REGEX = /\w+(?:-\w+|\.\w+)*​​​​​​​​​/
     }
 }
 
