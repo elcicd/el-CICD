@@ -41,7 +41,7 @@ def call(Map args) {
         def allImagesExist = true
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
                          usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]]) {
+                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
             def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
