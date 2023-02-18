@@ -39,15 +39,20 @@ def call(Map args) {
                                  projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                                variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
+                         usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]]) {
             def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
             def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
 
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
-                def verifyImageCmd =
-                    shCmd.verifyImage(projectInfo.PRE_PROD_ENV, 'IMAGE_REGISTRY_PULL_TOKEN', component.id, imageTag)
+                
+                def verifyImageCmd = shCmd.verifyImage(projectInfo.PRE_PROD_ENV,
+                                                       'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                                       'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                                       component.id,
+                                                       imageTag)
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
                 def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${component.name}" :
