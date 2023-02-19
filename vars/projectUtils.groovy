@@ -150,6 +150,7 @@ def initProjectSandboxData(def projectInfo) {
 }
 
 def setProjectReleaseVersion(def projectInfo, def releaseCandidateTag) {
+    println "releaseCandidateTag: '${releaseCandidateTag}'"
     assert releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATE_TAG_REGEX:
         "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATE_TAG_REGEX}: ${releaseCandidateTag}"
         
