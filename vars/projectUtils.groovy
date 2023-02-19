@@ -150,11 +150,6 @@ def initProjectSandboxData(def projectInfo) {
 }
 
 def setProjectReleaseVersion(def projectInfo, def releaseCandidateTag) {
-    echo ''
-    echo "releaseCandidateTag: '${releaseCandidateTag}'"
-    echo "RELEASE_CANDIDATE_TAG_REGEX: '${el.cicd.RELEASE_CANDIDATE_TAG_REGEX}'"
-    echo "test: ${releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATE_TAG_REGEX}"
-    echo ''
     assert releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATE_TAG_REGEX:
         "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATE_TAG_REGEX}: ${releaseCandidateTag}"
         

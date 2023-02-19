@@ -132,7 +132,7 @@ def call(Map args) {
             '',
             "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.releaseCandidateTag}",
             '',
-            'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
+            'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
             '',
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )

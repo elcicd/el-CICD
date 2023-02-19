@@ -36,35 +36,6 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
     }
 }
 
-def updateProjectMetaInfo(def projectInfo) {
-    stage('update project meta-info for production') {
-        def componentNames = projectInfo.components.findAll { it.releaseCandidateGitTag }.collect { it.name }.join(',')
-
-        sh """
-            ${loggingUtils.shellEchoBanner("UPDATE ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX}")}
-
-            oc delete --ignore-not-found cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -n ${projectInfo.prodNamespace}
-
-            ${shCmd.echo ''}
-            oc create cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} \
-                --from-literal=projectid=${projectInfo.id} \
-                --from-literal=release-version=${projectInfo.releaseVersionTag} \
-                --from-literal=release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
-                --from-literal=components=${componentNames} \
-                --from-literal=build-number=${BUILD_NUMBER} \
-                -n ${projectInfo.prodNamespace}
-
-            ${shCmd.echo ''}
-            oc label cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} \
-                projectid=${projectInfo.id} \
-                release-region=${projectInfo.releaseRegion ?: el.cicd.UNDEFINED} \
-                release-version=${projectInfo.releaseVersionTag} \
-                build-number=${BUILD_NUMBER} \
-                -n ${projectInfo.prodNamespace}
-        """
-    }
-}
-
 def cleanupPreviousRelease(def projectInfo) {
     sh """
         ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersionTag}")}

@@ -19,6 +19,7 @@ def call(Map args) {
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
         projectInfo.componentsToRedeploy = projectInfo.components.findAll { it.releaseCandidateGitTag }
+        projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateGitTag }
 
         if (!projectInfo.componentsToRedeploy)  {
             loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
@@ -71,49 +72,49 @@ def call(Map args) {
     }
 
     stage('Confirm release candidate deployment') {
-        input("""
+        def msg = loggingUtils.echoBanner(
+            "CONFIRM REDEPLOYMENT OF ${projectInfo.releaseCandidateTag} to ${projectInfo.deployToNamespace}",
+            '',
+            '===========================================',
+            '',
+            "-> Components in verion ${projectInfo.releaseCandidateTag} to be deployed:",
+            projectInfo.componentsToRedeploy.collect { it.name }.join(', '),
+            '',
+            '---',
+            '',
+            "-> Components to be removed from ${projectInfo.deployToNamespace} if present:",
+            projectInfo.componentsToRemove.collect { it.name }.join(', '),
+            '',
+            '===========================================',
+            '',
+            'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
+            '',
+            "Should Release Candidate ${projectInfo.releaseCandidateTag} be redeployed in ${projectInfo.deployToNamespace}?"
+        )
 
-            ===========================================
-            CONFIRM REDEPLOYMENT OF ${projectInfo.releaseCandidateTag} to ${projectInfo.preProdEnv}
-            ===========================================
-
-            *******
-            -> Microservices included in this release candidate to be deployed:
-            ${projectInfo.componentsToRedeploy.collect { it.name }.join(', ')}
-            *******
-
-            *******
-            -> ${projectInfo.deployToNamespace} will be cleaned of all other project resources before deployment
-            *******
-
-            ===========================================
-            PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION
-
-            ARE YOU SURE YOU WISH TO PROCEED?
-            ===========================================
-        """)
+        jenkinsUtils.displayInputWithTimeout(msg)
     }
 
     stage('Tag images') {
         loggingUtils.echoBanner("TAG IMAGES TO ${projectInfo.PRE_PROD_ENV}:",
                                  "${projectInfo.componentsToRedeploy.collect { it.name } .join(', ')}")
 
-        withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                         variable: 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN')]) {
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
+                         usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
-                def msg = "${component.name}: ${projectInfo.releaseCandidateTag} TAGGED AS ${projectInfo.preProdEnv} and ${imageTag}"
-
-                def tagImageCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag, imageTag)
+                def msg = "${component.name}: ${imageTag} TAGGED AS ${projectInfo.preProdEnv}"
 
                 def tagImageEnvCmd =
-                    shCmd.tagImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag, projectInfo.preProdEnv)
+                    shCmd.tagImage(projectInfo.PRE_PROD_ENV,
+                                   'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                   'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                   component.id,
+                                   imageTag,
+                                   projectInfo.preProdEnv)
 
                 sh """
-                    ${shCmd.echo ''}
-                    ${tagImageCmd}
-
                     ${shCmd.echo ''}
                     ${tagImageEnvCmd}
 
