@@ -22,7 +22,7 @@ def call(Map args) {
         projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateGitTag }
 
         if (!projectInfo.componentsToRedeploy)  {
-            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
+            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.releaseCandidateTag}")
         }
     }
 
