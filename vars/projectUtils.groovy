@@ -24,6 +24,11 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
 
+        echo '========= projectInfo =============='
+        echo ''
+        echo projectInfo
+        echo ''
+        echo '========= end projectInfo =============='
         projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
         projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
     }

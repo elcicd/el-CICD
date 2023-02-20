@@ -38,7 +38,7 @@ def call(Map args) {
 
     stage('Verify release candidate images exist for redeployment') {
         loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
-                                 projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
+                                projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
