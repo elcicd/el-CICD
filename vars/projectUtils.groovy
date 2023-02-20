@@ -24,9 +24,10 @@ def gatherProjectInfoStage(def projectId) {
         projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
         projectInfo.nfsShares = projectInfo.nfsShares ?: []
 
-        echo '========= projectInfo =============='
+        echo '========= projectInfo test =============='
         echo ''
-        echo projectInfo
+        def msg = projectInfo.toString()
+        echo msg 
         echo ''
         echo '========= end projectInfo =============='
         projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
