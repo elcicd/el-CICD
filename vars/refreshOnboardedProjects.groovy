@@ -52,13 +52,13 @@ def call(Map args) {
     
     stage('refresh each CICD server') {
         jenkinsRefresh.values().each { projectInfo ->
-            setupProjectCicdServer(projectInfo)
+            onboardingUtils.setupProjectCicdServer(projectInfo)
         }
     }
     
     stage("refresh each project's SDLC") {
         cicdProjects.each { projectInfo ->
-            setupProjectCicdResources(projectInfo)
+            onboardingUtils.setupProjectCicdResources(projectInfo)
         }
     }
     
