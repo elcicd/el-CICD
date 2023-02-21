@@ -2,7 +2,7 @@ elCicdTemplates-non-prod:
 - templateName: configMap
   appNames:
   - project-onboarding
-  - refresh-credentials
+  - refresh-onboarded-projects
   - delete-project
   labels:
     jenkins-pipeline: 'true'
@@ -67,7 +67,7 @@ elCicdDefs-project-onboarding:
       <disabled>false</disabled>
     </flow-definition>
 
-elCicdDefs-refresh-credentials:
+elCicdDefs-refresh-onboarded-projects:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
       <displayName>${APP_NAME}</displayName>
@@ -89,10 +89,10 @@ elCicdDefs-refresh-credentials:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: 'non-prod-refresh-credentials',
+                      pipelineName: 'refresh-onboarded-projects',
                       isNonProd: true]
           el.node(args) {
-              refreshCredentials(args)
+              refreshOnboardedProjects(args)
           }  
         </script>
         <sandbox>true</sandbox>

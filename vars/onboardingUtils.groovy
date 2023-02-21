@@ -13,7 +13,7 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml", text: libraryResource('templates/jenkinsUsernamePasswordCreds-template.xml')
 }
 
-def setupClusterWithProjecCicdServer(def projectInfo) {
+def setupProjectCicdServer(def projectInfo) {
     def rbacGroups = projectInfo.rbacGroups.toMapString()
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
@@ -56,7 +56,7 @@ def setupClusterWithProjecCicdServer(def projectInfo) {
 }
 
 
-def setupClusterWithProjectCicdResources(def projectInfo) {
+def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
 
     def projectDefs = getSldcConfigValues(projectInfo)
@@ -64,8 +64,6 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
 
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
-
-    def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
@@ -81,7 +79,13 @@ def setupClusterWithProjectCicdResources(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-project \
             elCicdCharts/elCicdChart
+    """
+}
 
+def syncJenkinsPipelines(def projectInfo) {
+    def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+
+    sh """
         ${shCmd.echo '', "SYNCING pipeline definitions for project ${projectInfo.id}"}
         if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
         then

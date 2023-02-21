@@ -18,11 +18,13 @@ def call(Map args) {
     }
 
     stage("Install/upgrade CICD Jenkins if necessary") {
-        onboardingUtils.setupClusterWithProjecCicdServer(projectInfo)
+        onboardingUtils.setupProjectCicdServer(projectInfo)
     }
     
     stage('Install/upgrade project SDLC resources') {        
-        onboardingUtils.setupClusterWithProjectCicdResources(projectInfo)
+        onboardingUtils.setupProjectCicdResources(projectInfo)
+        
+        onboardingUtils.syncJenkinsPipelines(projectInfo)
     }
     
     manageCicdCredentials([projectInfo: projectInfo, isNonProd: true])
