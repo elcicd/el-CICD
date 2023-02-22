@@ -105,6 +105,7 @@ def synchronized getProjectInfo(def jenkinsRefresh) {
     echo "jenkinsRefresh.size(): ${jenkinsRefresh.size()}"
     if (jenkinsRefresh) {
         def projectInfo = jenkinsRefresh.remove(0)
+        echo "projectInfo: ${projectInfo}"
         echo "jenkinsRefresh.size() after: ${jenkinsRefresh.size()}"
         return projectInfo
     }
