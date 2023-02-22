@@ -70,7 +70,6 @@ def call(Map args) {
     
     stage('sync all Jenkins pipelines') {
         if (jenkinsRefresh) {
-            jenkinsRefresh = jenkinsRefresh.values().asSynchronized()
             parallel(
                 firstBatch: {
                     stage('synching first batch of CICD servers') {
