@@ -50,8 +50,10 @@ def call(Map args) {
         }
     }
     
+    projectInfos = []
+    projectInfos.addAll(jenkinsRefresh.values())
     stage('refresh each CICD server') {
-        jenkinsRefresh.values().each { projectInfo ->
+        projectInfos.each { projectInfo ->
             onboardingUtils.setupProjectCicdServer(projectInfo)
         }
     }
@@ -69,31 +71,31 @@ def call(Map args) {
     }
     
     stage('sync all Jenkins pipelines') {
-        if (jenkinsRefresh) {
+        if (projectInfos) {
             parallel(
                 firstBatch: {
                     stage('synching first batch of CICD servers') {
-                        syncPipelines(jenkinsRefresh)
+                        syncPipelines(projectInfos)
                     }
                 },
                 secondBatch: {
                     stage('synching second batch of CICD servers') {
-                        syncPipelines(jenkinsRefresh)
+                        syncPipelines(projectInfos)
                     }
                 },
                 thirdBatch: {
                     stage('synching third batch of CICD servers') {
-                        syncPipelines(jenkinsRefresh)
+                        syncPipelines(projectInfos)
                     }
                 },
                 fourthBatch: {
                     stage('synching fourth batch of CICD servers') {
-                        syncPipelines(jenkinsRefresh)
+                        syncPipelines(projectInfos)
                     }
                 },
                 fifthBatch: {
                     stage('synching fifth batch of CICD servers') {
-                        syncPipelines(jenkinsRefresh)
+                        syncPipelines(projectInfos)
                     }
                 }
             )
@@ -101,19 +103,15 @@ def call(Map args) {
     }
 }
 
-def synchronized getProjectInfo(def jenkinsRefresh) {
-    echo "jenkinsRefresh.size(): ${jenkinsRefresh.size()}"
-    if (jenkinsRefresh) {
-        def projectInfo = jenkinsRefresh.remove(0)
-        echo "projectInfo: ${projectInfo}"
-        echo "jenkinsRefresh.size() after: ${jenkinsRefresh.size()}"
-        return projectInfo
+def synchronized getProjectInfo(def projectInfos) {
+    if (projectInfos) {
+        return projectInfos.remove(0)
     }
 }
 
-def syncPipelines(def jenkinsRefresh) {
-    while (jenkinsRefresh) {
-        def projectInfo = getProjectInfo(jenkinsRefresh)
+def syncPipelines(def projectInfos) {
+    while (projectInfos) {
+        def projectInfo = getProjectInfo(projectInfos)
         if (projectInfo) {
             loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.cicdNamespace}")
             onboardingUtils.syncJenkinsPipelines(projectInfo)
