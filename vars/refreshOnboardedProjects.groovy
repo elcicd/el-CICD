@@ -73,7 +73,7 @@ def call(Map args) {
             parallel(
                 firstBatch: {
                     stage('synching first batch of CICD servers') {
-                        refreshProject(jenkinsRefresh)
+                        syncPipelines(jenkinsRefresh)
                     }
                 },
                 secondBatch: {
