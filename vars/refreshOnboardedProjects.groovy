@@ -103,18 +103,12 @@ def call(Map args) {
     }
 }
 
-def synchronized getProjectInfo(def projectInfos) {
-    if (projectInfos) {
-        return projectInfos.remove(0)
-    }
-}
-
 def syncPipelines(def projectInfos) {
     while (projectInfos) {
-        def projectInfo = getProjectInfo(projectInfos)
+        def projectInfo = projectUtils.synchronizedRemoveListItem(projectInfos)
         if (projectInfo) {
-            loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.cicdNamespace}")
-            onboardingUtils.syncJenkinsPipelines(projectInfo)
+            loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.cicdMasterNamespace}")
+            onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
         }
     }
 }

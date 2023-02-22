@@ -77,26 +77,26 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
-            ${projectInfo.id}-project \
+            ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} \
             elCicdCharts/elCicdChart
     """
 }
 
-def syncJenkinsPipelines(def projectInfo) {
+def syncJenkinsPipelines(def cicdMasterNamespace) {
     def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
 
     sh """
-        ${shCmd.echo '', "SYNCING pipeline definitions for project ${projectInfo.id}"}
-        if [[ ! -z \$(helm list -n ${projectInfo.cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
+        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
+        if [[ ! -z \$(helm list -n ${cicdMasterNamespace} | grep jenkins-pipeline-sync) ]]
         then
-            helm uninstall jenkins-pipeline-sync -n ${projectInfo.cicdMasterNamespace}
+            helm uninstall jenkins-pipeline-sync -n ${cicdMasterNamespace}
         fi
 
         ${shCmd.echo ''}
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
-            -n ${projectInfo.cicdMasterNamespace} \
+            -n ${cicdMasterNamespace} \
             jenkins-pipeline-sync \
             elCicdCharts/elCicdChart
     """

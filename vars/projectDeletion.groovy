@@ -6,38 +6,34 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
+    
+    stage('Confirm removing project and namespaces from cluster') {
+        def msg = loggingUtils.echoBanner(
+            "ALL CICD NAMESPACES FOR ${projectInfo.id} WILL BE REMOVED FROM THE CLUSTER",
+            '',
+            "ALL DEPLOY KEYS FOR FOR ${projectInfo.id} WILL BE REMOVED FROM THE SCM",
+            ''
+            "Should project ${projectInfo.id} be deleted?"
+        )
 
-    stage('Remove project namespace environments') {
-        def namespacesToDelete = []
-        namespacesToDelete.addAll(projectInfo.nonProdNamespaces.values())
-        namespacesToDelete.addAll(projectInfo.sandboxNamespaces.values())
-        projectInfo.allowsHotfixes && namespacesToDelete.add(projectInfo.hotfixNamespace)
-
-        namespacesToDelete += args.deleteJenkinsCicdServer ? " ${projectInfo.cicdMasterNamespace}" : ''
-
-        def msg = args.deleteJenkinsCicdServer ?
-            "REMOVING ${projectInfo.id} CICD SERVER AND ENVIRONMENT(S):" :
-            "REMOVING ${projectInfo.id} ENVIRONMENT(S):"
-
-        loggingUtils.echoBanner(msg, namespacesToDelete.join(' '))
-
-        onboardingUtils.deleteNamespaces(namespacesToDelete)
+        jenkinsUtils.displayInputWithTimeout(msg)
     }
 
     stage('Delete GitHub deploy keys') {
+        loggingUtils.echoBanner("REMOVING ALL DEPLOY KEYS FROM THE SCM FOR PROJECT ${projectInfo.id}")
+        
         githubUtils.deleteProjectDeployKeys(projectInfo)
-
-        if (!args.deleteJenkinsCicdServer) {
-            jenkinsUtils.deleteProjectDeployKeysFromJenkins(projectInfo)
-        }
     }
 
-    stage('Remove project build-to-dev pipelines from Jenkins') {
-        if (!args.deleteJenkinsCicdServer) {
-            onboardingUtils.cleanStaleBuildToDevPipelines(projectInfo)
-        }
-        else {
-            loggingUtils.echoBanner("DELETED ${projectInfo.cicdMasterNamespace} NAMESPACE: BUILD-TO-DEV PIPELINES ALREADY DELETED")
-        }
+    stage('Remove project from cluster') {
+        loggingUtils.echoBanner("REMOVING ALL PROJECT ${projectInfo.id} FROM CLUSTER")
+        
+        sh """
+            helm uninstall ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} --wait --no-hooks
+        """
+        
+        onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
+        
+        loggingUtils.echoBanner("${projectInfo.id} REMOVED FROM CLUSTER")
     }
 }

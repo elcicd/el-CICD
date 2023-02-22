@@ -24,7 +24,7 @@ def call(Map args) {
     stage('Install/upgrade project SDLC resources') {        
         onboardingUtils.setupProjectCicdResources(projectInfo)
         
-        onboardingUtils.syncJenkinsPipelines(projectInfo)
+        onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
     }
     
     manageCicdCredentials([projectInfo: projectInfo, isNonProd: true])

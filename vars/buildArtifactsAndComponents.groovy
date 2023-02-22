@@ -17,7 +17,7 @@ def call(Map args) {
         def BUILD_ALL_ARTIFACTS = 'Build All Artifacts'
         def buildChoices = [BUILD_SELECTED, BUILD_ALL, BUILD_ALL_COMPONENTS, BUILD_ALL_ARTIFACTS]
         List inputs = [choice(name: 'buildToNamespace', description: 'The namespace to build and deploy to', choices: projectInfo.builderNamespaces),
-                       choice(name: 'buildChoice', 
+                       choice(name: 'buildChoice',
                               description: 'Choose to build selected components, everything, all components, or all artifacts',
                               choices: buildChoices),
                        booleanParam(name: 'cleanNamespace',
@@ -53,38 +53,11 @@ def call(Map args) {
     }
 
     stage("Building selected modules") {
-        def buildModules = [[],[],[]]
-        projectInfo.buildModules.findAll { it.build }.eachWithIndex { module, i ->
-            buildModules[i%3].add(module)
-        }
+        def buildModules = buildModules.findAll { it.build }
 
         if (buildModules) {
-            parallel(
-                firstBatch: {
-                    stage("building first batch of modules to ${projectInfo.deployToNamespace}") {
-                        loggingUtils.echoBanner("BUILDING FIRST BATCH OF MODULES:",
-                                                 buildModules[0].collect { it.name }.join(', '))
-
-                        triggerPipelines(projectInfo, buildModules[0])
-                    }
-                },
-                secondBatch: {
-                    stage("building second batch of modules to ${projectInfo.deployToNamespace}") {
-                        loggingUtils.echoBanner("BUILDING SECOND BATCH OF MODULES:",
-                                                 buildModules[1].collect { it.name }.join(', '))
-
-                        triggerPipelines(projectInfo, buildModules[1])
-                    }
-                },
-                thirdBatch: {
-                    stage("building third batch of modules to ${projectInfo.deployToNamespace}") {
-                        loggingUtils.echoBanner("BUILDING THIRD BATCH OF MODULES:",
-                                                 buildModules[2].collect { it.name }.join(', '))
-
-                        triggerPipelines(projectInfo, buildModules[2])
-                    }
-                }
-            )
+            def buildStages = createBuildStages(projectInfo, buildModules)
+            parallel(createBuildStages)
         }
         else {
             echo "No modules selected for building"
@@ -92,13 +65,24 @@ def call(Map args) {
     }
 }
 
-def triggerPipelines(def projectInfo, def buildModules) {
-    if (buildModules) {
-        buildModules.each { module ->
-            pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-            build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+def createBuildStages(def projectInfo, def buildModules) {
+    def buildStages = [:]
+    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
+        def stageName = "parallel build stage ${i}"
+        buildStages[stageName] = {
+            stage(stageName) {
+                while (buildModules) {
+                    def buildModule = projectUtils.synchronizedRemoveListItem(buildModules)
+                    loggingUtils.echoBanner("BUILDING ${buildModule.name}")
 
-            loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
+                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+
+                    loggingUtils.echoBanner("${buildModule.name} BUILT AND DEPLOYED SUCCESSFULLY")
+                }
+            }
         }
     }
+
+    return buildStages
 }

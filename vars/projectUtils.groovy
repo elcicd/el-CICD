@@ -9,24 +9,30 @@ def gatherProjectInfoStage(def projectId) {
     stage('Gather project information') {
         loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
         
-        projectInfo = readProjectYaml(projectId)
-
-        projectInfo.id = projectId
-        
-        projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
-        
-        initProjectModuleData(projectInfo)
-        
-        initProjectEnvNamespaceData(projectInfo)
-        
-        initProjectSandboxData(projectInfo)
-
-        projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
-        projectInfo.nfsShares = projectInfo.nfsShares ?: []
-        
-        projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
-        projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
+        gatherProjectInfo(projectId)
     }
+    
+    return projectInfo
+}
+
+def gatherProjectInfo(def projectId) {        
+    def projectInfo = readProjectYaml(projectId)
+
+    projectInfo.id = projectId
+    
+    projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
+    
+    initProjectModuleData(projectInfo)
+    
+    initProjectEnvNamespaceData(projectInfo)
+    
+    initProjectSandboxData(projectInfo)
+
+    projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
+    projectInfo.nfsShares = projectInfo.nfsShares ?: []
+    
+    projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
+    projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
 
     validateProjectInfo(projectInfo)
     
@@ -244,4 +250,10 @@ def createCloneRepoStages(def modules, Closure postCheckoutProcessing = null) {
 def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymentEnv) {
     return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
         "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${component.srcCommitHash}" : null
+}
+
+def synchronized synchronizedRemoveListItem(def someList) {
+    if (someList) {
+        return someList.remove(0)
+    }
 }
