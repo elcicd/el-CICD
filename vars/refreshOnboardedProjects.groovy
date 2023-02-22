@@ -102,14 +102,20 @@ def call(Map args) {
     }
 }
 
+def synchronized getProjectInfo(def jenkinsRefresh) {
+    try {
+        return jenkinsRefresh.remove(0)
+    }
+    catch (IndexOutOfBoundsException iobe) {
+    }
+}
+
 def syncPipelines(def jenkinsRefresh) {
     while (jenkinsRefresh) {
-        try {
-            def projectInfo = jenkinsRefresh.remove(0)
+        def projectInfo = getProjectInfo(jenkinsRefresh)
+        if (projectInfo) {
             loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.cicdNamespace}")
             onboardingUtils.syncJenkinsPipelines(projectInfo)
-        }
-        catch (IndexOutOfBoundsException iobe) {
         }
     }
 }
