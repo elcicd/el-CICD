@@ -101,11 +101,10 @@ def call(Map args) {
     }
 }
 
-def getProjectInfo(def jenkinsRefresh) {
-    synchronized {
-        if (jenkinsRefresh) {
-            return jenkinsRefresh.remove(0)
-        }
+def synchronized getProjectInfo(def jenkinsRefresh) {
+    echo "jenkinsRefresh.size(): ${jenkinsRefresh.size()}"
+    if (jenkinsRefresh) {
+        return jenkinsRefresh.remove(0)
     }
 }
 
