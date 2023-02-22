@@ -104,7 +104,9 @@ def call(Map args) {
 def synchronized getProjectInfo(def jenkinsRefresh) {
     echo "jenkinsRefresh.size(): ${jenkinsRefresh.size()}"
     if (jenkinsRefresh) {
-        return jenkinsRefresh.remove(0)
+        def projectInfo = jenkinsRefresh.remove(0)
+        echo "jenkinsRefresh.size() after: ${jenkinsRefresh.size()}"
+        return projectInfo
     }
 }
 
