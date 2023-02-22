@@ -101,11 +101,11 @@ def call(Map args) {
     }
 }
 
-def synchronized getProjectInfo(def jenkinsRefresh) {
-    try {
-        return jenkinsRefresh.remove(0)
-    }
-    catch (IndexOutOfBoundsException iobe) {
+def getProjectInfo(def jenkinsRefresh) {
+    synchronized {
+        if (jenkinsRefresh) {
+            return jenkinsRefresh.remove(0)
+        }
     }
 }
 
