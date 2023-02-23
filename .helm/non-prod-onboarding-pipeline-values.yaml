@@ -4,6 +4,7 @@ elCicdTemplates-non-prod:
   - project-onboarding
   - refresh-onboarded-projects
   - delete-project
+  - delete-cicd-server
   labels:
     jenkins-pipeline: 'true'
   data:
@@ -53,7 +54,7 @@ elCicdDefs-project-onboarding:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: 'non-prod-project-onboarding',
+                      pipelineName: '${APP_NAME}',
                       projectId: params.PROJECT_ID,
                       rebuildNonProd: params.REBUILD_NON_PROD,
                       rebuildSandboxes: params.REBUILD_SANDBOXES]
@@ -137,7 +138,7 @@ elCicdDefs-delete-project:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: 'delete-project',
+                      pipelineName: '${APP_NAME}',
                       projectId: params.PROJECT_ID,
                       deleteJenkinsCicdServer: params.DELETE_JENKINS_CICD_SERVER]
           el.node(args) {
@@ -180,7 +181,7 @@ elCicdDefs-delete-cicd-server:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: 'delete-team-server',
+                      pipelineName: '${APP_NAME}',
                       groupId: params.GROUP_ID]
           el.node(args) {
               cicdServerDeletion(args)
