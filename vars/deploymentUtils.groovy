@@ -95,9 +95,10 @@ def createComponentRemovalStages(def projectInfo, def components) {
                 while (components) {
                     def component = projectUtils.synchronizedRemoveListItem(components)
                     sh """
-                        if [[ ! -z \$(helm list -q -n ${projectInfo.deployToNamespace} | grep ${component.name}) ]]
+                        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
                         then
                             helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                            oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
                         fi
                     """
                 }

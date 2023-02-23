@@ -71,7 +71,7 @@ _check_upgrade_sealed_secrets() {
 
 _check_sealed_secrets() {
     echo
-    local CURRENT_SS_VERSION=$(helm list -f 'sealed-secrets' -o json -n kube-system | jq -r '.[0].app_version' )
+    local CURRENT_SS_VERSION=$(helm list --filter 'sealed-secrets' -o json -n kube-system | jq -r '.[0].app_version' )
     if [[ ${CURRENT_SS_VERSION} != 'null' ]]
     then
         echo "CURRENT INSTALLED SEALED SECRETS VERSION: ${CURRENT_SS_VERSION}"

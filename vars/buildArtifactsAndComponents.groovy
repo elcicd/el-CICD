@@ -50,8 +50,6 @@ def call(Map args) {
             def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, components)
             
             parallel(removalStages)
-            
-            sh "oc wait --for=delete pods -l 'component in (${componentNames})' -n ${projectInfo.deployToNamespace} --timeout=600s"
         }
         else {
             echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
