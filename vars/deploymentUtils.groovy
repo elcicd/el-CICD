@@ -86,23 +86,46 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
     }
 }
 
-def createComponentRemovalStages(def projectInfo, def components) {
-    assert projectInfo; assert components
-    
+def createComponentRemovalStages(def projectInfo, def components) {    
     def removalStages = [failFast: true]
-    components.each { component ->
+    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
+        def stageName = "parallel removal stage ${i}"
         removalStages[component.name] = {
-            stage("Uninstalling ${component.name}") {
-                sh """
-                    if [[ ! -z \$(helm list -q -n ${projectInfo.deployToNamespace} | grep ${component.name}) ]]
-                    then
-                        helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-                        oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
-                    fi
-                """
+            stage(stageName) {
+                while (components) {
+                    def component = projectUtils.synchronizedRemoveListItem(components)
+                    sh """
+                        if [[ ! -z \$(helm list -q -n ${projectInfo.deployToNamespace} | grep ${component.name}) ]]
+                        then
+                            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                        fi
+                    """
+                }
             }
         }
     }
     
     return removalStages
+}
+
+def createBuildStages(def projectInfo, def buildModules) {
+    def buildStages = [failFast: true]
+    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
+        def stageName = "parallel build stage ${i}"
+        buildStages[stageName] = {
+            stage(stageName) {
+                while (buildModules) {
+                    def buildModule = projectUtils.synchronizedRemoveListItem(buildModules)
+                    loggingUtils.echoBanner("BUILDING ${buildModule.name}")
+
+                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+
+                    loggingUtils.echoBanner("${buildModule.name} BUILT AND DEPLOYED SUCCESSFULLY")
+                }
+            }
+        }
+    }
+
+    return buildStages
 }

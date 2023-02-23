@@ -44,8 +44,14 @@ def call(Map args) {
 
     stage('Uninstall all components, if selected') {
         if (projectInfo.cleanNamespace) {
-            def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, projectInfo.components)
+            def components = []
+            components.addAll(projectInfo.components)
+            def componentNames = components.collect { it. name }.join(',')
+            def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, components)
+            
             parallel(removalStages)
+            
+            sh "oc wait --for=delete pods -l 'component in (${componentNames})' -n ${projectInfo.deployToNamespace} --timeout=600s"
         }
         else {
             echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
@@ -56,33 +62,11 @@ def call(Map args) {
         def buildModules = buildModules.findAll { it.build }
 
         if (buildModules) {
-            def buildStages = createBuildStages(projectInfo, buildModules)
+            def buildStages = deploymentUtils.createBuildStages(projectInfo, buildModules)
             parallel(createBuildStages)
         }
         else {
             echo "No modules selected for building"
         }
     }
-}
-
-def createBuildStages(def projectInfo, def buildModules) {
-    def buildStages = [:]
-    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
-        def stageName = "parallel build stage ${i}"
-        buildStages[stageName] = {
-            stage(stageName) {
-                while (buildModules) {
-                    def buildModule = projectUtils.synchronizedRemoveListItem(buildModules)
-                    loggingUtils.echoBanner("BUILDING ${buildModule.name}")
-
-                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-
-                    loggingUtils.echoBanner("${buildModule.name} BUILT AND DEPLOYED SUCCESSFULLY")
-                }
-            }
-        }
-    }
-
-    return buildStages
 }
