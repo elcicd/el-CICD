@@ -26,10 +26,10 @@ def createBuildStages(def projectInfo, def buildModules) {
     return buildStages
 }
 
-def createComponentRemovalStages(def projectInfo, def components) {    
+def createComponentRemovalStages(def projectInfo, def components) {
     def removalStages = [failFast: true]
     for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stageName = "parallel removal stage ${i}"
+        def stageName = "parallel removal stage ${i + 1}"
         removalStages[component.name] = {
             stage(stageName) {
                 while (components) {
@@ -49,7 +49,7 @@ def createComponentRemovalStages(def projectInfo, def components) {
     return removalStages
 }
  
-def createComponentDeployStages(def projectInfo, def components) {
+def createComponentDeployStages(def projectInfo, def components) {    
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
@@ -66,31 +66,21 @@ def createComponentDeployStages(def projectInfo, def components) {
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
-    def deploymentStages = [failFast: true]
-    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stageName = "parallel deployment stage ${i}"
-        deploymentStages[stageName] = {
-            stage(stageName) {
-                while (components) {
-                    def component = projectUtils.synchronizedRemoveListItem(components)
-                    def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-                    def compValues = ["elCicdDefaults.appName=${component.name}",
-                                    "elCicdDefs.COMPONENT_NAME=${component.name}",
-                                    "elCicdDefs.CODE_BASE=${component.codeBase}",
-                                    "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                                    "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                                    "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                    "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                                    "elCicdDefaults.image=${componentImage}"]
-                    compValues.addAll(commonValues)
 
-                    runHelmDeployment(projectInfo, component, compValues)
-                }
-            }
-        }
+    return createParallelStages("Component Deployment", components) { component ->
+        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+        def compValues = ["elCicdDefaults.appName=${component.name}",
+                          "elCicdDefs.COMPONENT_NAME=${component.name}",
+                          "elCicdDefs.CODE_BASE=${component.codeBase}",
+                          "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                          "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                          "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                          "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
+                          "elCicdDefaults.image=${componentImage}"]
+        compValues.addAll(commonValues)
+
+        runHelmDeployment(projectInfo, component, compValues)
     }
-    
-    return deploymentStages
 }
 
 def runHelmDeployment(def projectInfo, def component, def compValues) {

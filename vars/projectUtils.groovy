@@ -229,31 +229,37 @@ def cloneGitRepo(def module, def gitReference) {
     }
 }
 
-def createCloneRepoStages(def modules, Closure postCheckoutProcessing = null) {
-    def cloneRepoStages = [:]
-    modules.each { module ->
-        cloneRepoStages["Checkout ${module.name}"] = {
-            stage("Checkout ${module.name}") {
-                def gitReference = module.gitReference ?: module.scmBranch
-                cloneGitRepo(module, gitReference)
-                
-                if (postCheckoutProcessing) {
-                    postCheckoutProcessing(module)
-                }
-            }
-        }
-    }
-    
-    return cloneRepoStages
-}
-
 def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymentEnv) {
     return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
         "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${component.srcCommitHash}" : null
 }
 
-def synchronized synchronizedRemoveListItem(def someList) {
-    if (someList) {
-        return someList.remove(0)
+def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
+    def parallelStages = [failFast: true]
+    def numStages = Math.min(listItems.size(), el.cicd.JENKINS_MAX_STAGES)
+    for (int i = 1; i <= numStages; i++) {
+        def stageName = ("STAGE ${i}: ${stageTitle}")
+        listItems.each { module ->
+            parallelStages[stageName] = {
+                stage(stageName) {
+                    while (listItems) {
+                        def listItem = synchronizedRemoveListItem(listItems)
+                        if (listItem) {
+                            stageSteps(listItem)
+                        }
+                    }
+                    
+                    echo "STAGE ${i}: ${stageTitle} COMPLETE"
+                }
+            }
+        }
+    }
+    
+    return parallelStages
+}
+
+def synchronized synchronizedRemoveListItem(def listItems) {
+    if (listItems) {
+        return listItems.remove(0)
     }
 }
