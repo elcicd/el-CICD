@@ -162,6 +162,7 @@ def initializePipeline() {
             ${shCmd.echo 'Jenkins Service Account'}
             oc whoami
             ${shCmd.echo "\n======================="}
+            exit 1
         """
 
         dir (el.cicd.EL_CICD_DIR) {
