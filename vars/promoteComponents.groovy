@@ -127,13 +127,14 @@ def call(Map args) {
             if (projectInfo.componentsToPromote) {
                 loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-                projectInfo.componentsToPromote.each { component ->
+                projectInfo.componentsToPromote.each  { component ->
                     dir(component.workDir) {
+                        projectUtils.cloneGitRepo(component, component.srcCommitHash)
+
                         component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
                         component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
 
-                        component.deployBranchExists =
-                            sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                        component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
                         component.deployBranchExists = !component.deployBranchExists.isEmpty()
 
                         def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
