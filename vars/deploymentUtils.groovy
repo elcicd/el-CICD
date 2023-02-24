@@ -3,10 +3,53 @@
  *
  * Utility methods for apply OKD resources
  */
+
+def createBuildStages(def projectInfo, def buildModules) {
+    def buildStages = [failFast: true]
+    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
+        def stageName = "parallel build stage ${i + 1}"
+        buildStages[stageName] = {
+            stage(stageName) {
+                while (buildModules) {
+                    def module = projectUtils.synchronizedRemoveListItem(buildModules)
+                    loggingUtils.echoBanner("BUILDING ${module.name}")
+
+                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+
+                    loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
+                }
+            }
+        }
+    }
+
+    return buildStages
+}
+
+def createComponentRemovalStages(def projectInfo, def components) {    
+    def removalStages = [failFast: true]
+    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
+        def stageName = "parallel removal stage ${i}"
+        removalStages[component.name] = {
+            stage(stageName) {
+                while (components) {
+                    def component = projectUtils.synchronizedRemoveListItem(components)
+                    sh """
+                        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
+                        then
+                            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                            oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
+                        fi
+                    """
+                }
+            }
+        }
+    }
+    
+    return removalStages
+}
  
 def createComponentDeployStages(def projectInfo, def components) {
-    assert projectInfo; assert components
-
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
@@ -24,21 +67,25 @@ def createComponentDeployStages(def projectInfo, def components) {
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
     def deploymentStages = [failFast: true]
-    components.each { component ->
-        deploymentStages[component.name] = {
+    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
+        def stageName = "parallel deployment stage ${i}"
+        deploymentStages[stageName] = {
             stage("Deploying ${component.name}") {
-                def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-                def compValues = ["elCicdDefaults.appName=${component.name}",
-                                  "elCicdDefs.COMPONENT_NAME=${component.name}",
-                                  "elCicdDefs.CODE_BASE=${component.codeBase}",
-                                  "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                                  "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                                  "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                                  "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                                  "elCicdDefaults.image=${componentImage}"]
-                compValues.addAll(commonValues)
+                while (components) {
+                    def component = projectUtils.synchronizedRemoveListItem(components)
+                    def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+                    def compValues = ["elCicdDefaults.appName=${component.name}",
+                                    "elCicdDefs.COMPONENT_NAME=${component.name}",
+                                    "elCicdDefs.CODE_BASE=${component.codeBase}",
+                                    "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                                    "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                                    "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                                    "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
+                                    "elCicdDefaults.image=${componentImage}"]
+                    compValues.addAll(commonValues)
 
-                runHelmDeployment(projectInfo, component, compValues)
+                    runHelmDeployment(projectInfo, component, compValues)
+                }
             }
         }
     }
@@ -84,50 +131,4 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
             ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
     }
-}
-
-def createComponentRemovalStages(def projectInfo, def components) {    
-    def removalStages = [failFast: true]
-    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
-        def stageName = "parallel removal stage ${i}"
-        removalStages[component.name] = {
-            stage(stageName) {
-                while (components) {
-                    def component = projectUtils.synchronizedRemoveListItem(components)
-                    sh """
-                        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
-                        then
-                            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-                            oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
-                        fi
-                    """
-                }
-            }
-        }
-    }
-    
-    return removalStages
-}
-
-def createBuildStages(def projectInfo, def buildModules) {
-    def buildStages = [failFast: true]
-    def maxStages = el.cicd.JENKINS_MAX_STAGES as int
-    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stageName = "parallel build stage ${i + 1}"
-        buildStages[stageName] = {
-            stage(stageName) {
-                while (buildModules) {
-                    def module = projectUtils.synchronizedRemoveListItem(buildModules)
-                    loggingUtils.echoBanner("BUILDING ${module.name}")
-
-                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-
-                    loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
-                }
-            }
-        }
-    }
-
-    return buildStages
 }
