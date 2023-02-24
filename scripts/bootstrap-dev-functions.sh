@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 __bootstrap_lab_environment() {
+    set -eE
+    
     echo
     echo "${DEV_SETUP_WELCOME_MSG}"
 
@@ -60,9 +62,11 @@ __gather_lab_setup_info() {
     fi
 
     if [[ ${SETUP_CRC} != ${_YES} ]]
-    then
+    then        
         read -p 'Enter Cluster wildcard domain (leave blank if using a currently running OpenShift Local instance): ' TEMP_CLUSTER_WILDCARD_DOMAIN
         CLUSTER_WILDCARD_DOMAIN=${TEMP_CLUSTER_WILDCARD_DOMAIN:-${CLUSTER_WILDCARD_DOMAIN}}
+        
+        _confirm_logged_into_cluster
     fi
 
     echo
@@ -74,9 +78,8 @@ __gather_lab_setup_info() {
         if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
-            set -e
+            
             printf "%s\n" "${SUDO_PWD}" | sudo -k -p '' -S echo 'verified'
-            set +e
         fi
     else
         echo 'IF NOT ALREADY DONE, proper values for your chosen image registry must be set in the el-CICD configuration files.'
@@ -259,7 +262,6 @@ __create_image_registry_nfs_share() {
 }
 
 __setup_image_registries() {
-    set -e
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
         __create_image_registry_nfs_share
@@ -286,6 +288,7 @@ __setup_image_registries() {
         PROFILES="${PROFILES},nfs"
     fi
     
+    set -x
     helm upgrade --install --atomic --create-namespace --history-max=1 \
         --set-string profiles="{${PROFILES}}" \
         --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
@@ -298,10 +301,9 @@ __setup_image_registries() {
         -f ${EL_CICD_HELM_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
+    set +x
         
     __register_insecure_registries
-    
-    set +e
 
     echo
     echo 'Docker Registry is up!'

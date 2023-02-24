@@ -117,6 +117,30 @@ _failure() {
    fi
 }
 
+_confirm_logged_into_cluster() {
+    echo
+    echo "You must be logged into the cluster."
+    echo "el-CICD only confirms you are logged in."
+    echo "${_BOLD}DOUBLE-CHECK IT'S THE CORRECT CLUSTER${_REGULAR}."
+    echo "Confirming..."
+    sleep 2
+    oc whoami > /dev/null 2>&1 
+    echo "${_BOLD}Confirmed${_REGULAR}"
+}
+
+_confirm_continue() {
+    echo
+    echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
+    CONTINUE='N'
+    read CONTINUE
+    if [[ ${CONTINUE} != ${_YES} ]]
+    then
+        echo
+        echo "You must enter '${_BOLD}${_YES}${_REGULAR}' to continue.  Exiting..."
+        exit 0
+    fi
+}
+
 _get_yes_no_answer() {
     read -p "${1}" -n 1 USER_ANSWER
     >&2 echo

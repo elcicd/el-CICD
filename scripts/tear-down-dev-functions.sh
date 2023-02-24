@@ -45,15 +45,19 @@ __gather_lab_tear_down_info() {
 
     if [[ ${REMOVE_CRC} != ${_YES} ]]
     then
-        oc whoami > /dev/null 2>&1 
+        _confirm_logged_into_cluster
+        
         if [[ ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
         then
             echo
             REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
+        else
+            IMAGE_REGISTRY_NOT_FOUND=${_TRUE}
         fi
     fi
 
-    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} && (${REMOVE_IMAGE_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES})  ]]
+    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} && \
+            (${REMOVE_IMAGE_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES} || ${IMAGE_REGISTRY_NOT_FOUND} == ${_TRUE})  ]]
     then
         REMOVE_IMAGE_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
@@ -87,6 +91,9 @@ __summarize_and_confirm_lab_tear_down() {
         if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
         then
             echo "The image registry ${_BOLD}WILL${_REGULAR} be torn down."
+        elif [[ ${IMAGE_REGISTRY_NOT_FOUND} == ${_TRUE} ]]
+        then
+            echo "The image registry was ${_BOLD}NOT${_REGULAR} found."
         else
             echo "The image registry will ${_BOLD}NOT${_REGULAR} be torn down."
         fi

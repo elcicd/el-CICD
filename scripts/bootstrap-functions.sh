@@ -226,19 +226,6 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     _confirm_continue
 }
 
-_confirm_continue() {
-    echo
-    echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
-    CONTINUE='N'
-    read CONTINUE
-    if [[ ${CONTINUE} != ${_YES} ]]
-    then
-        echo
-        echo "You must enter ${_YES} for bootstrap to continue.  Exiting..."
-        exit 0
-    fi
-}
-
 __create_onboarding_automation_server() {
     echo
     set -e
@@ -285,34 +272,20 @@ __create_onboarding_automation_server() {
     fi
 
     echo
-    set -x +e
-    if [[ ! $(helm upgrade --wait --wait-for-jobs --install --history-max=1  \
+    set -x
+    helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
                 -n ${ONBOARDING_MASTER_NAMESPACE} \
                 -f ${EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
                 jenkins-pipeline-sync \
-                elCicdCharts/elCicdChart) \
-    ]]
-    then
-        set +x
-        echo '================================== ERROR ===================================='
-        echo
-        echo '      UNABLE TO CONFIRM PIPELINES FOR ONBOARDING SERVER WERE UPDATED'
-        echo
-        echo '================================== ERROR ===================================='
-        exit 1
-    fi
+                elCicdCharts/elCicdChart
     set +x
 }
 
 _helm_repo_add_and_update_elCicdCharts() {
-    set -e
-    
     echo
     helm repo add elCicdCharts --force-update ${EL_CICD_HELM_REPOSITORY}
     helm repo update elCicdCharts
-    
-    set +e
 }
 
 _delete_namespace() {
