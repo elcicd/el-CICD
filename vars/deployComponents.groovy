@@ -68,6 +68,12 @@ def call(Map args) {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
         }
     }
+    
+    stage ("Wait for all pods to terminate") {
+        sh """
+            oc wait --for=delete pod -l projectid=${projectInfo.projectId} --field-selector=metadata.deletionTimestamp -n ${projectInfo.deployToNamespace} --timeout=600s
+        """
+    }
 
     if (components.find { it.deploymentBranch}) {
         stage('Inform users of success') {

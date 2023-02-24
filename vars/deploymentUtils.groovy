@@ -121,12 +121,6 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
                     ${component.name} \
                     elCicdCharts/elCicdChart
             done
-
-            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l component=${component.name} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}')
-            for POD in \${DELETED_PODS}
-            do
-                oc wait --for=delete pod \${POD} -n ${projectInfo.deployToNamespace} --timeout=600s
-            done
             
             ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
