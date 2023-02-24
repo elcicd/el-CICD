@@ -113,17 +113,17 @@ def createBuildStages(def projectInfo, def buildModules) {
     def buildStages = [failFast: true]
     def maxStages = el.cicd.JENKINS_MAX_STAGES as int
     for (i in 0..<maxStages) {
-        def stageName = "parallel build stage ${i}"
+        def stageName = "parallel build stage ${i + 1}"
         buildStages[stageName] = {
             stage(stageName) {
                 while (buildModules) {
-                    def buildModule = projectUtils.synchronizedRemoveListItem(buildModules)
-                    loggingUtils.echoBanner("BUILDING ${buildModule.name}")
+                    def module = projectUtils.synchronizedRemoveListItem(buildModules)
+                    loggingUtils.echoBanner("BUILDING ${module.name}")
 
                     pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
                     build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
 
-                    loggingUtils.echoBanner("${buildModule.name} BUILT AND DEPLOYED SUCCESSFULLY")
+                    loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
                 }
             }
         }
