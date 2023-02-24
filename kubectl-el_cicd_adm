@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 cd "$(dirname ${0})"
 
-
 _BOLD=$(tput bold)
 _REGULAR=$(tput sgr0)
 
-set -o allexport
+set -e -o allexport
 
 EL_CICD_DIR=$(pwd)
 EL_CICD_SCRIPTS_DIR=${EL_CICD_DIR}/scripts
@@ -27,7 +26,6 @@ EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=${EL_CICD_HOME}/jenkins-target
 
-set -e
 echo
 echo -n 'Loading el-CICD scripts...'
 echo

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 _tear_down_lab_environment() {
+    set -eE
+    
     echo
     echo "${DEV_TEAR_DOWN_WELCOME_MSG}"
 
@@ -41,10 +43,14 @@ __gather_lab_tear_down_info() {
         echo 'OpenShift Local installation not found.  Skipping...'
     fi
 
-    if [[ ${REMOVE_CRC} != ${_YES} && ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
+    if [[ ${REMOVE_CRC} != ${_YES} ]]
     then
-        echo
-        REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
+        oc whoami > /dev/null 2>&1 
+        if [[ ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
+        then
+            echo
+            REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
+        fi
     fi
 
     if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} && (${REMOVE_IMAGE_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES})  ]]
