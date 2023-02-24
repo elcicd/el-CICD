@@ -98,6 +98,7 @@ def node(Map args, Closure body) {
 
                 if (args.projectId) {
                     args.projectInfo = projectUtils.gatherProjectInfoStage(args.projectId)
+                    echo "howdy ${args.projectInfo}"
                 }
 
                 runHookScript(el.cicd.INIT, args)

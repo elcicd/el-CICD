@@ -18,7 +18,6 @@ def call(Map args) {
     }
 
     stage("Install/upgrade CICD Jenkins if necessary") {
-        echo projectInfo
         onboardingUtils.setupProjectCicdServer(projectInfo)
     }
     
