@@ -127,7 +127,7 @@ def call(Map args) {
             if (projectInfo.componentsToPromote) {
                 loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-                def cloneRepoStages = projectUtils.createCloneRepoStages(projectInfo.componentsToPromote) { component ->
+                projectInfo.componentsToPromote.each { component ->
                     dir(component.workDir) {
                         component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
                         component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
@@ -144,8 +144,6 @@ def call(Map args) {
                         component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
                     }
                 }
-                
-                parallel(cloneRepoStages)
             }
             else {
                 loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")

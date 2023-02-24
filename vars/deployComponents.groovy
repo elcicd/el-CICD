@@ -73,11 +73,8 @@ def call(Map args) {
         sh """
             DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' | tr '\n' ' ')
             oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
-            done
         """
     }
-    
-    
 
     if (components.find { it.deploymentBranch}) {
         stage('Inform users of success') {

@@ -3,10 +3,6 @@
  *
  * Pipeline logging utilities
  */
- 
-def spacedEcho(def msg) {
-    echo "\n${msg}\n"
-}
 
 def echoBanner(def ... msgs) {
     echo createBanner(msgs)
