@@ -155,7 +155,6 @@ def initializePipeline() {
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
-            set +x
             echo "\n=======================\n"
             echo 'OCP Runtime'
             oc version
@@ -166,7 +165,6 @@ def initializePipeline() {
             echo 'Jenkins Service Account'
             oc whoami
             echo "\n=======================\n"
-            set -x
         """
 
         dir (el.cicd.EL_CICD_DIR) {
