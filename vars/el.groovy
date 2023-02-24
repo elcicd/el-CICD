@@ -127,21 +127,21 @@ def runHookScript(def prefix, def args) {
 }
 
 def runHookScript(def prefix, def args, def exception) {
-    dir(el.cicd.HOOK_SCRIPTS_DIR) {
-        def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
-        if (hookScriptFile) {
-            def hookScript = load hookScriptFile[0].path
+    // dir(el.cicd.HOOK_SCRIPTS_DIR) {
+    //     def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
+    //     if (hookScriptFile) {
+    //         def hookScript = load hookScriptFile[0].path
 
-            echo "hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING..."
+    //         echo "hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING..."
 
-            exception ?  hookScript(exception, args) : hookScript(args)
+    //         exception ?  hookScript(exception, args) : hookScript(args)
 
-            echo "hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE"
-        }
-        else {
-            echo "hook-script ${prefix}-${args.pipelineName}.groovy NOT found..."
-        }
-    }
+    //         echo "hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE"
+    //     }
+    //     else {
+    //         echo "hook-script ${prefix}-${args.pipelineName}.groovy NOT found..."
+    //     }
+    // }
 }
 
 def initializePipeline() {
@@ -162,6 +162,7 @@ def initializePipeline() {
             ${shCmd.echo 'Jenkins Service Account'}
             oc whoami
             ${shCmd.echo "\n======================="}
+            exit 1
         """
 
         dir (el.cicd.EL_CICD_DIR) {
