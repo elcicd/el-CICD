@@ -71,7 +71,7 @@ def call(Map args) {
     
     stage ("Wait for all pods to terminate") {
         sh """
-            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.projectId} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' | tr '\n' ' ')
+            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' | tr '\n' ' ')
             oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
             done
         """
