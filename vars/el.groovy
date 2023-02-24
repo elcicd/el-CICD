@@ -151,7 +151,7 @@ def initializePipeline() {
     stage('Initializing pipeline') {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
-        sh """
+        def cmd = """
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
@@ -166,6 +166,8 @@ def initializePipeline() {
             oc whoami
             ${shCmd.echo "\n======================="}
         """
+        
+        sh cmd
 
         dir (el.cicd.EL_CICD_DIR) {
             git url: el.cicd.EL_CICD_GIT_REPO,
