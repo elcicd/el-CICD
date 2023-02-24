@@ -155,6 +155,8 @@ def initializePipeline() {
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
+            ${shCmd.echo "\n=======================\n"}
+            ${shCmd.echo 'OCP Runtime'}
             oc version
             ${shCmd.echo "\n=======================\n"}
             ${shCmd.echo 'Helm Version'}
