@@ -70,7 +70,7 @@ def createComponentDeployStages(def projectInfo, def components) {
     for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
         def stageName = "parallel deployment stage ${i}"
         deploymentStages[stageName] = {
-            stage("Deploying ${component.name}") {
+            stage(stageName) {
                 while (components) {
                     def component = projectUtils.synchronizedRemoveListItem(components)
                     def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
