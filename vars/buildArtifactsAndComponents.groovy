@@ -61,7 +61,7 @@ def call(Map args) {
 
         if (buildModules) {
             def buildStages = deploymentUtils.createBuildStages(projectInfo, buildModules)
-            parallel(createBuildStages)
+            parallel(buildStages)
         }
         else {
             echo "No modules selected for building"
