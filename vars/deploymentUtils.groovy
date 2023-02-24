@@ -111,7 +111,7 @@ def createComponentRemovalStages(def projectInfo, def components) {
 
 def createBuildStages(def projectInfo, def buildModules) {
     def buildStages = [failFast: true]
-    for (i in 0..< el.cicd.JENKINS_MAX_STAGES) {
+    for (i in 0..<(el.cicd.JENKINS_MAX_STAGES as int)) {
         def stageName = "parallel build stage ${i}"
         buildStages[stageName] = {
             stage(stageName) {
