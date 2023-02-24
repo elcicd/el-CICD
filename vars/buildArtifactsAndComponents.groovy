@@ -57,7 +57,7 @@ def call(Map args) {
     }
 
     stage("Building selected modules") {
-        def buildModules = buildModules.findAll { it.build }
+        def buildModules = projectInfo.buildModules.findAll { it.build }
 
         if (buildModules) {
             def buildStages = deploymentUtils.createBuildStages(projectInfo, buildModules)
