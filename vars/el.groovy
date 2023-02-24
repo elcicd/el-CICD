@@ -151,23 +151,6 @@ def initializePipeline() {
         sh """
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
-            
-            echo 'howdy 1'
-
-            ${shCmd.echo "\n=======================\n"}
-            ${shCmd.echo 'OCP Runtime'}
-            
-            echo 'howdy 2'
-            oc version
-            ${shCmd.echo "\n=======================\n"}
-            ${shCmd.echo 'Helm Version'}
-            helm version
-            echo 'howdy 3'
-            ${shCmd.echo "\n=======================\n"}
-            ${shCmd.echo 'Jenkins Service Account'}
-            oc whoami
-            ${shCmd.echo "\n======================="}
-            exit 1
         """
 
         dir (el.cicd.EL_CICD_DIR) {
