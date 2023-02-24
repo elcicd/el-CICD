@@ -9,7 +9,7 @@ def gatherProjectInfoStage(def projectId) {
     stage('Gather project information') {
         loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
         
-        gatherProjectInfo(projectId)
+        projectInfo = gatherProjectInfo(projectId)
     }
     
     return projectInfo
