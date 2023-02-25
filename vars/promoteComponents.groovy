@@ -171,39 +171,37 @@ def call(Map args) {
             def promoteComponents = projectInfo.componentsToPromote.collect()
             def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
             def copyImageStages = projectUtils.createParallelStages(stageTitle, promoteComponents) { component ->
-                projectInfo.componentsToPromote.each { component ->
-                    def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
-                    def copyImage =
-                        shCmd.copyImage(projectInfo.ENV_FROM,
-                                        'FROM_IMAGE_REGISTRY_USERNAME',
-                                        'FROM_IMAGE_REGISTRY_PWD',
-                                        component.id,
-                                        projectInfo.deployFromEnv,
-                                        projectInfo.ENV_TO,
-                                        'TO_IMAGE_REGISTRY_USERNAME',
-                                        'TO_IMAGE_REGISTRY_PWD',
-                                        component.id,
-                                        promoteTag)
+                def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
+                def copyImage =
+                    shCmd.copyImage(projectInfo.ENV_FROM,
+                                    'FROM_IMAGE_REGISTRY_USERNAME',
+                                    'FROM_IMAGE_REGISTRY_PWD',
+                                    component.id,
+                                    projectInfo.deployFromEnv,
+                                    projectInfo.ENV_TO,
+                                    'TO_IMAGE_REGISTRY_USERNAME',
+                                    'TO_IMAGE_REGISTRY_PWD',
+                                    component.id,
+                                    promoteTag)
 
-                    def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
-                                                    'TO_IMAGE_REGISTRY_USERNAME',
-                                                    'TO_IMAGE_REGISTRY_PWD',
-                                                    component.id,
-                                                    promoteTag,
-                                                    projectInfo.deployToEnv)
+                def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
+                                                'TO_IMAGE_REGISTRY_USERNAME',
+                                                'TO_IMAGE_REGISTRY_PWD',
+                                                component.id,
+                                                promoteTag,
+                                                projectInfo.deployToEnv)
 
-                    def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
-                    
-                    sh  """
-                        ${copyImage}
+                def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
+                
+                sh  """
+                    ${copyImage}
 
-                        ${shCmd.echo ''}
-                        ${tagImage}
+                    ${shCmd.echo ''}
+                    ${tagImage}
 
-                        ${shCmd.echo ''}
-                        ${shCmd.echo  "--> ${msg}"}
-                    """
-                }
+                    ${shCmd.echo ''}
+                    ${shCmd.echo  "--> ${msg}"}
+                """
             }
             
             parallel(copyImageStages)
