@@ -125,37 +125,32 @@ def call(Map args) {
                 loggingUtils.errorBanner(componentsMissingMsg)
             }
         }
+        
+        loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-        if (projectInfo.componentsToPromote) {
-            loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
+        def promoteComponents = projectInfo.componentsToPromote.collect()
+        def cloneStages = projectUtils.createParallelStages("Clone Component Repos", promoteComponents) { component ->
+            dir(component.workDir) {
+                projectUtils.cloneGitRepo(component, component.srcCommitHash)
 
-            def promoteComponents = projectInfo.componentsToPromote.collect()
-            def cloneStages = projectUtils.createParallelStages("Clone Component Repos", promoteComponents) { component ->
-                dir(component.workDir) {
-                    projectUtils.cloneGitRepo(component, component.srcCommitHash)
+                component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+                component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
 
-                    component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-                    component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+                component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                component.deployBranchExists = !component.deployBranchExists.isEmpty()
 
-                    component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
-                    component.deployBranchExists = !component.deployBranchExists.isEmpty()
-
-                    def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
-                    if (ref) {
-                        sh "git checkout ${ref}"
-                    }
-
-                    component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+                def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+                if (ref) {
+                    sh "git checkout ${ref}"
                 }
+
+                component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
             }
-            
-            parallel(cloneStages)
-            
-            loggingUtils.echoBanner("COMPONENT REPOSITORY CLONING COMPLETE")
         }
-        else {
-            loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")
-        }
+        
+        parallel(cloneStages)
+        
+        loggingUtils.echoBanner("COMPONENT REPOSITORY CLONING COMPLETE")
 
         loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                 projectInfo.componentsToPromote.collect { it. name }.join(', '))
@@ -229,6 +224,9 @@ def call(Map args) {
                 }
             }
         }
+    }
+    else {
+        loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIPPING")
     }
 
     deployComponents(projectInfo: projectInfo,
