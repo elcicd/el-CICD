@@ -67,7 +67,7 @@ def createComponentDeployStages(def projectInfo, def components) {
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
 
-    return createParallelStages("Component Deployment", components) { component ->
+    return projectUtils.createParallelStages("Component Deployment", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.appName=${component.name}",
                           "elCicdDefs.COMPONENT_NAME=${component.name}",
