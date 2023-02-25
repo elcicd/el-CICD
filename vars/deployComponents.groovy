@@ -68,11 +68,15 @@ def call(Map args) {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
         }
     }
-    
+
     stage ("Wait for all pods to terminate") {
+        def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
         sh """
-            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}' | tr '\n' ' ')
-            oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+            DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+            if [[ ! -z \${DELETED_PODS} ]]
+            then
+                oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+            fi
         """
     }
 

@@ -150,22 +150,27 @@ def call(Map args) {
             }
             
             parallel(cloneStages)
+            
+            loggingUtils.echoBanner("COMPONENT REPOSITORY CLONING COMPLETE")
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")
         }
 
-        stage("promote images") {
-            loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
-                                    projectInfo.componentsToPromote.collect { it. name }.join(', '))
+        loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
+                                projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-            withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                              usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                              passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
-                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                              usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
-                                              passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
-            {
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
+                                            usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
+                                            passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
+                            usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
+                                            usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                            passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+        {
+            
+            def promoteComponents = projectInfo.componentsToPromote.collect()
+            def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
+            def copyImageStages = projectUtils.createParallelStages(stageTitle, promoteComponents) { component ->
                 projectInfo.componentsToPromote.each { component ->
                     def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
                     def copyImage =
@@ -181,11 +186,11 @@ def call(Map args) {
                                         promoteTag)
 
                     def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
-                                                  'TO_IMAGE_REGISTRY_USERNAME',
-                                                  'TO_IMAGE_REGISTRY_PWD',
-                                                  component.id,
-                                                  promoteTag,
-                                                  projectInfo.deployToEnv)
+                                                    'TO_IMAGE_REGISTRY_USERNAME',
+                                                    'TO_IMAGE_REGISTRY_PWD',
+                                                    component.id,
+                                                    promoteTag,
+                                                    projectInfo.deployToEnv)
 
                     def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
                     
@@ -200,6 +205,8 @@ def call(Map args) {
                     """
                 }
             }
+            
+            parallel(copyImageStages)
         }
 
         stage('Create deployment branch if necessary') {
