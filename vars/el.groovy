@@ -167,8 +167,6 @@ def initializePipeline() {
             ${shCmd.echo "\n======================="}
         """
         
-        echo cmd
-        
         sh cmd
 
         dir (el.cicd.EL_CICD_DIR) {

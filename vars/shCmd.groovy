@@ -47,7 +47,10 @@ def sshAgentBash(def sshKeyId, def ... commands) {
 }
 
 def echo(String... msgs) {
-    println msgs.class
-    msgs = msgs.flatten().collect { "echo \"${it.toString()}\";" }.join(' ')
-    return "{ ${msgs} } 2> /dev/null"
+    def out = ''
+    msgs.each { msg ->
+        out += "echo \"${msg}\"; "
+    }
+    println out
+    return "{ ${out} } 2> /dev/null"
 }
