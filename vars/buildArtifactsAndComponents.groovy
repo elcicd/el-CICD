@@ -60,7 +60,15 @@ def call(Map args) {
         def buildModules = projectInfo.buildModules.findAll { it.build }
 
         if (buildModules) {
-            def buildStages = deploymentUtils.createBuildStages(projectInfo, buildModules)
+            def buildStages =  projectUtils.createParallelStages("Build Module", buildModules) { module ->
+                loggingUtils.echoBanner("BUILDING ${module.name}")
+
+                pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
+                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+
+                loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
+            }
+            
             parallel(buildStages)
         }
         else {

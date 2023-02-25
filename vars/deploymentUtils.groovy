@@ -4,49 +4,16 @@
  * Utility methods for apply OKD resources
  */
 
-def createBuildStages(def projectInfo, def buildModules) {
-    def buildStages = [failFast: true]
-    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stageName = "parallel build stage ${i + 1}"
-        buildStages[stageName] = {
-            stage(stageName) {
-                while (buildModules) {
-                    def module = projectUtils.synchronizedRemoveListItem(buildModules)
-                    loggingUtils.echoBanner("BUILDING ${module.name}")
-
-                    pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                    build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
-
-                    loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
-                }
-            }
-        }
-    }
-
-    return buildStages
-}
-
 def createComponentRemovalStages(def projectInfo, def components) {
-    def removalStages = [failFast: true]
-    for (int i = 0; i < (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stageName = "parallel removal stage ${i + 1}"
-        removalStages[component.name] = {
-            stage(stageName) {
-                while (components) {
-                    def component = projectUtils.synchronizedRemoveListItem(components)
-                    sh """
-                        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
-                        then
-                            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-                            oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
-                        fi
-                    """
-                }
-            }
-        }
+    return projectUtils.createParallelStages("Component Removal", components) { component ->
+        sh """
+            if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
+            then
+                helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+                oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
+            fi
+        """
     }
-    
-    return removalStages
 }
  
 def createComponentDeployStages(def projectInfo, def components) {    

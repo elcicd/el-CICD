@@ -59,36 +59,34 @@ def call(Map args) {
     }
 
     if (projectInfo.componentsToPromote) {
-        stage('Verify image(s) exist for previous environment') {
-            loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.componentsToPromote.collect { it.name }.join(', '))
+        loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.componentsToPromote.collect { it.name }.join(', '))
 
-            def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+        def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+        
+        
+        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
+                                            usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
+                                            passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
+            projectUtils.createParallelStages("Verify Image Exists In Image Repository", projectInfo.componentsToPromote) { component ->
+                def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
+                                                       'FROM_IMAGE_REGISTRY_USERNAME',
+                                                       'FROM_IMAGE_REGISTRY_PWD',
+                                                        component.id,
+                                                        projectInfo.deployFromEnv)
 
-            withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                              usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                              passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')])
-            {
-                projectInfo.componentsToPromote.each { component ->
-                    def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
-                                                           'FROM_IMAGE_REGISTRY_USERNAME',
-                                                           'FROM_IMAGE_REGISTRY_PWD',
-                                                            component.id,
-                                                            projectInfo.deployFromEnv)
-
-                    if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
-                        def image = "${component.id}:${projectInfo.deployFromEnv}"
-                        errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
-                    }
-                    else {
-                        def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                        echo "VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
-                    }
+                if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
+                    def image = "${component.id}:${projectInfo.deployFromEnv}"
+                    errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
+                }
+                else {
+                    def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                    echo "VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
                 }
             }
+        }
 
-            if (errorMsgs.size() > 1) {
-                loggingUtils.errorBanner(errorMsgs)
-            }
+        if (errorMsgs.size() > 1) {
+            loggingUtils.errorBanner(errorMsgs)
         }
 
         stage('Verify images are deployed in previous environment, collect source commit hash') {
