@@ -16,7 +16,8 @@ def call(Map args) {
     if (projectInfo.componentsToPromote) {
         def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
         def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
-        promotionUtils.verifyImagesInFromEnvRegistry (projectInfo, verifyMsgs, errorMsgs)
+        
+        promotionUtils.runVerifyImagesInRegistryStages(projectInfo, verifedMsgs, errorMsgs)
 
         if (verifedMsgs.size() > 1) {
             loggingUtils.echoBanner(verifedMsgs)
@@ -30,19 +31,19 @@ def call(Map args) {
             loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
                                      projectInfo.componentsToPromote.collect { it.name }.join(', '))
 
-            promotionUtils.verifyImagesExistInPreviousEnv(projectInfo)
+            promotionUtils.verifyDeploymentsInPreviousEnv(projectInfo)
         }
 
         loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-        promotionUtils.cloneComponentRepos(projectInfo)
+        promotionUtils.runCloneComponentReposStages(projectInfo)
 
         loggingUtils.echoBanner("COMPONENT REPOSITORY CLONING COMPLETE")
 
         loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
                                 projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-        promotionUtils.promoteImagesToNextRegistry(projectInfo)
+        promotionUtils.runPromoteImagesToNextRegistryStages(projectInfo)
 
         stage('Create deployment branch if necessary') {
             loggingUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",

@@ -55,7 +55,7 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def verifyImagesInFromEnvRegistry(def projectInfo, def verifyMsgs, def errorMsgs) {
+def runVerifyImagesInRegistryStages(def projectInfo, def verifyMsgs, def errorMsgs) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                         usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                         passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
@@ -81,7 +81,7 @@ def verifyImagesInFromEnvRegistry(def projectInfo, def verifyMsgs, def errorMsgs
     }
 }
 
-def verifyImagesExistInPreviousEnv(def projectInfo) {
+def verifyDeploymentsInPreviousEnv(def projectInfo) {
     def jsonPathSingle = '''jsonpath='{.data.component}{":"}{.data.src-commit-hash}{" "}' '''
     def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.component}{":"}{.data.src-commit-hash}{" "}{end}' '''
 
@@ -110,7 +110,7 @@ def verifyImagesExistInPreviousEnv(def projectInfo) {
     }
 }
 
-def cloneComponentRepos(def projectInfo) {
+def runCloneComponentReposStages(def projectInfo) {
     def cloneStages = projectUtils.createParallelStages("Clone Component Repos", projectInfo.componentsToPromote) { component ->
         dir(component.workDir) {
             projectUtils.cloneGitRepo(component, component.srcCommitHash)
@@ -133,7 +133,7 @@ def cloneComponentRepos(def projectInfo) {
     parallel(cloneStages)
 }
 
-def promoteImagesToNextRegistry(def projectInfo) {
+def runPromoteImagesToNextRegistryStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                         usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                         passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
