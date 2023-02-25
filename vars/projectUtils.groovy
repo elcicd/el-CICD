@@ -215,8 +215,6 @@ def validateNfsShare(def projectInfo, def nfsShare) {
 }
 
 def cloneGitRepo(def module, def gitReference) {
-   assert module ; assert gitReference
-
     dir (module.workDir) {
         checkout([$class: 'GitSCM',
                   branches: [[ name: gitReference ]],

@@ -72,7 +72,7 @@ def call(Map args) {
             parallel(buildStages)
         }
         else {
-            echo "No modules selected for building"
+            echo "NO MODULES SELECTED FOR BUILDING: SKIPPING"
         }
     }
 }

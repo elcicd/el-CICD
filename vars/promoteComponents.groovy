@@ -34,18 +34,11 @@ def call(Map args) {
             promotionUtils.verifyDeploymentsInPreviousEnv(projectInfo)
         }
 
-        loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
-
         promotionUtils.runCloneComponentReposStages(projectInfo)
-
-        loggingUtils.echoBanner("COMPONENT REPOSITORY CLONING COMPLETE")
-
-        loggingUtils.echoBanner("PROMOTE IMAGES FROM ${projectInfo.deployFromNamespace} ENVIRONMENT TO ${projectInfo.deployToNamespace} ENVIRONMENT FOR:",
-                                projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
         promotionUtils.runPromoteImagesToNextRegistryStages(projectInfo)
 
-        stage('Create deployment branch if necessary') {
+        stage('Create deployment branches, if necessary') {
             loggingUtils.echoBanner("CREATE DEPLOYMENT BRANCH(ES) FOR PROMOTION RELEASE:",
                                      projectInfo.componentsToPromote.collect { it. name }.join(', '))
 

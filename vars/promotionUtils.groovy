@@ -57,13 +57,13 @@ def getUserPromotionRemovalSelections(def projectInfo) {
 
 def runVerifyImagesInRegistryStages(def projectInfo, def verifedMsgs, def errorMsgs) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                        usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                        passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
-        def stageTitle = "Verify Image Exists In Image Repository"
+                                      usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
+        def stageTitle = "Verify Image Exists In Previous Registry"
         def verifyImageStages = projectUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
-                                                    'FROM_IMAGE_REGISTRY_USERNAME',
-                                                    'FROM_IMAGE_REGISTRY_PWD',
+                                                   'FROM_IMAGE_REGISTRY_USERNAME',
+                                                   'FROM_IMAGE_REGISTRY_PWD',
                                                     component.id,
                                                     projectInfo.deployFromEnv)
 
@@ -113,17 +113,19 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
 def runCloneComponentReposStages(def projectInfo) {
     def cloneStages = projectUtils.createParallelStages("Clone Component Repos", projectInfo.componentsToPromote) { component ->
         dir(component.workDir) {
+            loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO FOR PROMOTION")
+            
             projectUtils.cloneGitRepo(component, component.srcCommitHash)
 
             component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
             component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
 
-            component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+            component.deployBranchExists = sh(returnStdout: true, script: "git show-scmBranch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
             component.deployBranchExists = !component.deployBranchExists.isEmpty()
 
-            def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
-            if (ref) {
-                sh "git checkout ${ref}"
+            def scmBranch = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+            if (scmBranch) {
+                sh "git checkout ${scmBranch}"
             }
 
             component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
@@ -143,6 +145,8 @@ def runPromoteImagesToNextRegistryStages(def projectInfo) {
     {
         def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
         def copyImageStages = projectUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+            loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
+                                    
             def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
             def copyImage =
                 shCmd.copyImage(projectInfo.ENV_FROM,
