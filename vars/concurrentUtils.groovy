@@ -37,7 +37,7 @@ def synchronized synchronizedRemoveListItem(def listItems) {
 }
 
 def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing) {
-    def cloneStages = concurrentUtils.createParallelStages("Clone Git Repos", modules) { module ->
+    def cloneStages = createParallelStages("Clone Git Repos", modules) { module ->
         dir(module.workDir) {
             loggingUtils.echoBanner("CLONING ${module.scmRepoName} REPO")
             
