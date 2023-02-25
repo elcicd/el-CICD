@@ -236,7 +236,7 @@ def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymen
 
 def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
     def parallelStages = [failFast: true]
-    def numStages = Math.min(listItems.size(), el.cicd.JENKINS_MAX_STAGES)
+    def numStages = Math.min(listItems.size(), (el.cicd.JENKINS_MAX_STAGES as int))
     for (int i = 1; i <= numStages; i++) {
         def stageName = ("STAGE ${i}: ${stageTitle}")
         listItems.each { module ->
