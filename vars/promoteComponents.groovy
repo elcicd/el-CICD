@@ -67,7 +67,7 @@ def call(Map args) {
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                             usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                             passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
-            projectUtils.createParallelStages("Verify Image Exists In Image Repository", projectInfo.componentsToPromote) { component ->
+            def verifyImageStages = projectUtils.createParallelStages("Verify Image Exists In Image Repository", projectInfo.componentsToPromote) { component ->
                 def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                        'FROM_IMAGE_REGISTRY_USERNAME',
                                                        'FROM_IMAGE_REGISTRY_PWD',
@@ -83,6 +83,8 @@ def call(Map args) {
                     echo "VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
                 }
             }
+            
+            parallel(verifyImageStages)
         }
 
         if (errorMsgs.size() > 1) {
