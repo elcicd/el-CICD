@@ -33,7 +33,6 @@ def call(Map args) {
 
         def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to promote and environment to promote from/to:", inputs)
 
-        def promoteOrRemove
         def promotionEnvs = cicdInfo.promotionEnvs.split(ENV_DELIMITER)
         projectInfo.deployFromEnv = promotionEnvs.first()
         projectInfo.ENV_FROM = projectInfo.deployFromEnv.toUpperCase()
@@ -42,6 +41,7 @@ def call(Map args) {
         projectInfo.deployFromNamespace = projectInfo.nonProdNamespaces[projectInfo.deployFromEnv]
         projectInfo.deployToNamespace = projectInfo.nonProdNamespaces[projectInfo.deployToEnv]
 
+        def promoteOrRemove
         projectInfo.components.each { component ->
             def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
             component.promote = answer == el.cicd.PROMOTE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.PROMOTE)
@@ -65,8 +65,8 @@ def call(Map args) {
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                           usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                           passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
-            def promoteComponents = projectInfo.componentsToPromote.collect()
-            def verifyImageStages = projectUtils.createParallelStages("Verify Image Exists In Image Repository", promoteComponents) { component ->
+            def stageTitle = "Verify Image Exists In Image Repository"
+            def verifyImageStages = projectUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
                 def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                        'FROM_IMAGE_REGISTRY_USERNAME',
                                                        'FROM_IMAGE_REGISTRY_PWD',
@@ -128,8 +128,7 @@ def call(Map args) {
         
         loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-        def promoteComponents = projectInfo.componentsToPromote.collect()
-        def cloneStages = projectUtils.createParallelStages("Clone Component Repos", promoteComponents) { component ->
+        def cloneStages = projectUtils.createParallelStages("Clone Component Repos", projectInfo.componentsToPromote) { component ->
             dir(component.workDir) {
                 projectUtils.cloneGitRepo(component, component.srcCommitHash)
 
@@ -162,10 +161,8 @@ def call(Map args) {
                                             usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
                                             passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
         {
-            
-            def promoteComponents = projectInfo.componentsToPromote.collect()
             def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
-            def copyImageStages = projectUtils.createParallelStages(stageTitle, promoteComponents) { component ->
+            def copyImageStages = projectUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
                 def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
                 def copyImage =
                     shCmd.copyImage(projectInfo.ENV_FROM,

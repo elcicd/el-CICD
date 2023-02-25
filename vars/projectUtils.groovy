@@ -235,6 +235,8 @@ def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymen
 }
 
 def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
+    listItems = listItems.collect()
+    
     def parallelStages = [failFast: true]
     def numStages = Math.min(listItems.size(), (el.cicd.JENKINS_MAX_STAGES as int))
     for (int i = 1; i <= numStages; i++) {
