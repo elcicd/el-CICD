@@ -46,7 +46,7 @@ def sshAgentBash(def sshKeyId, def ... commands) {
     return "ssh-agent bash -c 'ssh-add \${${sshKeyId}} ; ${commands.join('; ')}'"
 }
 
-def echo(Object... msgs) {
-    msgs.collect { "echo \"${it.toString()}\";" }.join(' ')
+def echo(String... msgs) {
+    msgs = msgs.collect { "echo \"${it.toString()}\";" }.join(' ')
     return "{ ${msgs} } 2> /dev/null"
 }
