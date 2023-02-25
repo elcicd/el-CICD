@@ -83,10 +83,10 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
     }
 }
 
-def waitForAllTerminatingPodsToFinish() {
+def waitForAllTerminatingPodsToFinish(def projectInfo) {
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
-        DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+        DELETED_PODS=\$(oc get pods -n ${deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
         if [[ ! -z \${DELETED_PODS} ]]
         then
             oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s

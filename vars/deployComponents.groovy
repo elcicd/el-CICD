@@ -36,7 +36,7 @@ def call(Map args) {
             removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, recreateComponents)
             parallel(removalStages)
             
-            deploymentUtils.waitForAllTerminatingPodsToFinish()
+            deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
         }
         else {
             echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
@@ -72,7 +72,7 @@ def call(Map args) {
     }
 
     stage ("Wait for all pods to terminate") {
-        deploymentUtils.waitForAllTerminatingPodsToFinish()
+        deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
     }
 
     if (components.find { it.deploymentBranch}) {
