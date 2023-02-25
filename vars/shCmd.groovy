@@ -48,7 +48,7 @@ def sshAgentBash(def sshKeyId, def ... commands) {
 
 def echo(Object... msgs) {
     echo '++++++++++++++'
-    echo msgs
+    echo msgs.toString()
     echo '++++++++++++++'
     
     def out = ''
