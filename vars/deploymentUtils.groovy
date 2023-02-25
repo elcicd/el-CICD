@@ -10,7 +10,6 @@ def createComponentRemovalStages(def projectInfo, def components) {
             if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
             then
                 helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-                oc wait --for=delete pods -l component=${component.name} -n ${projectInfo.deployToNamespace} --timeout=600s
             fi
         """
     }
@@ -82,4 +81,15 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
             ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
     }
+}
+
+def waitForAllTerminatingPodsToFinish() {
+    def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
+    sh """
+        DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+        if [[ ! -z \${DELETED_PODS} ]]
+        then
+            oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+        fi
+    """
 }
