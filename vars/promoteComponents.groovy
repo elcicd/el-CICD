@@ -61,9 +61,9 @@ def call(Map args) {
     if (projectInfo.componentsToPromote) {
         loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.componentsToPromote.collect { it.name }.join(', '))
 
-        def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"].name }.join(', '))
+        def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
 
-        def verifedMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
+        def verifedMsgs = ["VERIFED IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
         
         
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
@@ -83,7 +83,7 @@ def call(Map args) {
                 }
                 else {
                     def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                    verifedMsgs << "VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
+                    verifedMsgs << "   VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
                 }
             }
             
