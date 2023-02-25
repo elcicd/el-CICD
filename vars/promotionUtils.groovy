@@ -65,7 +65,7 @@ def runVerifyImagesInRegistryStages(def projectInfo, def verifedMsgs, def errorM
                                       usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
         def stageTitle = "Verify Image Exists In Previous Registry"
-        def verifyImageStages = concurrrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                    'FROM_IMAGE_REGISTRY_USERNAME',
                                                    'FROM_IMAGE_REGISTRY_PWD',
@@ -116,7 +116,7 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
 }
 
 def runCloneGitReposStages(def projectInfo, def components) {
-    def cloneStages = concurrrentUtils.createParallelStages("Clone Component Repos", components) { component ->
+    def cloneStages = concurrentUtils.createParallelStages("Clone Component Repos", components) { component ->
         dir(component.workDir) {
             loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO FOR PROMOTION")
             
@@ -146,7 +146,7 @@ def runPromoteImagesToNextRegistryStages(def projectInfo) {
                                       passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
     {
         def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
-        def copyImageStages = concurrrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+        def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
                                     
             def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"

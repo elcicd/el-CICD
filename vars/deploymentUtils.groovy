@@ -5,7 +5,7 @@
  */
 
 def createComponentRemovalStages(def projectInfo, def components) {
-    return concurrrentUtils.createParallelStages("Component Removal", components) { component ->
+    return concurrentUtils.createParallelStages("Component Removal", components) { component ->
         sh """
             if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
             then
@@ -33,7 +33,7 @@ def createComponentDeployStages(def projectInfo, def components) {
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
 
-    return concurrrentUtils.createParallelStages("Component Deployment", components) { component ->
+    return concurrentUtils.createParallelStages("Component Deployment", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.appName=${component.name}",
                           "elCicdDefs.COMPONENT_NAME=${component.name}",
