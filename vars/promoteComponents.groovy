@@ -166,15 +166,15 @@ def call(Map args) {
                     def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
                     def copyImage =
                         shCmd.copyImage(projectInfo.ENV_FROM,
-                                                'FROM_IMAGE_REGISTRY_USERNAME',
-                                                'FROM_IMAGE_REGISTRY_PWD',
-                                                component.id,
-                                                projectInfo.deployFromEnv,
-                                                projectInfo.ENV_TO,
-                                                'TO_IMAGE_REGISTRY_USERNAME',
-                                                'TO_IMAGE_REGISTRY_PWD',
-                                                component.id,
-                                                promoteTag)
+                                        'FROM_IMAGE_REGISTRY_USERNAME',
+                                        'FROM_IMAGE_REGISTRY_PWD',
+                                        component.id,
+                                        projectInfo.deployFromEnv,
+                                        projectInfo.ENV_TO,
+                                        'TO_IMAGE_REGISTRY_USERNAME',
+                                        'TO_IMAGE_REGISTRY_PWD',
+                                        component.id,
+                                        promoteTag)
 
                     def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
                                                   'TO_IMAGE_REGISTRY_USERNAME',
@@ -184,8 +184,7 @@ def call(Map args) {
                                                   projectInfo.deployToEnv)
 
                     def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
-                    sh """
-                        ${shCmd.echo ''}
+                    sh """}
                         ${copyImage}
 
                         ${shCmd.echo ''}

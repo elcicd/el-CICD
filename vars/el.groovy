@@ -135,14 +135,14 @@ def runHookScript(def prefix, def args, def exception) {
         if (hookScriptFile) {
             def hookScript = load hookScriptFile[0].path
 
-            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING...")
+            echo "hook-script ${prefix}-${args.pipelineName}.groovy found: RUNNING..."
 
             exception ?  hookScript(exception, args) : hookScript(args)
 
-            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE")
+            echo "hook-script ${prefix}-${args.pipelineName}.groovy COMPLETE"
         }
         else {
-            loggingUtils.spacedEcho("hook-script ${prefix}-${args.pipelineName}.groovy NOT found...")
+            echo "hook-script ${prefix}-${args.pipelineName}.groovy NOT found..."
         }
     }
 }
