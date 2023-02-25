@@ -34,7 +34,18 @@ def call(Map args) {
             promotionUtils.verifyDeploymentsInPreviousEnv(projectInfo)
         }
 
-        promotionUtils.runCloneComponentReposStages(projectInfo)
+        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
+            def checkDeployBranchScript = "git show-scmBranch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
+            component.deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
+            component.deployBranchExists = !component.deployBranchExists.isEmpty()
+
+            def scmBranch = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
+            if (scmBranch) {
+                sh "git checkout ${scmBranch}"
+            }
+
+            component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+        }
 
         promotionUtils.runPromoteImagesToNextRegistryStages(projectInfo)
 
