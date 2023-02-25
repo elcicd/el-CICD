@@ -130,7 +130,7 @@ def call(Map args) {
             loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
             def promoteComponents = projectInfo.componentsToPromote.collect()
-            def cloneStages = projectUtils.createParallelStages("Verify Image Exists In Image Repository", promoteComponents) { component ->
+            def cloneStages = projectUtils.createParallelStages("Clone Component Repos", promoteComponents) { component ->
                 dir(component.workDir) {
                     projectUtils.cloneGitRepo(component, component.srcCommitHash)
 
