@@ -91,7 +91,7 @@ def call(Map args) {
         }
 
         if (verifedMsgs.size() > 1) {
-            loggingUtils.errorBanner(verifedMsgs)
+            loggingUtils.echoBanner(verifedMsgs)
         }
 
         if (errorMsgs.size() > 1) {
