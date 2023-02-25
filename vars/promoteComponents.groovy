@@ -59,16 +59,12 @@ def call(Map args) {
     }
 
     if (projectInfo.componentsToPromote) {
-        loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE EXIST IN IMAGE REPOSITORY:", projectInfo.componentsToPromote.collect { it.name }.join(', '))
+        def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
+        def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
 
-        def errorMsgs = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
-
-        def verifedMsgs = ["VERIFED IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}:"]
-        
-        
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                            usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                            passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
+                                          usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
+                                          passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
             def promoteComponents = projectInfo.componentsToPromote.collect()
             def verifyImageStages = projectUtils.createParallelStages("Verify Image Exists In Image Repository", promoteComponents) { component ->
                 def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
@@ -130,32 +126,33 @@ def call(Map args) {
             }
         }
 
-        stage('Checkout all component repositories') {
-            if (projectInfo.componentsToPromote) {
-                loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
+        if (projectInfo.componentsToPromote) {
+            loggingUtils.echoBanner("CLONE COMPONENT REPOSITORIES:", projectInfo.componentsToPromote.collect { it. name }.join(', '))
 
-                projectInfo.componentsToPromote.each  { component ->
-                    dir(component.workDir) {
-                        projectUtils.cloneGitRepo(component, component.srcCommitHash)
+            def promoteComponents = projectInfo.componentsToPromote.collect()
+            def cloneStages = projectUtils.createParallelStages("Verify Image Exists In Image Repository", promoteComponents) { component ->
+                dir(component.workDir) {
+                    projectUtils.cloneGitRepo(component, component.srcCommitHash)
 
-                        component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-                        component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+                    component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+                    component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
 
-                        component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
-                        component.deployBranchExists = !component.deployBranchExists.isEmpty()
+                    component.deployBranchExists = sh(returnStdout: true, script: "git show-ref refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
+                    component.deployBranchExists = !component.deployBranchExists.isEmpty()
 
-                        def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
-                        if (ref) {
-                            sh "git checkout ${ref}"
-                        }
-
-                        component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
+                    def ref = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranchName
+                    if (ref) {
+                        sh "git checkout ${ref}"
                     }
+
+                    component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
                 }
             }
-            else {
-                loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")
-            }
+            
+            parallel(cloneStages)
+        }
+        else {
+            loggingUtils.echoBanner("NO COMPONENTS TO PROMOTE: SKIP CLONING")
         }
 
         stage("promote images") {
