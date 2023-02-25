@@ -55,7 +55,7 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def runVerifyImagesInRegistryStages(def projectInfo, def verifyMsgs, def errorMsgs) {
+def runVerifyImagesInRegistryStages(def projectInfo, def verifedMsgs, def errorMsgs) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                         usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                         passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
