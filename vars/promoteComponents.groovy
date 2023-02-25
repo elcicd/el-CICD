@@ -184,6 +184,8 @@ def call(Map args) {
                                                   projectInfo.deployToEnv)
 
                     def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
+                    println msg
+                    
                     def cmd =  """
                         ${copyImage}
 
