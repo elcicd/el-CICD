@@ -128,8 +128,6 @@ def runHookScript(def prefix, def args) {
 
 
 def runHookScript(def prefix, def args, def exception) {
-    loggingUtils.spacedEcho("Searching in hook-scripts directory for ${prefix}-${args.pipelineName}.groovy...")
-
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
         if (hookScriptFile) {
