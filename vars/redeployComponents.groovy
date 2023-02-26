@@ -12,10 +12,15 @@ def call(Map args) {
 
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
+
+        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
+        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
         
         def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
         def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
 
+        def deployedMarker = '<DEPLOYED>'
         concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
             component.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
             component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
@@ -39,12 +44,7 @@ def call(Map args) {
     stage ('Select components and environment to redeploy to or remove from') {
         loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
 
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
-        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
-
         def inputs = []
-        def deployedMarker = '<DEPLOYED>'
         projectInfo.components.each { component ->
             inputs += choice(name: component.name,
                              description: "status: ${component.status}",
