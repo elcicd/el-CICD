@@ -54,7 +54,7 @@ def runVerifyImagesInRegistryStages(def projectInfo, def components, def deployE
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
         def stageTitle = "Verify Image Exists In Previous Registry"
-        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, components) { component ->
+        def verifyImageStages = createParallelStages(stageTitle, components) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                    'IMAGE_REGISTRY_USERNAME',
                                                    'IMAGE_REGISTRY_PWD',
