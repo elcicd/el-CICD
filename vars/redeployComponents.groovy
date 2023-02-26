@@ -13,7 +13,7 @@ def call(Map args) {
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
-        concurrentUtils.runCloneGitReposStages(projectInfo, components)
+        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components)
     }
 
     stage ('Select components and environment to redeploy to or remove from') {
