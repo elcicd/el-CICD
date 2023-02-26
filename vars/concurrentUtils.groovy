@@ -9,7 +9,7 @@ def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
 
     def parallelStages = [failFast: true]
     for (int i = 1; i <= (el.cicd.JENKINS_MAX_STAGES as int); i++) {
-        def stagePrefix = "STAGE ${i}:"
+        def stagePrefix = "STAGE ${i}"
         def stageName = ("${stagePrefix}: ${stageTitle}")
         parallelStages[stageName] = {
             stage(stageName) {

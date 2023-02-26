@@ -84,12 +84,20 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
 }
 
 def waitForAllTerminatingPodsToFinish(def projectInfo) {
+    loggingUtils.echoBanner("WAIT FOR ANY TERMINATING PODS TO COMPLETE")
+    
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
-        DELETED_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
-        if [[ ! -z \${DELETED_PODS} ]]
+        TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+        if [[ ! -z \${TERMINATING_PODS} ]]
         then
-            oc wait --for=delete pod \${DELETED_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+            ${schCmd.echo '', 'WAIT FOR OLD PODS TO COMPLETE TERMINATION', ''}
+            
+            oc wait --for=delete pod \${TERMINATING_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
+        
+            ${schCmd.echo '', 'ALL OLD PODS TERMINATED AND REMOVED', ''}
         fi
     """
+    
+    echo 
 }
