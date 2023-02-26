@@ -123,7 +123,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
     
     elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"<string>${it}</string>" }
-    elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projcectInfo}</string>")
+    elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projectInfo.preProdEnv}</string>")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join('')
 
     elCicdDefs.PROJECT_ID = projectInfo.id
