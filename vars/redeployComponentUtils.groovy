@@ -3,13 +3,12 @@
  *
  * Defines the implementation of the redeploy component pipeline methods.
  */
- 
+
 def checkoutAllRepos(def projectInfo) {
     def jsonPath = '{range .itecomp[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
     def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
     def compNameDepBranch = sh(returnStdout: true, script: script).split(' ')
-    
-    
+
     def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
     def branchesAndTimesScript =
         "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate))' --sort='-committerdate' 'refs/remotes/**/${branchPrefix}*'"
@@ -20,7 +19,7 @@ def checkoutAllRepos(def projectInfo) {
             def compToBranch = compNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
             component.deploymentBranch = compToBranch ? compToBranch.split(':')[1] : ''
             component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
-            
+
             def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
             branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
@@ -28,13 +27,13 @@ def checkoutAllRepos(def projectInfo) {
             branchesAndTimes.split('\n').each { line ->
                 deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
             }
-            
+
             component.deployBranchesAndTimes =
                 deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
         }
     }
 }
- 
+
 def selectComponentsToRedeploy(def projectInfo) {
     def inputs = []
     projectInfo.components.each { component ->
@@ -50,7 +49,7 @@ def selectComponentsToRedeploy(def projectInfo) {
         def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
         component.remove = (answer == el.cicd.REMOVE)
         component.redeploy = (answer != el.cicd.IGNORE && answer != el.cicd.REMOVE)
-        
+
 
         if (component.redeploy) {
             component.deploymentImageTag = (answer =~ "${projectInfo.deployToEnv}-[0-9a-z]{7}")[0]
@@ -66,7 +65,7 @@ def selectComponentsToRedeploy(def projectInfo) {
         loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
     }
 }
- 
+
 def runTagImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
@@ -88,7 +87,7 @@ def runTagImagesStages(def projectInfo) {
                 ${tagImageCmd}
             """
         }
-        
+
         parallel(tagImagesStages)
     }
 }
