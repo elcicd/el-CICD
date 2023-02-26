@@ -69,6 +69,7 @@ def selectComponentsToRedeploy(def projectInfo) {
 def runVerifyImagesExistStages(def projectInfo, def components) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
+    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
@@ -81,13 +82,12 @@ def runVerifyImagesExistStages(def projectInfo, def components) {
                                                    component.id,
                                                    component.deploymentImageTag)
 
+            def image = "${component.id}:${component.deploymentImageTag}"
             if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
-                def image = "${component.id}:${deployEnv}"
-                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
+                errorMsgs << "    ${image} NOT FOUND IN ${imageRepo}"
             }
             else {
-                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
+                verifedMsgs << "   VERIFIED: ${image} IN ${imageRepo}"
             }
         }
 
