@@ -66,7 +66,7 @@ def selectComponentsToRedeploy(def projectInfo) {
     }
 }
 
-def runVerifyImagesExistStages(def projectInfo, def components, def verifedMsgs, def errorMsgs) {
+def runVerifyImagesExistStages(def projectInfo, def components) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
     
