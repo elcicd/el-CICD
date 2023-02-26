@@ -16,17 +16,15 @@ def call(Map args) {
         def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
         def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
-        
-        def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
-        def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
+        def branchPrefix = "refs/remotes/**/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-*"
 
         def deployedMarker = '<DEPLOYED>'
         concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
-            component.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
-            component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
-
             dir(component.workDir) {
-                branchPrefix = "refs/remotes/**/${branchPrefix}*"
+                def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
+                component.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
+                component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
+                
                 def branchesAndTimesScript =
                     "git for-each-ref --count=5 --format='%(refname:short) (%(committerdate))' --sort='-committerdate' '${branchPrefix}'"
                 def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
