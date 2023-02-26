@@ -12,23 +12,11 @@ def call(Map args) {
 
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
+        
+        def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
+        def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
 
-        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components)
-    }
-
-    stage ('Select components and environment to redeploy to or remove from') {
-        loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
-
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
-        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
-
-        def inputs = []
-        def deployedMarker = '<DEPLOYED>'
-        projectInfo.components.each { component ->
-            def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
-            def msToBranch = msNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
-
+        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
             component.deploymentBranch = msToBranch ? msToBranch.split(':')[1] : ''
             component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
@@ -43,12 +31,24 @@ def call(Map args) {
                 branchesAndTimes.split('\n').each { line ->
                     deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
                 }
-                branchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
-
-                inputs += choice(name: component.name,
-                                 description: "status: ${component.status}",
-                                 choices: "${el.cicd.IGNORE}\n${branchesAndTimes}\n${el.cicd.REMOVE}")
+                component.deployBranchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
             }
+        }
+    }
+
+    stage ('Select components and environment to redeploy to or remove from') {
+        loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
+
+        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
+        def msNameDepBranch = sh(returnStdout: true, script: script).split(' ')
+
+        def inputs = []
+        def deployedMarker = '<DEPLOYED>'
+        projectInfo.components.each { component ->
+            inputs += choice(name: component.name,
+                             description: "status: ${component.status}",
+                             choices: "${el.cicd.IGNORE}\n${component.deployBranchesAndTimes}\n${el.cicd.REMOVE}")
         }
 
         def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to redeploy in ${projectInfo.deployToEnv}", inputs)
