@@ -32,26 +32,4 @@ def call(Map args) {
     if (verifedMsgs.size() > 1) {
         loggingUtils.echoBanner(verifedMsgs)
     }
-
-    if (errorMsgs.size() > 1) {
-        loggingUtils.errorBanner(errorMsgs)
-    }
-
-    stage('Checkout all deployment branches') {
-        loggingUtils.echoBanner("CHECKOUT ALL DEPLOYMENT BRANCHES")
-
-        projectInfo.componentsToRedeploy.each { component ->
-            dir(component.workDir) {
-                sh "git checkout ${component.deploymentBranch}"
-                component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-            }
-        }
-    }
-
-    redeployComponentUtils.runTagImagesStages((projectInfo)
-
-    deployComponents(projectInfo: projectInfo,
-                     components: projectInfo.componentsToRedeploy,
-                     componentsToRemove: projectInfo.components.findAll { it.remove },
-                     imageTag: projectInfo.deployToEnv)
 }
