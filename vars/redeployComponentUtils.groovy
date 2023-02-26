@@ -71,7 +71,7 @@ def runVerifyImagesExistStages(def projectInfo, def components) {
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
     def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     
-    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
