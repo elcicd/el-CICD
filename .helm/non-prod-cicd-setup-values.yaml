@@ -93,9 +93,9 @@ elCicdTemplates:
 - templateName: configMap
   appNames:
   - build-artifacts-and-components
-  - promote-or-remove-components
+  - promote-components
   - run-post-deployment-tests
-  - redeploy-or-remove-components
+  - redeploy-components
   - create-release-candidate
   - redeploy-release-candidate
   appName: ${#}-${}
@@ -113,20 +113,35 @@ elCicdTemplates:
       }
   elCicdDefs-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
-  elCicdDefs-promote-or-remove-components:
+  elCicdDefs-promote-components:
     EL_CICD_API_METHOD: promoteComponents
   elCicdDefs-run-post-deployment-tests:
     EL_CICD_API_METHOD: runSystemTests
-  elCicdDefs-redeploy-or-remove-components:
+  elCicdDefs-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
+    EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
+    PIPELINE_PARAMS: |-
+      <hudson.model.ParametersDefinitionProperty>
+          <parameterDefinitions>
+            <hudson.model.ChoiceParameterDefinition>
+              <name>REDEPLOY_ENVIRONMENT</name>
+              <description>Environment</description>
+              <choices class="java.util.Arrays$ArrayList">
+                <a class="string-array">
+                  ${REDEPLOY_ENV_CHOICES}
+                </a>
+              </choices>
+            </hudson.model.ChoiceParameterDefinition>
+          </parameterDefinitions>
+      </hudson.model.ParametersDefinitionProperty>
   elCicdDefs-create-release-candidate:
-    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     EL_CICD_API_METHOD: createReleaseCandidate
+    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')"
   elCicdDefs-redeploy-release-candidate:
-    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     EL_CICD_API_METHOD: redeployReleaseCandidate
+    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
   data: ${PIPELINE_CONFIG_MAP_DATA}

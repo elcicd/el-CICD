@@ -6,24 +6,14 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    def timeoutSeconds = 120
+    projectInfo.deployToEnv = args.redeployEnv
+    projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
+    projectInfo.deployToNamespace = projectInfo.nonProdNamespaces[projectInfo.deployToEnv]
 
     stage('Checkout all component repositories') {
         loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
 
-        def cloneRepoStages = projectUtils.createCloneRepoStages(projectInfo.components)
-        
-        parallel(cloneRepoStages)
-    }
-
-    stage ('Select the environment to redeploy to or remove from') {
-        def inputs = [choice(name: 'redeployEnv', description: '', choices: "${projectInfo.testEnvs.join('\n')}\n${projectInfo.preProdEnv}")]
-
-        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select environment to redeploy or remove components:", inputs)
-
-        projectInfo.deployToEnv = cicdInfo
-        projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
-        projectInfo.deployToNamespace = projectInfo.nonProdNamespaces[projectInfo.deployToEnv]
+        concurrentUtils.runCloneGitReposStages(projectInfo, components)
     }
 
     stage ('Select components and environment to redeploy to or remove from') {
