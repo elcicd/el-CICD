@@ -115,28 +115,6 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     }
 }
 
-def runCloneGitReposStages(def projectInfo, def components) {
-    def cloneStages = concurrentUtils.createParallelStages("Clone Component Repos", components) { component ->
-        dir(component.workDir) {
-            loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO FOR PROMOTION")
-            
-            projectUtils.cloneGitRepo(component, component.srcCommitHash)
-
-            component.deployBranchExists = sh(returnStdout: true, script: "git show-scmBranch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'")
-            component.deployBranchExists = !component.deployBranchExists.isEmpty()
-
-            def scmBranch = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
-            if (scmBranch) {
-                sh "git checkout ${scmBranch}"
-            }
-
-            component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-        }
-    }
-
-    parallel(cloneStages)
-}
-
 def runPromoteImagesToNextRegistryStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                       usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',

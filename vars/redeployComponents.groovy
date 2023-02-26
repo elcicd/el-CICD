@@ -34,7 +34,9 @@ def call(Map args) {
                 branchesAndTimes.split('\n').each { line ->
                     deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
                 }
-                component.deployBranchesAndTimes = deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
+                
+                component.deployBranchesAndTimes =
+                    deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
             }
         }
     }

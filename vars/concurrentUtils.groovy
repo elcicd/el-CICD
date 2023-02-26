@@ -41,6 +41,7 @@ def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing 
         dir(module.workDir) {
             loggingUtils.echoBanner("CLONING ${module.scmRepoName} REPO")
             
+            def ref = module.srcCommitHash ? projectInfo.scmBranch
             projectUtils.cloneGitRepo(module, module.srcCommitHash)
             
             if (postProcessing) {
