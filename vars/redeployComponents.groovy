@@ -23,7 +23,7 @@ def call(Map args) {
     }
 
     stage('Verify selected component image(s) exists') {
-        redeployComponentsUtils.runVerifyImagesExistStages(projectInfo, projectInfo.componentsToRedeploys)
+        redeployComponentUtils.runVerifyImagesExistStages(projectInfo, projectInfo.componentsToRedeploys)
     }
 
     stage('Checkout all deployment branches') {
