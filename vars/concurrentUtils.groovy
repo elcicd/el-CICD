@@ -6,10 +6,9 @@
 
 def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
     listItems = listItems.collect()
-    
+
     def parallelStages = [failFast: true]
-    def numStages = Math.min(listItems.size(), (el.cicd.JENKINS_MAX_STAGES as int))
-    for (int i = 1; i <= numStages; i++) {
+    for (int i = 1; i <= (el.cicd.JENKINS_MAX_STAGES as int); i++) {
         def stageName = ("STAGE ${i}: ${stageTitle}")
         listItems.each { module ->
             parallelStages[stageName] = {
@@ -50,4 +49,30 @@ def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing 
     }
 
     parallel(cloneStages)
+}
+
+def runVerifyImagesInRegistryStages(def projectInfo, def components, def deployEnv, def verifedMsgs, def errorMsgs) {
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
+                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
+        def stageTitle = "Verify Image Exists In Previous Registry"
+        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, components) { component ->
+            def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
+                                                   'IMAGE_REGISTRY_USERNAME',
+                                                   'IMAGE_REGISTRY_PWD',
+                                                    component.id,
+                                                    deployEnv)
+
+            if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
+                def image = "${component.id}:${deployEnv}"
+                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
+            }
+            else {
+                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
+            }
+        }
+
+        parallel(verifyImageStages)
+    }
 }

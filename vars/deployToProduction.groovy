@@ -65,7 +65,7 @@ def call(Map args) {
                             "REDEPLOYMENT CAN PROCEED FOR ${component.name}" : "PROMOTION DEPLOYMENT CAN PROCEED FOR ${component.name}"
                     }
                     else {
-                        msg = "-> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]}"
+                        msg = "--> ERROR: no image found in image repo: ${el.cicd["${PROMOTION_ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]}"
                     }
 
                     echo msg
@@ -178,7 +178,7 @@ def call(Map args) {
             }
         }
         else {
-            echo "-> IMAGES HAVE ALREADY BEEN PROMOTED: SKIPPING"
+            echo "--> IMAGES HAVE ALREADY BEEN PROMOTED: SKIPPING"
         }
     }
 
@@ -193,7 +193,7 @@ def call(Map args) {
                     dir(component.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
-                                ${shCmd.echo '', "-> Creating deployment branch: ${component.deploymentBranch}"}
+                                ${shCmd.echo '', "--> Creating deployment branch: ${component.deploymentBranch}"}
                                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
                                                      "git branch ${component.deploymentBranch}",
                                                      "git push origin ${component.deploymentBranch}")}
@@ -204,7 +204,7 @@ def call(Map args) {
             }
         }
         else {
-            echo "-> RELEASE DEPLOYMENT BRANCH(ES) HAVE ALREADY BEEN CREATED: SKIPPING"
+            echo "--> RELEASE DEPLOYMENT BRANCH(ES) HAVE ALREADY BEEN CREATED: SKIPPING"
         }
     }
 

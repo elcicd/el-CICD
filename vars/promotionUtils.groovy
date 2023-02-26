@@ -18,9 +18,9 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.allowsHotfixes && (promotionChoices << "${el.cicd.hotfixEnv}${ENV_DELIMITER}${el.cicd.preProdEnv}")
 
     def inputs = [choice(name: 'promotionEnvs', description: '', choices: "${promotionChoices.join('\n')}"),
-                    choice(name: 'defaultAction',
-                            description: 'Default action to apply to all components',
-                            choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")]
+                  choice(name: 'defaultAction',
+                         description: 'Default action to apply to all components',
+                         choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")]
 
     inputs += projectInfo.components.collect { component ->
         choice(name: component.name,
@@ -60,32 +60,6 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def runVerifyImagesInRegistryStages(def projectInfo, def verifedMsgs, def errorMsgs) {
-    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                      usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'FROM_IMAGE_REGISTRY_PWD')]) {
-        def stageTitle = "Verify Image Exists In Previous Registry"
-        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
-            def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
-                                                   'FROM_IMAGE_REGISTRY_USERNAME',
-                                                   'FROM_IMAGE_REGISTRY_PWD',
-                                                    component.id,
-                                                    projectInfo.deployFromEnv)
-
-            if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
-                def image = "${component.id}:${projectInfo.deployFromEnv}"
-                errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
-            }
-            else {
-                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                verifedMsgs << "   VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
-            }
-        }
-
-        parallel(verifyImageStages)
-    }
-}
-
 def verifyDeploymentsInPreviousEnv(def projectInfo) {
     def jsonPathSingle = '''jsonpath='{.data.component}{":"}{.data.src-commit-hash}{" "}' '''
     def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.component}{":"}{.data.src-commit-hash}{" "}{end}' '''
@@ -115,7 +89,7 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     }
 }
 
-def runPromoteImagesToNextRegistryStages(def projectInfo) {
+def runPromoteImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                       usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
@@ -123,7 +97,7 @@ def runPromoteImagesToNextRegistryStages(def projectInfo) {
                                       usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
     {
-        def stageTitle = "Promote Image From ${projectInfo.ENV_FROM} to ${projectInfo.ENV_TO}"
+        def stageTitle = "Promote And Tag Images"
         def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
                                     
@@ -141,13 +115,13 @@ def runPromoteImagesToNextRegistryStages(def projectInfo) {
                                 promoteTag)
 
             def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
-                                            'TO_IMAGE_REGISTRY_USERNAME',
-                                            'TO_IMAGE_REGISTRY_PWD',
-                                            component.id,
-                                            promoteTag,
-                                            projectInfo.deployToEnv)
+                                          'TO_IMAGE_REGISTRY_USERNAME',
+                                          'TO_IMAGE_REGISTRY_PWD',
+                                          component.id,
+                                          promoteTag,
+                                          projectInfo.deployToEnv)
 
-            def msg = "${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
+            def msg = "--> ${component.id} image promoted and tagged as ${promoteTag} and ${projectInfo.deployToEnv}"
 
             sh  """
                 ${copyImage}
@@ -170,7 +144,7 @@ def createDeploymentBranches(def projectInfo) {
             dir(component.workDir) {
                 withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                     sh """
-                        ${shCmd.echo  "-> Creating Deployment Branch for the image ${component.id}: ${component.deploymentBranch}"}
+                        ${shCmd.echo  "--> Creating Deployment Branch for the image ${component.id}: ${component.deploymentBranch}"}
                         ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
                                                 "git branch ${component.deploymentBranch}",
                                                 "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
@@ -179,7 +153,7 @@ def createDeploymentBranches(def projectInfo) {
             }
         }
         else if (component.promote) {
-            echo "-> Deployment Branch already exists for the image ${component.id}: ${component.deploymentBranch}"
+            echo "--> Deployment Branch ${component.deploymentBranch} already exists: SKIPPING"
         }
     }
 }

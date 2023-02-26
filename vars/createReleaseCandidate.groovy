@@ -174,7 +174,7 @@ def call(Map args) {
                         def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${component.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-                            ${shCmd.echo "-> Tagging Release Candidate in '${component.scmRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                            ${shCmd.echo "--> Tagging Release Candidate in '${component.scmRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
                             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                         """
                     }

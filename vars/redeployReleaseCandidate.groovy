@@ -58,7 +58,7 @@ def call(Map args) {
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
 
                 def msg = imageFound ? "REDEPLOYMENT CAN PROCEED FOR ${component.name}" :
-                                        "-> ERROR: no image found: ${imageRepo}/${component.id}:${projectInfo.preProdEnv}-${component.srcCommitHash}"
+                                        "--> ERROR: no image found: ${imageRepo}/${component.id}:${projectInfo.preProdEnv}-${component.srcCommitHash}"
                 echo msg
 
                 allImagesExist = allImagesExist && imageFound
@@ -77,12 +77,12 @@ def call(Map args) {
             '',
             '===========================================',
             '',
-            "-> Components in verion ${projectInfo.releaseCandidateTag} to be deployed:",
+            "--> Components in verion ${projectInfo.releaseCandidateTag} to be deployed:",
             projectInfo.componentsToRedeploy.collect { it.name }.join(', '),
             '',
             '---',
             '',
-            "-> Components to be removed from ${projectInfo.deployToNamespace} if present:",
+            "--> Components to be removed from ${projectInfo.deployToNamespace} if present:",
             projectInfo.componentsToRemove.collect { it.name }.join(', '),
             '',
             '===========================================',
