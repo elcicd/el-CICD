@@ -31,7 +31,7 @@ def checkoutAllRepos(def projectInfo) {
                 deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
         }
     }
- }
+}
  
 def selectComponentsToRedeploy(def projectInfo) {
     def inputs = []
@@ -63,23 +63,23 @@ def selectComponentsToRedeploy(def projectInfo) {
     if (!willRedeployOrRemove) {
         loggingUtils.errorBanner("NO COMPONENTS SELECTED FOR REDEPLOYMENT OR REMOVAL FOR ${projectInfo.deployToEnv}")
     }
- }
+}
  
- def runTagImagesStages(def projectInfo) {
+def runTagImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                    usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                    passwordVariable: 'IMAGE_REGISTRY_PWD')])
+                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'IMAGE_REGISTRY_PWD')])
     {
         def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${IMAGE_REGISTRY_PULL_TOKEN}"
         def stageTitle = "Tag Images"
         def tagImagesStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
             def tagImageCmd =
                 shCmd.tagImage(projectInfo.ENV_TO,
-                            'IMAGE_REGISTRY_USERNAME',
-                            'IMAGE_REGISTRY_PWD',
-                            component.id,
-                            component.deploymentImageTag,
-                            projectInfo.deployToEnv)
+                               'IMAGE_REGISTRY_USERNAME',
+                               'IMAGE_REGISTRY_PWD',
+                               component.id,
+                               component.deploymentImageTag,
+                               projectInfo.deployToEnv)
             sh """
                 ${shCmd.echo '', "--> Tagging image '${component.id}:${component.deploymentImageTag}' as '${component.id}:${projectInfo.deployToEnv}'"}
 
@@ -89,4 +89,4 @@ def selectComponentsToRedeploy(def projectInfo) {
         
         parallel(tagImagesStages)
     }
- }
+}
