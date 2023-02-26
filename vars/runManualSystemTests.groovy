@@ -40,9 +40,9 @@ def call(Map args) {
     }
 
     stage ('Select components to test') {
-        def jsonPath = '{range .items[?(@.data.component)]}{.data.component}{" "}'
+        def jsonPath = '{range .itecomp[?(@.data.component)]}{.data.component}{" "}'
         def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.testModuleNamespace}"
-        def msNames = sh(returnStdout: true, script: script).split(' ')
+        def compNames = sh(returnStdout: true, script: script).split(' ')
 
         def testMicroServiceReposSet = [] as Set
         projectInfo.testModulesToRun.each { testModule ->
@@ -50,10 +50,10 @@ def call(Map args) {
         }
 
         def inputs = []
-        def msTestPossibilities = [] as Set
+        def compTestPossibilities = [] as Set
         projectInfo.components.each { component ->
-            if (msNames.contains(component.name) && testMicroServiceReposSet.contains(component.scmRepoName)) {
-                msTestPossibilities += component
+            if (compNames.contains(component.name) && testMicroServiceReposSet.contains(component.scmRepoName)) {
+                compTestPossibilities += component
                 inputs += booleanParam(name: component.name)
             }
         }
@@ -69,7 +69,7 @@ def call(Map args) {
 
         def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to test in ${projectInfo.testModuleEnv}", inputs)
 
-        projectInfo.componentsToTest = msTestPossibilities.findAll { component ->
+        projectInfo.componentsToTest = compTestPossibilities.findAll { component ->
             return (inputs.size() > 1) ? (cicdInfo[TEST_ALL] || cicdInfo[component.name]) : cicdInfo
         }
 
