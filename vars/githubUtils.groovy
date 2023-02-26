@@ -17,7 +17,7 @@ def deleteProjectDeployKeys(def projectInfo, def module) {
         def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${module.scmRepoName}/keys"
         sh """
             ${shCmd.echo ''}
-            KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} -f ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
+            KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false)} ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
             if [[ ! -z \${KEY_IDS} ]]
             then
                 ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY(S) FROM ${module.scmRepoName}: \${KEY_IDS}", ''}
