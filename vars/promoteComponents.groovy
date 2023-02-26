@@ -12,23 +12,8 @@ def call(Map args) {
 
         promotionUtils.getUserPromotionRemovalSelections(projectInfo)
     }
-
-    def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
-    def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     
-    concurrentUtils.runVerifyImagesInRegistryStages(projectInfo, 
-                                                    projectInfo.componentsToPromote,
-                                                    projectInfo.deployFromEnv,
-                                                    verifedMsgs,
-                                                    errorMsgs)
-
-    if (verifedMsgs.size() > 1) {
-        loggingUtils.echoBanner(verifedMsgs)
-    }
-
-    if (errorMsgs.size() > 1) {
-        loggingUtils.errorBanner(errorMsgs)
-    }
+    promotionUtils.runVerifyImagesExistStages(projectInfo, projectInfo.componentsToPromote)
 
     stage('Verify images are deployed in previous environment, collect source commit hash') {
         loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",

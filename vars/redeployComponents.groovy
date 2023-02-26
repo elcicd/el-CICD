@@ -10,9 +10,11 @@ def call(Map args) {
     projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
     projectInfo.deployToNamespace = projectInfo.nonProdNamespaces[projectInfo.deployToEnv]
 
-    loggingUtils.echoBanner("CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT")
+    loggingUtils.echoBanner('CLONE ALL MICROSERVICE REPOSITORIES IN PROJECT')
 
-    redeployComponentUtils.checkoutAllRepos(projectInfo)
+    stage('Clone all component repos') {
+        redeployComponentUtils.checkoutAllRepos(projectInfo)
+    }
 
     stage ('Select components and environment to redeploy to or remove from') {
         loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
@@ -20,21 +22,8 @@ def call(Map args) {
         redeployComponentUtils.selectComponentsToRedeploy(projectInfo)
     }
 
-    def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
-    def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
-
-    concurrentUtils.runVerifyImagesInRegistryStages(projectInfo,
-                                                    projectInfo.componentsToRedeploy,
-                                                    projectInfo.deployToEnv,
-                                                    verifedMsgs,
-                                                    errorMsgs)
-
-    if (verifedMsgs.size() > 1) {
-        loggingUtils.echoBanner(verifedMsgs)
-    }
-
-    if (errorMsgs.size() > 1) {
-        loggingUtils.errorBanner(errorMsgs)
+    stage('Verify selected component image(s) exists') {
+        redeployComponentsUtils.runVerifyImagesExistStages(projectInfo, projectInfo.componentsToRedeploys)
     }
 
     stage('Checkout all deployment branches') {
@@ -48,7 +37,9 @@ def call(Map args) {
         }
     }
 
-    redeployComponentUtils.runTagImagesStages(projectInfo)
+    stage('Tag image(s) for deployment') {
+        redeployComponentUtils.runTagImagesStages(projectInfo)
+    }
 
     deployComponents(projectInfo: projectInfo,
                      components: projectInfo.componentsToRedeploy,

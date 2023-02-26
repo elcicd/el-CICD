@@ -36,7 +36,7 @@ def synchronized synchronizedRemoveListItem(def listItems) {
 }
 
 def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing = null) {
-    def cloneStages = createParallelStages("Clone Git Repos", modules) { module ->
+    def cloneStages = createParallelStages("Clone Git Repo(s)", modules) { module ->
         dir(module.workDir) {
             loggingUtils.echoBanner("CLONING ${module.scmRepoName}:${projectInfo.scmBranch} FROM SCM")
             
@@ -49,30 +49,4 @@ def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing 
     }
 
     parallel(cloneStages)
-}
-
-def runVerifyImagesInRegistryStages(def projectInfo, def components, def deployEnv, def verifedMsgs, def errorMsgs) {
-    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
-                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
-        def stageTitle = "Verify Image Exists In Previous Registry"
-        def verifyImageStages = createParallelStages(stageTitle, components) { component ->
-            def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
-                                                   'IMAGE_REGISTRY_USERNAME',
-                                                   'IMAGE_REGISTRY_PWD',
-                                                    component.id,
-                                                    deployEnv)
-
-            if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
-                def image = "${component.id}:${deployEnv}"
-                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
-            }
-            else {
-                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
-            }
-        }
-
-        parallel(verifyImageStages)
-    }
 }

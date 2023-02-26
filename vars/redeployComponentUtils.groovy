@@ -66,6 +66,43 @@ def selectComponentsToRedeploy(def projectInfo) {
     }
 }
 
+def runVerifyImagesExistStages(def projectInfo, def components, def verifedMsgs, def errorMsgs) {
+    def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
+    def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
+    
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
+                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
+        def stageTitle = "Verify Image(s) Exist In Registry"
+        def verifyImageStages = createParallelStages(stageTitle, components) { component ->
+            def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_TO,
+                                                   'IMAGE_REGISTRY_USERNAME',
+                                                   'IMAGE_REGISTRY_PWD',
+                                                   component.id,
+                                                   component.deploymentImageTag)
+
+            if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
+                def image = "${component.id}:${deployEnv}"
+                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
+            }
+            else {
+                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
+            }
+        }
+
+        parallel(verifyImageStages)
+
+        if (verifedMsgs.size() > 1) {
+            loggingUtils.echoBanner(verifedMsgs)
+        }
+
+        if (errorMsgs.size() > 1) {
+            loggingUtils.errorBanner(errorMsgs)
+        }
+    }
+}
+
 def runTagImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',

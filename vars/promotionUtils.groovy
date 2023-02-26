@@ -60,6 +60,43 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
+def runVerifyImagesExistStages(def projectInfo, def components, def env, def verifedMsgs, def errorMsgs) {
+    def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
+    def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
+    
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
+                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
+        def stageTitle = "Verify Image(s) Exist In Registry"
+        def verifyImageStages = createParallelStages(stageTitle, components) { component ->
+            def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
+                                                   'IMAGE_REGISTRY_USERNAME',
+                                                   'IMAGE_REGISTRY_PWD',
+                                                   component.id,
+                                                   projectInfo.deployFromEnv)
+
+            if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
+                def image = "${component.id}:${deployEnv}"
+                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
+            }
+            else {
+                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
+            }
+        }
+
+        parallel(verifyImageStages)
+
+        if (verifedMsgs.size() > 1) {
+            loggingUtils.echoBanner(verifedMsgs)
+        }
+
+        if (errorMsgs.size() > 1) {
+            loggingUtils.errorBanner(errorMsgs)
+        }
+    }
+}
+
 def verifyDeploymentsInPreviousEnv(def projectInfo) {
     def jsonPathSingle = '''jsonpath='{.data.component}{":"}{.data.src-commit-hash}{" "}' '''
     def jsonPathMulti = '''jsonpath='{range .items[*]}{.data.component}{":"}{.data.src-commit-hash}{" "}{end}' '''
