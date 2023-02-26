@@ -39,10 +39,9 @@ def synchronized synchronizedRemoveListItem(def listItems) {
 def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing = null) {
     def cloneStages = createParallelStages("Clone Git Repos", modules) { module ->
         dir(module.workDir) {
-            def gitReference = module.srcCommitHash ?: projectInfo.scmBranch
-            loggingUtils.echoBanner("CLONING ${module.scmRepoName}:${gitReference} REPO")
+            loggingUtils.echoBanner("CLONING ${module.scmRepoName}:${projectInfo.scmBranch} FROM SCM")
             
-            projectUtils.cloneGitRepo(module, gitReference)
+            projectUtils.cloneGitRepo(module, projectInfo.scmBranch)
             
             if (postProcessing) {
                 postProcessing(module)
