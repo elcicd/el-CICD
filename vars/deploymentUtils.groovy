@@ -91,13 +91,11 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
         TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
         if [[ ! -z \${TERMINATING_PODS} ]]
         then
-            ${shCmd.echo '', 'WAIT FOR OLD PODS TO COMPLETE TERMINATION', ''}
+            ${shCmd.echo '', '--> WAIT FOR OLD PODS TO COMPLETE TERMINATION', ''}
             
             oc wait --for=delete pod \${TERMINATING_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
         
-            ${shCmd.echo '', 'ALL OLD PODS TERMINATED AND REMOVED', ''}
+            ${shCmd.echo '', '--> ALL OLD PODS TERMINATED AND REMOVED', ''}
         fi
     """
-    
-    echo 
 }
