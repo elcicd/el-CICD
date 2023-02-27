@@ -21,7 +21,7 @@ def call(Map args) {
         fi
     """
 
-    stage('Uninstall component(s)') {
+    stage('Remove component(s)') {
         def componentsToUninstall = args.recreateAll ? projectInfo.components : (componentsToRemove ? componentsToRemove.collect() : [])
         if (args.recreate && componentsToDeploy) {
             componentsToUninstall += componentsToDeploy
@@ -41,7 +41,7 @@ def call(Map args) {
         }
     }
 
-    stage ("Install/Upgrade component(s)") {
+    stage ("Deploy component(s)") {
         deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
         
         deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
