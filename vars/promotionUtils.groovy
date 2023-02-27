@@ -179,27 +179,37 @@ def createAndCheckoutDeploymentBranches(def projectInfo) {
     def scmBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
         def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
-        component.deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
-        component.deployBranchExists = !component.deployBranchExists.isEmpty()
+        def deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
+        deployBranchExists = !deployBranchExists.isEmpty()
 
-        def scmBranch = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
+        def scmBranch = deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
         if (scmBranch) {            
-            sh "git checkout ${scmBranch}"            
-            scmBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
+            sh "git checkout ${scmBranch}"        
         }
-        else {
+        
+        if (!deployBranchExists) {
             withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                 sh """
                     ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                        "git branch ${component.deploymentBranch}",
-                                        "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
+                                         "git checkout -b ${component.deploymentBranch}",
+                                         "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
                 """
             }
+            
             scmBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
+        }
+        else {
+            scmBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
         }
 
         component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
     }
     
-    loggingUtils.echoBanner(scmBranchesFound, scmBranchesCreated)
+    if (scmBranchesFound.size() > 1 && scmBranchesCreated.size() > 1) {
+        loggingUtils.echoBanner(scmBranchesFound, '', scmBranchesCreated)
+    }
+    else (scmBranchesFound.size() > 1 ) {
+        def resultMsgs = scmBranchesFound ? scmBranchesFound : scmBranchesCreated
+        loggingUtils.echoBanner(resultMsgs)
+    }
 }
