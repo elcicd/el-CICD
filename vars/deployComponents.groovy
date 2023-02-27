@@ -75,18 +75,21 @@ def call(Map args) {
         deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
     }
 
-    if (components.find { it.deploymentBranch}) {
-        stage('Inform users of success') {
-            def checkoutMsgs = []
-            components.each { component ->
-                checkoutMsgs += ''
-                checkoutMsgs += "**********"
-                checkoutMsgs += "DEPLOYMENT BRANCH FOR ${component.name}: ${component.deploymentBranch}"
-                checkoutMsgs += "git checkout ${component.deploymentBranch}"
-                checkoutMsgs += "**********"
+    stage('Inform users of success') {
+        projectInfo.components.each { component ->
+            resultsMsgs += "**********"
+            resultsMsgs += ''
+            if (components?.contains(component)) {
+                resultsMsgs += "${component.name} DEPLOYED FROM BRANCH:"
+                resultsMsgs += "    git checkout ${component.deploymentBranch}"
             }
-
-            loggingUtils.echoBanner("DEPLOYMENT COMPLETE.  CURRENT DEPLOYMENT BRANCHES FOR PATCHING IN ${projectInfo.deployToNamespace}:", checkoutMsgs)
+            else if (componentsToRemove?.contains(component)) {
+                resultsMsgs += "${component.name} REMOVED"
+            }
+            resultsMsgs += ''
+            resultsMsgs += "**********"
         }
+
+        loggingUtils.echoBanner("DEPLOYMENT COMPLETE FOR NAMESPACE ${projectInfo.deployToNamespace}:", resultsMsgs)
     }
 }
