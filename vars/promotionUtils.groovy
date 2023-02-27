@@ -45,11 +45,6 @@ def getUserPromotionRemovalSelections(def projectInfo) {
         component.remove = answer == el.cicd.REMOVE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.REMOVE)
 
         promoteOrRemove = promoteOrRemove || component.promote != null
-        
-        if (component.promote) {
-            component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-            component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
-        }
     }
 
     if (!promoteOrRemove) {
@@ -111,14 +106,17 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
         [(pair.first()): pair.last()]
     }
 
-    def componentsMissingMsg = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}"]
+    def componentsMissingMsg = ["UNABLE TO PROMOTE MISSING COMPONENTS IN ${projectInfo.deployFromNamespace}:"]
     projectInfo.componentsToPromote.each { component ->
         component.srcCommitHash = commitHashMap[component.name]
-        if (!component.srcCommitHash) {
-            componentsMissingMsg += "${component.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
+        if (component.srcCommitHash) {
+            component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+            component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+            
+            println "--> ${component.name} deployed in ${projectInfo.deployFromNamespace} src commit hash: ${component.srcCommitHash}"
         }
         else {
-            println "component.srcCommitHash: ${component.srcCommitHash}"
+            componentsMissingMsg += "    ${component.name} NOT FOUND IN ${projectInfo.deployFromNamespace}"
         }
     }
 
@@ -177,8 +175,8 @@ def runPromoteImagesStages(def projectInfo) {
 }
 
 def createDeploymentBranches(def projectInfo) {
-    projectInfo.components.each { component ->
-        if (component.promote && !component.deployBranchExists) {
+    projectInfo.componentsToPromote.each { component ->
+        if (!component.deployBranchExists) {
             dir(component.workDir) {
                 withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                     sh """
