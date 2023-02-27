@@ -108,6 +108,7 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     def commitHashMap =  sh(returnStdout: true, script: script).trim()
     commitHashMap = commitHashMap.split(' ').collectEntries { entry ->
         def pair = entry.split(':')
+        println [(pair.first()): pair.last()]
         [(pair.first()): pair.last()]
     }
 
@@ -116,6 +117,9 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
         component.srcCommitHash = commitHashMap[component.name]
         if (!component.srcCommitHash) {
             componentsMissingMsg += "${component.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
+        }
+        else {
+            println "component.srcCommitHash: ${component.srcCommitHash}"
         }
     }
 
