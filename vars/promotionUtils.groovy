@@ -108,7 +108,6 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     def commitHashMap =  sh(returnStdout: true, script: script).trim()
     commitHashMap = commitHashMap.split(' ').collectEntries { entry ->
         def pair = entry.split(':')
-        println [(pair.first()): pair.last()]
         [(pair.first()): pair.last()]
     }
 
