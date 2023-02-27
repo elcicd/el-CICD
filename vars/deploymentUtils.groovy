@@ -4,18 +4,15 @@
  * Utility methods for apply OKD resources
  */
 
-def createComponentRemovalStages(def projectInfo, def components) {
-    return concurrentUtils.createParallelStages("Component Removal", components) { component ->
-        sh """
-            if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
-            then
-                helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-            fi
-        """
+def runComponentRemovalStages(def projectInfo, def components) {
+    def removalStages = concurrentUtils.createParallelStages("Component Removal", components) { component ->
+        helmUninstall(component)
     }
+    
+    parallel(removalStages)
 }
  
-def createComponentDeployStages(def projectInfo, def components) {    
+def runComponentDeploymentStages(def projectInfo, def components) {    
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
@@ -32,8 +29,7 @@ def createComponentDeployStages(def projectInfo, def components) {
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
-
-    return concurrentUtils.createParallelStages("Component Deployment", components) { component ->
+    def deploymentStages = concurrentUtils.createParallelStages("Component Deployment", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.appName=${component.name}",
                           "elCicdDefs.COMPONENT_NAME=${component.name}",
@@ -44,12 +40,14 @@ def createComponentDeployStages(def projectInfo, def components) {
                           "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
                           "elCicdDefaults.image=${componentImage}"]
         compValues.addAll(commonValues)
-
-        runHelmDeployment(projectInfo, component, compValues)
+        
+        helmUpgradeInstall(projectInfo, component, compValues)
     }
+    
+    parallel(deploymentStages)
 }
 
-def runHelmDeployment(def projectInfo, def component, def compValues) {
+def helmUpgradeInstall(def projectInfo, def component, def compValues) {
     dir("${component.workDir}/${el.cicd.DEFAULT_HELM_DIR}") {
         sh """            
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
@@ -81,6 +79,15 @@ def runHelmDeployment(def projectInfo, def component, def compValues) {
             ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
     }
+}
+
+def helmUninstall(def component) {
+    sh """
+        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
+        then
+            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+        fi
+    """
 }
 
 def waitForAllTerminatingPodsToFinish(def projectInfo) {

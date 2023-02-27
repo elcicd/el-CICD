@@ -6,79 +6,51 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    def components = args.components
+    def componentsToDeploy = args.componentsToDeploy
     def componentsToRemove = args.componentsToRemove
 
-    def envCaps = (projectInfo.deployToNamespace - projectInfo.id).toUpperCase()
+    def componentNames = componentsToDeploy ? componentsToDeploy.collect { it.name } .join(' ') : ''
+    componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
+    sh """
+        if [[ ! -z \$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace}) ]]
+        then
+            for COMPONENT_NAME in ${componentNames}
+            do
+                helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
+            done
+        fi
+    """
 
-    stage("Purge all failed helm chart installs") {
-        def componentNames = components ? components.collect { it.name } .join(' ') : ''
-        componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
-        sh """
-            if [[ ! -z \$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace}) ]]
-            then
-                for COMPONENT_NAME in ${componentNames}
-                do
-                    helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
-                done
-            fi
+    stage('Uninstall component(s)') {
+        def componentsToUninstall = args.recreateAll ? projectInfo.components : (componentsToRemove ? componentsToRemove.collect() : [])
+        if (args.recreate && componentsToDeploy) {
+            componentsToUninstall += componentsToDeploy
+        }
+        
+        if (args.recreate && componentsToDeploy) {
+            loggingUtils.echoBanner("RECREATE SELECTED, REMOVING INSTALLED COMPONENTS:", componentsToDeploy.collect { it.name }.join(', '))
+        }
+        else if (args.recreateAll) {
+            loggingUtils.echoBanner("RECREATE ALL SELECTED.  ALL DEPLOYED COMPONENTS TO BE REMOVED.")
+        }
 
-        """
-    }
+        deploymentUtils.runComponentRemovalStages(projectInfo, componentsToUninstall)
 
-    stage('Remove one or more selected components prior to rebuild, if selected') {
-        def removalStages
-        def recreateComponents = args.recreate ? components : (args.recreateAll ? projectInfo.components : null)
-
-        if (recreateComponents) {
-            loggingUtils.echoBanner("REMOVING THE FOLLOWING COMPONENTS BEFORE BUILDING:", componentsToRemove.collect { it.name }.join(', '))
-
-            removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, recreateComponents)
-            parallel(removalStages)
-            
+        if (componentsToUninstall) {
             deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
         }
-        else {
-            echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
-        }
     }
 
-    stage ("Adding and/or removing components") {
-        def deployAndRemoveStages = [:]
-        def echoBanner = []
-
-        if (components) {
-            echoBanner += "DEPLOYING THE FOLLOWING COMPONENTS:"
-            echoBanner += components.collect { it.name }.join(', ')
-            deployAndRemoveStages.putAll(deploymentUtils.createComponentDeployStages(projectInfo, components))
-        }
-
-        if (componentsToRemove) {
-            if (echoBanner) {
-                echoBanner += ''
-            }
-            echoBanner += "REMOVING THE FOLLOWING COMPONENTS:"
-            echoBanner += componentsToRemove.collect { it.name }.join(', ')
-            deployAndRemoveStages.putAll(deploymentUtils.createComponentRemovalStages(projectInfo, componentsToRemove))
-        }
-
-        if (deployAndRemoveStages) {
-                loggingUtils.echoBanner(echoBanner)
-                parallel(deployAndRemoveStages)
-        }
-        else {
-            loggingUtils.echoBanner("NO COMPONENTS TO REMOVE OR DEPLOY: SKIPPING")
-        }
-    }
-
-    stage ("Wait for all pods to terminate") {
+    stage ("Install/Upgrade component(s)") {
+        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+        
         deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
     }
 
-    stage('Inform users of success') {
+    stage('Deployment change summary') {
         def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
         projectInfo.components.each { component ->
-            def deployed = components?.contains(component)
+            def deployed = componentsToDeploy?.contains(component)
             def removed = componentsToRemove?.contains(component)
             if (deployed || removed) {
                 resultsMsgs += "**********"
