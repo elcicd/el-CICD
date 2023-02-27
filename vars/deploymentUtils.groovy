@@ -3,14 +3,6 @@
  *
  * Utility methods for apply OKD resources
  */
-
-def runComponentRemovalStages(def projectInfo, def components) {
-    def removalStages = concurrentUtils.createParallelStages("Component Removal", components) { component ->
-        helmUninstall(component)
-    }
-    
-    parallel(removalStages)
-}
  
 def runComponentDeploymentStages(def projectInfo, def components) {    
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
@@ -19,32 +11,39 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
-    def commonValues = ["elCicdDefs.PROJECT_ID=${projectInfo.id}",
-                        "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
+    def commonValues = ["profiles='{${projectInfo.deployToEnv}}'",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
-                        "profiles='{${projectInfo.deployToEnv}}'",
+                        "elCicdDefs.PROJECT_ID=${projectInfo.id}",
+                        "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
                         "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
 
-    def deploymentStages = concurrentUtils.createParallelStages("Component Deployment", components) { component ->
-        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-        def compValues = ["elCicdDefaults.appName=${component.name}",
-                          "elCicdDefs.COMPONENT_NAME=${component.name}",
-                          "elCicdDefs.CODE_BASE=${component.codeBase}",
-                          "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                          "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                          "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                          "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}",
-                          "elCicdDefaults.image=${componentImage}"]
-        compValues.addAll(commonValues)
-        
-        helmUpgradeInstall(projectInfo, component, compValues)
+    sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
+
+    def helmStages = concurrentUtils.createParallelStages("Component Deployment/Removal", components) { component ->
+        if (component.flaggedForDeployment) {
+            def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+            def compValues = ["elCicdDefaults.appName=${component.name}",
+                              "elCicdDefaults.image=${componentImage}",
+                              "elCicdDefs.COMPONENT_NAME=${component.name}",
+                              "elCicdDefs.CODE_BASE=${component.codeBase}",
+                              "elCicdDefs.SCM_REPO=${component.scmRepoName}",
+                              "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
+                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
+                              "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}"]
+            compValues.addAll(commonValues)
+            
+            helmUpgradeInstall(projectInfo, component, compValues)
+        }
+        else if (component.flaggedForRemoval) {
+            helmUninstall(component)
+        }
     }
     
-    parallel(deploymentStages)
+    parallel(helmStages)
 }
 
 def helmUpgradeInstall(def projectInfo, def component, def compValues) {
@@ -57,11 +56,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                 ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
                 ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
             fi
-            
-            
-            helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
-            ${shCmd.echo ''}
             HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
             for FLAGS in "\${HELM_FLAGS[@]}"
             do
@@ -75,8 +70,6 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                     ${component.name} \
                     elCicdCharts/elCicdChart
             done
-            
-            ${shCmd.echo '', "UPGRADE/INSTALL OF ${component.name} COMPLETE", ''}
         """
     }
 }

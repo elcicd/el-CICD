@@ -9,40 +9,22 @@ def call(Map args) {
     def componentsToDeploy = args.componentsToDeploy ?: []
     def componentsToRemove = args.componentsToRemove ?: []
 
-    def componentNames = componentsToDeploy ? componentsToDeploy.collect { it.name } .join(' ') : ''
-    componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''
     sh """
-        if [[ ! -z \$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace}) ]]
+        COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
+        if [[ ! -z \${COMPONENT_NAMES} ]]
         then
-            for COMPONENT_NAME in ${componentNames}
+            for COMPONENT_NAME in \${COMPONENT_NAMES}
             do
                 helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
             done
         fi
     """
 
-    stage('Remove component(s)') {
-        def componentsToUninstall = args.recreateAll ? projectInfo.components : (componentsToRemove ? componentsToRemove.collect() : [])
-        if (args.recreate && componentsToDeploy) {
-            componentsToUninstall += componentsToDeploy
-        }
+    stage ("Deploy and Remove component(s)") {
+        componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
+        componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
         
-        if (args.recreate && componentsToDeploy) {
-            loggingUtils.echoBanner("RECREATE SELECTED, REMOVING INSTALLED COMPONENTS:", componentsToDeploy.collect { it.name }.join(', '))
-        }
-        else if (args.recreateAll) {
-            loggingUtils.echoBanner("RECREATE ALL SELECTED.  ALL DEPLOYED COMPONENTS TO BE REMOVED.")
-        }
-
-        deploymentUtils.runComponentRemovalStages(projectInfo, componentsToUninstall)
-
-        if (componentsToUninstall) {
-            deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
-        }
-    }
-
-    stage ("Deploy component(s)") {
-        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy + componentsToRemove)
         
         deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
     }
