@@ -174,22 +174,32 @@ def runPromoteImagesStages(def projectInfo) {
     }
 }
 
-def createDeploymentBranches(def projectInfo) {
-    projectInfo.componentsToPromote.each { component ->
-        if (!component.deployBranchExists) {
-            dir(component.workDir) {
-                withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-                    sh """
-                        ${shCmd.echo  "--> Creating Deployment Branch for the image ${component.id}: ${component.deploymentBranch}"}
-                        ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                                "git branch ${component.deploymentBranch}",
-                                                "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
-                    """
-                }
+def createAndCheckoutDeploymentBranches(def projectInfo) {
+    def scmBranchesFound = ["DEPLOYMENT BRANCHES FOUND:"]
+    def scmBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
+    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
+        def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
+        component.deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
+        component.deployBranchExists = !component.deployBranchExists.isEmpty()
+
+        def scmBranch = component.deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
+        if (scmBranch) {            
+            sh "git checkout ${scmBranch}"            
+            scmBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
+        }
+        else {
+            withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                sh """
+                    ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
+                                        "git branch ${component.deploymentBranch}",
+                                        "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
+                """
             }
+            scmBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
         }
-        else if (component.promote) {
-            echo "--> Deployment Branch ${component.deploymentBranch} already exists: SKIPPING"
-        }
+
+        component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
     }
+    
+    loggingUtils.echoBanner(scmBranchesFound, scmBranchesCreated)
 }
