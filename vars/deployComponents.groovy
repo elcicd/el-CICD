@@ -9,18 +9,19 @@ def call(Map args) {
     def componentsToDeploy = args.componentsToDeploy ?: []
     def componentsToRemove = args.componentsToRemove ?: []
 
-    sh """
-        COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
-        if [[ ! -z \${COMPONENT_NAMES} ]]
-        then
-            for COMPONENT_NAME in \${COMPONENT_NAMES}
-            do
-                helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
-            done
-        fi
-    """
-
     stage ("Deploy and Remove component(s)") {
+        echo "\n--> CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS\n"
+        sh """
+            COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
+            if [[ ! -z \${COMPONENT_NAMES} ]]
+            then
+                for COMPONENT_NAME in \${COMPONENT_NAMES}
+                do
+                    helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
+                done
+            fi
+        """
+    
         componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
         componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
         
