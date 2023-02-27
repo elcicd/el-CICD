@@ -208,8 +208,8 @@ def createAndCheckoutDeploymentBranches(def projectInfo) {
     if (scmBranchesFound.size() > 1 && scmBranchesCreated.size() > 1) {
         loggingUtils.echoBanner(scmBranchesFound, '', scmBranchesCreated)
     }
-    else (scmBranchesFound.size() > 1 ) {
-        def resultMsgs = scmBranchesFound ? scmBranchesFound : scmBranchesCreated
+    else {
+        def resultMsgs = (scmBranchesFound.size() > 1 ) ? scmBranchesFound : scmBranchesCreated
         loggingUtils.echoBanner(resultMsgs)
     }
 }
