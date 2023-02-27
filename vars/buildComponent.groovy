@@ -103,5 +103,5 @@ void call(Map args) {
         }
     }
 
-    deployComponents(projectInfo: projectInfo,  components: [component], imageTag: projectInfo.imageTag, recreate: args.recreate)
+    deployComponents(projectInfo: projectInfo,  componentsToDeploy: [component], imageTag: projectInfo.imageTag, recreate: args.recreate)
 }

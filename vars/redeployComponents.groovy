@@ -42,7 +42,7 @@ def call(Map args) {
     }
 
     deployComponents(projectInfo: projectInfo,
-                     components: projectInfo.componentsToRedeploy,
+                     componentsToDeploy: projectInfo.componentsToRedeploy,
                      componentsToRemove: projectInfo.components.findAll { it.remove },
                      imageTag: projectInfo.deployToEnv)
 }

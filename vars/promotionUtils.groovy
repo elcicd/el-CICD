@@ -166,7 +166,7 @@ def runPromoteImagesStages(def projectInfo) {
                 ${tagImage}
 
                 ${shCmd.echo ''}
-                ${shCmd.echo  "--> ${msg}"}
+                ${shCmd.echo msg}
             """
         }
 

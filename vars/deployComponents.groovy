@@ -6,8 +6,8 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    def componentsToDeploy = args.componentsToDeploy
-    def componentsToRemove = args.componentsToRemove
+    def componentsToDeploy = args.componentsToDeploy ?: []
+    def componentsToRemove = args.componentsToRemove ?: []
 
     def componentNames = componentsToDeploy ? componentsToDeploy.collect { it.name } .join(' ') : ''
     componentNames += componentsToRemove ? componentsToRemove.collect { it.name } .join(' ') : ''

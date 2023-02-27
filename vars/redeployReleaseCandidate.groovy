@@ -125,7 +125,7 @@ def call(Map args) {
     }
 
     deployComponents(projectInfo: projectInfo,
-                     components: projectInfo.componentsToRedeploy,
+                     componentsToDeploy: projectInfo.componentsToRedeploy,
                      imageTag: projectInfo.preProdEnv,
                      recreateAll: true)
 }

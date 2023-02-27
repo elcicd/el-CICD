@@ -33,7 +33,7 @@ def call(Map args) {
     }
 
     deployComponents(projectInfo: projectInfo,
-                     components: projectInfo.componentsToPromote,
+                     componentsToDeploy: projectInfo.componentsToPromote,
                      componentsToRemove: projectInfo.componentsToRemove,
                      imageTag: projectInfo.deployToEnv)
 }
