@@ -228,6 +228,6 @@ def cloneGitRepo(def module, def gitReference) {
 }
 
 def getNonProdDeploymentBranchName(def projectInfo, def component, def deploymentEnv) {
-    return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv)  ?
+    return (projectInfo.testEnvs.contains(deploymentEnv) || deploymentEnv == el.cicd.preProdEnv) ?
         "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${deploymentEnv}-${component.srcCommitHash}" : null
 }

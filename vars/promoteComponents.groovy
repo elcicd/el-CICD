@@ -17,13 +17,13 @@ def call(Map args) {
 
     stage('Verify images are deployed in previous environment, collect source commit hash') {
         loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
-                                    projectInfo.componentsToPromote.collect { it.name }.join(', '))
+                                projectInfo.componentsToPromote.collect { it.name }.join(', '))
 
         promotionUtils.verifyDeploymentsInPreviousEnv(projectInfo)
     }
 
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
-        def checkDeployBranchScript = "git show-scmBranch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
+        def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
         component.deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
         component.deployBranchExists = !component.deployBranchExists.isEmpty()
 

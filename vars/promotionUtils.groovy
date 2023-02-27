@@ -112,12 +112,10 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     }
 
     def componentsMissingMsg = ["MISSING IMAGE(s) IN ${projectInfo.deployFromNamespace} TO PROMOTE TO ${projectInfo.deployToNamespace}"]
-    projectInfo.components.each { component ->
-        if (component.promote) {
-            component.srcCommitHash = commitHashMap[component.name]
-            if (!component.srcCommitHash) {
-                componentsMissingMsg += "${component.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
-            }
+    projectInfo.componentsToPromote.each { component ->
+        component.srcCommitHash = commitHashMap[component.name]
+        if (!component.srcCommitHash) {
+            componentsMissingMsg += "${component.id} NOT FOUND IN ${projectInfo.deployFromNamespace}"
         }
     }
 
