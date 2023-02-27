@@ -76,7 +76,7 @@ def call(Map args) {
     }
 
     stage('Inform users of success') {
-        def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:"]
+        def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
         projectInfo.components.each { component ->
             def deployed = components?.contains(component)
             def removed = componentsToRemove?.contains(component)

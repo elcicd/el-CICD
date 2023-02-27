@@ -60,7 +60,7 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def runVerifyImagesExistStages(def projectInfo, def components, def env, def verifedMsgs, def errorMsgs) {
+def runVerifyImagesExistStages(def projectInfo, def components, def env) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     
