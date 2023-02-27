@@ -76,6 +76,7 @@ def call(Map args) {
     }
 
     stage('Inform users of success') {
+        def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:"]
         projectInfo.components.each { component ->
             resultsMsgs += "**********"
             resultsMsgs += ''
@@ -90,6 +91,6 @@ def call(Map args) {
             resultsMsgs += "**********"
         }
 
-        loggingUtils.echoBanner("DEPLOYMENT COMPLETE FOR NAMESPACE ${projectInfo.deployToNamespace}:", resultsMsgs)
+        loggingUtils.echoBanner(resultsMsgs)
     }
 }
