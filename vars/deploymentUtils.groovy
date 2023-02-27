@@ -39,7 +39,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
             helmUpgradeInstall(projectInfo, component, compValues)
         }
         else if (component.flaggedForRemoval) {
-            helmUninstall(component)
+            helmUninstall(projectInfo, component)
         }
     }
     
@@ -74,7 +74,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
     }
 }
 
-def helmUninstall(def component) {
+def helmUninstall(def projectInfo, def component) {
     sh """
         if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
         then

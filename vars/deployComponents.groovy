@@ -24,7 +24,7 @@ def call(Map args) {
         componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
         componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
         
-        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy + componentsToRemove)
+        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToRemove + componentsToDeploy)
         
         deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
     }
