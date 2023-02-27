@@ -14,7 +14,7 @@ def call(Map args) {
     }
     
     stage('Verify image(s) exist in registry') {
-        promotionUtils.runVerifyImagesExistStages(projectInfo, projectInfo.componentsToPromote)
+        promotionUtils.runVerifyImagesExistStages(projectInfo)
     }
 
     stage('Verify image(s) are deployed in previous environment') {

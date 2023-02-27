@@ -55,7 +55,7 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def runVerifyImagesExistStages(def projectInfo, def components) {
+def runVerifyImagesExistStages(def projectInfo) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     
@@ -63,7 +63,7 @@ def runVerifyImagesExistStages(def projectInfo, def components) {
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
-        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, components) { component ->
+        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                    'IMAGE_REGISTRY_USERNAME',
                                                    'IMAGE_REGISTRY_PWD',
