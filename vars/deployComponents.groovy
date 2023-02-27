@@ -88,8 +88,8 @@ def call(Map args) {
                 resultsMsgs += "${component.name} REMOVED"
             }
             resultsMsgs += ''
-            resultsMsgs += "**********"
         }
+        resultsMsgs += "**********"
 
         loggingUtils.echoBanner(resultsMsgs)
     }
