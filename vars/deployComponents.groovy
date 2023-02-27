@@ -78,16 +78,17 @@ def call(Map args) {
     stage('Inform users of success') {
         def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:"]
         projectInfo.components.each { component ->
-            resultsMsgs += "**********"
-            resultsMsgs += ''
-            if (components?.contains(component)) {
-                resultsMsgs += "${component.name} DEPLOYED FROM BRANCH:"
-                resultsMsgs += "    git checkout ${component.deploymentBranch}"
+            def deployed = components?.contains(component)
+            def removed = componentsToRemove?.contains(component)
+            if (deployed || removed) {
+                resultsMsgs += "**********"
+                resultsMsgs += ''
+                resultsMsgs += deployed ? "${component.name} DEPLOYED FROM BRANCH:" : "${component.name} REMOVED"
+                if (deployed) {
+                    resultsMsgs += "    git checkout ${component.deploymentBranch}"
+                }
+                resultsMsgs += ''
             }
-            else if (componentsToRemove?.contains(component)) {
-                resultsMsgs += "${component.name} REMOVED"
-            }
-            resultsMsgs += ''
         }
         resultsMsgs += "**********"
 
