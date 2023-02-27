@@ -8,7 +8,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage ('Select components to promote and remove') {
-        loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND COMPONENTS TO DEPLOY OR REMOVE")
+        loggingUtils.echoBanner("SELECT COMPONENTS TO PROMOTE TO OR REMOVE FROM ${projectInfo.deployToEnv}")
 
         promotionUtils.getUserPromotionRemovalSelections(projectInfo)
     }
