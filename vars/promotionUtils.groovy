@@ -60,11 +60,11 @@ def getUserPromotionRemovalSelections(def projectInfo) {
     projectInfo.componentsToRemove = projectInfo.components.findAll{ it.remove }
 }
 
-def runVerifyImagesExistStages(def projectInfo, def components, def env) {
+def runVerifyImagesExistStages(def projectInfo, def components) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     
-    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(deployEnv),
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
@@ -76,12 +76,12 @@ def runVerifyImagesExistStages(def projectInfo, def components, def env) {
                                                    projectInfo.deployFromEnv)
 
             if (!sh(returnStdout: true, script: "${verifyImageCmd}").trim()) {
-                def image = "${component.id}:${deployEnv}"
-                errorMsgs << "    ${image} NOT FOUND IN ${deployEnv} (${projectInfo.deployFromNamespace})"
+                def image = "${component.id}:${projectInfo.deployFromEnv}"
+                errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
             }
             else {
                 def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-                verifedMsgs << "   VERIFIED: ${component.id}:${deployEnv} IN ${imageRepo}"
+                verifedMsgs << "   VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
             }
         }
 
