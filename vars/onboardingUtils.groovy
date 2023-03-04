@@ -44,7 +44,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
@@ -74,8 +74,8 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-pipelines-values.yaml \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
+            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} \
             elCicdCharts/elCicdChart
@@ -95,7 +95,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
         ${shCmd.echo ''}
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-            -f ${el.cicd.EL_CICD_HELM_DIR}/jenkins-pipeline-sync-job-values.yaml \
+            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/jenkins-pipeline-sync-job-values.yaml \
             -n ${cicdMasterNamespace} \
             jenkins-pipeline-sync \
             elCicdCharts/elCicdChart

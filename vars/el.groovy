@@ -17,10 +17,10 @@ def initMetaData(Map metaData) {
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
-        el.cicd.EL_CICD_HELM_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.DEFAULT_HELM_DIR}"
+        el.cicd.EL_CICD_CHART_VALUES_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.EL_CICD_CHART_VALUES_DIR}"
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
-        el.cicd.CONFIG_HELM_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.DEFAULT_HELM_DIR}"
+        el.cicd.CONFIG_HELM_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.EL_CICD_CHART_VALUES_DIR}"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"

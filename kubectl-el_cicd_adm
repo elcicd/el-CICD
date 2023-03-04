@@ -18,139 +18,136 @@ EL_CICD_SCRIPTS_RESOURCES_DIR=${EL_CICD_SCRIPTS_DIR}/resources
 
 EL_CICD_RESOURCES_DIR=${EL_CICD_DIR}/resources
 EL_CICD_TEMPLATES_DIR=${EL_CICD_RESOURCES_DIR}/templates
-EL_CICD_HELM_DIR=${EL_CICD_DIR}/.helm
+EL_CICD_CHART_VALUES_DIR=${EL_CICD_DIR}/.elcicdchart
 
-EL_CICD_CONFIG_HELM_DIR=${EL_CICD_CONFIG_DIR}/.helm
+EL_CICD_CONFIG_CHART_VALUES_DIR=${EL_CICD_CONFIG_DIR}/.elcicdchart
 EL_CICD_CONFIG_BOOTSTRAP_DIR=${EL_CICD_CONFIG_DIR}/bootstrap
 EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins
 
 TARGET_JENKINS_BUILD_DIR=${EL_CICD_HOME}/jenkins-target
 
 echo
-echo -n 'Loading el-CICD scripts...'
+echo -n 'Loading el-CICD scripts and config...'
 echo
 for FILE in $(ls ${EL_CICD_SCRIPTS_DIR}/*.sh | xargs -n 1 basename)
 do
     source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
     echo "- ${FILE}"
 done
+
+_create_and_source_meta_info_file
+
 sleep 2
 echo 'Loaded'
 
 _load_kubectl_msgs
 
-EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_file')
-
-KUBECTL_ADM_ARGS=()
+EL_CICD_ADM_COMMANDS=()
 while [[ $# -gt 0 ]]
 do
-  case "${1}" in
-    '--agents' | '-a')
-        ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
+    __NEXT_ARG="${1}"
+    case "${__NEXT_ARG}" in
+        '--agents' | '-a')
+            ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
 
-        EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_agent_images')
-        shift 1
-    ;;
+            EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_agent_images')
+            shift 1
+        ;;
 
-    '--bootstrap' | '-b')
-        BOOTSTRAP='true'
-        ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
+        '--bootstrap' | '-b')
+            BOOTSTRAP='true'
+            ELCICD_ADM_MSG="BOOTSTRAPPING ${ONBOARDING_SERVER_TYPE} EL-CICD"
 
-        EL_CICD_ADM_COMMANDS+=( '_helm_repo_add_and_update_elCicdCharts' '_verify_scm_secret_files_exist' '_verify_pull_secret_files_exist' '_podman_login' '_bootstrap_el_cicd')
-        shift 1
-    ;;
+            EL_CICD_ADM_COMMANDS+=( '_helm_repo_add_and_update_elCicdCharts' '_verify_scm_secret_files_exist' '_verify_pull_secret_files_exist' '_podman_login' '_bootstrap_el_cicd')
+            shift 1
+        ;;
 
-    '--config-file' | '-f' | '--lab-config-file' | '-F')
-        if [[ $# == '--lab-config-file' || $# == '-F' ]]
-        then
+        '--config-file' | '-f' | '--lab-config-file' | '-F')
+            if [[ $# == '--lab-config-file' || $# == '-F' ]]
+            then
+                EL_CICD_USE_LAB_CONFIG='true'
+            fi
+
+            shift 1
+        ;;
+
+        '--help' | '-h')
+            echo
+            echo "${HELP_MSG}"
+            exit 0
+        ;;
+
+        '--jenkins' | '-j')
+            ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
+
+            EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_image')
+            shift 1
+        ;;
+
+        '--refresh-creds' | '-c')
+            ELCICD_ADM_MSG="REFRESH CREDENTIALS"
+
+            EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials')
+            shift 1
+        ;;
+
+        '--refresh-cicd-creds' | '-C')
+            ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
+
+            echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
+            shift 1
+        ;;
+
+        '--sealed-secrets' | '-s')
+            ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
+
+            EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets')
+            shift 1
+        ;;
+
+        '--setup-lab' | '-L')
+            ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
             EL_CICD_USE_LAB_CONFIG='true'
-        fi
 
-        shift 1
-    ;;
+            EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '__bootstrap_lab_environment')
+            shift 1
+        ;;
 
-    '--help' | '-h')
-        echo
-        echo "${HELP_MSG}"
-        exit 0
-    ;;
+        '--start-crc')
+            ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
+            EL_CICD_USE_LAB_CONFIG='true'
 
-    '--jenkins' | '-j')
-        ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
+            EL_CICD_ADM_COMMANDS+=('_start_crc')
+            shift 1
+        ;;
 
-        EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_image')
-        shift 1
-    ;;
+        '--tear-down-lab' | '-T')
+            ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
+            EL_CICD_USE_LAB_CONFIG='true'
 
-    '--refresh-creds' | '-c')
-        ELCICD_ADM_MSG="REFRESH CREDENTIALS"
+            EL_CICD_ADM_COMMANDS+=('_tear_down_lab_environment')
+            shift 1
+        ;;
 
-        EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials')
-        shift 1
-    ;;
+        -*|--*)
+            echo
+            echo "ERROR: Unknown command option '${1}'"
+            echo
+            echo "${HELP_MSG}"
+            exit 1
+        ;;
 
-    '--refresh-cicd-creds' | '-C')
-        ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
+        *)
+            if [[ ! -z ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${__NEXT_ARG} ]]
+            then
+                __error_msg_and_exit
+            fi
 
-        echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
-        shift 1
-    ;;
+            ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${__NEXT_ARG}
 
-    '--sealed-secrets' | '-s')
-        ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
-
-        EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets')
-        shift 1
-    ;;
-
-    '--setup-lab' | '-L')
-        ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
-        EL_CICD_USE_LAB_CONFIG='true'
-
-        EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '__bootstrap_lab_environment')
-        shift 1
-    ;;
-
-    '--start-crc')
-        ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
-        EL_CICD_USE_LAB_CONFIG='true'
-
-        EL_CICD_ADM_COMMANDS+=('_start_crc')
-        shift 1
-    ;;
-
-    '--tear-down-lab' | '-T')
-        ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
-        EL_CICD_USE_LAB_CONFIG='true'
-
-        EL_CICD_ADM_COMMANDS+=('_tear_down_lab_environment')
-        shift 1
-    ;;
-
-    -*|--*)
-        echo
-        echo "ERROR: Unknown command option '${1}'"
-        echo
-        echo "${HELP_MSG}"
-        exit 1
-    ;;
-
-    *)
-        if [[ ! -z ${ROOT_CONFIG_FILE} ]]
-        then
-            __error_msg_and_exit
-        fi
-
-        ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${1}
-
-        if [[ ! -f ${ROOT_CONFIG_FILE} ]]
-        then
-            __error_msg_and_exit
-        fi
-
-        shift 1
-    ;;
-  esac
+            shift 1
+        ;;
+    esac
 done
 
 set +e
