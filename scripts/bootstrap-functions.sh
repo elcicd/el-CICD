@@ -254,9 +254,9 @@ __create_onboarding_automation_server() {
         --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-jenkins-casc.yaml \
         --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-plugins.txt \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_CONFIG_CHART_VALUES_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
-        -f ${EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
-        -f ${EL_CICD_CHART_VALUES_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-pipeline-values.yaml \
+        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-pipeline-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x
@@ -276,7 +276,7 @@ __create_onboarding_automation_server() {
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
                 -n ${ONBOARDING_MASTER_NAMESPACE} \
-                -f ${EL_CICD_CHART_VALUES_DIR}/jenkins-pipeline-sync-job-values.yaml \
+                -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-pipeline-sync-job-values.yaml \
                 jenkins-pipeline-sync \
                 elCicdCharts/elCicdChart
     set +x

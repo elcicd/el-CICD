@@ -185,7 +185,7 @@ _create_env_image_registry_secrets() {
         --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
         ${SET_FLAGS} \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_CHART_VALUES_DIR}/cicd-image-registry-secrets-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/cicd-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
     set +ex

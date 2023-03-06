@@ -298,7 +298,7 @@ __setup_image_registries() {
         --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         --set createNamespaces=true \
         -n ${DEMO_IMAGE_REGISTRY} \
-        -f ${EL_CICD_CHART_VALUES_DIR}/demo-image-registry-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
     set +x

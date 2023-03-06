@@ -43,7 +43,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
@@ -72,8 +72,8 @@ def setupProjectCicdResources(def projectInfo) {
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         helm upgrade --install --history-max=1 \
             -f ${cicdConfigFile} \
-            -f ${el.cicd.CONFIG_HELM_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_HELM_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/resource-quotas-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
