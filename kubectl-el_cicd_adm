@@ -35,14 +35,12 @@ do
     echo "- ${FILE}"
 done
 
-_create_and_source_meta_info_file
-
 sleep 2
 echo 'Loaded'
 
 _load_kubectl_msgs
 
-EL_CICD_ADM_COMMANDS=()
+EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_file')
 while [[ $# -gt 0 ]]
 do
     __NEXT_ARG="${1}"
@@ -142,7 +140,7 @@ do
             then
                 __error_msg_and_exit
             fi
-
+            echo "__NEXT_ARG: ${__NEXT_ARG}"
             ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${__NEXT_ARG}
 
             shift 1
