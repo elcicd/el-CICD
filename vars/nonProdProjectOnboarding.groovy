@@ -10,8 +10,8 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage('Uninstall project SDLC for baseline reinstall, if requested') {
-        if (args.reinstallProjectSdlc) {
-            loggingUtils.echoBanner("REMOVING STALE NAMESPACES FOR ${projectInfo.id}, IF REQUESTED")
+        if (args.rebuildSdlcEnvs) {
+            loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
             sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
         }

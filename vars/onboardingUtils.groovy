@@ -44,7 +44,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
             ${projectInfo.defaultRbacGroup}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins

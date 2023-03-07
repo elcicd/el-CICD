@@ -27,13 +27,8 @@ elCicdDefs-project-onboarding:
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
             <hudson.model.BooleanParameterDefinition>
-              <name>REBUILD_NON_PROD</name>
-              <description>Should all non-prod environment(s) be torn down and new, empty projects created?</description>
-              <defaultValue>false</defaultValue>
-            </hudson.model.BooleanParameterDefinition>
-            <hudson.model.BooleanParameterDefinition>
-              <name>REBUILD_SANDBOXES</name>
-              <description>Should the sandbox environment(s) be torn down and new, empty projects created</description>
+              <name>REBUILD_SDLC_ENVS</name>
+              <description>Should all SDLC environment(s) be destroyed and recreated from scratch?</description>
               <defaultValue>false</defaultValue>
             </hudson.model.BooleanParameterDefinition>
           </parameterDefinitions>
@@ -56,8 +51,7 @@ elCicdDefs-project-onboarding:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineName: '${APP_NAME}',
                       projectId: params.PROJECT_ID,
-                      rebuildNonProd: params.REBUILD_NON_PROD,
-                      rebuildSandboxes: params.REBUILD_SANDBOXES]
+                      rebuildSdlcEnvs: params.REBUILD_SDLC_ENVS]
           el.node(args) {                    
               nonProdProjectOnboarding(args)
           }
