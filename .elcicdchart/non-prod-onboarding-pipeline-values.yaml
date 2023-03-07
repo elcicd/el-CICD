@@ -165,6 +165,7 @@ elCicdDefs-delete-cicd-server:
               <description>Group ID</description>
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
+          </parameterDefinitions>
         </hudson.model.ParametersDefinitionProperty>
       </properties>
       <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
