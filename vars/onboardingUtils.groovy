@@ -74,8 +74,8 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
-            -f ${el.cicd.EL_CICD_CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
+            -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} \
             elCicdCharts/elCicdChart
