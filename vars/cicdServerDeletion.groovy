@@ -16,7 +16,7 @@ def call(Map args) {
         de helmListScript = "helm list --all --short -n ${cicdMasterNamespace} | grep \\-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
         def projectNames = sh(returnStdout: true, script: helmListScript).split('n')
         
-        projectNames = projectNames.collect { it - "-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}$" }
+        projectNames = projectNames.collect { it - "-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}" }
         def projectInfos = projectNames.collect { projectUtils.gatherProjectInfo(it.trim()) }
     }
     
