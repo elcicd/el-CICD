@@ -19,11 +19,11 @@ def call(Map args) {
         jenkinsUtils.displayInputWithTimeout(msg)
     }
 
-    stage('Delete GitHub deploy keys') {
-        loggingUtils.echoBanner("REMOVING ALL DEPLOY KEYS FROM THE SCM FOR PROJECT ${projectInfo.id}")
-        
-        githubUtils.deleteProjectDeployKeys(projectInfo)
-    }
+    loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
+    def buildStages =  concurrentUtils.createParallelStages('Delete SCM deploy keys', projectInfo.modules) { module ->
+        githubUtils.deleteProjectDeployKeys(module)
+    }    
+    parallel(buildStages)
 
     stage('Remove project from cluster') {
         loggingUtils.echoBanner("REMOVING ALL PROJECT ${projectInfo.id} FROM CLUSTER")

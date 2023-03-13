@@ -15,13 +15,11 @@ def call(Map args) {
         jenkinsUtils.copyElCicdCredentialsToCicdServer(projectInfo, envs)
     }
 
-    stage('Delete old github public keys') {
-        loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT GIT REPOS")
-
-        projectInfo.modules.each { module ->
-            githubUtils.deleteProjectDeployKeys(projectInfo, module)
-        }
-    }
+    loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
+    def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
+        githubUtils.deleteProjectDeployKeys(module)
+    }    
+    parallel(buildStages)
 
     stage('Create and push public key for each github repo to github with curl') {
         loggingUtils.echoBanner("CREATE DEPLOY KEYS FOR EACH GIT REPO:",
