@@ -10,7 +10,7 @@ export _NO='No'
 _bootstrap_el_cicd() {
     if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
     then
-        echo "el-CICD ${ONBOARDING_SERVER_TYPE} master project must be defined in ${ROOT_CONFIG_FILE}"
+        echo "The el-CICD master project must be defined in ${ROOT_CONFIG_FILE}"
         echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} and rerun."
         echo "Exiting."
         exit 1
@@ -35,20 +35,20 @@ _bootstrap_el_cicd() {
 
     echo
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
-    _refresh_${ONBOARDING_SERVER_TYPE/-/_}_credentials
+    _refresh_credentials
 
     echo
-    echo "RUN ALL CUSTOM SCRIPTS '${ONBOARDING_SERVER_TYPE}-*.sh' FOUND IN ${EL_CICD_CONFIG_BOOTSTRAP_DIR}"
+    echo "RUN ALL CUSTOM SCRIPTS *.sh FOUND IN ${EL_CICD_CONFIG_BOOTSTRAP_DIR}"
     __run_custom_config_scripts
 
     echo
-    echo "${ONBOARDING_SERVER_TYPE} Onboarding Server Bootstrap Script Complete:"
+    echo "el-CICD Onboarding Server Bootstrap Script Complete:"
     echo "https://${JENKINS_URL}"
 }
 
 _create_and_source_meta_info_file() {
     set -e -o allexport
-    
+
     echo
     echo "GENERATING CONFIG FILES:"
 
@@ -58,16 +58,16 @@ _create_and_source_meta_info_file() {
 
     local EL_CICD_SYSTEM_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-system.conf
 
-    local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-${ONBOARDING_SERVER_TYPE}.conf
+    local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd.conf
 
     local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-bootstrap.conf
-    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/default-bootstrap.conf
+    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-default-bootstrap.conf
 
     local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-runtime.conf
-    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/default-runtime.conf
+    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-default-runtime.conf
 
-    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-${ONBOARDING_SERVER_TYPE}-lab-setup.conf
-    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${ONBOARDING_SERVER_TYPE}-lab-setup.conf
+    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-lab-setup.conf
+    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-lab-setup.conf
 
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
@@ -87,7 +87,7 @@ _create_and_source_meta_info_file() {
 
     echo
     echo 'el-CICD environment loaded'
-    
+
     set +e +o allexport
 }
 
@@ -132,6 +132,19 @@ __gather_and_confirm_bootstrap_info_with_user() {
         UPDATE_EL_CICD_JENKINS=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
     fi
 
+    echo
+    if [[ -z $(oc get project ${PROD_DEPLOYMENT_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
+    then
+        INSTALL_PROD_DEPLOYMENT_SERVER=$(_get_yes_no_answer 'Install the el-CICD Prod Deployment Server? [Y/n] ')
+    else
+        REMOVE_PROD_DEPLOYMENT_SERVER=$(_get_yes_no_answer 'Remove the el-CICD Prod Deployment Server (this will not affect already deployed applications)? [Y/n] ')
+
+        if [[ ${REMOVE_PROD_DEPLOYMENT_SERVER} == ${_NO} ]]
+        then
+            INSTALL_PROD_DEPLOYMENT_SERVER=${_YES}
+        fi
+    fi
+
     __summarize_and_confirm_bootstrap_run_with_user
 }
 
@@ -162,7 +175,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo
     echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
     echo
-    
+
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
     echo
@@ -220,6 +233,16 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         fi
         echo "To manually rebuild Jenkins Agents, run the 'oc el-cicd-adm --agents <el-CICD config file>'"
     fi
+
+    echo
+    echo "Update/install el-CICD Prod Deployment Server? ${INSTALL_PROD_DEPLOYMENT_SERVER}"
+
+    if [[ ${REMOVE_PROD_DEPLOYMENT_SERVER} == ${_YES} ]]
+    then
+        echo
+        echo "${_BOLD}WARNING: The el-CICD Prod Deployment Server WILL be removed.!${_REGULAR}"
+    fi
+
     echo
     echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
 
@@ -251,12 +274,12 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
-        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-jenkins-casc.yaml \
-        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${ONBOARDING_SERVER_TYPE}-plugins.txt \
+        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/jenkins-casc.yaml \
+        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/jenkins-plugins.txt \
         -n ${ONBOARDING_MASTER_NAMESPACE} \
-        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-${ONBOARDING_SERVER_TYPE}-onboarding-values.yaml \
+        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-onboarding-values.yaml \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
-        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/${ONBOARDING_SERVER_TYPE}-onboarding-pipeline-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/onboarding-pipeline-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +x
@@ -314,7 +337,7 @@ _delete_namespace() {
 }
 
 __run_custom_config_scripts() {
-    local SCRIPTS=$(find "${EL_CICD_CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "${ONBOARDING_SERVER_TYPE}-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
+    local SCRIPTS=$(find "${EL_CICD_CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
     if [[ ! -z ${SCRIPTS} ]]
     then
         for FILE in ${SCRIPTS}

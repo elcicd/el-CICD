@@ -13,8 +13,8 @@ def call(Map args) {
     stage('Gather every project info') {
         loggingUtils.echoBanner("GATHERING ALL PROJECT INFORMATION FOR ${groupId} PROJECTS IN ${cicdMasterNamespace}")
         
-        def projectNames = sh(returnStdout: true,
-                            script: "helm list --all --short -n ${cicdMasterNamespace} | grep \\-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}$").split('n')
+        de helmListScript = "helm list --all --short -n ${cicdMasterNamespace} | grep \\-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+        def projectNames = sh(returnStdout: true, script: helmListScript).split('n')
         
         projectNames = projectNames.collect { it - "-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}$" }
         def projectInfos = projectNames.collect { projectUtils.gatherProjectInfo(it.trim()) }

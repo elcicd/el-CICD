@@ -3,7 +3,7 @@
 
 _load_kubectl_msgs() {
 
-WARNING_MSG=$(cat <<-EOM
+EL_CICD_ADM_WARNING_MSG=$(cat <<-EOM
 ===================================================================
 
 ${_BOLD}WARNING:${_REGULAR} SUDO AND CLUSTER ADMIN PRIVILEGES REQUIRED WHEN USING THIS UTILITY
@@ -14,24 +14,47 @@ ACCESS TO el-CICD ONBOARDING AUTOMATION SERVERS SHOULD BE RESTRICTED TO CLUSTER 
 EOM
 )
 
-HELP_MSG=$(cat <<-EOM
+EL_CICD_CLI_HELP_MSG=$(cat <<-EOM
 Usage: oc el-cicd-adm [OPTION]... [root-config-file]
 
 el-CICD Admin Utility
 
 Options:
-    -b,   --bootstrap:         bootstraps an el-CICD Onboarding Server
-    -f,   --config-file:       generate el-CICD configuration files, both bootstrap and runtime
-    -F,   --lab-config-file:   generate el-CICD configuration files for lab installs, both bootstrap and runtime
-    -L,   --setup-lab:         setup a lab instance of el-CICD
-    -T,   --tear-down-lab:     tear down a lab instance of el-CICD
-    -S,   --start-crc:         start the OpenShift Local lab cluster
-    -c,   --onboarding-creds:  refresh an el-CICD Onboarding Server credentials
-    -C,   --all-creds:         refresh an el-CICD Onboarding Server credentials and then refresh all CICD server credentials
-    -s,   --sealed-secrets:    install/upgrade the Sealed Secret Helm Chart or version
-    -j,   --jenkins:           build the el-CICD Jenkins image
-    -a,   --agents:            build the el-CICD Jenkins agent images
-    -h,   --help:              display this help text and exit
+    -b, --bootstrap
+        bootstraps an el-CICD Project Onboarding Server
+
+    -f, --config-file
+         generate el-CICD configuration files, both bootstrap and runtime
+
+    -F, --lab-config-file:
+        generate el-CICD configuration files for lab installs, both bootstrap and runtime
+
+    -L, --setup-lab
+        setup a lab instance of el-CICD, including optional demo registries and single node cluster
+
+    -T, --tear-down-lab
+        tear down a lab instance of el-CICD
+
+    -S, --start-cluster
+        start the OpenShift Local lab cluster
+
+    -c, --master-creds
+        refresh el-CICD Onboarding Server credentials
+
+    -C, --all-creds
+        refresh el-CICD Onboarding Server credentials, and then refresh all SDLC credentials
+
+    -s, --sealed-secrets
+        install/upgrade the Sealed Secret Helm Chart or version
+
+    -j, --jenkins
+        build the el-CICD Jenkins image
+
+    -a, --agents
+        build the el-CICD Jenkins agent images
+
+    -h, --help
+        display this help text and exit
 
 root-config-file:
     file name or path to a root configuration file relative the root of the el-CICD-config directory
@@ -70,18 +93,20 @@ EOM
 } # _load_kubectl_msgs
 
 _execute_kubectl_el_cicd_adm() {
-    set -E
+    COMMANDS=("${@}")
 
     trap 'ERRO_LINENO=$LINENO' ERR
     trap '_failure' EXIT
     echo
-    echo "${WARNING_MSG}"
-    
+    echo "${EL_CICD_ADM_WARNING_MSG}"
+
     echo
     echo ${ELCICD_ADM_MSG}
-
-    for COMMAND in ${EL_CICD_ADM_COMMANDS[@]}
+    sleep 2
+    
+    for COMMAND in ${COMMANDS[@]}
     do
+        set -E
         eval ${COMMAND}
     done
 }
@@ -117,6 +142,14 @@ _failure() {
    fi
 }
 
+_unknown_cmd_opt_msg_and_exit() {
+    echo
+    echo "ERROR: Unknown command option '${1}'"
+    echo
+    echo "${EL_CICD_CLI_HELP_MSG}"
+    exit 1
+}
+
 _confirm_logged_into_cluster() {
     echo
     echo "You must be logged into the cluster."
@@ -124,7 +157,7 @@ _confirm_logged_into_cluster() {
     echo "${_BOLD}DOUBLE-CHECK IT'S THE CORRECT CLUSTER${_REGULAR}."
     echo "Confirming..."
     sleep 2
-    oc whoami > /dev/null 2>&1 
+    oc whoami > /dev/null 2>&1
     echo "${_BOLD}Confirmed${_REGULAR}"
 }
 

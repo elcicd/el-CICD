@@ -18,6 +18,7 @@ _verify_scm_secret_files_exist() {
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}"
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
         echo "    ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE//${SECRET_FILE_DIR}\//}"
+
         __verify_continue
     fi
 }
@@ -28,11 +29,11 @@ _verify_pull_secret_files_exist() {
     do
         if [[ ${PULL_SECRET_TYPE} == 'jenkins' ]]
         then
-            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${ONBOARDING_SERVER_TYPE}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
         else
             local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
         fi
-    
+
         if [[ ! -f ${USERNAME_PWD_FILE} ]]
         then
             local PULL_SECRET_FILES=${PULL_SECRET_FILES:+$PULL_SECRET_FILES, }${TKN_FILE}
@@ -78,7 +79,7 @@ _check_sealed_secrets() {
     else
         echo 'NO CURRENTLY INSTALLED SEALED SECRETS FOUND'
     fi
-    
+
     local LATEST_SS_VERSION=$(helm show chart sealed-secrets --repo https://bitnami-labs.github.io/sealed-secrets | grep appVersion | tr -d 'appVersion: ')
     echo "LATEST RELEASED SEALED SECRETS VERSION INFO: ${LATEST_SS_VERSION}"
 
@@ -89,7 +90,7 @@ _check_sealed_secrets() {
 
 _install_sealed_secrets() {
     set -e
-    
+
     echo
     echo '================= SEALED SECRETS ================='
     echo
@@ -112,7 +113,7 @@ _install_sealed_secrets() {
     wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
     sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
-    
+
     set +e
 }
 
@@ -161,19 +162,14 @@ _create_env_image_registry_secrets() {
     local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
     echo
     echo "Creating the image repository pull secrets for each environment and Jenkins: ${PULL_SECRET_TYPES}"
-    
+
     for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
     do
         local APP_NAME="el-cicd-${PULL_SECRET_TYPE@L}-pull-secret"
         local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
 
-        if [[ ${PULL_SECRET_TYPE} == 'jenkins' ]]
-        then
-            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${ONBOARDING_SERVER_TYPE}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-        else
-            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-        fi
-        
+        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+
         local SET_FLAGS="${SET_FLAGS:+$SET_FLAGS }--set-file elCicdDefs-${APP_NAME}.USERNAME_PWD=${USERNAME_PWD_FILE}"
         local SERVER=$(eval echo \${${PULL_SECRET_TYPE}${IMAGE_REGISTRY_POSTFIX}})
         SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER:-${JENKINS_IMAGE_REGISTRY}}"
@@ -275,7 +271,7 @@ _run_custom_credentials_script() {
 _podman_login() {
     echo
     echo -n 'Podman: '
-    JENKINS_USERNAME_PWD_FILE="jenkins-${ONBOARDING_SERVER_TYPE}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    JENKINS_USERNAME_PWD_FILE="jenkins${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
     IFS=':' read -r -a JENKINS_USERNAME_PWD <<< $(cat ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE})
     if [[ ! -z ${JENKINS_USERNAME_PWD} ]]
     then
