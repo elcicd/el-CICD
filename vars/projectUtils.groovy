@@ -61,8 +61,13 @@ def readProjectYaml(def projectId) {
 
 def initProjectModuleData(def projectInfo) {
     projectInfo.components = projectInfo.components ?: []
+    projectInfo.components.each { it.isComponent = true }
+    
     projectInfo.artifacts = projectInfo.artifacts ?: []
+    projectInfo.artifacts.each { it.isArtifact = true }
+    
     projectInfo.testModules = projectInfo.testModules ?: []
+    projectInfo.testModules.each { it.isTestModule = true }
 
     projectInfo.buildModules = []
     projectInfo.buildModules.addAll(projectInfo.components)
@@ -73,12 +78,9 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.modules.addAll(projectInfo.artifacts)
     projectInfo.modules.addAll(projectInfo.testModules)
 
-    projectInfo.buildModules = []
-    projectInfo.buildModules.addAll(projectInfo.components)
-    projectInfo.buildModules.addAll(projectInfo.artifacts)
-
     projectInfo.modules.each { module ->
-        module.projectId = projectInfo.id
+        module.projectInfo = projectInfo
+
         module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
         module.id = "${projectInfo.id}-${module.name}"
 
@@ -87,10 +89,6 @@ def initProjectModuleData(def projectInfo) {
         module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
         module.scmBranch = projectInfo.scmBranch
         module.scmDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
-
-        module.isComponent = projectInfo.components.contains(module)
-        module.isArtifact = projectInfo.artifacts.contains(module)
-        module.isTestModule = projectInfo.testModules.contains(module)
     }
 }
 

@@ -10,7 +10,8 @@ import groovy.transform.Field
 @Field
 def GITHUB_REST_API_HDR = "-H 'Accept: application/vnd.github.v3+json'"
 
-def deleteProjectDeployKeys(def projectInfo, def module) {
+def deleteProjectDeployKeys(def module) {
+    def projectInfo = module.projectInfo
     withCredentials([string(credentialsId: el.cicd.SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def jqIdFilter = """jq '.[] | select(.title  == "${projectInfo.repoDeployKeyId}") | .id'"""
         
@@ -32,7 +33,8 @@ def deleteProjectDeployKeys(def projectInfo, def module) {
     }
 }
 
-def addProjectDeployKey(def projectInfo, def module, def keyFile) {
+def addProjectDeployKey(def module, def keyFile) {
+    def projectInfo = module.projectInfo
     TEMPLATE_FILE = 'githubDeployKey-template.json'
     def GITHUB_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
@@ -58,7 +60,8 @@ def addProjectDeployKey(def projectInfo, def module, def keyFile) {
     }
 }
 
-def pushBuildWebhook(def projectInfo, def module, def buildType) {
+def pushBuildWebhook(def module, def buildType) {
+    def projectInfo = module.projectInfo
     TEMPLATE_FILE = 'githubWebhook-template.json'
     def WEBHOOK_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
         

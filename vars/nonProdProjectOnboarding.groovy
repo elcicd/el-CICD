@@ -32,12 +32,8 @@ def call(Map args) {
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
-        projectInfo.components.each { component ->
-            githubUtils.pushBuildWebhook(projectInfo, component, 'build-to-dev')
-        }
-
-        projectInfo.artifacts.each { artifact ->
-            githubUtils.pushBuildWebhook(projectInfo, artifact, 'build-artifact')
+        projectInfo.buildModules.each { module ->
+            githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
         }
     }
 }

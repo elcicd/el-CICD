@@ -36,13 +36,12 @@ def call(Map args) {
 
         jenkinsUtils.displayInputWithTimeout(msg)
     }
-
-    stage('Delete SCM deploy keys for all projects') {
-        loggingUtils.echoBanner("DELETING DEPLOY KEYS FOR ALL ${groupId} PROJECTS")
-        
-        projectInfos.each { projectInfo ->
-            githubUtils.deleteProjectDeployKeys(projectInfo)
-        }
+    
+    
+    loggingUtils.echoBanner("DELETING DEPLOY KEYS FOR ALL ${groupId} PROJECT MODULES")
+    def modules = projectInfos.collectMany { it.modules }
+    def buildStages =  concurrentUtils.createParallelStages('Delete SCM deploy keys for all modules of all projects', modules) { module ->
+        githubUtils.deleteProjectDeployKeys(module)
     }
 
     stage('Tear down all projects and the cicd server') {
