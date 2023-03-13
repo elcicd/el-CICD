@@ -40,7 +40,7 @@ def call(Map args) {
     stage('Delete SCM deploy keys for all projects') {
         loggingUtils.echoBanner("DELETING DEPLOY KEYS FOR ALL ${groupId} PROJECTS")
         
-        projectInfos.each {
+        projectInfos.each { projectInfo ->
             githubUtils.deleteProjectDeployKeys(projectInfo)
         }
     }
