@@ -14,10 +14,10 @@ def call(Map args) {
         loggingUtils.echoBanner("GATHERING ALL PROJECT INFORMATION FOR ${groupId} PROJECTS IN ${cicdMasterNamespace}")
         
         de helmListScript = "helm list --all --short -n ${cicdMasterNamespace} | grep \\-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
-        def projectNames = sh(returnStdout: true, script: helmListScript).split('n')
+        projectNames = sh(returnStdout: true, script: helmListScript).split('n')
         
         projectNames = projectNames.collect { it - "-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}" }
-        def projectInfos = projectNames.collect { projectUtils.gatherProjectInfo(it.trim()) }
+        projectInfos = projectNames.collect { projectUtils.gatherProjectInfo(it.trim()) }
     }
     
     stage('Confirm removing cicd server and all project namespaces from cluster') {
