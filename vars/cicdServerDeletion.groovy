@@ -43,6 +43,8 @@ def call(Map args) {
     def buildStages =  concurrentUtils.createParallelStages('Delete SCM deploy keys for all modules of all projects', modules) { module ->
         githubUtils.deleteProjectDeployKeys(module)
     }
+    
+    parallel(buildStages)
 
     stage('Tear down all projects and the cicd server') {
         loggingUtils.echoBanner("REMOVING ALL ${groupId} PROJECTS AND THE ${groupId} CICD SERVER FROM THE CLUSTER")
@@ -53,6 +55,6 @@ def call(Map args) {
             oc delete project ${cicdMasterNamespace}
         """
         
-        loggingUtils.echoBanner("ALL PROJECTS FOR GROUP ${groupId} HAVE BEEN REMOVED FROM THE CLUSTER AND ${cicdMasterNamespace} HAS BEEN DELETED")
+        loggingUtils.echoBanner("ALL PROJECTS FOR THE ${groupId} GROUP AND NAMESPACE ${cicdMasterNamespace} HAVE BEEN REMOVED FROM THE CLUSTER ")
     }
 }
