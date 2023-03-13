@@ -14,7 +14,7 @@ def call(Map args) {
         loggingUtils.echoBanner("GATHERING ALL PROJECT INFORMATION FOR ${groupId} PROJECTS IN ${cicdMasterNamespace}")
         
         def helmListScript = "helm list --all --short -n ${cicdMasterNamespace} | grep \\\\-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
-        projectNames = sh(returnStdout: true, script: helmListScript).split('n')
+        projectNames = sh(returnStdout: true, script: helmListScript).split('\n')
         
         projectNames = projectNames.collect { it - "-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}" }
         projectInfos = projectNames.collect { projectUtils.gatherProjectInfo(it.trim()) }
