@@ -64,7 +64,7 @@ __verify_continue() {
 _check_upgrade_sealed_secrets() {
     _check_sealed_secrets
 
-    if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
+    if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
     then
         _install_sealed_secrets
     fi
@@ -72,20 +72,30 @@ _check_upgrade_sealed_secrets() {
 
 _check_sealed_secrets() {
     echo
-    local CURRENT_SS_VERSION=$(helm list --filter 'sealed-secrets' -o json -n kube-system | jq -r '.[0].app_version' )
+    local CURRENT_SS_VERSION=$(helm list --short --filter 'sealed-secrets')
     if [[ ${CURRENT_SS_VERSION} != 'null' ]]
     then
-        echo "CURRENT INSTALLED SEALED SECRETS VERSION: ${CURRENT_SS_VERSION}"
+        echo "CURRENTLY INSTALLED SEALED SECRETS:"
+        helm list --filter 'sealed-secrets' --time-format "2006-01-02" -n kube-system
     else
         echo 'NO CURRENTLY INSTALLED SEALED SECRETS FOUND'
     fi
 
-    local LATEST_SS_VERSION=$(helm show chart sealed-secrets --repo https://bitnami-labs.github.io/sealed-secrets | grep appVersion | tr -d 'appVersion: ')
-    echo "LATEST RELEASED SEALED SECRETS VERSION INFO: ${LATEST_SS_VERSION}"
+    local SS_URL='https://bitnami-labs.github.io/sealed-secrets'
+    if [[ -z ${SEALED_SECRETS_CHART_VERSION} ]]
+    then
+        SEALED_SECRETS_CHART_VERSION=$(helm show chart sealed-secrets --repo ${SS_URL} | grep version | tr -d 'version: ')
+    fi
+    
+    SEALED_SECRETS_RELEASE_VERSION=$(helm show chart sealed-secrets --version ${SEALED_SECRETS_CHART_VERSION} --repo ${SS_URL} | grep appVersion)
+    SEALED_SECRETS_RELEASE_VERSION=$(echo ${SEALED_SECRETS_RELEASE_VERSION} | tr -d 'appVersion: ')
+    SEALED_SECRETS_RELEASE_INFO="Helm Chart ${SEALED_SECRETS_CHART_VERSION} / Release ${SEALED_SECRETS_RELEASE_VERSION}"
+    echo
+    echo "SEALED SECRETS VERSION TO BE INSTALLED: ${SEALED_SECRETS_RELEASE_INFO}"
 
     echo
-    local MSG="Do you wish to reinstall/upgrade sealed-secrets and kubeseal to the latest release version? [Y/n] "
-    INSTALL_KUBESEAL=$(_get_yes_no_answer "${MSG}")
+    local MSG="Do you wish to reinstall/upgrade sealed-secrets and kubeseal ${SEALED_SECRETS_RELEASE_INFO}? [Y/n] "
+    INSTALL_SEALED_SECRETS=$(_get_yes_no_answer "${MSG}")
 }
 
 _install_sealed_secrets() {
@@ -94,11 +104,12 @@ _install_sealed_secrets() {
     echo
     echo '================= SEALED SECRETS ================='
     echo
-    echo 'Installing latest Sealed Secrets Helm chart'
+    echo "Installing Sealed Secrets ${_BOLD}${SEALED_SECRETS_RELEASE_INFO}${_REGULAR}"
     echo
     helm upgrade --install --atomic sealed-secrets --history-max 2 -n kube-system \
                  --set-string fullnameOverride=sealed-secrets-controller \
                  --repo https://bitnami-labs.github.io/sealed-secrets \
+                 --version ${SEALED_SECRETS_CHART_VERSION} \
                  sealed-secrets
     echo
     echo '================= SEALED SECRETS ================='
@@ -107,8 +118,8 @@ _install_sealed_secrets() {
     echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
     local SEALED_SECRETS_DIR=/tmp/sealedsecrets
     mkdir -p ${SEALED_SECRETS_DIR}
-    local SS_VERSION=$(helm list -o json -n kube-system | jq -r '.[] | select (.name == "sealed-secrets") | .app_version' | tr -d v)
-    local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${SS_VERSION}/kubeseal-${SS_VERSION}-linux-amd64.tar.gz"
+    local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download"
+    KUBESEAL_URL="${KUBESEAL_URL}/${SEALED_SECRETS_RELEASE_VERSION}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:1}-linux-amd64.tar.gz"
     sudo rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
     wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
@@ -180,7 +191,7 @@ _create_env_image_registry_secrets() {
     helm upgrade --create-namespace --atomic --install --history-max=1 \
         --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
         ${SET_FLAGS} \
-        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/cicd-image-registry-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
@@ -230,7 +241,7 @@ _push_ssh_creds_to_jenkins() {
     JENKINS_CREDS=$(<${JENKINS_CREDS_FILE})
     echo "${JENKINS_CREDS//%PRIVATE_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${JENKINS_CREDS_FILE}
 
-    __push_creds_file_to_jenkins ${JENKINS_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE}
+    __push_creds_file_to_jenkins ${JENKINS_MASTER_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE}
 
     rm -f ${JENKINS_CREDS_FILE}
 }

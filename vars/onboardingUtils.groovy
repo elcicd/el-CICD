@@ -33,9 +33,9 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
             --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
-            --set-string elCicdDefs.ONBOARDING_MASTER_NAMESPACE=${el.cicd.ONBOARDING_MASTER_NAMESPACE} \
+            --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-            --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
+            --set-string elCicdDefs.JENKINS_MASTER_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
             --set-string elCicdDefs.CPU_REQUEST=${el.cicd.JENKINS_CPU_REQUEST} \
             --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
@@ -133,7 +133,7 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
-    elCicdDefs.ONBOARDING_MASTER_NAMESPACE = el.cicd.ONBOARDING_MASTER_NAMESPACE
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }

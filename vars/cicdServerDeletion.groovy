@@ -9,7 +9,7 @@ def call(Map args) {
     def projectNames
     def projectInfos
 
-    def cicdMasterNamespace = "${groupId}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
+    def cicdMasterNamespace = "${groupId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
     stage('Gather every project info') {
         loggingUtils.echoBanner("GATHERING ALL PROJECT INFORMATION FOR ${groupId} PROJECTS IN ${cicdMasterNamespace}")
 

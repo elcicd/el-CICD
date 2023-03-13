@@ -8,22 +8,22 @@ export _YES='Yes'
 export _NO='No'
 
 _bootstrap_el_cicd() {
-    if [[ -z "${ONBOARDING_MASTER_NAMESPACE}" ]]
+    if [[ -z "${EL_CICD_MASTER_NAMESPACE}" ]]
     then
         echo "The el-CICD master project must be defined in ${ROOT_CONFIG_FILE}"
-        echo "Set the value of ONBOARDING_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} and rerun."
+        echo "Set the value of EL_CICD_MASTER_NAMESPACE ${ROOT_CONFIG_FILE} and rerun."
         echo "Exiting."
         exit 1
     fi
 
     __gather_and_confirm_bootstrap_info_with_user
 
-    if [[ ${INSTALL_KUBESEAL} == ${_YES} ]]
+    if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
     then
         _install_sealed_secrets
     fi
 
-    if [[ -z ${UPDATE_EL_CICD_JENKINS} || ${UPDATE_EL_CICD_JENKINS} == ${_YES} ]]
+    if [[ -z ${UPDATE_EL_CICD_JENKINS_MASTER} || ${UPDATE_EL_CICD_JENKINS_MASTER} == ${_YES} ]]
     then
         _build_el_cicd_jenkins_image
         sleep 2
@@ -34,7 +34,7 @@ _bootstrap_el_cicd() {
     __bootstrap_el_cicd_onboarding_server
 
     echo
-    echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS'
+    echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS_MASTER'
     _refresh_credentials
 
     echo
@@ -43,7 +43,7 @@ _bootstrap_el_cicd() {
 
     echo
     echo "el-CICD Onboarding Server Bootstrap Script Complete:"
-    echo "https://${JENKINS_URL}"
+    echo "https://${JENKINS_MASTER_URL}"
 }
 
 _create_and_source_meta_info_file() {
@@ -61,13 +61,13 @@ _create_and_source_meta_info_file() {
     local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd.conf
 
     local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-bootstrap.conf
-    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-default-bootstrap.conf
+    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-default-bootstrap.conf
 
     local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-runtime.conf
-    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-default-runtime.conf
+    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-default-runtime.conf
 
     local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-lab-setup.conf
-    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/el-cicd-lab-setup.conf
+    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-lab-setup.conf
 
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
@@ -124,25 +124,12 @@ __create_meta_info_file() {
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
-    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
-    local HAS_JENKINS_IMAGE=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    if [[ ! -z ${HAS_JENKINS_IMAGE} ]]
+    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}
+    local HAS_JENKINS_MASTER_IMAGE=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    if [[ ! -z ${HAS_JENKINS_MASTER_IMAGE} ]]
     then
         echo
-        UPDATE_EL_CICD_JENKINS=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
-    fi
-
-    echo
-    if [[ -z $(oc get project ${PROD_DEPLOYMENT_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
-    then
-        INSTALL_PROD_DEPLOYMENT_SERVER=$(_get_yes_no_answer 'Install the el-CICD Prod Deployment Server? [Y/n] ')
-    else
-        REMOVE_PROD_DEPLOYMENT_SERVER=$(_get_yes_no_answer 'Remove the el-CICD Prod Deployment Server (this will not affect already deployed applications)? [Y/n] ')
-
-        if [[ ${REMOVE_PROD_DEPLOYMENT_SERVER} == ${_NO} ]]
-        then
-            INSTALL_PROD_DEPLOYMENT_SERVER=${_YES}
-        fi
+        UPDATE_EL_CICD_JENKINS_MASTER=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
     fi
 
     __summarize_and_confirm_bootstrap_run_with_user
@@ -160,9 +147,9 @@ __bootstrap_el_cicd_onboarding_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     echo
 
-    if [[ -z $(oc get project ${ONBOARDING_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
+    if [[ -z $(oc get project ${EL_CICD_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
     then
-        oc new-project ${ONBOARDING_MASTER_NAMESPACE}
+        oc new-project ${EL_CICD_MASTER_NAMESPACE}
     fi
     sleep 2
 
@@ -173,60 +160,60 @@ __bootstrap_el_cicd_onboarding_server() {
 
 __summarize_and_confirm_bootstrap_run_with_user() {
     echo
-    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
+    echo "===================== ${_BOLD}SUMMARY${_REGULAR} ====================="
     echo
 
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
     echo
-    if [[ ! -z ${SEALED_SECRET_RELEASE_VERSION} ]]
+    echo -n "Sealed Secrets ${SEALED_SECRETS_RELEASE_INFO} ${_BOLD}WILL"
+    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} ]]
     then
-         echo "Install Sealed Secrets version ${SEALED_SECRET_RELEASE_VERSION}? ${INSTALL_KUBESEAL}"
-    else
-        echo "SEALED SECRETS WILL NOT BE INSTALLED.  A Sealed Secrets version in el-CICD configuration is not defined."
+        echo -n " NOT"
     fi
+    echo "${_REGULAR} be installed."
 
     echo
-    echo "Cluster API hostname? '${CLUSTER_API_HOSTNAME}'"
-    echo "Cluster wildcard Domain? '*.${CLUSTER_WILDCARD_DOMAIN}'"
+    echo "Cluster API hostname? ${_BOLD}${CLUSTER_API_HOSTNAME}${_REGULAR}"
+    echo "Cluster wildcard Domain? ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
 
-    if [[ ! -z $(oc get project ${ONBOARDING_MASTER_NAMESPACE} --ignore-not-found -o name) ]]
+    if [[ ! -z $(oc get project ${EL_CICD_MASTER_NAMESPACE} --ignore-not-found -o name) ]]
     then
         echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${ONBOARDING_MASTER_NAMESPACE}' was found".
+        echo "${_BOLD}WARNING:${_REGULAR} '${EL_CICD_MASTER_NAMESPACE}' was found".
         echo
         echo "${_BOLD}The onboarding server environment will be reinstalled.${_REGULAR}"
     else
         echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${ONBOARDING_MASTER_NAMESPACE}' was NOT found".
+        echo "${_BOLD}WARNING:${_REGULAR} '${EL_CICD_MASTER_NAMESPACE}' was NOT found".
         echo
         echo "${_BOLD}The onboarding server environment will be created and installed.${_REGULAR}"
     fi
 
-    if [[ ! -z ${UPDATE_EL_CICD_JENKINS} ]]
+    if [[ ! -z ${UPDATE_EL_CICD_JENKINS_MASTER} ]]
     then
         echo
-        echo "Update/build el-CICD Jenkins image? ${UPDATE_EL_CICD_JENKINS}"
+        echo "Update/build el-CICD Jenkins image? ${_BOLD}${UPDATE_EL_CICD_JENKINS_MASTER}${_REGULAR}"
     else
         echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}' image was not found."
+        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}' image was not found."
         echo
         echo "${_BOLD}el-CICD Jenkins WILL BE BUILT.${_REGULAR}"
     fi
 
-    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(_base_jenkins_agent_exists) == ${_FALSE} ]]
+    if [[ $(_is_true ${JENKINS_MASTER_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(_base_jenkins_agent_exists) == ${_FALSE} ]]
     then
         echo
         echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}' image was not found,"
-        echo "          and JENKINS_SKIP_AGENT_BUILDS is not ${_TRUE}."
+        echo "          and JENKINS_MASTER_SKIP_AGENT_BUILDS is not ${_TRUE}."
         echo
-        echo "${_BOLD}ALL JENKINS AGENTS WILL BE BUILT.${_REGULAR}"
-        MUST_BUILD_JENKINS_AGENTS=${_TRUE}
+        echo "${_BOLD}ALL JENKINS_MASTER AGENTS WILL BE BUILT.${_REGULAR}"
+        MUST_BUILD_JENKINS_MASTER_AGENTS=${_TRUE}
     else
-        if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
+        if [[ $(_is_true ${JENKINS_MASTER_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
         then
             echo
-            echo "JENKINS_SKIP_AGENT_BUILDS is true."
+            echo "JENKINS_MASTER_SKIP_AGENT_BUILDS is true."
         else
             echo
             echo "'${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}' was found."
@@ -235,16 +222,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     fi
 
     echo
-    echo "Update/install el-CICD Prod Deployment Server? ${INSTALL_PROD_DEPLOYMENT_SERVER}"
-
-    if [[ ${REMOVE_PROD_DEPLOYMENT_SERVER} == ${_YES} ]]
-    then
-        echo
-        echo "${_BOLD}WARNING: The el-CICD Prod Deployment Server WILL be removed.!${_REGULAR}"
-    fi
-
-    echo
-    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
+    echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
 
     _confirm_continue
 }
@@ -261,48 +239,48 @@ __create_onboarding_automation_server() {
 
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
-    set -x
+    set -ex
     helm upgrade --atomic --install --history-max=1 \
-        --set-string profiles="{onboarding${JENKINS_PERSISTENT:+,jenkinsPersistent}}" \
-        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
-        --set-string elCicdDefs.JENKINS_URL=${JENKINS_URL} \
+        --set-string profiles="{onboarding${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}}" \
+        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME} \
+        --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
-        --set-string elCicdDefs.CPU_REQUEST=${JENKINS_CPU_REQUEST} \
-        --set-string elCicdDefs.CPU_LIMIT=${JENKINS_CPU_LIMIT} \
-        --set-string elCicdDefs.MEMORY_REQUEST=${JENKINS_MEMORY_REQUEST} \
-        --set-string elCicdDefs.MEMORY_LIMIT=${JENKINS_MEMORY_LIMIT} \
-        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_VOLUME_CAPACITY} \
+        --set-string elCicdDefs.CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
+        --set-string elCicdDefs.CPU_LIMIT=${JENKINS_MASTER_CPU_LIMIT} \
+        --set-string elCicdDefs.MEMORY_REQUEST=${JENKINS_MASTER_MEMORY_REQUEST} \
+        --set-string elCicdDefs.MEMORY_LIMIT=${JENKINS_MASTER_MEMORY_LIMIT} \
+        --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_MASTER_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
-        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/jenkins-casc.yaml \
-        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/jenkins-plugins.txt \
-        -n ${ONBOARDING_MASTER_NAMESPACE} \
+        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
+        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
+        -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-onboarding-values.yaml \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/onboarding-pipeline-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
-    set +x
+    set +ex
 
     echo
-    echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
+    echo 'JENKINS_MASTER UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
 
-    if [[ ! -z $(helm list -n ${ONBOARDING_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
+    if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
     then
         echo
-        helm uninstall jenkins-pipeline-sync -n ${ONBOARDING_MASTER_NAMESPACE}
+        helm uninstall jenkins-pipeline-sync -n ${EL_CICD_MASTER_NAMESPACE}
     fi
 
     echo
-    set -x
+    set -ex
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
-                -n ${ONBOARDING_MASTER_NAMESPACE} \
+                -n ${EL_CICD_MASTER_NAMESPACE} \
                 -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-pipeline-sync-job-values.yaml \
                 jenkins-pipeline-sync \
                 elCicdCharts/elCicdChart
-    set +x
+    set +ex
 }
 
 _helm_repo_add_and_update_elCicdCharts() {

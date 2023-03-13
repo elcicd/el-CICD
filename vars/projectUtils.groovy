@@ -32,7 +32,7 @@ def gatherProjectInfo(def projectId) {
     projectInfo.nfsShares = projectInfo.nfsShares ?: []
     
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
-    projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.CICD_MASTER_NAMESPACE_POSTFIX}"
+    projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
 
     validateProjectInfo(projectInfo)
     

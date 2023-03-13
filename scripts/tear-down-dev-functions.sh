@@ -165,15 +165,13 @@ _remove_image_registry() {
 __remove_image_registry_nfs_share() {
     if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} ]]
     then
-        echo
         echo "Removing ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
 
         sudo rm -rf ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
-        sudo cat /etc/exports | sudo grep -v ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} > /etc/exports
+        sudo bash -c "cat /etc/exports | grep -v ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} > /etc/exports || :"
         sudo exportfs -a
         sudo systemctl restart nfs-server.service
     else
-        echo
         echo "${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
     fi
 }

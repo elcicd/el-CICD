@@ -165,14 +165,14 @@ elCicdTemplates:
   appNames: ${NONPROD_ENVS}
   appName: el-cicd-${}-pull-secret
   kind: Secret
-  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
 
 - templateName: copyResource
   appNames: ${SANDBOX_ENVS}
   srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
   kind: Secret
-  fromNamespace: ${ONBOARDING_MASTER_NAMESPACE}
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
   
 - templateName: persistentVolumeClaim
