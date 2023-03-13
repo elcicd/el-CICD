@@ -49,7 +49,6 @@ def call(Map args) {
         
         sh """
             helm list --all --short -n ${cicdMasterNamespace} | xargs -L1 helm uninstall --wait -n ${cicdMasterNamespace}
-            oc wait --for=delete pods -l 'component in (${componentNames})' -n ${projectInfo.deployToNamespace} --timeout=600s
             
             oc delete project ${cicdMasterNamespace}
         """
