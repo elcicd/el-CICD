@@ -1,5 +1,6 @@
 elCicdDefs:
   EL_CICD_COMPONENT_META_INFO:
+    projectid: ${TEAM_ID}
     projectid: ${PROJECT_ID}
     component: ${COMPONENT_NAME}
     codebase: ${CODE_BASE}

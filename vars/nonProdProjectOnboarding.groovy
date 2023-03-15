@@ -36,4 +36,6 @@ def call(Map args) {
             githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
         }
     }
+    
+    loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.", "CICD Server URL: ${projectInfo.cicdMasterNamespace}")
 }

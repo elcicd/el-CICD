@@ -107,7 +107,7 @@ def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
 
-    elCicdDefs.TEAM_ID = projectInfo.id
+    elCicdDefs.TEAM_ID = projectInfo.teamId
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
