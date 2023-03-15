@@ -68,7 +68,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
     TEMPLATE_FILE = 'jenkinsSshCredentials-template.xml'
     def JENKINS_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
 
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_SERVICE_ACCOUNT_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
 
@@ -95,7 +95,7 @@ def pushSshCredentialsToJenkins(def projectInfo, def keyId, def sshKeyGenVar) {
 }
 
 def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
-    withCredentials([string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.JENKINS_SERVICE_ACCOUNT_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo ''}
             ${curlUtils.getCmd(curlUtils.POST)} ${projectInfo.jenkinsUrls.DELETE_CREDS}/${module.scmDeployKeyJenkinsId}/doDelete
@@ -107,7 +107,7 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
     withCredentials([usernamePassword(credentialsId: credsId,
                                       usernameVariable: 'IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'IMAGE_REGISTRY_PASSWORD'),
-                     string(credentialsId: el.cicd.JENKINS_ACCESS_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
+                     string(credentialsId: el.cicd.JENKINS_SERVICE_ACCOUNT_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
         def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsUserNamePwdCredentials.xml"
         def curlCommand =
             "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"

@@ -1,4 +1,4 @@
-elCicdTemplates-non-prod:
+elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
   appNames:
   - project-onboarding
@@ -22,12 +22,17 @@ elCicdDefs-project-onboarding:
         <hudson.model.ParametersDefinitionProperty>
           <parameterDefinitions>
             <hudson.model.StringParameterDefinition>
+              <name>TEAM</name>
+              <description>Team Name</description>
+              <trim>true</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
               <name>PROJECT_ID</name>
               <description>Project ID</description>
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
             <hudson.model.BooleanParameterDefinition>
-              <name>REBUILD_SDLC_ENVS</name>
+              <name>REBUILD_CICD_ENVS</name>
               <description>Should all SDLC environment(s) be destroyed and recreated from scratch?</description>
               <defaultValue>false</defaultValue>
             </hudson.model.BooleanParameterDefinition>
@@ -51,7 +56,8 @@ elCicdDefs-project-onboarding:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineName: '${APP_NAME}',
                       projectId: params.PROJECT_ID,
-                      rebuildSdlcEnvs: params.REBUILD_SDLC_ENVS]
+                      team: params.TEAM,
+                      rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
           el.node(args) {                    
               nonProdProjectOnboarding(args)
           }
@@ -155,7 +161,7 @@ elCicdDefs-delete-cicd-server:
         <hudson.model.ParametersDefinitionProperty>
           <parameterDefinitions>
             <hudson.model.StringParameterDefinition>
-              <name>GROUP_ID</name>
+              <name>TEAM</name>
               <description>Group ID</description>
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
@@ -177,7 +183,7 @@ elCicdDefs-delete-cicd-server:
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineName: '${APP_NAME}',
-                      groupId: params.GROUP_ID]
+                      team: params.TEAM]
           el.node(args) {
               cicdServerDeletion(args)
           }

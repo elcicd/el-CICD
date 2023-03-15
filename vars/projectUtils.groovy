@@ -4,20 +4,21 @@
  * General pipeline utilities
  */
  
-def gatherProjectInfoStage(def projectId) {
+def gatherProjectInfoStage(def team, def projectId) {
     def projectInfo
     stage('Gather project information') {
-        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId}")
+        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId} IN ${team}")
         
-        projectInfo = gatherProjectInfo(projectId)
+        projectInfo = gatherProjectInfo(team, projectId)
     }
     
     return projectInfo
 }
 
-def gatherProjectInfo(def projectId) {        
-    def projectInfo = readProjectYaml(projectId)
+def gatherProjectInfo(def team, def projectId) {        
+    def projectInfo = readProjectYaml(team, projectId)
 
+    projectInfo.team = team
     projectInfo.id = projectId
     
     projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
@@ -32,19 +33,19 @@ def gatherProjectInfo(def projectId) {
     projectInfo.nfsShares = projectInfo.nfsShares ?: []
     
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
-    projectInfo.cicdMasterNamespace = "${projectInfo.defaultRbacGroup}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
+    projectInfo.cicdMasterNamespace = "${projectInfo.team}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
 
     validateProjectInfo(projectInfo)
     
     return projectInfo
 }
 
-def readProjectYaml(def projectId) {
+def readProjectYaml(def team, def projectId) {
     assert projectId
     
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def projectFile = findFiles(glob: "**/${projectId}.yaml")
+        def projectFile = findFiles(glob: "**/team/${projectId}.yaml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.json")
 
@@ -52,7 +53,7 @@ def readProjectYaml(def projectId) {
             projectInfo = readYaml file: projectFile[0].path
         }
         else {
-            loggingUtils.errorBanner("PROJECT NOT FOUND: ${projectId}")
+            loggingUtils.errorBanner("TEAM/PROJECT NOT FOUND: ${team}/${projectId}")
         }
     }
 

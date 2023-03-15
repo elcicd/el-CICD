@@ -35,7 +35,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-            --set-string elCicdDefs.JENKINS_MASTER_URL=${jenkinsUrl} \
+            --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
             --set-string elCicdDefs.CPU_REQUEST=${el.cicd.JENKINS_CPU_REQUEST} \
             --set-string elCicdDefs.CPU_LIMIT=${el.cicd.JENKINS_CPU_LIMIT} \
@@ -43,9 +43,9 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.MEMORY_LIMIT=${el.cicd.JENKINS_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-cicd-server-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.defaultRbacGroup}-jenkins-cicd-server \
+            ${projectInfo.team}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
 
@@ -73,7 +73,7 @@ def setupProjectCicdResources(def projectInfo) {
         helm upgrade --install --history-max=1 \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-cicd-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \

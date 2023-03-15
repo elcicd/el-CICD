@@ -19,7 +19,7 @@ _refresh_credentials() {
     local SA_SECRET_NAME=$(oc get secrets -o custom-columns=:.metadata.name -n ${EL_CICD_MASTER_NAMESPACE} | grep -m 1 jenkins-token)
     local SA_TOKEN="$(oc get secrets ${SA_SECRET_NAME} -o custom-columns=:.data.token -n ${EL_CICD_MASTER_NAMESPACE} | tr -d '[:space:]')"
     echo ${SA_TOKEN} | base64 -d > ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}
-    _push_access_token_to_jenkins ${JENKINS_MASTER_URL} ${JENKINS_ACCESS_TOKEN_ID} ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}
+    _push_access_token_to_jenkins ${JENKINS_MASTER_URL} ${JENKINS_SERVICE_ACCOUNT_TOKEN_ID} ${SECRET_FILE_TEMP_DIR}/${SA_SECRET_NAME}
 
     echo
     echo 'Pushing el-CICD git site wide READ/WRITE token to Jenkins'

@@ -10,7 +10,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
 
     stage('Uninstall project SDLC for baseline reinstall, if requested') {
-        if (args.rebuildSdlcEnvs) {
+        if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
             sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
