@@ -17,7 +17,7 @@ def setupProjectCicdServer(def projectInfo) {
     def rbacGroups = projectInfo.rbacGroups.toMapString()
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
-    def jenkinsUrl = "jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    def jenkinsUrl = "${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
     profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
@@ -44,9 +44,9 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${el.cicd.JENKINS_AGENT_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
             -n ${projectInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-cicd-server-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-team-server-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.teamId}-jenkins-cicd-server \
+            ${projectInfo.cicdMasterNamespace} \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
 
@@ -74,7 +74,7 @@ def setupProjectCicdResources(def projectInfo) {
         helm upgrade --install --history-max=1 \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-cicd-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/non-prod-cicd-setup-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/cicd-setup-values.yaml \
