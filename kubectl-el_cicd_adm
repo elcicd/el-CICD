@@ -79,7 +79,7 @@ __main() {
                 ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
-                EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '__bootstrap_lab_environment')
+                EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '_bootstrap_lab_environment')
                 shift 1
             ;;
 

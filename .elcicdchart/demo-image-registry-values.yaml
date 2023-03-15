@@ -53,9 +53,7 @@ elCicdTemplates:
 - templateName: limitRange
   appName: demo-image-registry
   limits:
-  - default:
-      cpu: 1000m
-    defaultRequest:
+  - defaultRequest:
       cpu: 200m
     type: Container
   

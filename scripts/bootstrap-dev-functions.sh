@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-__bootstrap_lab_environment() {
+_bootstrap_lab_environment() {
     set -eE
     
     echo
@@ -198,7 +198,7 @@ __bootstrap_clean_crc() {
     echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
     
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
+    CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
 
     echo
     ${CRC_EXEC} setup <<< 'y'
@@ -207,12 +207,14 @@ __bootstrap_clean_crc() {
 }
 
 _start_crc() {
+    CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
     then    
         echo
-        echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, and ${CRC_DISK}Gi disk"
+        echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
         echo "[WARNING: use el-CICD CLI to restart your CRC instance if necessary (--start flag), since it isn't guaranteed to remember these values on restart.]"
         echo
+        ${CRC_EXEC} config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
         ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
 
         eval $(${CRC_EXEC} oc-env)

@@ -245,10 +245,11 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
-        --set-string elCicdDefs.CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
-        --set-string elCicdDefs.CPU_LIMIT=${JENKINS_MASTER_CPU_LIMIT} \
-        --set-string elCicdDefs.MEMORY_REQUEST=${JENKINS_MASTER_MEMORY_REQUEST} \
-        --set-string elCicdDefs.MEMORY_LIMIT=${JENKINS_MASTER_MEMORY_LIMIT} \
+        --set-string elCicdDefs.JENKINS_CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
+        --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${JENKINS_MASTER_MEMORY_LIMIT} \
+        --set-string elCicdDefs.JENKINS_AGENT_CPU_REQUEST=${JENKINS_AGENT_CPU_REQUEST} \
+        --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${JENKINS_AGENT_MEMORY_REQUEST} \
+        --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${JENKINS_AGENT_MEMORY_LIMIT} \
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_MASTER_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \

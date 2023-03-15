@@ -165,6 +165,7 @@ _confirm_continue() {
     echo
     echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
+    read -t 1 -n 256 discard 
     read CONTINUE
     if [[ ${CONTINUE} != ${_YES} ]]
     then
@@ -175,6 +176,7 @@ _confirm_continue() {
 }
 
 _get_yes_no_answer() {
+    read -t 1 -n 256 discard 
     read -p "${1}" -n 1 USER_ANSWER
     >&2 echo
 

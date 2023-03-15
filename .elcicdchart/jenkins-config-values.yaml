@@ -82,9 +82,10 @@ elCicdTemplates:
     timeoutSeconds: 240
   resources:
     limits:
-      memory: ${MEMORY_LIMIT}
+      memory: ${JENKINS_MEMORY_LIMIT}
     requests:
-      memory: ${MEMORY_REQUEST}
+      memory: ${JENKINS_MEMORY_LIMIT}
+      cpu: ${JENKINS_CPU_REQUEST}
   volumeMounts: ${JENKINS_VOLUME_MNTS}
   volumes: ${JENKINS_VOLUMES}
 
@@ -92,9 +93,10 @@ elCicdTemplates:
   appName: jenkins
   limits:
   - default:
-      cpu: ${CPU_LIMIT}
+      memory: ${JENKINS_AGENT_MEMORY_LIMIT}
     defaultRequest:
-      cpu: ${CPU_REQUEST}
+      memory: ${JENKINS_AGENT_MEMORY_REQUEST}
+      cpu: ${JENKINS_AGENT_CPU_REQUEST}
     type: Container
 
 - templateName: configMap
