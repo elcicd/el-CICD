@@ -3,47 +3,46 @@
  *
  * General pipeline utilities
  */
- 
+
 def gatherProjectInfoStage(def teamId, def projectId) {
     def projectInfo
     stage('Gather project information') {
         loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId} IN ${teamId}")
-        
+
         projectInfo = gatherProjectInfo(teamId, projectId)
     }
-    
+
     return projectInfo
 }
 
-def gatherProjectInfo(def teamId, def projectId) {        
+def gatherProjectInfo(def teamId, def projectId) {
+    assert teamId && projectId : "teamId (${teamId}) and (${projectId}) cannot be empty'
+    
     def projectInfo = readProjectYaml(teamId, projectId)
 
     projectInfo.teamId = teamId
     projectInfo.id = projectId
-    
+
     projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
-    
+
     initProjectModuleData(projectInfo)
-    
+
     initProjectEnvNamespaceData(projectInfo)
-    
+
     initProjectSandboxData(projectInfo)
 
     projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
     projectInfo.nfsShares = projectInfo.nfsShares ?: []
-    
+
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
     projectInfo.cicdMasterNamespace = "${projectInfo.teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
 
     validateProjectInfo(projectInfo)
-    
+
     return projectInfo
 }
 
 def readProjectYaml(def teamId, def projectId) {
-    assert teamId
-    assert projectId
-    
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def projectFile = findFiles(glob: "**/teamId/${projectId}.yaml")
@@ -64,10 +63,10 @@ def readProjectYaml(def teamId, def projectId) {
 def initProjectModuleData(def projectInfo) {
     projectInfo.components = projectInfo.components ?: []
     projectInfo.components.each { it.isComponent = true }
-    
+
     projectInfo.artifacts = projectInfo.artifacts ?: []
     projectInfo.artifacts.each { it.isArtifact = true }
-    
+
     projectInfo.testModules = projectInfo.testModules ?: []
     projectInfo.testModules.each { it.isTestModule = true }
 
@@ -150,7 +149,7 @@ def initProjectSandboxData(def projectInfo) {
             projectInfo.sandboxEnvs << sandboxEnv
             projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
         }
-        
+
         projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
     }
 }
@@ -158,14 +157,14 @@ def initProjectSandboxData(def projectInfo) {
 def setProjectReleaseVersion(def projectInfo, def releaseCandidateTag) {
     assert releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATE_TAG_REGEX:
         "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATE_TAG_REGEX}: ${releaseCandidateTag}"
-        
+
     projectInfo.releaseCandidateTag = releaseCandidateTag
     projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${releaseCandidateTag}"
 }
 
 def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroups : 'missing rbacGroups'
-    
+
     def errMsg = "missing ${projectInfo.devEnv} rbacGroup: this is the default RBAC group for all environments if not otherwise specified"
     assert projectInfo.defaultRbacGroup : errMsg
 
