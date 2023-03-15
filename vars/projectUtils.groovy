@@ -45,7 +45,7 @@ def gatherProjectInfo(def teamId, def projectId) {
 def readProjectYaml(def teamId, def projectId) {
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def projectFile = findFiles(glob: "**/teamId/${projectId}.yaml")
+        def projectFile = findFiles(glob: "**/${teamId}/${projectId}.yaml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.json")
 
@@ -53,7 +53,7 @@ def readProjectYaml(def teamId, def projectId) {
             projectInfo = readYaml file: projectFile[0].path
         }
         else {
-            loggingUtils.errorBanner("TEAM_ID/PROJECT NOT FOUND: ${teamId}/${projectId}")
+            loggingUtils.errorBanner("PROJECT NOT FOUND: ${teamId}/${projectId}")
         }
     }
 
