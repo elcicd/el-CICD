@@ -97,7 +97,7 @@ def node(Map args, Closure body) {
                 runHookScript(el.cicd.PRE, args)
 
                 if (args.projectId) {
-                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.projectId)
+                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.teamId, args.projectId)
                 }
 
                 runHookScript(el.cicd.INIT, args)

@@ -4,21 +4,21 @@
  * General pipeline utilities
  */
  
-def gatherProjectInfoStage(def team, def projectId) {
+def gatherProjectInfoStage(def teamId, def projectId) {
     def projectInfo
     stage('Gather project information') {
-        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId} IN ${team}")
+        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId} IN ${teamId}")
         
-        projectInfo = gatherProjectInfo(team, projectId)
+        projectInfo = gatherProjectInfo(teamId, projectId)
     }
     
     return projectInfo
 }
 
-def gatherProjectInfo(def team, def projectId) {        
-    def projectInfo = readProjectYaml(team, projectId)
+def gatherProjectInfo(def teamId, def projectId) {        
+    def projectInfo = readProjectYaml(teamId, projectId)
 
-    projectInfo.team = team
+    projectInfo.teamId = teamId
     projectInfo.id = projectId
     
     projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
@@ -33,19 +33,20 @@ def gatherProjectInfo(def team, def projectId) {
     projectInfo.nfsShares = projectInfo.nfsShares ?: []
     
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
-    projectInfo.cicdMasterNamespace = "${projectInfo.team}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
+    projectInfo.cicdMasterNamespace = "${projectInfo.teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
 
     validateProjectInfo(projectInfo)
     
     return projectInfo
 }
 
-def readProjectYaml(def team, def projectId) {
+def readProjectYaml(def teamId, def projectId) {
+    assert teamId
     assert projectId
     
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def projectFile = findFiles(glob: "**/team/${projectId}.yaml")
+        def projectFile = findFiles(glob: "**/teamId/${projectId}.yaml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.json")
 
@@ -53,7 +54,7 @@ def readProjectYaml(def team, def projectId) {
             projectInfo = readYaml file: projectFile[0].path
         }
         else {
-            loggingUtils.errorBanner("TEAM/PROJECT NOT FOUND: ${team}/${projectId}")
+            loggingUtils.errorBanner("TEAM_ID/PROJECT NOT FOUND: ${teamId}/${projectId}")
         }
     }
 

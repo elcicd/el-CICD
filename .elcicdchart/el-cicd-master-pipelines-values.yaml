@@ -22,7 +22,7 @@ elCicdDefs-project-onboarding:
         <hudson.model.ParametersDefinitionProperty>
           <parameterDefinitions>
             <hudson.model.StringParameterDefinition>
-              <name>TEAM</name>
+              <name>TEAM_ID</name>
               <description>Team Name</description>
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
@@ -56,7 +56,7 @@ elCicdDefs-project-onboarding:
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineName: '${APP_NAME}',
                       projectId: params.PROJECT_ID,
-                      team: params.TEAM,
+                      teamId: params.TEAM_ID,
                       rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
           el.node(args) {                    
               nonProdProjectOnboarding(args)
@@ -118,7 +118,7 @@ elCicdDefs-delete-project:
             </hudson.model.StringParameterDefinition>
             <hudson.model.BooleanParameterDefinition>
               <name>DELETE_JENKINS_CICD_SERVER</name>
-              <description>Should the team's Jenkins CICD CICD Server be deleted, too?</description>
+              <description>Should the teamId's Jenkins CICD CICD Server be deleted, too?</description>
               <defaultValue>false</defaultValue>
             </hudson.model.BooleanParameterDefinition>
           </parameterDefinitions>
@@ -161,7 +161,7 @@ elCicdDefs-delete-cicd-server:
         <hudson.model.ParametersDefinitionProperty>
           <parameterDefinitions>
             <hudson.model.StringParameterDefinition>
-              <name>TEAM</name>
+              <name>TEAM_ID</name>
               <description>Group ID</description>
               <trim>true</trim>
             </hudson.model.StringParameterDefinition>
@@ -183,7 +183,7 @@ elCicdDefs-delete-cicd-server:
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
                       pipelineName: '${APP_NAME}',
-                      team: params.TEAM]
+                      teamId: params.TEAM_ID]
           el.node(args) {
               cicdServerDeletion(args)
           }

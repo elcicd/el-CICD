@@ -45,7 +45,7 @@ def setupProjectCicdServer(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-cicd-server-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.team}-jenkins-cicd-server \
+            ${projectInfo.teamId}-jenkins-cicd-server \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
 
@@ -59,7 +59,7 @@ def setupProjectCicdServer(def projectInfo) {
 def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
 
-    def projectDefs = getSldcConfigValues(projectInfo)
+    def projectDefs = getCicdConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
     def cicdConfigFile = "cicd-config-values.yaml"
@@ -103,16 +103,20 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
     """
 }
 
-def getSldcConfigValues(def projectInfo) {
+def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
-
-    cicdConfigValues.elCicdNamespaces = []
-    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
-    if (projectInfo.sandboxNamespaces) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
-    }
-
     elCicdDefs = [:]
+
+    elCicdDefs.TEAM_ID = projectInfo.id
+    elCicdDefs.PROJECT_ID = projectInfo.id
+    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
+    elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
+    elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
+    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
+    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
+    elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
     elCicdDefs.NONPROD_ENVS = []
     elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.DEV_ENV = projectInfo.devEnv
@@ -126,16 +130,12 @@ def getSldcConfigValues(def projectInfo) {
     elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"<string>${it}</string>" }
     elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projectInfo.preProdEnv}</string>")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join('')
-
-    elCicdDefs.PROJECT_ID = projectInfo.id
-    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
-    elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
-    elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
-    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
-    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
-    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
-    elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
+    
+    cicdConfigValues.elCicdNamespaces = []
+    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+    if (projectInfo.sandboxNamespaces) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+    }
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }

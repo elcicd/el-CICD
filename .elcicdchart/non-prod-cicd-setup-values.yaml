@@ -2,22 +2,23 @@ elCicdDefs:
   BUILD_COMPONENT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     component: ${BASE_APP_NAME}
-    jenkins-pipeline: 'true'  
-    jenkins-build-pipeline: 'true'  
+    jenkins-pipeline: 'true'
+    jenkins-build-pipeline: 'true'
   BUILD_ARTIFACT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     artifact: ${BASE_APP_NAME}
-    jenkins-pipeline: 'true'  
-    jenkins-build-pipeline: 'true'  
+    jenkins-pipeline: 'true'
+    jenkins-build-pipeline: 'true'
   SHARED_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
-    jenkins-shared-pipeline: 'true'  
+    jenkins-shared-pipeline: 'true'
   COMMON_BUILD_ARGS: |-
+    teamId: '${TEAM_ID}',
+    projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
     isBuild: true,
     pipelineName: '${APP_NAME}',
-    projectId: '${PROJECT_ID}',
     scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
     <hudson.model.ParametersDefinitionProperty>
@@ -31,7 +32,8 @@ elCicdDefs:
     </hudson.model.ParametersDefinitionProperty>
   RELEASE_CANDIDATE_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT},
-                pipelineName: '${APP_NAME}',
+                pipelineName: '${APP_NAME}',,
+                teamId: '${TEAM_ID}',
                 projectId: ${PROJECT_ID},
                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PROJECT_FOLDER_DATA:
@@ -45,15 +47,16 @@ elCicdDefs:
     path: ${PROJECT_ID}/jobs/${APP_NAME}/config.xml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
-  
+
 elCicdTemplates:
 - templateName: configMap
   appName: ${PROJECT_ID}-jenkins-folder
   labels:
+    teamid: ${TEAM_ID}
     projectid: ${PROJECT_ID}
     jenkins-folder: 'true'
   data: ${PROJECT_FOLDER_DATA}
-      
+
 - templateName: configMap
   appNames: ${BUILD_COMPONENT_PIPELINES}
   appName: ${}-build-component
@@ -102,9 +105,10 @@ elCicdTemplates:
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
     ARGS: |-
-      def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_APP_NAME}',
+      def args = [teamId: '${TEAM_ID}',
                   projectId: '${PROJECT_ID}',
+                  agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                  pipelineName: '${BASE_APP_NAME}',
                   ${EXTRA_ARGS}]
     EL_CICD_API_CALL: |-
       ${ARGS}
@@ -145,7 +149,7 @@ elCicdTemplates:
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
   data: ${PIPELINE_CONFIG_MAP_DATA}
-  
+
 - templateName: roleBinding
   appName: ${PROJECT_ID}-edit
   namespaces: ${SDLC_ENVS}
@@ -174,13 +178,12 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
-  
+
 - templateName: persistentVolumeClaim
   anyProfiles:
   - jenkinsAgentPersistent
   appName: jenkins-agent-home
   storageRequest: ${AGENT_VOLUME_CAPACITY}
   accessMode: ReadWriteMany
-  
-  
-  
+
+
