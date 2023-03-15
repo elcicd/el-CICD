@@ -16,7 +16,7 @@ def gatherProjectInfoStage(def teamId, def projectId) {
 }
 
 def gatherProjectInfo(def teamId, def projectId) {
-    assert teamId && projectId : "teamId (${teamId}) and (${projectId}) cannot be empty'
+    assert teamId && projectId : "teamId (${teamId}) and (${projectId}) cannot be empty"
     
     def projectInfo = readProjectYaml(teamId, projectId)
 
