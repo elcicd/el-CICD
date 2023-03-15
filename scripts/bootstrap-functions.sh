@@ -255,9 +255,9 @@ __create_onboarding_automation_server() {
         --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
         --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-onboarding-values.yaml \
+        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-el-cicd-master-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-master-pipelines-values.yaml \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/jenkins-config-values.yaml \
-        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/onboarding-pipeline-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +ex
