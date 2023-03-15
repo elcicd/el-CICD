@@ -18,7 +18,8 @@ def setupProjectCicdServer(def projectInfo) {
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
     def jenkinsUrl = "${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def profiles = el.cicd.OKD_VERSION ? 'cicd,okd' : 'cicd'
+    def profiles = 'cicd,user-group'
+    def profiles = el.cicd.OKD_VERSION ? 'okd' : ''
     profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
     profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
@@ -30,6 +31,7 @@ def setupProjectCicdServer(def projectInfo) {
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string profiles='{${profiles}}' \
+            --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
             --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
