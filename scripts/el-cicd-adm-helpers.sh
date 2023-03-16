@@ -162,10 +162,10 @@ _confirm_logged_into_cluster() {
 }
 
 _confirm_continue() {
+    read -t 1 -n 256 discard 
     echo
     echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
-    read -t 1 -n 256 discard 
     read CONTINUE
     if [[ ${CONTINUE} != ${_YES} ]]
     then

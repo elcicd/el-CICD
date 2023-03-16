@@ -18,8 +18,7 @@ def setupProjectCicdServer(def projectInfo) {
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
     def jenkinsUrl = "${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def profiles = 'cicd,user-group'
-    def profiles = el.cicd.OKD_VERSION ? 'okd' : ''
+    def profiles = 'cicd,user-group' + (el.cicd.OKD_VERSION ? 'okd' : '')
     profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
     profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
