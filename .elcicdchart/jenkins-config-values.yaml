@@ -127,9 +127,9 @@ elCicdTemplates:
 
 - templateName: clusterRoleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
-  anyProfiles:
+  mustHaveAnyProfile:
   - onboarding
-  ignoreAnyProfiles:
+  mustNotHaveAnyProfile:
   - cicd
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -142,10 +142,10 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   - okd
-  ignoreAnyProfiles:
+  mustNotHaveAnyProfile:
   - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -158,9 +158,9 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-edit
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
-  ignoreAnyProfiles:
+  mustNotHaveAnyProfile:
   - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -173,9 +173,9 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${USER_GROUP}-view
-  anyProfiles:
+  mustHaveAnyProfile:
   - user-group
-  ignoreAnyProfiles:
+  mustNotHaveAnyProfile:
   - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -188,10 +188,10 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   - sealed-secrets
-  ignoreAnyProfiles:
+  mustNotHaveAnyProfile:
   - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -203,20 +203,20 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: persistentVolumeClaim
-  anyProfiles:
+  mustHaveAnyProfile:
   - jenkinsPersistent
   appName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteMany
 
 - templateName: configMap
-  anyProfiles:
+  mustHaveAnyProfile:
   - onboarding
   appName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
 
 - templateName: copyResource
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   appName: el-cicd-jenkins-pull-secret
   kind: Secret
@@ -224,7 +224,7 @@ elCicdTemplates:
   toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   appNames: ${SDLC_ENVS}
   appName: el-cicd-${}-pull-secret
@@ -233,7 +233,7 @@ elCicdTemplates:
   toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   appName: ${EL_CICD_META_INFO_NAME}
   kind: ConfigMap
@@ -241,7 +241,7 @@ elCicdTemplates:
   toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
-  anyProfiles:
+  mustHaveAnyProfile:
   - cicd
   appName: ${EL_CICD_BUILD_SECRETS_NAME}
   kind: Secret

@@ -59,14 +59,14 @@ elCicdTemplates:
   
 - templateName: secret
   appNames: ${APP_NAMES}
-  anyProfiles:
+  mustHaveAnyProfile:
   - htpasswd
   stringData:
     htpasswd: ${${APP_NAME}_HTPASSWD}
     
 - templateName: persistentVolume
   appName: ${DEMO_IMAGE_REGISTRY}-nfs
-  anyProfiles:
+  mustHaveAnyProfile:
   - nfs
   storageClassName: ${STORAGE_CLASS_NAME}
   storageCapacity: 10Gi
@@ -78,7 +78,7 @@ elCicdTemplates:
     
 - templateName: persistentVolumeClaim
   appName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
-  anyProfiles:
+  mustHaveAnyProfile:
   - nfs
   storageClassName: ${STORAGE_CLASS_NAME}
   volumeName: ${DEMO_IMAGE_REGISTRY}-nfs

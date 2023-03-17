@@ -124,23 +124,18 @@ __create_meta_info_file() {
 _create_rbac_helpers() {
     if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${SEALED_SECRETS_RELEASE_INFO} ]]
     then
-        SET_PROFILES="--set-string profiles='{${PROFILES}}'"
-        local SEALED_SECRETS_VALUES_FILE="-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/sealed-secrets-rbac-values.yaml"
+        local SET_PROFILES="--set-string profiles='{${PROFILES}}'"
     fi
 
-    local OKD_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/okd-rbac-values.yaml"}
-
-    if [[ ! -z $PROFILES ]]
-    then
-        local 
-    fi
+    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-okd-rbac-values.yaml"}
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
     set -ex
     helm upgrade --atomic --install --history-max=1 \
-        ${SEALED_SECRETS_VALUES_FILE} ${OKD_VALUES_FILE} -n kube-system \
-        el-cicd-rbac-helpers \
+        ${SET_PROFILES} ${OKD_VALUES_FILE} -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-cluster-rbac-values.yaml \
+        -n kube-system \
+        el-cicd-cluster-rbac-resources \
         elCicdCharts/elCicdChart
     set +ex
 }

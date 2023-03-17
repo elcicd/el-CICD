@@ -1,7 +1,7 @@
 templateNames-nfs:
 - templateName: persistentVolume
   appNames: ${NFS_APP_NAMES}
-  anyProfiles:
+  mustHaveAnyProfile:
   - nfs
   storageCapacity: ${STORAGE_CAPACITY}
   accessModes: ${ACESS_MODES}

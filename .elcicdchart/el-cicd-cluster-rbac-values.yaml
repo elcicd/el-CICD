@@ -6,7 +6,7 @@ elCicdTemplates:
 elCicdTemplates-sealed-secrets:
 - templateName: clusterRole
   appName: sealed-secrets-management
-  anyProfiles:
+  mustHaveAnyProfile:
   - sealed-secrets  
   rules:
   - apiGroups:
