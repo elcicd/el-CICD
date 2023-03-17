@@ -27,7 +27,7 @@ __main() {
                 BOOTSTRAP='true'
 
                 EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '_verify_scm_secret_files_exist' '_verify_pull_secret_files_exist')
-                EL_CICD_ADM_COMMANDS+=('_podman_login' '_create_rbac_helpers' '_bootstrap_el_cicd')
+                EL_CICD_ADM_COMMANDS+=('_podman_login' '_bootstrap_el_cicd')
 
                 shift 1
             ;;
@@ -57,7 +57,7 @@ __main() {
             '--refresh-creds' | '-c')
                 ELCICD_ADM_MSG="REFRESH CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_create_rbac_helpers' '_create_env_image_registry_secrets' '_refresh_redentials')
+                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_redentials')
                 shift 1
             ;;
 
@@ -71,7 +71,7 @@ __main() {
             '--sealed-secrets' | '-s')
                 ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
 
-                EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets')
+                EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets' '_create_rbac_helpers')
                 shift 1
             ;;
 

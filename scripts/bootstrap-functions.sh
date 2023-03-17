@@ -122,9 +122,10 @@ __create_meta_info_file() {
 }
 
 _create_rbac_helpers() {
-    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${SEALED_SECRETS_RELEASE_INFO} ]]
+    local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
+    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${HAS_SEALED_SECRETS} ]]
     then
-        local SET_PROFILES="--set-string profiles='{${PROFILES}}'"
+        local SET_PROFILES='--set-string profiles={sealed-secrets}'
     fi
 
     local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-okd-rbac-values.yaml"}
@@ -171,6 +172,8 @@ __bootstrap_el_cicd_onboarding_server() {
         oc new-project ${EL_CICD_MASTER_NAMESPACE}
     fi
     sleep 2
+    
+    _create_rbac_helpers
 
     _create_env_image_registry_secrets
 
@@ -248,6 +251,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 
 __create_onboarding_automation_server() {
     echo
+    echo 'Installing el-CICD Master server'
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -ex
     helm upgrade --atomic --install --history-max=1 \
@@ -274,16 +278,18 @@ __create_onboarding_automation_server() {
     set +ex
 
     echo
-    echo 'JENKINS_MASTER UP: sleep for 5 seconds to make sure server REST api is ready'
+    echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
 
     if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
     then
         echo
+        echo 'Removing old Jenkins pipeline sync job.'
         helm uninstall jenkins-pipeline-sync -n ${EL_CICD_MASTER_NAMESPACE}
     fi
 
     echo
+    echo 'Running Jenkins pipeline sync job for el-CICD Master.'
     set -ex
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \

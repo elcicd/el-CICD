@@ -72,8 +72,8 @@ _check_upgrade_sealed_secrets() {
 
 _check_sealed_secrets() {
     echo
-    local CURRENT_SS_VERSION=$(helm list --short --filter 'sealed-secrets')
-    if [[ ${CURRENT_SS_VERSION} != 'null' ]]
+    local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
+    if [[ ! -z ${HAS_SEALED_SECRETS} ]]
     then
         echo "CURRENTLY INSTALLED SEALED SECRETS:"
         helm list --filter 'sealed-secrets' --time-format "2006-01-02" -n kube-system
