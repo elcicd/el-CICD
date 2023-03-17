@@ -4,7 +4,7 @@ elCicdDefs:
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
-  
+
 elCicdDefs-jenkinsPersistent:
   JENKINS_VOLUME_MNTS:
   - mountPath: /var/lib/jenkins
@@ -24,7 +24,7 @@ elCicdTemplates:
   args:
   - -c
   - if [[ -f $JENKINS_PLUGINS_FILE ]];
-    then 
+    then
         echo "Installing Jenkins Plugins:" | tee -a /var/log/jenkins-startup.log;
         cat $JENKINS_PLUGINS_FILE | tee -a /var/log/jenkins-startup.log;
 
@@ -103,10 +103,10 @@ elCicdTemplates:
   appName: openshift-jenkins-login-plugin-config
   data:
     Overall-Administer: edit
-    Overall-Read: view
-    Job-Build: view
-    Job-Cancel: view
-    Job-Read: view
+    Overall-Read: elcicd-user
+    Job-Build: elcicd-user
+    Job-Cancel: elcicd-user
+    Job-Read: elcicd-user
 
 - templateName: service
   appName: ${JENKINS_SERVICE_NAME}
@@ -140,7 +140,7 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: clusterRoleBinding
+- templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
   anyProfiles:
   - cicd
@@ -185,18 +185,8 @@ elCicdTemplates:
   - kind: Group
     name: ${GROUP_NAME}
     apiGroup: rbac.authorization.k8s.io
-    
-- templateName: clusterRole
-  appName: sealed-secrets-management
-  anyProfiles:
-  - cicd
-  - sealed-secrets
-  rules:
-  - apiGroups: ["bitnami.com"]
-    resources: ["sealedsecrets"]
-    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
 
-- templateName: clusterRoleBinding
+- templateName: roleBinding
   appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
   anyProfiles:
   - cicd
@@ -241,7 +231,7 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-    
+
 - templateName: copyResource
   anyProfiles:
   - cicd
@@ -249,7 +239,7 @@ elCicdTemplates:
   kind: ConfigMap
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-    
+
 - templateName: copyResource
   anyProfiles:
   - cicd
@@ -257,5 +247,5 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-  
-  
+
+

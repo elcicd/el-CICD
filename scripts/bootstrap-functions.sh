@@ -121,6 +121,30 @@ __create_meta_info_file() {
     sleep 2
 }
 
+_create_rbac_helpers() {
+    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${SEALED_SECRETS_RELEASE_INFO} ]]
+    then
+        SET_PROFILES="--set-string profiles='{${PROFILES}}'"
+        local SEALED_SECRETS_VALUES_FILE="-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/sealed-secrets-rbac-values.yaml"
+    fi
+
+    local OKD_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/okd-rbac-values.yaml"}
+
+    if [[ ! -z $PROFILES ]]
+    then
+        local 
+    fi
+
+    echo
+    echo 'Installing el-CICD RBAC helpers.'
+    set -ex
+    helm upgrade --atomic --install --history-max=1 \
+        ${SEALED_SECRETS_VALUES_FILE} ${OKD_VALUES_FILE} -n kube-system \
+        el-cicd-rbac-helpers \
+        elCicdCharts/elCicdChart
+    set +ex
+}
+
 __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
@@ -228,15 +252,6 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 }
 
 __create_onboarding_automation_server() {
-    echo
-    set -e
-    if [[ ${OKD_VERSION} ]]
-    then
-        echo
-        echo "RUNNING ON OKD.  APPLYING SCC nonroot-builder:"
-        oc apply -f ${EL_CICD_RESOURCES_DIR}/nonroot-builder.yaml
-    fi
-
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -ex

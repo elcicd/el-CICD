@@ -1,0 +1,23 @@
+elCicdTemplates:
+- templateName: clusterRole
+  appName: elcicd-user
+  rules: []
+
+elCicdTemplates-sealed-secrets:
+- templateName: clusterRole
+  appName: sealed-secrets-management
+  anyProfiles:
+  - sealed-secrets  
+  rules:
+  - apiGroups:
+    - bitnami.com
+    resources:
+    - sealedsecrets
+    verbs:
+    - get
+    - list
+    - watch
+    - create
+    - patch
+    - update
+    - delete

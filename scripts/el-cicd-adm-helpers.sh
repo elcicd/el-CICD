@@ -103,7 +103,7 @@ _execute_kubectl_el_cicd_adm() {
     echo
     echo ${ELCICD_ADM_MSG}
     sleep 2
-    
+
     for COMMAND in ${COMMANDS[@]}
     do
         set -E
@@ -162,7 +162,7 @@ _confirm_logged_into_cluster() {
 }
 
 _confirm_continue() {
-    read -t 1 -n 256 discard 
+    read -t 0.1 -n 256 discard || :
     echo
     echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
     CONTINUE='N'
@@ -176,7 +176,7 @@ _confirm_continue() {
 }
 
 _get_yes_no_answer() {
-    read -t 1 -n 256 discard 
+    read -t 0.1 -n 256 discard || :
     read -p "${1}" -n 1 USER_ANSWER
     >&2 echo
 
