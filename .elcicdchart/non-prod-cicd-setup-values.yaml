@@ -152,8 +152,7 @@ elCicdTemplates:
 
 - templateName: roleBinding
   appName: ${PROJECT_ID}-edit
-  namespaces: ${SDLC_ENVS}
-  namespace: ${PROJECT_ID}-${}
+  namespaces: ${CICD_NAMESPACES}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
@@ -180,7 +179,7 @@ elCicdTemplates:
   toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
 
 - templateName: persistentVolumeClaim
-  mustHaveAnyProfile:
+  anyProfiles:
   - jenkinsAgentPersistent
   appName: jenkins-agent-home
   storageRequest: ${AGENT_VOLUME_CAPACITY}

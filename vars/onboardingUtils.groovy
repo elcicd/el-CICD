@@ -33,7 +33,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
-            --set-string elCicdDefs.SDLC_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
+            --set-string elCicdDefs.CICD_NAMESPACES='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
@@ -156,13 +156,16 @@ def getCicdConfigValues(def projectInfo) {
             ['CODE_BASE' : art.codeBase, 
              'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache)}" ]
     }
+    
+    elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
 
-    elCicdDefs.SDLC_ENVS = []
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.nonProdEnvs)
-    elCicdDefs.SDLC_ENVS.addAll(projectInfo.sandboxEnvs)
+    def cicdEnvs = projectInfo.nonProdEnvs.collect()
+    cicdEnvs.addAll(projectInfo.sandboxEnvs)
     def rqProfiles = [:]
-    elCicdDefs.SDLC_ENVS.each { env ->
-        def rqNames = projectInfo.resourceQuotas[env] ?: (projectInfo.resourceQuotas[el.cicd.SANDBOX] ?: projectInfo.resourceQuotas[el.cicd.DEFAULT])
+    cicdEnvs.each { env ->
+        def rqNames = projectInfo.resourceQuotas[env]
+        rqNames = !rqNames && !projectInfo.nonProdNamespaces[env] ? projectInfo.resourceQuotas[el.cicd.SANDBOX] : rqNames
+        rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
         rqNames?.each { rqName ->
             elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
             elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env])
@@ -170,13 +173,13 @@ def getCicdConfigValues(def projectInfo) {
         }
     }
 
-    elCicdDefs.SDLC_ENVS.each { env ->
+    cicdEnvs.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
-        elCicdDefs["${projectInfo.id}-${env}_GROUP"] = group
+        def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
+        elCicdDefs["${namespace}_GROUP"] = group
     }
 
-    cicdConfigValues.profiles = el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']
-    cicdConfigValues.profiles.addAll(rqProfiles.keySet())
+    cicdConfigValues.profiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
     
     if (hasJenkinsAgentPersistent) {
         cicdConfigValues.profiles += 'jenkinsAgentPersistent'

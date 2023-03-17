@@ -7,7 +7,9 @@ elCicdTemplates-sealed-secrets:
 - templateName: clusterRole
   appName: sealed-secrets-management
   mustHaveAnyProfile:
-  - sealed-secrets  
+  - sealed-secrets
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
   rules:
   - apiGroups:
     - bitnami.com

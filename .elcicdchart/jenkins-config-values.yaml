@@ -186,22 +186,6 @@ elCicdTemplates:
     name: ${USER_GROUP}
     apiGroup: rbac.authorization.k8s.io
 
-- templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}-sealed-secrets-management
-  mustHaveAnyProfile:
-  - cicd
-  - sealed-secrets
-  mustNotHaveAnyProfile:
-  - onboarding
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: sealed-secrets-management
-  subjects:
-  - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
-    namespace: ${RELEASE_NAMESPACE}
-
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
   - jenkinsPersistent

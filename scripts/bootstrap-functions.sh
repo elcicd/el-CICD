@@ -134,7 +134,7 @@ _create_rbac_helpers() {
     echo 'Installing el-CICD RBAC helpers.'
     set -ex
     helm upgrade --atomic --install --history-max=1 \
-        ${SET_PROFILES} ${OKD_VALUES_FILE} -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-cluster-rbac-values.yaml \
+        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-cluster-rbac-values.yaml \
         -n kube-system \
         el-cicd-cluster-rbac-resources \
         elCicdCharts/elCicdChart
