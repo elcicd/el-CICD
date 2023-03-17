@@ -210,7 +210,7 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  appNames: ${SDLC_ENVS}
+  appNames: ${CICD_ENVS}
   appName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}

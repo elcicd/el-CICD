@@ -159,10 +159,10 @@ def getCicdConfigValues(def projectInfo) {
     
     elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
 
-    def cicdEnvs = projectInfo.nonProdEnvs.collect()
-    cicdEnvs.addAll(projectInfo.sandboxEnvs)
+    elCicdDefs.CICD_ENVS = projectInfo.nonProdEnvs.collect()
+    elCicdDefs.CICD_ENVS.addAll(projectInfo.sandboxEnvs)
     def rqProfiles = [:]
-    cicdEnvs.each { env ->
+    elCicdDefs.CICD_ENVS.each { env ->
         def rqNames = projectInfo.resourceQuotas[env]
         rqNames = !rqNames && !projectInfo.nonProdNamespaces[env] ? projectInfo.resourceQuotas[el.cicd.SANDBOX] : rqNames
         rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
@@ -173,7 +173,7 @@ def getCicdConfigValues(def projectInfo) {
         }
     }
 
-    cicdEnvs.each { env ->
+    elCicdDefs.CICD_ENVS.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
         elCicdDefs["${namespace}_GROUP"] = group
