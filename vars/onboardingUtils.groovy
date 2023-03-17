@@ -22,6 +22,8 @@ def setupProjectCicdServer(def projectInfo) {
     profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
     profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
+    
+    def cicdEnvs
 
     sh """
         ${shCmd.echo ''}
@@ -33,7 +35,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
-            --set-string elCicdDefs.CICD_NAMESPACES='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
+            --set-string elCicdDefs.CICD_ENVS='{${projectInfo.nonProdNamespaces.keySet().join(',')}}' \
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
@@ -47,7 +49,7 @@ def setupProjectCicdServer(def projectInfo) {
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-team-server-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
-            ${projectInfo.cicdMasterNamespace} \
+            jenkins \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
 
@@ -159,10 +161,10 @@ def getCicdConfigValues(def projectInfo) {
     
     elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
 
-    elCicdDefs.CICD_ENVS = projectInfo.nonProdEnvs.collect()
-    elCicdDefs.CICD_ENVS.addAll(projectInfo.sandboxEnvs)
+    def cicdEnvs = projectInfo.nonProdEnvs.collect()
+    cicdEnvs.addAll(projectInfo.sandboxEnvs)
     def rqProfiles = [:]
-    elCicdDefs.CICD_ENVS.each { env ->
+    cicdEnvs.each { env ->
         def rqNames = projectInfo.resourceQuotas[env]
         rqNames = !rqNames && !projectInfo.nonProdNamespaces[env] ? projectInfo.resourceQuotas[el.cicd.SANDBOX] : rqNames
         rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
@@ -173,7 +175,7 @@ def getCicdConfigValues(def projectInfo) {
         }
     }
 
-    elCicdDefs.CICD_ENVS.each { env ->
+    cicdEnvs.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
         elCicdDefs["${namespace}_GROUP"] = group
