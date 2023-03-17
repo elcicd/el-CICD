@@ -183,7 +183,7 @@ elCicdTemplates:
     name: elcicd-user
   subjects:
   - kind: Group
-    name: ${GROUP_NAME}
+    name: ${USER_GROUP}
     apiGroup: rbac.authorization.k8s.io
 
 - templateName: roleBinding
