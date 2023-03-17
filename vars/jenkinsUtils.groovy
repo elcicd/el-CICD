@@ -28,7 +28,7 @@ def CURL_NO_OUTPUT = '-o /dev/null'
 
 def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls = [:]
-    projectInfo.jenkinsUrls.HOST = "https://jenkins-${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    projectInfo.jenkinsUrls.HOST = "https://${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     projectInfo.jenkinsUrls.CREATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${CREATE_CREDS_PATH}"
     projectInfo.jenkinsUrls.UPDATE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}"
     projectInfo.jenkinsUrls.DELETE_CREDS = "${projectInfo.jenkinsUrls.HOST}/${JENKINS_CREDS_PATH}/doDelete"
