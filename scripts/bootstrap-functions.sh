@@ -145,8 +145,8 @@ __gather_and_confirm_bootstrap_info_with_user() {
     _check_sealed_secrets
 
     IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}
-    local HAS_JENKINS_MASTER_IMAGE=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    if [[ ! -z ${HAS_JENKINS_MASTER_IMAGE} ]]
+    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    if [[ ! -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
         echo
         UPDATE_EL_CICD_JENKINS_MASTER=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
@@ -252,11 +252,17 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 __create_onboarding_automation_server() {
     echo
     echo 'Installing el-CICD Master server'
+    
+    if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
+    then
+        JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    fi
+    
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -ex
     helm upgrade --atomic --install --history-max=1 \
         --set-string profiles="{onboarding${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}}" \
-        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME} \
+        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
         --set-string elCicdDefs.JENKINS_CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
