@@ -28,7 +28,7 @@ def setupProjectCicdServer(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
-        helm upgrade --debug --atomic --install --create-namespace --history-max=1 \
+        helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
