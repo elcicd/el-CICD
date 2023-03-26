@@ -76,7 +76,7 @@ _check_upgrade_install_sealed_secrets() {
 
 _collect_sealed_secret_info() {
     echo
-    local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
+    HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
     if [[ ! -z ${HAS_SEALED_SECRETS} ]]
     then
         echo "CURRENTLY INSTALLED SEALED SECRETS VERSION INFO:"
