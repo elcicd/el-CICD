@@ -9,73 +9,71 @@ __main() {
 
     _load_kubectl_msgs
 
+    _echo_sudo_cluster_admin_warning
+
     local EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_file')
     while [[ $# -gt 0 ]]
     do
         __NEXT_ARG="${1}"
         case "${__NEXT_ARG}" in
-            '--agents' | '-a')
+            '--agents')
                 ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
 
                 EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_agent_images')
                 shift 1
             ;;
 
-            '--bootstrap' | '-b')
-                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD"
-                
-                BOOTSTRAP='true'
-
-                EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '_verify_scm_secret_files_exist' '_verify_pull_secret_files_exist')
-                EL_CICD_ADM_COMMANDS+=('_podman_login' '_bootstrap_el_cicd')
-
-                shift 1
-            ;;
-
-            '--config-file' | '-f' | '--lab-config-file' | '-F')
-                if [[ $# == '--lab-config-file' || $# == '-F' ]]
-                then
-                    EL_CICD_USE_LAB_CONFIG='true'
-                fi
-
-                shift 1
-            ;;
-
-            '--help' | '-h')
+            '--help')
                 echo
                 echo "${EL_CICD_CLI_HELP_MSG}"
                 exit 0
             ;;
 
-            '--jenkins' | '-j')
+            '--jenkins')
                 ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
 
                 EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_image')
                 shift 1
             ;;
 
-            '--refresh-creds' | '-c')
+            '--nonprod' | '-N')
+                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT NON-PROD"
+                
+                EL_CICD_MASTER_NONPROD=${_TRUE}
+
+                shift 1
+            ;;
+
+            '--prod' | '-P')
+                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD"
+                
+                EL_CICD_MASTER_PROD=${_TRUE}
+
+                shift 1
+            ;;
+
+            '--refresh-creds')
                 ELCICD_ADM_MSG="REFRESH CREDENTIALS"
 
                 EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_redentials')
                 shift 1
             ;;
 
-            '--refresh-cicd-creds' | '-C')
+            '--refresh-cicd-creds')
                 ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
 
                 echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
                 shift 1
             ;;
 
-            '--sealed-secrets' | '-s')
-                ELCICD_ADM_MSG="INSTALL SEALED SECRETS"
+            '--sealed-secrets')
+                ELCICD_ADM_MSG="INSTALL/UPGRADE SEALED SECRETS"
 
-                EL_CICD_ADM_COMMANDS=('_check_upgrade_sealed_secrets' '_create_rbac_helpers')
+                EL_CICD_ADM_COMMANDS=('_check_upgrade_install_sealed_secrets' '_create_rbac_helpers')
                 shift 1
             ;;
 
-            '--setup-lab' | '-L')
+            '--setup-lab')
                 ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
@@ -91,7 +89,7 @@ __main() {
                 shift 1
             ;;
 
-            '--tear-down-lab' | '-T')
+            '--tear-down-lab')
                 ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
@@ -119,14 +117,17 @@ __main() {
             ;;
         esac
     done
-
-    echo
-    echo -n 'Loaded the following el-CICD scripts...'
-    echo
-    for FILE in $(echo ${EL_CICD_SCRIPTS} | xargs -n 1 basename)
-    do
-        echo "- ${FILE}"
-    done
+    
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} || ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        EL_CICD_ADM_COMMANDS+=('_helm_repo_add_and_update_elCicdCharts' '_verify_scm_secret_files_exist' '_verify_pull_secret_files_exist')
+        EL_CICD_ADM_COMMANDS+=('_podman_login' '_bootstrap_el_cicd')
+        
+        if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} && ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+        then
+            ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD AND NON-PROD"
+        fi
+    fi
 
     sleep 2
 

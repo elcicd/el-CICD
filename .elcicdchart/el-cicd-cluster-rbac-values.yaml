@@ -1,7 +1,18 @@
 elCicdTemplates:
 - templateName: clusterRole
   appName: elcicd-user
-  rules: []
+  mustHaveEveryProfile:
+  - cicd
+  - okd
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  rules:
+  - apiGroups:
+    - build.openshift.io
+    resources:
+    - jenkins
+    verbs:
+    - elcicd-user
 
 elCicdTemplates-sealed-secrets:
 - templateName: clusterRole

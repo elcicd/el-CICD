@@ -61,24 +61,28 @@ __verify_continue() {
     fi
 }
 
-_check_upgrade_sealed_secrets() {
-    _check_sealed_secrets
+_check_upgrade_install_sealed_secrets() {
+    _collect_sealed_secret_info
+
+    _confirm_upgrade_install_sealed_secrets
 
     if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
     then
         _install_sealed_secrets
+    else
+        exit 0
     fi
 }
 
-_check_sealed_secrets() {
+_collect_sealed_secret_info() {
     echo
     local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
     if [[ ! -z ${HAS_SEALED_SECRETS} ]]
     then
-        echo "CURRENTLY INSTALLED SEALED SECRETS:"
+        echo "CURRENTLY INSTALLED SEALED SECRETS VERSION INFO:"
         helm list --filter 'sealed-secrets' --time-format "2006-01-02" -n kube-system
     else
-        echo 'NO CURRENTLY INSTALLED SEALED SECRETS FOUND'
+        echo 'NO CURRENTLY INSTALLED SEALED SECRETS VERSION FOUND: Use the --sealed-secrets flag to install.'
     fi
 
     local SS_URL='https://bitnami-labs.github.io/sealed-secrets'
@@ -86,15 +90,18 @@ _check_sealed_secrets() {
     then
         SEALED_SECRETS_CHART_VERSION=$(helm show chart sealed-secrets --repo ${SS_URL} | grep version | tr -d 'version: ')
     fi
-    
+
     SEALED_SECRETS_RELEASE_VERSION=$(helm show chart sealed-secrets --version ${SEALED_SECRETS_CHART_VERSION} --repo ${SS_URL} | grep appVersion)
     SEALED_SECRETS_RELEASE_VERSION=$(echo ${SEALED_SECRETS_RELEASE_VERSION} | tr -d 'appVersion: ')
     SEALED_SECRETS_RELEASE_INFO="Helm Chart ${SEALED_SECRETS_CHART_VERSION} / Release ${SEALED_SECRETS_RELEASE_VERSION}"
+}
+
+_confirm_upgrade_install_sealed_secrets() {
     echo
     echo "SEALED SECRETS VERSION TO BE INSTALLED: ${SEALED_SECRETS_RELEASE_INFO}"
 
     echo
-    local MSG="Do you wish to reinstall/upgrade sealed-secrets and kubeseal ${SEALED_SECRETS_RELEASE_INFO}? [Y/n] "
+    local MSG="Do you wish to install/upgrade sealed-secrets and kubeseal to ${SEALED_SECRETS_RELEASE_INFO}? [Y/n] "
     INSTALL_SEALED_SECRETS=$(_get_yes_no_answer "${MSG}")
 }
 
@@ -170,32 +177,59 @@ _push_deploy_key_to_github() {
 }
 
 _create_env_image_registry_secrets() {
-    local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV}"
+    local NONPROD_PULL_SECRET_TYPES="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS//:/ }"
+    local PULL_SECRET_TYPES="JENKINS ${EL_CICD_MASTER_NONPROD:+${NONPROD_PULL_SECRET_TYPES} }${PRE_PROD_ENV}"
+    PULL_SECRET_TYPES="${PULL_SECRET_TYPES:+${PULL_SECRET_TYPES} }${EL_CICD_MASTER_PROD:+${PROD_ENV}}"
+    
+    local SET_FLAGS=$(__create_helm_image_registry_env_flags "${PULL_SECRET_TYPES}") 
+    
+	if [[ ! -z ${EL_CICD_MASTER_NONPROD} && ! -z "$(ls -A ${BUILD_SECRETS_FILE_DIR})" ]]
+    then
+        local PROFILE_FLAG="--set-string elCicdProfiles={builder-secrets}"
+        SET_FLAGS+="${SET_FLAGS:+ }$(_create_builder_secret_flags)"
+    fi
+
     echo
-    echo "Creating the image repository pull secrets for each environment and Jenkins: ${PULL_SECRET_TYPES}"
-
-    for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
-    do
-        local APP_NAME="el-cicd-${PULL_SECRET_TYPE@L}-pull-secret"
-        local APP_NAMES="${APP_NAMES:+$APP_NAMES,}${APP_NAME}"
-
-        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-
-        local SET_FLAGS="${SET_FLAGS:+$SET_FLAGS }--set-file elCicdDefs-${APP_NAME}.USERNAME_PWD=${USERNAME_PWD_FILE}"
-        local SERVER=$(eval echo \${${PULL_SECRET_TYPE}${IMAGE_REGISTRY_POSTFIX}})
-        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.SERVER=${SERVER:-${JENKINS_IMAGE_REGISTRY}}"
-        SET_FLAGS="${SET_FLAGS} --set-string elCicdDefs-${APP_NAME}.PULL_SECRET_TYPE=${PULL_SECRET_TYPE@L}"
-    done
-
+    echo "Creating the pull secrets for image registry types: ${PULL_SECRET_TYPES}"
+    echo
+    local PULL_SECRET_NAMES=$(echo ${PULL_SECRET_TYPES@L} | sed -e 's/\s\+/,/g')
     set -ex
     helm upgrade --create-namespace --atomic --install --history-max=1 \
-        --set-string elCicdDefs.IMAGE_SECRET_APP_NAMES="{${APP_NAMES}}" \
+        ${PROFILE_FLAG}  \
+        --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
+        --set-string elCicdDefs.PULL_SECRET_NAMES="{${PULL_SECRET_NAMES}}" \
         ${SET_FLAGS} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/cicd-image-registry-secrets-values.yaml \
+        -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-pull-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
     set +ex
+}
+
+__create_helm_image_registry_env_flags() {
+    local PULL_SECRET_TYPES=${1}
+
+    for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
+    do
+        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+
+        local SET_FLAGS+="${SET_FLAGS:+ }--set-file elCicdDefs-${PULL_SECRET_TYPE@L}.USERNAME_PWD=${USERNAME_PWD_FILE}"
+        
+        local IMAGE_REGISTRY_URL=$(eval echo \${${PULL_SECRET_TYPE}${IMAGE_REGISTRY_POSTFIX}})
+        local SET_FLAGS+="${SET_FLAGS:+ }--set-string elCicdDefs-${PULL_SECRET_TYPE@L}.IMAGE_REGISTRY_URL=${IMAGE_REGISTRY_URL}"
+    done
+    
+    echo ${SET_FLAGS}
+}
+
+_create_builder_secret_flags() {
+    for BUILDER_SECRET_FILE in ${BUILD_SECRETS_FILE_DIR}/*
+    do
+        local BUILDER_SECRET_KEY=$(basename ${BUILDER_SECRET_FILE})
+        local SET_FLAGS="${SET_FLAGS:+${SET_FLAGS} }--set-file elCicdDefs.BUILDER_SECRET_FILES.${BUILDER_SECRET_KEY//[.]/\\.}=${BUILDER_SECRET_FILE}"
+    done
+    
+    echo ${SET_FLAGS}
 }
 
 _push_access_token_to_jenkins() {
@@ -261,22 +295,6 @@ __push_creds_file_to_jenkins() {
         "${JENKINS_CREDS_URL}/createCredentials"
     curl -fksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${JENKINS_CREDS_FILE} \
         "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
-}
-
-_run_custom_credentials_script() {
-    # $1 -> should be a value of 'prod' or 'non-prod'
-    local CUSTOM_CREDENTIALS_SCRIPT=secrets-${1}.sh
-
-    echo
-    echo "Looking for custom credentials script '${CUSTOM_CREDENTIALS_SCRIPT}' in ${EL_CICD_CONFIG_BOOTSTRAP_DIR}..."
-    if [[ -f ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT} ]]
-    then
-        echo "Found ${CUSTOM_CREDENTIALS_SCRIPT}; running..."
-        ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CREDENTIALS_SCRIPT}
-        echo "Custom script ${CUSTOM_CREDENTIALS_SCRIPT} completed"
-    else
-        echo "Custom script '${CUSTOM_CREDENTIALS_SCRIPT}' not found."
-    fi
 }
 
 _podman_login() {

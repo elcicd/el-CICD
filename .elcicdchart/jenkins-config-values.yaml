@@ -4,13 +4,16 @@ elCicdDefs:
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
+  JENKINS_CONFIG: jenkins-config
+  JENKINS_CASC_YAML: jenkins-casc.yaml
+  JENKINS_PLUGINS_TXT: jenkins-plugins.txt
 
 elCicdDefs-jenkinsPersistent:
-  JENKINS_VOLUME_MNTS:
-  - mountPath: /var/lib/jenkins
+  JENKINS_PERSISTENT_VOLUME_MNT:
+    mountPath: /var/lib/jenkins
     name: ${JENKINS_SERVICE_NAME}-data
-  JENKINS_VOLUMES:
-  - name: ${JENKINS_SERVICE_NAME}-data
+  JENKINS_PERSISTENT_VOLUME:
+    name: ${JENKINS_SERVICE_NAME}-data
     persistentVolumeClaim:
       claimName: ${JENKINS_SERVICE_NAME}
 
@@ -61,6 +64,10 @@ elCicdTemplates:
     value: ${ENABLE_FATAL_ERROR_LOG_FILE}
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
+  - name: CASC_JENKINS_CONFIG
+    value: ${JENKINS_CONFIG_FILE_PATH}/${JENKINS_CASC_YAML}
+  - name: JENKINS_PLUGINS_FILE
+    value: ${JENKINS_CONFIG_FILE_PATH}/${JENKINS_PLUGINS_TXT}
   ports:
     - name: httpport
       containerPort: 8080
@@ -86,8 +93,37 @@ elCicdTemplates:
     requests:
       memory: ${JENKINS_MEMORY_LIMIT}
       cpu: ${JENKINS_CPU_REQUEST}
-  volumeMounts: ${JENKINS_VOLUME_MNTS}
-  volumes: ${JENKINS_VOLUMES}
+  volumeMounts:
+  - name: ${JENKINS_CONFIG}
+    mountPath: ${JENKINS_CONFIG_FILE_PATH}
+  - ${JENKINS_PERSISTENT_VOLUME_MNT}
+  volumes:
+  - name: ${JENKINS_CONFIG}
+    configMap:
+      name: ${JENKINS_CONFIG}
+      items:
+      - key: ${JENKINS_CASC_YAML}
+        path: ${JENKINS_CASC_YAML}
+      - key: ${JENKINS_PLUGINS_TXT}
+        path: ${JENKINS_PLUGINS_TXT}
+  - ${JENKINS_PERSISTENT_VOLUME}
+
+- templateName: service
+  appName: ${JENKINS_SERVICE_NAME}
+  ports:
+  - name: https
+    port: 8080
+  - name: jnlpport
+    port: 50000
+  
+- templateName: configMap
+  appName: ${JENKINS_CONFIG}
+  data:
+    ${JENKINS_CASC_YAML}: |-
+      ${JENKINS_CASC_FILE}
+    ${JENKINS_PLUGINS_TXT}: |-
+      ${JENKINS_PLUGINS_FILE}
+    
 
 - templateName: limitRange
   appName: jenkins
@@ -101,20 +137,15 @@ elCicdTemplates:
 
 - templateName: configMap
   appName: openshift-jenkins-login-plugin-config
+  mustHaveEveryProfile:
+  - cicd
+  - okd
   data:
     Overall-Administer: edit
     Overall-Read: elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
-
-- templateName: service
-  appName: ${JENKINS_SERVICE_NAME}
-  ports:
-  - name: https
-    port: 8080
-  - name: jnlpport
-    port: 50000
 
 - templateName: ingress
   appName: ${JENKINS_SERVICE_NAME}
@@ -172,15 +203,32 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${USER_GROUP}-view
-  mustHaveAnyProfile:
+  appName: ${USER_GROUP}-jenkins-elcicd-user
+  mustHaveEveryProfile:
   - user-group
+  - okd
   mustNotHaveAnyProfile:
   - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
     name: elcicd-user
+  subjects:
+  - kind: Group
+    name: ${USER_GROUP}
+    apiGroup: rbac.authorization.k8s.io
+
+- templateName: roleBinding
+  appName: ${USER_GROUP}-jenkins-elcicd-user
+  mustHaveEveryProfile:
+  - user-group
+  mustNotHaveAnyProfile:
+  - onboarding
+  - okd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: view
   subjects:
   - kind: Group
     name: ${USER_GROUP}

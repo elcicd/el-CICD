@@ -9,7 +9,7 @@ _build_el_cicd_jenkins_image() {
     set -e
     podman build --squash \
         --build-arg OKD_VERSION=${OKD_VERSION} \
-        --build-arg CONFIG_FILE_PATH=${JENKINS_CONTAINER_CONFIG_DIR} \
+        --build-arg CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
         --build-arg CASC_FILE=${JENKINS_CASC_FILE} \
         --build-arg JENKINS_PLUGINS_FILE=${JENKINS_PLUGINS_FILE} \
         -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
@@ -40,7 +40,7 @@ __init_jenkins_build() {
 }
 
 _build_el_cicd_jenkins_agent_images() {
-    if [[ $(_is_true ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} ]]
+    if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} ]]
     then
         echo
         echo "Creating Jenkins Agents"
@@ -72,13 +72,6 @@ _build_el_cicd_jenkins_agent_images() {
     else
         echo
         echo "JENKINS_SKIP_AGENT_BUILDS is set to 'true'.  Jenkins agent builds skipped."
-    fi
-}
-
-_build_jenkins_agents_if_necessary() {
-    if [[ ${MUST_BUILD_JENKINS_AGENTS} == ${_TRUE} ]]
-    then
-        _build_el_cicd_jenkins_agent_images
     fi
 }
 

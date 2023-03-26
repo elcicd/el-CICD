@@ -66,6 +66,8 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
     
+    echo "JENKINS_URL: ${env.JENKINS_URL}"
+    
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',

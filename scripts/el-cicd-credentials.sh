@@ -45,14 +45,15 @@ _refresh_credentials() {
         _push_username_pwd_to_jenkins ${JENKINS_MASTER_URL} ${USERNAME_PWD_FILE_NAME} ${SECRET_FILE_DIR}/${USERNAME_PWD_FILE_NAME}
     done
 
-    echo
-    echo "Creating ${EL_CICD_BUILD_SECRETS_NAME} secret containing el-CICD build secret(s) in ${EL_CICD_MASTER_NAMESPACE}"
-    oc delete secret --ignore-not-found ${EL_CICD_BUILD_SECRETS_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
-    sleep 5
-    mkdir -p ${BUILD_SECRET_FILE_DIR}
-    oc create secret generic ${EL_CICD_BUILD_SECRETS_NAME} --from-file=${BUILD_SECRET_FILE_DIR} -n ${EL_CICD_MASTER_NAMESPACE}
-
-    _run_custom_credentials_script non-prod
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
+    then        
+        _run_custom_config_script secrets-non-prod.sh
+    fi
+    
+    if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        _run_custom_config_script secrets-prod.sh
+    fi
 
     rm -rf ${SECRET_FILE_TEMP_DIR}
 

@@ -1,18 +1,35 @@
-elCicdTemplates-master-pipelines-defs:
-- templateName: configMap
-  appNames:
-  - project-onboarding
-  - refresh-onboarded-projects
-  - delete-project
-  - delete-cicd-server
-  labels:
-    jenkins-pipeline: 'true'
-  data:
+elCicdDefs:
+  PIPELINE_CONFIG_MAP_DATA:
     contentKey: config.xml
     config.xml: ${PIPELINE_XML}
     path: ${APP_NAME}/config.xml
+  JENKINS_PIPELINE_LABEL:
+    jenkins-pipeline: 'true'
+
+elCicdTemplates-master-pipelines-defs:
+- templateName: configMap
+  appNames:
+  - refresh-onboarded-projects
+  - delete-project
+  - delete-cicd-server
+  labels: ${JENKINS_PIPELINE_LABEL}
+  data: ${PIPELINE_CONFIG_MAP_DATA}
   
-elCicdDefs-project-onboarding:
+- templateName: configMap
+  appName: non-prod-project-onboarding
+  mustHaveAnyProfile:
+  - nonprod
+  labels: ${JENKINS_PIPELINE_LABEL}
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+  
+- templateName: configMap
+  appName: prod-project-onboarding
+  mustHaveAnyProfile:
+  - prod
+  labels: ${JENKINS_PIPELINE_LABEL}
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+  
+elCicdDefs-non-prod-project-onboarding:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
       <displayName>${APP_NAME}</displayName>
@@ -186,6 +203,57 @@ elCicdDefs-delete-cicd-server:
                       teamId: params.TEAM_ID]
           el.node(args) {
               cicdServerDeletion(args)
+          }
+        </script>
+        <sandbox>true</sandbox>
+      </definition>
+      <triggers />
+      <disabled>false</disabled>
+    </flow-definition>
+    
+
+  
+elCicdDefs-prod-project-onboarding:
+  PIPELINE_XML: |-
+    <flow-definition plugin="workflow-job">
+      <displayName>${APP_NAME}</displayName>
+      <keepDependencies>false</keepDependencies>
+      <properties>
+        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
+        <hudson.model.ParametersDefinitionProperty>
+          <parameterDefinitions>
+            <hudson.model.StringParameterDefinition>
+              <name>TEAM_ID</name>
+              <description>Team Name</description>
+              <trim>true</trim>
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+              <name>PROJECT_ID</name>
+              <description>Project ID</description>
+              <trim>true</trim>
+            </hudson.model.StringParameterDefinition>
+          </parameterDefinitions>
+        </hudson.model.ParametersDefinitionProperty>
+      </properties>
+      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cp">
+        <script>
+          node() {
+              def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+              def elCicdData = elcicdMetaData.data
+              
+              def scmMap = [$class: 'GitSCMSource',
+                            remote: elCicdData.EL_CICD_GIT_REPO,
+                            credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+              library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+              el.initMetaData(elCicdData)
+          }
+
+          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                      pipelineName: '${APP_NAME},
+                      teamId: params.TEAM_ID]
+          el.node(args) {                    
+              prodProjectOnboarding(args)
           }
         </script>
         <sandbox>true</sandbox>

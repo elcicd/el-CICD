@@ -11,9 +11,10 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
-    def commonValues = ["profiles='{${projectInfo.deployToEnv}}'",
+    def commonValues = ["elCicdProfiles='{${projectInfo.deployToEnv}}'",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "elCicdDefs.TEAM_ID=${projectInfo.teamId}",
                         "elCicdDefs.PROJECT_ID=${projectInfo.id}",
                         "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",

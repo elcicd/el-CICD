@@ -16,20 +16,24 @@ _bootstrap_el_cicd() {
         exit 1
     fi
 
-    __gather_and_confirm_bootstrap_info_with_user
+    __gather_bootstrap_info
+
+    __summarize_and_confirm_bootstrap_run_with_user
 
     if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
     then
         _install_sealed_secrets
     fi
 
-    if [[ -z ${UPDATE_EL_CICD_JENKINS_MASTER} || ${UPDATE_EL_CICD_JENKINS_MASTER} == ${_YES} ]]
+    if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
         _build_el_cicd_jenkins_image
-        sleep 2
     fi
 
-    _build_jenkins_agents_if_necessary
+    if [[ ${BUILD_JENKINS_AGENTS} == ${_TRUE} ]]
+    then
+        _build_el_cicd_jenkins_agent_images
+    fi
 
     __bootstrap_el_cicd_onboarding_server
 
@@ -37,13 +41,88 @@ _bootstrap_el_cicd() {
     echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS_MASTER'
     _refresh_credentials
 
-    echo
-    echo "RUN ALL CUSTOM SCRIPTS *.sh FOUND IN ${EL_CICD_CONFIG_BOOTSTRAP_DIR}"
-    __run_custom_config_scripts
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
+    then
+        _run_custom_config_script bootstrap-non-prod.sh
+    fi
+    
+    if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        _run_custom_config_script bootstrap-prod.sh
+    fi
 
     echo
     echo "el-CICD Onboarding Server Bootstrap Script Complete:"
     echo "https://${JENKINS_MASTER_URL}"
+}
+
+__gather_bootstrap_info() {
+    _collect_sealed_secret_info
+
+    EL_CICD_MASTER_NAMESPACE_EXISTS=$(oc get project ${EL_CICD_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)
+    if [[ -z ${EL_CICD_MASTER_NAMESPACE_EXISTS}  ]]
+    then
+        _confirm_upgrade_install_sealed_secrets
+    fi
+    
+    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
+    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+}
+
+__summarize_and_confirm_bootstrap_run_with_user() {    
+    echo
+    echo "===================== ${_BOLD}SUMMARY${_REGULAR} ====================="
+        
+    echo
+    echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
+    echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
+    
+    echo
+    echo "${_BOLD}${ELCICD_ADM_MSG}${_REGULAR}"
+    
+    if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
+    then
+        echo
+        echo "Sealed Secrets ${SEALED_SECRETS_RELEASE_INFO} ${_BOLD}WILL${_REGULAR} be installed."
+    fi
+
+    if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
+    then
+        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}' image was not found."
+        echo
+        echo "The el-CICD Jenkins image ${_BOLD}WILL BE BUILT${_REGULAR}."
+    fi
+
+    local JENKINS_BASE_AGENT_EXISTS=$(_base_jenkins_agent_exists)
+    if [[ ${JENKINS_BASE_AGENT_EXISTS} == ${_FALSE} ]]
+    then
+        echo
+        echo "${BOLD}WARNING: THE JENKINS BASE AGENT WAS NOT FOUND.${REGULAR}"
+        if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
+        then
+            echo
+            echo "${BOLD}JENKINS_SKIP_AGENT_BUILDS IS TRUE:${REGULAR} Jenkins agents will not be built."
+            echo "To manually rebuild Jenkins Agents, run the 'el-cicd-adm' utility with the --agents flag."
+        else
+            echo
+            echo "All Jenkins agents will be built."
+            BUILD_JENKINS_AGENTS=${_TRUE}
+        fi
+    fi
+
+    echo
+    echo "Cluster API hostname: ${_BOLD}${CLUSTER_API_HOSTNAME}${_REGULAR}"
+    echo
+    echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
+
+    echo
+    local EL_CICD_MASTER_NAMESPACE_RESULT="${EL_CICD_MASTER_NAMESPACE_EXISTS:-create and install}${EL_CICD_MASTER_NAMESPACE_EXISTS:+refresh and upgrade}"
+    echo "${EL_CICD_MASTER_NAMESPACE} namespace and el-CICD Master: ${_BOLD}${EL_CICD_MASTER_NAMESPACE_RESULT}${_REGULAR}"
+
+    echo
+    echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
+
+    _confirm_continue
 }
 
 _create_and_source_meta_info_file() {
@@ -125,13 +204,14 @@ _create_rbac_helpers() {
     local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
     if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${HAS_SEALED_SECRETS} ]]
     then
-        local SET_PROFILES='--set-string profiles={sealed-secrets}'
+        local SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
     fi
 
-    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-okd-rbac-values.yaml"}
+    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-okd-scc-nonroot-builder-values.yaml"}
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
+    echo
     set -ex
     helm upgrade --atomic --install --history-max=1 \
         ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-cluster-rbac-values.yaml \
@@ -139,20 +219,6 @@ _create_rbac_helpers() {
         el-cicd-cluster-rbac-resources \
         elCicdCharts/elCicdChart
     set +ex
-}
-
-__gather_and_confirm_bootstrap_info_with_user() {
-    _check_sealed_secrets
-
-    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}
-    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    if [[ ! -z ${JENKINS_MASTER_IMAGE_SHA} ]]
-    then
-        echo
-        UPDATE_EL_CICD_JENKINS_MASTER=$(_get_yes_no_answer 'Update/build el-CICD Jenkins image? [Y/n] ')
-    fi
-
-    __summarize_and_confirm_bootstrap_run_with_user
 }
 
 __bootstrap_el_cicd_onboarding_server() {
@@ -180,89 +246,20 @@ __bootstrap_el_cicd_onboarding_server() {
     __create_onboarding_automation_server
 }
 
-__summarize_and_confirm_bootstrap_run_with_user() {
-    echo
-    echo "===================== ${_BOLD}SUMMARY${_REGULAR} ====================="
-    echo
-
-    echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
-    echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
-    echo
-    echo -n "Sealed Secrets ${SEALED_SECRETS_RELEASE_INFO} ${_BOLD}WILL"
-    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} ]]
-    then
-        echo -n " NOT"
-    fi
-    echo "${_REGULAR} be installed."
-
-    echo
-    echo "Cluster API hostname? ${_BOLD}${CLUSTER_API_HOSTNAME}${_REGULAR}"
-    echo "Cluster wildcard Domain? ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
-
-    if [[ ! -z $(oc get project ${EL_CICD_MASTER_NAMESPACE} --ignore-not-found -o name) ]]
-    then
-        echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${EL_CICD_MASTER_NAMESPACE}' was found".
-        echo
-        echo "${_BOLD}The onboarding server environment will be reinstalled.${_REGULAR}"
-    else
-        echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${EL_CICD_MASTER_NAMESPACE}' was NOT found".
-        echo
-        echo "${_BOLD}The onboarding server environment will be created and installed.${_REGULAR}"
-    fi
-
-    if [[ ! -z ${UPDATE_EL_CICD_JENKINS_MASTER} ]]
-    then
-        echo
-        echo "Update/build el-CICD Jenkins image? ${_BOLD}${UPDATE_EL_CICD_JENKINS_MASTER}${_REGULAR}"
-    else
-        echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}' image was not found."
-        echo
-        echo "${_BOLD}el-CICD Jenkins WILL BE BUILT.${_REGULAR}"
-    fi
-
-    if [[ $(_is_true ${JENKINS_MASTER_SKIP_AGENT_BUILDS}) != ${_TRUE} && $(_base_jenkins_agent_exists) == ${_FALSE} ]]
-    then
-        echo
-        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}' image was not found,"
-        echo "          and JENKINS_MASTER_SKIP_AGENT_BUILDS is not ${_TRUE}."
-        echo
-        echo "${_BOLD}ALL JENKINS_MASTER AGENTS WILL BE BUILT.${_REGULAR}"
-        MUST_BUILD_JENKINS_MASTER_AGENTS=${_TRUE}
-    else
-        if [[ $(_is_true ${JENKINS_MASTER_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
-        then
-            echo
-            echo "JENKINS_MASTER_SKIP_AGENT_BUILDS is true."
-        else
-            echo
-            echo "'${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}' was found."
-        fi
-        echo "To manually rebuild Jenkins Agents, run the 'oc el-cicd-adm --agents <el-CICD config file>'"
-    fi
-
-    echo
-    echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
-
-    _confirm_continue
-}
-
 __create_onboarding_automation_server() {
+    local PROFILES='onboarding'
+    PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
+    PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
+    PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
+    
     echo
     echo 'Installing el-CICD Master server'
-    
-    if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
-    then
-        JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    fi
-    
+    echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
     set -ex
     helm upgrade --atomic --install --history-max=1 \
-        --set-string profiles="{onboarding${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}}" \
-        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_MASTER_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
+        --set-string elCicdProfiles="{${PROFILES}}" \
+        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
         --set-string elCicdDefs.JENKINS_CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
@@ -272,9 +269,10 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${JENKINS_AGENT_MEMORY_LIMIT} \
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_MASTER_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
+        --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
-        --set-file elCicdDefs.CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
-        --set-file elCicdDefs.PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
+        --set-file elCicdDefs.JENKINS_CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
+        --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_VALUES_DIR}/default-el-cicd-master-values.yaml \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/el-cicd-master-pipelines-values.yaml \
@@ -296,6 +294,7 @@ __create_onboarding_automation_server() {
 
     echo
     echo 'Running Jenkins pipeline sync job for el-CICD Master.'
+    echo
     set -ex
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
@@ -337,18 +336,17 @@ _delete_namespace() {
     fi
 }
 
-__run_custom_config_scripts() {
-    local SCRIPTS=$(find "${EL_CICD_CONFIG_BOOTSTRAP_DIR}" -type f -executable \( -name "-*.sh" -o -name 'all-*.sh' \) | sort | tr '\n' ' ')
-    if [[ ! -z ${SCRIPTS} ]]
+_run_custom_config_script() {
+    CUSTOM_CONFIG_SCRIPT=${1}
+
+    echo
+    echo "LOOKING FOR CUSTOM CONFIGURATION SCRIPT '${CUSTOM_CONFIG_SCRIPT}' in ${EL_CICD_CONFIG_BOOTSTRAP_DIR}..."
+    if [[ -f ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CONFIG_SCRIPT} ]]
     then
-        for FILE in ${SCRIPTS}
-        do
-            echo
-            echo "Found ${FILE}; running..."
-            eval "${FILE}"
-            echo "Custom script ${FILE} completed"
-        done
+        echo "${_BOLD}FOUND ${CUSTOM_CONFIG_SCRIPT}${_REGULAR}; running..."
+        ${EL_CICD_CONFIG_BOOTSTRAP_DIR}/${CUSTOM_CONFIG_SCRIPT}
+        echo "Custom script ${CUSTOM_CONFIG_SCRIPT} completed"
     else
-        echo 'No custom config scripts found...'
+        echo "Custom script '${CUSTOM_CONFIG_SCRIPT}' ${_BOLD}NOT FOUND${_REGULAR}."
     fi
 }

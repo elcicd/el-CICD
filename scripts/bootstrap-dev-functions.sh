@@ -292,13 +292,12 @@ __setup_image_registries() {
     
     set -x
     helm upgrade --install --atomic --create-namespace --history-max=1 \
-        --set-string profiles="{${PROFILES}}" \
+        --set-string elCicdProfiles="{${PROFILES}}" \
         --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
         ${HTPASSWDS} \
         --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
-        --set createNamespaces=true \
         -n ${DEMO_IMAGE_REGISTRY} \
         -f ${EL_CICD_DIR}/${EL_CICD_CHART_VALUES_DIR}/demo-image-registry-values.yaml \
         ${DEMO_IMAGE_REGISTRY} \

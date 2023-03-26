@@ -92,17 +92,28 @@ EOM
 
 } # _load_kubectl_msgs
 
+_echo_sudo_cluster_admin_warning() {
+    echo
+    echo "${EL_CICD_ADM_WARNING_MSG}"
+}
+
 _execute_kubectl_el_cicd_adm() {
+    echo
+    echo ${ELCICD_ADM_MSG}
+    sleep 3
+    
     COMMANDS=("${@}")
 
     trap 'ERRO_LINENO=$LINENO' ERR
     trap '_failure' EXIT
-    echo
-    echo "${EL_CICD_ADM_WARNING_MSG}"
 
     echo
-    echo ${ELCICD_ADM_MSG}
-    sleep 2
+    echo -n 'Loaded the following el-CICD scripts...'
+    echo
+    for FILE in $(echo ${EL_CICD_SCRIPTS} | xargs -n 1 basename)
+    do
+        echo "- ${FILE}"
+    done
 
     for COMMAND in ${COMMANDS[@]}
     do
@@ -199,6 +210,6 @@ _compare_ignore_case_and_extra_whitespace() {
     fi
 }
 
-_is_true() {
+_get_bool() {
     _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
 }

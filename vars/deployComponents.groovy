@@ -38,9 +38,15 @@ def call(Map args) {
             if (deployed || removed) {
                 resultsMsgs += "**********"
                 resultsMsgs += ''
-                resultsMsgs += deployed ? "${component.name} DEPLOYED FROM BRANCH:" : "${component.name} REMOVED"
+                def checkoutBranch = component.deploymentBranch ? component.scmBranch
+                resultsMsgs += deployed ? "${component.name} DEPLOYED FROM GIT:" : "${component.name} REMOVED FROM NAMESPACE"
                 if (deployed) {
-                    resultsMsgs += "    git checkout ${component.deploymentBranch}"
+                    def refs = component.scmBranch.startsWith(component.srcCommitHash) ?
+                        "    Git image source ref: ${component.srcCommitHash}" :
+                        "    Git image source refs: ${component.scmBranch} / ${component.srcCommitHash}"
+                    
+                    resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
+                    resultsMsgs += "    git checkout ${checkoutBranch}"
                 }
                 resultsMsgs += ''
             }

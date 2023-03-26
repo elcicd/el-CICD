@@ -1,10 +1,9 @@
 elCicdDefs:
   EL_CICD_COMPONENT_META_INFO:
-    projectid: ${TEAM_ID}
+    teamid: ${TEAM_ID}
     projectid: ${PROJECT_ID}
     component: ${COMPONENT_NAME}
     codebase: ${CODE_BASE}
-    elcicd-profiles: ${EL_CICD_PROFILES}
     scm-repo: ${SCM_REPO}
     src-commit-hash: ${SRC_COMMIT_HASH}
     deployment-branch: ${DEPLOYMENT_BRANCH}
@@ -12,7 +11,7 @@ elCicdDefs:
     release-version: ${RELEASE_VERSION}
     build-number: ${BUILD_NUMBER}
     deploy-time: ${EL_CICD_DEPLOYMENT_TIME}
-    profiles: ${PROFILES}
+    elcicd-profiles: ${EL_CICD_PROFILES}
 
 elCicdDefaults:
   labels: ${EL_CICD_COMPONENT_META_INFO}

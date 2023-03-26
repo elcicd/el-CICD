@@ -18,10 +18,10 @@ def setupProjectCicdServer(def projectInfo) {
     loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
 
     def jenkinsUrl = "${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def profiles = 'cicd,user-group' + (el.cicd.OKD_VERSION ? ',okd' : '')
-    profiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
-    profiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
-    profiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
+    def elCicdProfiles = 'cicd,user-group' + (el.cicd.OKD_VERSION ? ',okd' : '')
+    elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
+    elCicdProfiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
+    elCicdProfiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
     
     def cicdEnvs
 
@@ -31,7 +31,7 @@ def setupProjectCicdServer(def projectInfo) {
 
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
-            --set-string profiles='{${profiles}}' \
+            --set-string elCicdProfiles='{${elCicdProfiles}}' \
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
@@ -181,15 +181,15 @@ def getCicdConfigValues(def projectInfo) {
         elCicdDefs["${namespace}_GROUP"] = group
     }
 
-    cicdConfigValues.profiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
+    cicdConfigValues.elCicdProfiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
     
     if (hasJenkinsAgentPersistent) {
-        cicdConfigValues.profiles += 'jenkinsAgentPersistent'
+        cicdConfigValues.elCicdProfiles += 'jenkinsAgentPersistent'
         elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
     }
     
     if (projectInfo.nfsShares) {
-        cicdConfigValues.profiles << "nfs"
+        cicdConfigValues.elCicdProfiles << "nfs"
 
         elCicdDefs.NFS_APP_NAMES = []
         projectInfo.nfsShares.each { nfsShare ->
