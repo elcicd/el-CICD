@@ -22,8 +22,6 @@ def setupProjectCicdServer(def projectInfo) {
     elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     elCicdProfiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
     elCicdProfiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
-    
-    def cicdEnvs
 
     sh """
         ${shCmd.echo ''}
@@ -46,6 +44,9 @@ def setupProjectCicdServer(def projectInfo) {
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${el.cicd.JENKINS_AGENT_MEMORY_REQUEST} \
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${el.cicd.JENKINS_AGENT_MEMORY_LIMIT} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
+            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
+            --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CASC_FILE} \
+            --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-team-server-values.yaml \
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \

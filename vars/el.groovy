@@ -21,6 +21,7 @@ def initMetaData(Map metaData) {
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
         el.cicd.CONFIG_CHART_VALUES_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.EL_CICD_CHART_VALUES_DIR}"
+        el.cicd.CONFIG_JENKINS_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
         el.cicd.BUILDER_STEPS_DIR = "${el.cicd.CONFIG_DIR}/builder-steps"
         el.cicd.SYSTEM_TEST_RUNNERS_DIR = "${el.cicd.CONFIG_DIR}/system-test-runners"
         el.cicd.HOOK_SCRIPTS_DIR = "${el.cicd.CONFIG_DIR}/hook-scripts"
