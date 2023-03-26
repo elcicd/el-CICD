@@ -30,7 +30,7 @@ def setupProjectCicdServer(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
-        helm template --debug \
+        helm upgrade --debug --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
@@ -51,7 +51,6 @@ def setupProjectCicdServer(def projectInfo) {
             -f ${el.cicd.CHART_VALUES_DIR}/jenkins-config-values.yaml \
             jenkins \
             elCicdCharts/elCicdChart
-        exit 1
         oc rollout status deploy/jenkins
 
         ${shCmd.echo ''}
