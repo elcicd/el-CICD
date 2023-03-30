@@ -200,7 +200,7 @@ _create_env_image_registry_secrets() {
         --set-string elCicdDefs.PULL_SECRET_NAMES="{${PULL_SECRET_NAMES}}" \
         ${SET_FLAGS} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_DIR}/${EL_CICD_CHART_DEPLOY_DIR}/el-cicd-pull-secrets-values.yaml \
+        -f ${EL_CICD_BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-pull-secrets-values.yaml \
         el-cicd-pull-secrets \
         elCicdCharts/elCicdChart
     set +ex

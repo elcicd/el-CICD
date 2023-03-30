@@ -49,7 +49,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
-            -f ${el.cicd.CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             jenkins \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
@@ -79,9 +79,9 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
-            -f ${el.cicd.CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
-            -f ${el.cicd.CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
+            -f ${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
+            -f ${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.CICD_CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} \
             elCicdCharts/elCicdChart
@@ -101,7 +101,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
         ${shCmd.echo ''}
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-            -f ${el.cicd.CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
+            -f ${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
             -n ${cicdMasterNamespace} \
             jenkins-pipeline-sync \
             elCicdCharts/elCicdChart

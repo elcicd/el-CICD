@@ -32,7 +32,6 @@ def call(Map args) {
         projectInfo.componentsToRedeploy.each { component ->
             dir(component.workDir) {
                 sh "git checkout ${component.deploymentBranch}"
-                component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
             }
         }
     }

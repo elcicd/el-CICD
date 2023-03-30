@@ -222,7 +222,6 @@ def cloneGitRepo(def module, def gitReference) {
 
         def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
         module.srcCommitHash = module.srcCommitHash ?: currentHash
-        module.deploymentCommitHash = currentHash
     }
 }
 

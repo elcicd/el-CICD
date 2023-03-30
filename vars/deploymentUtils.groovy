@@ -33,8 +33,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                               "elCicdDefs.CODE_BASE=${component.codeBase}",
                               "elCicdDefs.SCM_REPO=${component.scmRepoName}",
                               "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}",
-                              "elCicdDefs.DEPLOYMENT_COMMIT_HASH=${component.deploymentCommitHash}"]
+                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
             compValues.addAll(commonValues)
             
             helmUpgradeInstall(projectInfo, component, compValues)
@@ -66,7 +65,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                     --set-string ${compValues.join(' --set-string ')} \
                     \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
+                    -f ${el.cicd.CICD_CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     elCicdCharts/elCicdChart

@@ -201,8 +201,6 @@ def createAndCheckoutDeploymentBranches(def projectInfo) {
         else {
             scmBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
         }
-
-        component.deploymentCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
     }
     
     if (scmBranchesFound.size() > 1 && scmBranchesCreated.size() > 1) {
