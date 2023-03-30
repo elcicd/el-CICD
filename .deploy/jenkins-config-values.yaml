@@ -251,7 +251,7 @@ elCicdTemplates:
   mustHaveAnyProfile:
   - cicd
   appName: el-cicd-jenkins-pull-secret
-  kind: Secret
+  kind: Deployment
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
 

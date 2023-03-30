@@ -33,7 +33,12 @@ def call(Map args) {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
         projectInfo.buildModules.each { module ->
-            githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
+            if (!module.disableWebhook) {
+                githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
+            }
+            else {
+                echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED.  SKIPPING..."
+            }
         }
     }
     
