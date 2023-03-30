@@ -48,7 +48,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 }
 
 def helmUpgradeInstall(def projectInfo, def component, def compValues) {
-    dir("${component.workDir}/${el.cicd.EL_CICD_CHART_VALUES_DIR}") {
+    dir("${component.workDir}/${el.cicd.EL_CICD_CHART_DEPLOY_DIR}") {
         sh """            
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
@@ -65,8 +65,8 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                 helm \${FLAGS} \
                     --set-string ${compValues.join(' --set-string ')} \
                     \${VALUES_FILES} \${ENV_FILES} \
-                    -f ${el.cicd.CONFIG_CHART_VALUES_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.CHART_VALUES_DIR}/component-meta-info-values.yaml \
+                    -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
+                    -f ${el.cicd.CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     elCicdCharts/elCicdChart
