@@ -75,7 +75,7 @@ def setupProjectCicdResources(def projectInfo) {
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         # helm upgrade --install --history-max=1
-        helm template \
+        helm template --debug \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
