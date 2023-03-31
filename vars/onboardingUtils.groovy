@@ -28,8 +28,7 @@ def setupProjectCicdServer(def projectInfo) {
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
-        # helm upgrade --atomic --install --create-namespace --history-max=1 \
-        helm template \
+        helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
             --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
@@ -53,7 +52,6 @@ def setupProjectCicdServer(def projectInfo) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             jenkins \
             elCicdCharts/elCicdChart
-        exit
 
         ${shCmd.echo ''}
         ${shCmd.echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'}
@@ -76,7 +74,8 @@ def setupProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        helm upgrade --install --history-max=1 \
+        # helm upgrade --install --history-max=1 \
+        helm template \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
