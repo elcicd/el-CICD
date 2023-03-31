@@ -72,13 +72,18 @@ def setupProjectCicdResources(def projectInfo) {
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
     
     sh """
-        helm uninstall ${chartName}-pv
+        PVS_INSTALLED=$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
+        if [[ ! -z \${PVS_INSTALLED} ]]
+        then
+            helm uninstall ${chartName}-pv
+        fi
         
-        if [[ ! -z '${projectInfo.nfsShares}' ]]
+        if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' " ''}' ]]
         then
             helm install --atomic \
                 -f ${cicdConfigFile} \
                 -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
+                 -n ${projectInfo.cicdMasterNamespace} \
                 ${chartName}-pv
         fi
     """
@@ -86,7 +91,6 @@ def setupProjectCicdResources(def projectInfo) {
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${cicdConfigFile}
-        
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         helm upgrade --install --history-max=1  \
