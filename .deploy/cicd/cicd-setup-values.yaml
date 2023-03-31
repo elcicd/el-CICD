@@ -1,4 +1,4 @@
-templateNames-nfs:
+elCicdTemplates-nfs:
 - templateName: persistentVolume
   appNames: ${NFS_APP_NAMES}
   mustHaveAnyProfile:
