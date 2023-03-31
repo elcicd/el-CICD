@@ -68,21 +68,35 @@ def setupProjectCicdResources(def projectInfo) {
 
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
+    
+    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+    
+    sh """
+        helm uninstall ${chartName}-pv
+        
+        if [[ ! -z '${projectInfo.nfsShares}' ]]
+        then
+            helm install --atomic \
+                -f ${cicdConfigFile} \
+                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
+                ${chartName}-pv
+        fi
+    """
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${cicdConfigFile}
+        
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        helm upgrade --install --history-max=1 --debug \
+        helm upgrade --install --history-max=1  \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
             -n ${projectInfo.cicdMasterNamespace} \
-            ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} \
+            ${chartName} \
             elCicdCharts/elCicdChart
     """
 }

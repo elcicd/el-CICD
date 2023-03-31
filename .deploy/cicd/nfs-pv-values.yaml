@@ -1,0 +1,13 @@
+elCicdTemplates-nfs:
+- templateName: persistentVolume
+  appNames: ${NFS_APP_NAMES}
+  mustHaveAnyProfile:
+  - nfs
+  storageClassName: ${APP_NAME}
+  storageCapacity: ${STORAGE_CAPACITY}
+  accessModes: ${ACCESS_MODES}
+  nfs:
+    path: ${PATH}
+    server: ${SERVER}
+
+  
