@@ -72,7 +72,7 @@ def setupProjectCicdResources(def projectInfo) {
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
     
     sh """
-        PVS_INSTALLED=$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
+        PVS_INSTALLED=\$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
         if [[ ! -z \${PVS_INSTALLED} ]]
         then
             helm uninstall ${chartName}-pv
