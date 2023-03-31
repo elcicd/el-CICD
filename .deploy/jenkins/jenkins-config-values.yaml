@@ -250,8 +250,16 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
+  appName: ${EL_CICD_META_INFO_NAME}
+  kind: ConfigMap
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
+
+- templateName: copyResource
+  mustHaveAnyProfile:
+  - cicd
   appName: el-cicd-jenkins-pull-secret
-  kind: Deployment
+  kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
 
@@ -261,14 +269,6 @@ elCicdTemplates:
   appNames: ${CICD_ENVS}
   appName: el-cicd-${}-pull-secret
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
-
-- templateName: copyResource
-  mustHaveAnyProfile:
-  - cicd
-  appName: ${EL_CICD_META_INFO_NAME}
-  kind: ConfigMap
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
 
