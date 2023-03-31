@@ -101,7 +101,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
         ${shCmd.echo ''}
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-            -f ${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
             -n ${cicdMasterNamespace} \
             jenkins-pipeline-sync \
             elCicdCharts/elCicdChart
