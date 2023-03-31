@@ -105,6 +105,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
             -n ${cicdMasterNamespace} \
             jenkins-pipeline-sync \
             elCicdCharts/elCicdChart
+        exit 1
     """
 }
 
