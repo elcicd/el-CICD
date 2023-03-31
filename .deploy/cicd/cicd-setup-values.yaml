@@ -21,7 +21,7 @@ elCicdTemplates-nfs:
   storageClassName: ${APP_NAME}
   storageCapacity: ${STORAGE_CAPACITY}
   accessModes: ${ACCESS_MODES}
-  volumeName: ${APP_NAME}-nfs
+  volumeName: ${APP_NAME}
   accessMode: ReadWriteMany
   storageRequest: 10Gi
 
