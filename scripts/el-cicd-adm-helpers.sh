@@ -20,44 +20,44 @@ Usage: oc el-cicd-adm [OPTION]... [root-config-file]
 el-CICD Admin Utility
 
 Options:
-    -b, --bootstrap
-        bootstraps an el-CICD Project Onboarding Server
-
-    -f, --config-file
-         generate el-CICD configuration files, both bootstrap and runtime
-
-    -F, --lab-config-file:
-        generate el-CICD configuration files for lab installs, both bootstrap and runtime
-
-    -L, --setup-lab
-        setup a lab instance of el-CICD, including optional demo registries and single node cluster
-
-    -T, --tear-down-lab
-        tear down a lab instance of el-CICD
-
-    -S, --start-cluster
-        start the OpenShift Local lab cluster
-
-    -c, --master-creds
-        refresh el-CICD Onboarding Server credentials
-
-    -C, --all-creds
-        refresh el-CICD Onboarding Server credentials, and then refresh all SDLC credentials
-
-    -s, --sealed-secrets
-        install/upgrade the Sealed Secret Helm Chart or version
-
-    -j, --jenkins
-        build the el-CICD Jenkins image
-
-    -a, --agents
+    -A, --agents
         build the el-CICD Jenkins agent images
 
     -h, --help
         display this help text and exit
 
+    -J, --jenkins
+        build the el-CICD Jenkins image
+        
+    -L, --lab
+        prepare a lab el-CICD cluster environment for working with, on, or demoing el-CICD
+        
+    -N, --non-prod
+        bootstraps an el-CICD Master with non-prod onboarding pipelines
+        
+    -P, --prod
+        bootstraps an el-CICD Master with prod onboarding pipelines
+        
+    --refresh-creds
+        refresh el-CICD Master Server credentials
+
+    --refresh-cicd-creds
+        refresh all el-CICD Team Master Server credentials
+
+    --sealed-secrets
+        install/upgrade the Sealed Secret Helm Chart or version
+
+    -S, --start-cluster
+        start the OpenShift Local lab cluster
+
+    -T, --tear-down-lab
+        tear down a lab instance of el-CICD
+        
+
 root-config-file:
     file name or path to a root configuration file relative the root of the el-CICD-config directory
+    
+See the help documents for further informaton.
 EOM
 )
 

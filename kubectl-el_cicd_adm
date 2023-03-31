@@ -16,20 +16,20 @@ __main() {
     do
         __NEXT_ARG="${1}"
         case "${__NEXT_ARG}" in
-            '--agents')
+            '--agents' | '-A')
                 ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
 
                 EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_agent_images')
                 shift 1
             ;;
 
-            '--help')
+            '--help' | '-h')
                 echo
                 echo "${EL_CICD_CLI_HELP_MSG}"
                 exit 0
             ;;
 
-            '--jenkins')
+            '--jenkins' | '-J')
                 ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
 
                 EL_CICD_ADM_COMMANDS+=('_podman_login' '_build_el_cicd_jenkins_image')
@@ -73,7 +73,7 @@ __main() {
                 shift 1
             ;;
 
-            '--setup-lab')
+            '--setup-lab' | '-L')
                 ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
@@ -81,7 +81,7 @@ __main() {
                 shift 1
             ;;
 
-            '--start-cluster')
+            '--start-cluster' | '-S')
                 ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
@@ -89,7 +89,7 @@ __main() {
                 shift 1
             ;;
 
-            '--tear-down-lab')
+            '--tear-down-lab' | '-T')
                 ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
@@ -151,7 +151,6 @@ __load_basic_vars_and_scripts() {
 
     EL_CICD_TEMPLATES_DIR=${EL_CICD_DIR}/resources/templates
 
-    EL_CICD_CONFIG_CHART_DEPLOY_DIR=${EL_CICD_CONFIG_DIR}/,deploy
     EL_CICD_CONFIG_BOOTSTRAP_DIR=${EL_CICD_CONFIG_DIR}/bootstrap
     EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins
 

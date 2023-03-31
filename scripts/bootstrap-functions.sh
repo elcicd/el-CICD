@@ -116,7 +116,12 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
 
     echo
-    local EL_CICD_MASTER_NAMESPACE_RESULT="${EL_CICD_MASTER_NAMESPACE_EXISTS:-create and install}${EL_CICD_MASTER_NAMESPACE_EXISTS:+refresh and upgrade}"
+    local EL_CICD_MASTER_NAMESPACE_RESULT
+    case "${EL_CICD_MASTER_NAMESPACE_EXISTS}" in
+        '') EL_CICD_MASTER_NAMESPACE_RESULT='create and install' ;;
+         *) EL_CICD_MASTER_NAMESPACE_RESULT='refresh and upgrade' ;;
+    esac
+    
     echo "${EL_CICD_MASTER_NAMESPACE} namespace and el-CICD Master: ${_BOLD}${EL_CICD_MASTER_NAMESPACE_RESULT}${_REGULAR}"
 
     echo
@@ -207,14 +212,14 @@ _create_rbac_helpers() {
         local SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
     fi
 
-    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-okd-scc-nonroot-builder-values.yaml"}
+    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-okd-scc-nonroot-builder-values.yaml"}
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
     echo
     set -ex
     helm upgrade --atomic --install --history-max=1 \
-        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-cluster-rbac-values.yaml \
+        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-cluster-rbac-values.yaml \
         -n kube-system \
         el-cicd-cluster-rbac-resources \
         elCicdCharts/elCicdChart
@@ -274,9 +279,9 @@ __create_onboarding_automation_server() {
         --set-file elCicdDefs.JENKINS_CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
         --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_CONFIG_DIR}/${EL_CICD_CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
-        -f ${EL_CICD_BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
-        -f ${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+        -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
+        -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
+        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
         jenkins \
         elCicdCharts/elCicdChart
     set +ex
@@ -299,7 +304,7 @@ __create_onboarding_automation_server() {
     helm upgrade --wait --wait-for-jobs --install --history-max=1  \
                 --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
                 -n ${EL_CICD_MASTER_NAMESPACE} \
-                -f ${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
+                -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
                 jenkins-pipeline-sync \
                 elCicdCharts/elCicdChart
     set +ex

@@ -49,7 +49,7 @@ def setupProjectCicdServer(def projectInfo) {
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
             -n ${projectInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
-            -f ${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             jenkins \
             elCicdCharts/elCicdChart
         oc rollout status deploy/jenkins
