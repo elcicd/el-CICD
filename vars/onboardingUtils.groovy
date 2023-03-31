@@ -78,7 +78,7 @@ def setupProjectCicdResources(def projectInfo) {
             helm uninstall ${chartName}-pv
         fi
         
-        if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' " ''}' ]]
+        if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
         then
             helm install --atomic \
                 -f ${cicdConfigFile} \
