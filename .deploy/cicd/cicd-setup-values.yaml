@@ -3,12 +3,26 @@ templateNames-nfs:
   appNames: ${NFS_APP_NAMES}
   mustHaveAnyProfile:
   - nfs
+  storageClassName: ${APP_NAME}
   storageCapacity: ${STORAGE_CAPACITY}
-  accessModes: ${ACESS_MODES}
+  accessModes: ${ACCESS_MODES}
   nfs:
     path: ${PATH}
     server: ${SERVER}
   claimRef:
     name: ${CLAIM_NAME}
     namespace: ${NAMESPACE}
+    
+- templateName: persistentVolumeClaim
+  appNames: ${NFS_APP_NAMES}
+  namespace: ${NFS_NAMESPACE}
+  mustHaveAnyProfile:
+  - nfs
+  storageClassName: ${APP_NAME}
+  storageCapacity: ${STORAGE_CAPACITY}
+  accessModes: ${ACCESS_MODES}
+  volumeName: ${APP_NAME}-nfs
+  accessMode: ReadWriteMany
+  storageRequest: 10Gi
+
   

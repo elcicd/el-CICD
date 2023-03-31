@@ -202,11 +202,11 @@ def getCicdConfigValues(def projectInfo) {
 
                     nfsMap = [:]
                     nfsMap.CLAIM_NAME = nfsShare.claimName
-                    nfsMap.CAPACITY = nfsShare.capacity
-                    nfsMap.ACESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
+                    nfsMap.STORAGE_CAPACITY = nfsShare.capacity
+                    nfsMap.ACCESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
                     nfsMap.PATH = nfsShare.exportPath
                     nfsMap.SERVER = nfsShare.server
-                    nfsMap.NAMESPACE = namespace
+                    nfsMap.NFS_NAMESPACE = namespace
 
                     cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
                 }
