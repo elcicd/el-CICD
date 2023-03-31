@@ -65,7 +65,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                     --set-string ${compValues.join(' --set-string ')} \
                     \${VALUES_FILES} \${ENV_FILES} \
                     -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.CICD_CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     elCicdCharts/elCicdChart
