@@ -76,7 +76,7 @@ def setupProjectNfsPvResources(def projectInfo) {
             ${shCmd.echo '', "${projectInfo.id} PROJECT NFS VALUES:"}
             cat ${nfsCicdConfigFile}
             
-            PVS_INSTALLED=\$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
+            PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.cicdMasterNamespace})
             if [[ ! -z \${PVS_INSTALLED} ]]
             then
                 helm uninstall ${chartName} -n ${projectInfo.cicdMasterNamespace}
