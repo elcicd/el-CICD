@@ -66,13 +66,16 @@ def setupProjectNfsPvResources(def projectInfo) {
         def projectDefs = getNfsCicdConfigValues(projectInfo)
         def nfsCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
-        def nfsCicdConfigfile = "nfs-cicd-config-values.yaml"
-        writeFile(file: nfsCicdConfigfile, text: nfsCicdConfigValues)
+        def nfsCicdConfigFile = "nfs-cicd-config-values.yaml"
+        writeFile(file: nfsCicdConfigFile, text: nfsCicdConfigValues)
 
         def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
         chartName = "${chartName}-pv"
 
         sh """
+            ${shCmd.echo '', "${projectInfo.id} PROJECT NFS VALUES:"}
+            cat ${nfsCicdConfigFile}
+            
             PVS_INSTALLED=\$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
             if [[ ! -z \${PVS_INSTALLED} ]]
             then
@@ -82,8 +85,8 @@ def setupProjectNfsPvResources(def projectInfo) {
             if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
             then
                 helm install --atomic \
-                    -f ${nfsCicdConfigfile} \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/${nfsCicdConfigfile} \
+                    -f ${nfsCicdConfigFile} \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
                     -n ${projectInfo.cicdMasterNamespace} \
                     ${chartName} \
                     elCicdCharts/elCicdChart
