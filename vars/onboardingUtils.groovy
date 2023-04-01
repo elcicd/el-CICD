@@ -95,7 +95,7 @@ def setupProjectNfsPvResources(def projectInfo) {
 def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
 
-    def projectDefs = getCicdNfsConfigValues(projectInfo)
+    def projectDefs = getCicdConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
     def cicdConfigFile = "cicd-config-values.yaml"
@@ -141,34 +141,37 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 }
 
 def getNfsCicdConfigValues(def projectInfo) {
-    if (projectInfo.nfsShares) {
-        cicdConfigValues.elCicdProfiles << "nfs"
+    cicdConfigValues = [:]
+    elCicdDefs = [:]
+    
+    elCicdDefs.NFS_APP_NAMES = []
+    projectInfo.nfsShares.each { nfsShare ->
+        nfsShare.envs.each { env ->
+            def namespace = projectInfo.nonProdNamespaces[env]
+            if (namespace) {
+                def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+                elCicdDefs.NFS_APP_NAMES << appName
 
-        elCicdDefs.NFS_APP_NAMES = []
-        projectInfo.nfsShares.each { nfsShare ->
-            nfsShare.envs.each { env ->
-                def namespace = projectInfo.nonProdNamespaces[env]
-                if (namespace) {
-                    def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-                    elCicdDefs.NFS_APP_NAMES << appName
+                nfsMap = [:]
+                nfsMap.CLAIM_NAME = nfsShare.claimName
+                nfsMap.STORAGE_CAPACITY = nfsShare.capacity
+                nfsMap.ACCESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
+                nfsMap.PATH = nfsShare.exportPath
+                nfsMap.SERVER = nfsShare.server
+                nfsMap.NFS_NAMESPACE = namespace
 
-                    nfsMap = [:]
-                    nfsMap.CLAIM_NAME = nfsShare.claimName
-                    nfsMap.STORAGE_CAPACITY = nfsShare.capacity
-                    nfsMap.ACCESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
-                    nfsMap.PATH = nfsShare.exportPath
-                    nfsMap.SERVER = nfsShare.server
-                    nfsMap.NFS_NAMESPACE = namespace
-
-                    cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
-                }
+                cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
             }
         }
     }
+    
+    cicdConfigValues.elCicdDefs = elCicdDefs
+    return cicdConfigValues
 }
 
-def getCicdConfigValues(def projectInfo, def elCicdDefs) {
+def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
+    elCicdDefs = [:]
 
     elCicdDefs.TEAM_ID = projectInfo.teamId
     elCicdDefs.PROJECT_ID = projectInfo.id
@@ -248,6 +251,5 @@ def getCicdConfigValues(def projectInfo, def elCicdDefs) {
     }
 
     cicdConfigValues.elCicdDefs = elCicdDefs
-
     return cicdConfigValues
 }
