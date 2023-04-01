@@ -84,7 +84,7 @@ def setupProjectNfsPvResources(def projectInfo) {
 
             if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
             then
-                helm install --atomic \
+                helm install \
                     -f ${nfsCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
                     -n ${projectInfo.cicdMasterNamespace} \
