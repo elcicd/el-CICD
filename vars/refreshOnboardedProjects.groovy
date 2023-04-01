@@ -37,7 +37,7 @@ def call(Map args) {
                         cicdProjects += projectInfo
                     }
                     else {
-                        echo "WARNING [${projectInfo.id}]: SDLC namespaces NOT FOUND; skipping"
+                        echo "WARNING [${projectInfo.id}]: CICD namespaces NOT FOUND; skipping"
                     }
                 }
                 else {
@@ -45,7 +45,7 @@ def call(Map args) {
                 }
             }
             
-            echo "[WARNING] The following SDLC namespaces were not found and CICD server refresh will will be SKIPPED:"
+            echo "[WARNING] The following CICD namespaces were not found and CICD server refresh will will be SKIPPED:"
             echo jenkinsNoRefresh.join('\n')
         }
     }
@@ -58,7 +58,7 @@ def call(Map args) {
         }
     }
     
-    stage("refresh each project's SDLC") {
+    stage("refresh each project's CICD") {
         cicdProjects.each { projectInfo ->
             onboardingUtils.setupProjectCicdResources(projectInfo)
         }

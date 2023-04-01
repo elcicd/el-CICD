@@ -50,7 +50,7 @@ elCicdDefs-non-prod-project-onboarding:
             </hudson.model.StringParameterDefinition>
             <hudson.model.BooleanParameterDefinition>
               <name>REBUILD_CICD_ENVS</name>
-              <description>Should all SDLC environment(s) be destroyed and recreated from scratch?</description>
+              <description>Should all CICD environment(s) be destroyed and recreated from scratch?</description>
               <defaultValue>false</defaultValue>
             </hudson.model.BooleanParameterDefinition>
           </parameterDefinitions>

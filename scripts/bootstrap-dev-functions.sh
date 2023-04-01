@@ -83,7 +83,7 @@ __gather_lab_setup_info() {
         fi
     else
         echo 'IF NOT ALREADY DONE, proper values for your chosen image registry must be set in the el-CICD configuration files.'
-        echo 'See el-CICD operational documentation for information on how to configure the image registry values per SDLC environment.'
+        echo 'See el-CICD operational documentation for information on how to configure the image registry values per CICD environment.'
     fi
 
     echo

@@ -59,35 +59,49 @@ def setupProjectCicdServer(def projectInfo) {
     """
 }
 
+def setupProjectNfsPvResources(def projectInfo) {
+    if (projectInfo.nfsShares) {
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD NFS Volumes")
+
+        def projectDefs = getNfsCicdConfigValues(projectInfo)
+        def nfsCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
+
+        def nfsCicdConfigfile = "nfs-cicd-config-values.yaml"
+        writeFile(file: nfsCicdConfigfile, text: cicdConfigValues)
+
+        def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+        chartName = "${chartName}-pv"
+
+        sh """
+            PVS_INSTALLED=\$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
+            if [[ ! -z \${PVS_INSTALLED} ]]
+            then
+                helm uninstall ${chartName}
+            fi
+
+            if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
+            then
+                helm install --atomic \
+                    -f ${nfsCicdConfigfile} \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/${nfsCicdConfigfile} \
+                    -n ${projectInfo.cicdMasterNamespace} \
+                    ${chartName} \
+                    elCicdCharts/elCicdChart
+            fi
+        """
+    }
+}
 
 def setupProjectCicdResources(def projectInfo) {
-    loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} SDLC")
+    loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
 
-    def projectDefs = getCicdConfigValues(projectInfo)
+    def projectDefs = getCicdNfsConfigValues(projectInfo)
     def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
-    
+
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
-    
-    sh """
-        PVS_INSTALLED=\$(helm list --short --filter '${chartName}-pv' -n ${projectInfo.cicdMasterNamespace})
-        if [[ ! -z \${PVS_INSTALLED} ]]
-        then
-            helm uninstall ${chartName}-pv
-        fi
-        
-        if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
-        then
-            helm install --atomic \
-                -f ${cicdConfigFile} \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
-                -n ${projectInfo.cicdMasterNamespace} \
-                ${chartName}-pv \
-                elCicdCharts/elCicdChart
-        fi
-    """
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
@@ -126,87 +140,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
     """
 }
 
-def getCicdConfigValues(def projectInfo) {
-    cicdConfigValues = [:]
-    elCicdDefs = [:]
-
-    elCicdDefs.TEAM_ID = projectInfo.teamId
-    elCicdDefs.PROJECT_ID = projectInfo.id
-    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
-    elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
-    elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
-    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
-    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
-    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
-    elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
-    elCicdDefs.NONPROD_ENVS = []
-    elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
-    elCicdDefs.DEV_ENV = projectInfo.devEnv
-
-    elCicdDefs.SANDBOX_ENVS = []
-    elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
-    
-    elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${projectInfo.devNamespace}</string>"
-    elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
-    
-    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"<string>${it}</string>" }
-    elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projectInfo.preProdEnv}</string>")
-    elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join('')
-    
-    cicdConfigValues.elCicdNamespaces = []
-    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
-    if (projectInfo.sandboxNamespaces) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
-    }
-
-    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
-    elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
-
-    def hasJenkinsAgentPersistent = false
-    projectInfo.components.each { comp ->
-        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache
-        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
-            ['CODE_BASE' : comp.codeBase, 
-             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache)}" ]
-    }
-
-    projectInfo.artifacts.each { art ->
-        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache
-        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
-            ['CODE_BASE' : art.codeBase, 
-             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache)}" ]
-    }
-    
-    elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
-
-    def cicdEnvs = projectInfo.nonProdEnvs.collect()
-    cicdEnvs.addAll(projectInfo.sandboxEnvs)
-    def rqProfiles = [:]
-    cicdEnvs.each { env ->
-        def rqNames = projectInfo.resourceQuotas[env]
-        rqNames = !rqNames && !projectInfo.nonProdNamespaces[env] ? projectInfo.resourceQuotas[el.cicd.SANDBOX] : rqNames
-        rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
-        rqNames?.each { rqName ->
-            elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-            elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env])
-            rqProfiles[rqName] = 'placeHolder'
-        }
-    }
-
-    cicdEnvs.each { env ->
-        def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
-        def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
-        elCicdDefs["${namespace}_GROUP"] = group
-    }
-
-    cicdConfigValues.elCicdProfiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
-    
-    if (hasJenkinsAgentPersistent) {
-        cicdConfigValues.elCicdProfiles += 'jenkinsAgentPersistent'
-        elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
-    }
-    
+def getNfsCicdConfigValues(def projectInfo) {
     if (projectInfo.nfsShares) {
         cicdConfigValues.elCicdProfiles << "nfs"
 
@@ -230,6 +164,87 @@ def getCicdConfigValues(def projectInfo) {
                 }
             }
         }
+    }
+}
+
+def getCicdConfigValues(def projectInfo, def elCicdDefs) {
+    cicdConfigValues = [:]
+
+    elCicdDefs.TEAM_ID = projectInfo.teamId
+    elCicdDefs.PROJECT_ID = projectInfo.id
+    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
+    elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
+    elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
+    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
+    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
+    elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
+    elCicdDefs.NONPROD_ENVS = []
+    elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
+    elCicdDefs.DEV_ENV = projectInfo.devEnv
+
+    elCicdDefs.SANDBOX_ENVS = []
+    elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
+
+    elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${projectInfo.devNamespace}</string>"
+    elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
+
+    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"<string>${it}</string>" }
+    elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projectInfo.preProdEnv}</string>")
+    elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join('')
+
+    cicdConfigValues.elCicdNamespaces = []
+    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+    if (projectInfo.sandboxNamespaces) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+    }
+
+    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
+    elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
+
+    def hasJenkinsAgentPersistent = false
+    projectInfo.components.each { comp ->
+        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache
+        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
+            ['CODE_BASE' : comp.codeBase,
+             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache)}" ]
+    }
+
+    projectInfo.artifacts.each { art ->
+        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache
+        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
+            ['CODE_BASE' : art.codeBase,
+             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache)}" ]
+    }
+
+    elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
+
+    def cicdEnvs = projectInfo.nonProdEnvs.collect()
+    cicdEnvs.addAll(projectInfo.sandboxEnvs)
+    def rqProfiles = [:]
+    cicdEnvs.each { env ->
+        def rqNames = projectInfo.resourceQuotas[env]
+        rqNames = !rqNames && !projectInfo.nonProdNamespaces[env] ? projectInfo.resourceQuotas[el.cicd.SANDBOX] : rqNames
+        rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
+        rqNames?.each { rqName ->
+            elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
+            elCicdDefs["${rqName}_NAMESPACES"] += (projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env])
+            rqProfiles[rqName] = 'placeHolder'
+        }
+    }
+
+    cicdEnvs.each { env ->
+        def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
+        def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
+        elCicdDefs["${namespace}_GROUP"] = group
+    }
+
+    cicdConfigValues.elCicdProfiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
+
+    if (hasJenkinsAgentPersistent) {
+        cicdConfigValues.elCicdProfiles += 'jenkinsAgentPersistent'
+        elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
     }
 
     cicdConfigValues.elCicdDefs = elCicdDefs

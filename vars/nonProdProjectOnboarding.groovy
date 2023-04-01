@@ -9,7 +9,7 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    stage('Uninstall project SDLC for baseline reinstall, if requested') {
+    stage('Uninstall project CICD for baseline reinstall, if requested') {
         if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
@@ -21,7 +21,9 @@ def call(Map args) {
         onboardingUtils.setupProjectCicdServer(projectInfo)
     }
     
-    stage('Install/upgrade project SDLC resources') {        
+    stage('Install/upgrade project CICD resources') {        
+        onboardingUtils.setupProjectNfsPvResources(projectInfo)
+        
         onboardingUtils.setupProjectCicdResources(projectInfo)
         
         onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
