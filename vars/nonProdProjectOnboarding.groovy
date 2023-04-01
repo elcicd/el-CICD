@@ -22,9 +22,9 @@ def call(Map args) {
     }
     
     stage('Install/upgrade project CICD resources') {        
-        onboardingUtils.setupProjectNfsPvResources(projectInfo)
-        
         onboardingUtils.setupProjectCicdResources(projectInfo)
+        
+        onboardingUtils.setupProjectNfsPvResources(projectInfo)
         
         onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
     }
