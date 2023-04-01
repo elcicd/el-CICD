@@ -70,7 +70,7 @@ def setupProjectNfsPvResources(def projectInfo) {
         writeFile(file: nfsCicdConfigFile, text: nfsCicdConfigValues)
 
         def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
-            projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
+            "${projectInfo.id}-pv" : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 
         sh """
             ${shCmd.echo '', "${projectInfo.id} PROJECT NFS VALUES:"}
