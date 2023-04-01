@@ -69,8 +69,8 @@ def setupProjectNfsPvResources(def projectInfo) {
         def nfsCicdConfigFile = "nfs-cicd-config-values.yaml"
         writeFile(file: nfsCicdConfigFile, text: nfsCicdConfigValues)
 
-        def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
-        chartName = "${chartName}-pv"
+        def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
+            projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 
         sh """
             ${shCmd.echo '', "${projectInfo.id} PROJECT NFS VALUES:"}

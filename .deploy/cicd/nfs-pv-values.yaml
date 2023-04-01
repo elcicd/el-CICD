@@ -8,4 +8,9 @@ elCicdTemplates:
     path: ${PATH}
     server: ${SERVER}
 
+- templateName: persistentVolumeClaim
+  appName: ${NFS_APP_NAMES}
+  storageRequest: ${STORAGE_CAPACITY}
+  accessMode: ReadWriteMany
+
   
