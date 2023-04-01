@@ -9,7 +9,7 @@ elCicdTemplates:
     server: ${SERVER}
 
 - templateName: persistentVolumeClaim
-  appName: ${NFS_APP_NAMES}
+  appNames: ${NFS_APP_NAMES}
   namespace: ${NFS_NAMESPACE}
   storageRequest: ${STORAGE_CAPACITY}
   accessMode: ReadWriteMany
