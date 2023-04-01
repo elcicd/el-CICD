@@ -83,8 +83,9 @@ def setupProjectCicdResources(def projectInfo) {
             helm install --atomic \
                 -f ${cicdConfigFile} \
                 -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
-                 -n ${projectInfo.cicdMasterNamespace} \
-                ${chartName}-pv
+                -n ${projectInfo.cicdMasterNamespace} \
+                ${chartName}-pv \
+                elCicdCharts/elCicdChart
         fi
     """
 
