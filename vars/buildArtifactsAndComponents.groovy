@@ -1,8 +1,7 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-and-deploy-components pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/build-and-deploy-components-pipeline-template.
+ * Defines the bulk of the build-artifacts-and-components pipeline.
  *
  */
 
