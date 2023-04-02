@@ -125,11 +125,11 @@ def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
     }
 }
 
-def displayInputWithTimeout(def inputMsg, def inputs = null) {
+def displayInputWithTimeout(def inputMsg, def args, def inputs = null) {
     def cicdInfo
     def startTime = System.currentTimeMillis()
     try {
-        el.runHookScript(el.cicd.PRE_USER_INPUT, projectInfo)
+        el.runHookScript(el.cicd.PRE_USER_INPUT, args)
         timeout(time: el.cicd.JENKINS_INPUT_MINS_TIMEOUT) {
             if (inputs) {
                 cicdInfo = input(message: inputMsg, parameters: inputs)
@@ -138,7 +138,7 @@ def displayInputWithTimeout(def inputMsg, def inputs = null) {
                 input(inputMsg)
             }
         }
-        el.runHookScript(el.cicd.POST_USER_INPUT, projectInfo)
+        el.runHookScript(el.cicd.POST_USER_INPUT, args)
     }
     catch(FlowInterruptedException err) {
         def inputDuration = (System.currentTimeMillis() - startTime) / 1000

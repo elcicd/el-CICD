@@ -10,7 +10,7 @@ def call(Map args) {
     stage ('Select components to promote and remove') {
         loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND COMPONENTS TO DEPLOY OR REMOVE")
 
-        promotionUtils.getUserPromotionRemovalSelections(projectInfo)
+        promotionUtils.getUserPromotionRemovalSelections(projectInfo, args)
     }
     
     stage('Verify image(s) exist in registry') {

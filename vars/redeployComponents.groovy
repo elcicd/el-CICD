@@ -19,7 +19,7 @@ def call(Map args) {
     stage ('Select components and environment to redeploy to or remove from') {
         loggingUtils.echoBanner("SELECT WHICH COMPONENTS TO REDEPLOY OR REMOVE")
 
-        redeployComponentUtils.selectComponentsToRedeploy(projectInfo)
+        redeployComponentUtils.selectComponentsToRedeploy(projectInfo, args)
     }
 
     stage('Verify selected component image(s) exists') {

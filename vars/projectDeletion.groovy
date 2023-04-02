@@ -16,7 +16,7 @@ def call(Map args) {
             "Should project ${projectInfo.id} be deleted?"
         )
 
-        jenkinsUtils.displayInputWithTimeout(msg)
+        jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")

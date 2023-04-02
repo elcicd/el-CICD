@@ -34,7 +34,7 @@ def checkoutAllRepos(def projectInfo) {
     }
 }
 
-def selectComponentsToRedeploy(def projectInfo) {
+def selectComponentsToRedeploy(def projectInfo, def args) {
     def inputs = []
     projectInfo.components.each { component ->
         inputs += choice(name: component.name,
@@ -42,7 +42,7 @@ def selectComponentsToRedeploy(def projectInfo) {
                          choices: "${el.cicd.IGNORE}\n${component.deployBranchesAndTimes}\n${el.cicd.REMOVE}")
     }
 
-    def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to redeploy in ${projectInfo.deployToEnv}", inputs)
+    def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to redeploy in ${projectInfo.deployToEnv}", args, inputs)
 
     def willRedeployOrRemove = false
     projectInfo.componentsToRedeploy = projectInfo.components.findAll { component ->

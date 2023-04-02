@@ -124,7 +124,6 @@ def runHookScript(def prefix, def args) {
     runHookScript(prefix, args, null)
 }
 
-
 def runHookScript(def prefix, def args, def exception) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")

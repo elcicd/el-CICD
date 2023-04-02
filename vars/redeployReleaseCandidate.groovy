@@ -92,7 +92,7 @@ def call(Map args) {
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be redeployed in ${projectInfo.deployToNamespace}?"
         )
 
-        jenkinsUtils.displayInputWithTimeout(msg)
+        jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
     stage('Tag images') {

@@ -89,7 +89,7 @@ def call(Map args) {
         }
 
         def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.releaseCandidateTag}"
-        def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
         projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
             def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
@@ -137,7 +137,7 @@ def call(Map args) {
             "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
         )
 
-        jenkinsUtils.displayInputWithTimeout(msg)
+        jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
     stage('Tag all images') {

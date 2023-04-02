@@ -27,7 +27,7 @@ def call(Map args) {
             booleanParam(name: module.name, description: "${moduleType} status: ${module.status}")
         }
 
-        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", inputs)
+        def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
         projectInfo.scmBranch = cicdInfo.scmBranch

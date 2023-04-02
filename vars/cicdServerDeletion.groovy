@@ -34,7 +34,7 @@ def call(Map args) {
             "Should the CICD Server and all Projects for the Group ${teamId} be removed from the cluster?"
         )
 
-        jenkinsUtils.displayInputWithTimeout(msg)
+        jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
     loggingUtils.echoBanner("DELETING DEPLOY KEYS FOR ALL ${teamId} PROJECT MODULES")

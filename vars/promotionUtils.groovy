@@ -4,7 +4,7 @@
  * Defines the implementation of the component promotion pipeline.
  */
  
-def getUserPromotionRemovalSelections(def projectInfo) {
+def getUserPromotionRemovalSelections(def projectInfo, def args) {
     def ENV_DELIMITER = ' to '
     def fromEnv = projectInfo.devEnv
 
@@ -28,7 +28,7 @@ def getUserPromotionRemovalSelections(def projectInfo) {
                 choices: "${el.cicd.IGNORE}\n${el.cicd.PROMOTE}\n${el.cicd.REMOVE}")
     }
 
-    def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to promote and environment to promote from/to:", inputs)
+    def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select components to promote and environment to promote from/to:", args, inputs)
 
     def promotionEnvs = cicdInfo.promotionEnvs.split(ENV_DELIMITER)
     projectInfo.deployFromEnv = promotionEnvs.first()
