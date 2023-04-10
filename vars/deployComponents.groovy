@@ -9,50 +9,38 @@ def call(Map args) {
     def componentsToDeploy = args.componentsToDeploy ?: []
     def componentsToRemove = args.componentsToRemove ?: []
 
-    stage ("Deploy and Remove component(s)") {
-        echo "\n--> CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS\n"
-        sh """
-            COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
-            if [[ ! -z \${COMPONENT_NAMES} ]]
-            then
-                for COMPONENT_NAME in \${COMPONENT_NAMES}
-                do
-                    helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
-                done
-            fi
-        """
-    
-        componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
-        componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
-        
-        deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToRemove + componentsToDeploy)
-        
-        deploymentUtils.waitForAllTerminatingPodsToFinish(projectInfo)
+    if (!componentsToDeploy && !componentsToRemove) {
+        loggingUtils.errorBanner("NO COMPONENTS TO DEPLOY OR REMOVE")
     }
 
-    stage('Deployment change summary') {
-        def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
-        projectInfo.components.each { component ->
-            def deployed = componentsToDeploy?.contains(component)
-            def removed = componentsToRemove?.contains(component)
-            if (deployed || removed) {
-                resultsMsgs += "**********"
-                resultsMsgs += ''
-                def checkoutBranch = component.deploymentBranch ?: component.scmBranch
-                resultsMsgs += deployed ? "${component.name} DEPLOYED FROM GIT:" : "${component.name} REMOVED FROM NAMESPACE"
-                if (deployed) {
-                    def refs = component.scmBranch.startsWith(component.srcCommitHash) ?
-                        "    Git image source ref: ${component.srcCommitHash}" :
-                        "    Git image source refs: ${component.scmBranch} / ${component.srcCommitHash}"
-                    
-                    resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
-                    resultsMsgs += "    git checkout ${checkoutBranch}"
-                }
-                resultsMsgs += ''
-            }
-        }
-        resultsMsgs += "**********"
+    componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
+    componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
 
-        loggingUtils.echoBanner(resultsMsgs)
+    stage ("Clean up failed upgrades/installs") {
+        loggingUtils.echoBanner("CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS")
+        deploymentUtils.cleanupFailedInstalls(projectInfo)
+    }
+
+    stage("Remove component(s)") {
+        if (componentsToRemove) {            
+            runComponentRemovalStages(projectInfo, componentsToRemove)
+        }
+        else {
+            loggingUtils.echoBanner("NO COMPONENTS TO REMOVE: SKIPPING")
+        }
+    }
+
+    stage("Deploy component(s)") {
+        if (componentsToRemove) {
+            loggingUtils.echoBanner("REMOVE COMPONENT(S):", componentsToRemove.collect { it.name }.join(', '))
+            
+            deploymentUtils.
+
+            deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToRemove + componentsToDeploy)
+        }
+    }
+    
+    stage("Summary") {
+        deploymentUtils.outputDeploymentSummary(projectInfo)
     }
 }

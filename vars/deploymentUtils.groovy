@@ -4,7 +4,37 @@
  * Utility methods for apply OKD resources
  */
  
-def runComponentDeploymentStages(def projectInfo, def components) {    
+ def cleanupFailedInstalls(def projectInfo) {
+    sh """
+        COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
+        if [[ ! -z \${COMPONENT_NAMES} ]]
+        then
+            for COMPONENT_NAME in \${COMPONENT_NAMES}
+            do
+                helm uninstall -n ${projectInfo.deployToNamespace} \${COMPONENT_NAME} --no-hooks
+            done
+        fi
+    """
+}
+
+def runComponentRemovalStages(def projectInfo, def components) {
+    def helmStages = concurrentUtils.createParallelStages("Component Removal", components) { component ->
+        sh """
+            if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
+            then
+                helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
+            fi
+        """
+    }
+
+    parallel(helmStages)
+    
+    waitForAllTerminatingPodsToFinish(projectInfo)
+}
+
+def runComponentDeploymentStages(def projectInfo, def components) {
+    setupComponentDeploymentDirs(projectInfo, components)
+    
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
@@ -14,47 +44,82 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def commonValues = ["elCicdProfiles='{${projectInfo.deployToEnv}}'",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
-                        "elCicdDefs.TEAM_ID=${projectInfo.teamId}",
-                        "elCicdDefs.PROJECT_ID=${projectInfo.id}",
-                        "elCicdDefs.RELEASE_VERSION=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
-                        "elCicdDefs.BUILD_NUMBER=\${BUILD_NUMBER}",
-                        "elCicdDefs.EL_CICD_PROFILES=${projectInfo.deployToEnv}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
-                        "elCicdDefs.META_INFO_POSTFIX=${el.cicd.META_INFO_POSTFIX}"]
+                        "elCicdDefs.TEAM_ID=${projectInfo.teamId}",
+                        "elCicdDefs.PROJECT_ID=${projectInfo.id}"]
 
     sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
 
     def helmStages = concurrentUtils.createParallelStages("Component Deployment/Removal", components) { component ->
-        if (component.flaggedForDeployment) {
-            def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-            def compValues = ["elCicdDefaults.appName=${component.name}",
-                              "elCicdDefaults.image=${componentImage}",
-                              "elCicdDefs.COMPONENT_NAME=${component.name}",
-                              "elCicdDefs.CODE_BASE=${component.codeBase}",
-                              "elCicdDefs.SCM_REPO=${component.scmRepoName}",
-                              "elCicdDefs.SRC_COMMIT_HASH=${component.srcCommitHash}",
-                              "elCicdDefs.DEPLOYMENT_BRANCH=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
-            compValues.addAll(commonValues)
-            
-            helmUpgradeInstall(projectInfo, component, compValues)
+        def compValues = ["elCicdDefaults.appName=${component.name}",
+                            "elCicdDefaults.image=${componentImage}",
+                            "elCicdDefs.COMPONENT_NAME=${component.name}"]
+
+        def deploymentType = component.deploymentType ?: projectInfo.deploymentType
+
+        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+        compValues.addAll(commonValues)
+
+        helmUpgradeInstall(projectInfo, component, compValues)
+    }
+
+    parallel(helmStages)
+    
+    waitForAllTerminatingPodsToFinish(projectInfo)
+}
+
+def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
+    def commonValues = ["profiles=${projectInfo.deployToEnv}",
+                        "teamId=${projectInfo.teamId}",
+                        "projectId=${projectInfo.id}",
+                        "releaseVersion=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "buildNumber=\${BUILD_NUMBER}",
+                        "metaInfoPostfix=${el.cicd.META_INFO_POSTFIX}"]
+                        
+    componentsToDeploy.each { component ->        
+        def compValues = ["codeBase=${component.codeBase}",
+                          "scmRepoName=${component.scmRepoName}",
+                          "srcCommitHash=${component.srcCommitHash}",
+                          "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
+                          
+        if (fileExists("${component.deploymentDir}/${projectInfo.deployToEnv}/kustomization.yaml")) {
+            compValues.add("kustDir=${component.deploymentDir}/${projectInfo.deployToEnv}")
         }
-        else if (component.flaggedForRemoval) {
-            helmUninstall(projectInfo, component)
+        else if (fileExists("${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}/kustomization.yaml")) {
+            compValues.add("kustDir=${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}")
+        }
+        
+        compValues.addAll(commonValues)
+    
+        dir (component.deploymentDir) {
+            sh """
+                cp -rTn ${el.cicd.EL_CICD_DIR}/${CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart .
+                cp ${el.cicd.EL_CICD_DIR}/${CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart/kustomize.sh .
+            
+                mkdir ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
+                
+                ${shCmd.echo ''}
+                helm template \
+                    --set-string ${compValues.join(' --set-string ')} \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/kustomizeChart \
+                    > ./${el.cicd.EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
+            """
         }
     }
-    
-    parallel(helmStages)
 }
 
 def helmUpgradeInstall(def projectInfo, def component, def compValues) {
     dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-        sh """            
+        sh """
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
             if [[ -d ./${projectInfo.deployToEnv} ]]
             then
-                ENV_FILES=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *.yaml -o -name *.yml -o -name *.json \\) -printf '%f ')
-                ENV_FILES=\$(for FILE in \$ENV_FILES; do echo -n "--set-file=elCicdRawYaml.\$(echo \$FILE | sed s/\\\\./_/g )=./${projectInfo.deployToEnv}/\$FILE "; done)
+                VALUES_FILES+=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
+                mkdir -p templates
+                cp -rT templates ..
             fi
 
             HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
@@ -63,39 +128,51 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                 ${shCmd.echo ''}
                 helm \${FLAGS} \
                     --set-string ${compValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \${ENV_FILES} \
+                    \${VALUES_FILES} \
                     -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/component-meta-info-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
-                    ${component.name} \
-                    elCicdCharts/elCicdChart
+                    --post-renderer ./kustomize.sh \
+                    ${component.name} .
             done
         """
     }
 }
 
-def helmUninstall(def projectInfo, def component) {
-    sh """
-        if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
-        then
-            helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-        fi
-    """
-}
-
 def waitForAllTerminatingPodsToFinish(def projectInfo) {
-    loggingUtils.echoBanner("WAIT FOR ANY TERMINATING PODS TO COMPLETE")
-    
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
         TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
         if [[ ! -z \${TERMINATING_PODS} ]]
         then
-            ${shCmd.echo '', '--> WAIT FOR OLD PODS TO COMPLETE TERMINATION', ''}
-            
+            ${shCmd.echo '', '--> WAIT FOR PODS TO COMPLETE TERMINATION', ''}
+
             oc wait --for=delete pod \${TERMINATING_PODS} -n ${projectInfo.deployToNamespace} --timeout=600s
-        
-            ${shCmd.echo '', '--> ALL OLD PODS TERMINATED AND REMOVED', ''}
+
+            ${shCmd.echo '', '--> NO TERMINATING PODS REMAINING', ''}
         fi
     """
+}
+
+def outputDeploymentSummary(def projectInfo) {
+    def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
+    projectInfo.components.each { component ->
+        if (component.flaggedForDeployment || component.flaggedForRemoval) {
+            resultsMsgs += "**********"
+            resultsMsgs += ''
+            def checkoutBranch = component.deploymentBranch ?: component.scmBranch
+            resultsMsgs += component.flaggedForDeployment ? "${component.name} DEPLOYED FROM GIT:" : "${component.name} REMOVED FROM NAMESPACE"
+            if (component.flaggedForDeployment) {
+                def refs = component.scmBranch.startsWith(component.srcCommitHash) ?
+                    "    Git image source ref: ${component.srcCommitHash}" :
+                    "    Git image source refs: ${component.scmBranch} / ${component.srcCommitHash}"
+                
+                resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
+                resultsMsgs += "    git checkout ${checkoutBranch}"
+            }
+            resultsMsgs += ''
+        }
+    }
+    resultsMsgs += "**********"
+
+    loggingUtils.echoBanner(resultsMsgs)
 }

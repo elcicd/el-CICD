@@ -17,7 +17,7 @@ def gatherProjectInfoStage(def teamId, def projectId) {
 
 def gatherProjectInfo(def teamId, def projectId) {
     assert teamId && projectId : "teamId (${teamId}) and (${projectId}) cannot be empty"
-    
+
     def projectInfo = readProjectYaml(teamId, projectId)
 
     projectInfo.teamId = teamId
@@ -61,15 +61,30 @@ def readProjectYaml(def teamId, def projectId) {
 }
 
 def initProjectModuleData(def projectInfo) {
+    projectInfo.workDir =  "${WORKSPACE}/${projectInfo.id}"
+    projectInfo.compDeploymentDirs = [:]
+
     projectInfo.components = projectInfo.components ?: []
-    projectInfo.components.each { it.isComponent = true }
+    projectInfo.components.each { component ->
+        component.isComponent = true
+        setModuleData(projectInfo, component)
+        
+        component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
+        projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
+    }
 
     projectInfo.artifacts = projectInfo.artifacts ?: []
-    projectInfo.artifacts.each { it.isArtifact = true }
+    projectInfo.artifacts.each { artifact ->
+        artifact.isArtifact = true
+        setModuleData(projectInfo, artifact)
+    }
 
-    projectInfo.testModules = projectInfo.testModules ?: []
-    projectInfo.testModules.each { it.isTestModule = true }
-
+    projectInfo.artifacts = projectInfo.testModules ?: []
+    projectInfo.testModules.each { testModule ->
+        testModule.isTestModule = true
+        setModuleData(projectInfo, testModule)
+    }
+    
     projectInfo.buildModules = []
     projectInfo.buildModules.addAll(projectInfo.components)
     projectInfo.buildModules.addAll(projectInfo.artifacts)
@@ -78,19 +93,19 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.modules.addAll(projectInfo.components)
     projectInfo.modules.addAll(projectInfo.artifacts)
     projectInfo.modules.addAll(projectInfo.testModules)
+}
 
-    projectInfo.modules.each { module ->
-        module.projectInfo = projectInfo
+def setModuleData(def projectInfo, def module) {
+    module.projectInfo = projectInfo
 
-        module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
-        module.id = "${projectInfo.id}-${module.name}"
+    module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+    module.id = "${projectInfo.id}-${module.name}"
 
-        module.workDir = "${WORKSPACE}/${module.scmRepoName}"
+    module.workDir = "${WORKSPACE}/${module.scmRepoName}"
 
-        module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
-        module.scmBranch = projectInfo.scmBranch
-        module.scmDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
-    }
+    module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+    module.scmBranch = projectInfo.scmBranch
+    module.scmDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {
