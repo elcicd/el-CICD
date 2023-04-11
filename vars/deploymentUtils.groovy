@@ -3,7 +3,7 @@
  *
  * Utility methods for apply OKD resources
  */
- 
+
  def cleanupFailedInstalls(def projectInfo) {
     sh """
         COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
@@ -28,13 +28,13 @@ def runComponentRemovalStages(def projectInfo, def components) {
     }
 
     parallel(helmStages)
-    
+
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
     setupComponentDeploymentDirs(projectInfo, components)
-    
+
     def ENV_TO = projectInfo.deployToEnv.toUpperCase()
     def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
@@ -64,7 +64,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     }
 
     parallel(helmStages)
-    
+
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
@@ -75,29 +75,29 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
                         "releaseVersion=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "buildNumber=\${BUILD_NUMBER}",
                         "metaInfoPostfix=${el.cicd.META_INFO_POSTFIX}"]
-                        
-    componentsToDeploy.each { component ->        
+
+    componentsToDeploy.each { component ->
         def compValues = ["codeBase=${component.codeBase}",
                           "scmRepoName=${component.scmRepoName}",
                           "srcCommitHash=${component.srcCommitHash}",
                           "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
-                          
+
         if (fileExists("${component.deploymentDir}/${projectInfo.deployToEnv}/kustomization.yaml")) {
             compValues.add("kustDir=${component.deploymentDir}/${projectInfo.deployToEnv}")
         }
         else if (fileExists("${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}/kustomization.yaml")) {
             compValues.add("kustDir=${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}")
         }
-        
+
         compValues.addAll(commonValues)
-    
+
         dir (component.deploymentDir) {
             sh """
-                cp -rTn ${el.cicd.EL_CICD_DIR}/${CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart .
-                cp ${el.cicd.EL_CICD_DIR}/${CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart/kustomize.sh .
-            
+                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart .
+                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart/kustomize.sh .
+
                 mkdir ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
-                
+
                 ${shCmd.echo ''}
                 helm template \
                     --set-string ${compValues.join(' --set-string ')} \
@@ -165,7 +165,7 @@ def outputDeploymentSummary(def projectInfo) {
                 def refs = component.scmBranch.startsWith(component.srcCommitHash) ?
                     "    Git image source ref: ${component.srcCommitHash}" :
                     "    Git image source refs: ${component.scmBranch} / ${component.srcCommitHash}"
-                
+
                 resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
                 resultsMsgs += "    git checkout ${checkoutBranch}"
             }
