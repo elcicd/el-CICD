@@ -18,7 +18,7 @@
 }
 
 def runComponentRemovalStages(def projectInfo, def components) {
-    def helmStages = concurrentUtils.createParallelStages("Component Removal", components) { component ->
+    def helmStages = concurrentUtils.createParallelStages("Component Removals", components) { component ->
         sh """
             if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
             then
@@ -50,14 +50,12 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
 
-    def helmStages = concurrentUtils.createParallelStages("Component Deployment/Removal", components) { component ->
+    def helmStages = concurrentUtils.createParallelStages("Component Deployments", components) { component ->
+        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.appName=${component.name}",
                             "elCicdDefaults.image=${componentImage}",
                             "elCicdDefs.COMPONENT_NAME=${component.name}"]
 
-        def deploymentType = component.deploymentType ?: projectInfo.deploymentType
-
-        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         compValues.addAll(commonValues)
 
         helmUpgradeInstall(projectInfo, component, compValues)
