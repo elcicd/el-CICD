@@ -93,8 +93,8 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
         dir (component.deploymentDir) {
             sh """
-                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart .
-                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/elCicdTemplateChart/kustomize.sh .
+                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/templateChart .
+                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/templateChart/kustomize.sh .
 
                 mkdir ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
 
