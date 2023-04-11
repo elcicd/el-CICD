@@ -11,10 +11,10 @@ version: "0.1.0"
 dependencies:
 - name: elCicdRenderer
   version: 0.1.0
-  repository: file://../elCicdRenderer
+  repository: '@elCicdCharts'
 - name: elCicdK8s
   version: 0.1.0
-  repository: file://../elCicdK8s
+  repository: '@elCicdCharts'
 - name: elCicdCommon
   version: 0.1.0
-  repository: file://../elCicdCommon
+  repository: '@elCicdCharts'
