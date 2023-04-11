@@ -120,7 +120,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                 cp -rT templates ..
             fi
 
-            HELM_FLAGS=("template --debug" "upgrade --atomic --install --history-max=1")
+            HELM_FLAGS=("template --dependency-update --debug" "upgrade --atomic --install --history-max=1")
             for FLAGS in "\${HELM_FLAGS[@]}"
             do
                 ${shCmd.echo ''}
