@@ -93,8 +93,8 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
         dir (component.deploymentDir) {
             sh """
-                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/templateChart .
-                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/templateChart/kustomize.sh .
+                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR} .
+                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}/kustomize.sh .
 
                 mkdir ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
 
@@ -103,7 +103,7 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     --set-string ${compValues.join(' --set-string ')} \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/kustomizeChart \
+                    ${el.cicd.EL_CICD_DIR}/${el.cicd.KUSTOMIZE_CHART_DIR} \
                     > ./${el.cicd.EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
             """
         }
