@@ -1,4 +1,4 @@
-{{- _ := set .Values "UNDEFINED" "undefined" -}}
+{{- $_ := set $.Values "UNDEFINED" "undefined" -}}
 
 {{/*
 Kustomization YAML
@@ -7,37 +7,37 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-{{- if .Values.kustDir }}
-- {{ .Values.kustDir }}
+{{- if $.Values.kustDir }}
+- {{ $.Values.kustDir }}
 {{- end }}
-- ./{{ .Values.helmAllFile }}
+- ./{{ $.Values.helmAllFile }}
 
 namespace: "{{ .Release.Namespace }}"
 
 commonLabels:
-  teamid: "{{ .Values.teamId }}"
-  projectid: "{{ .Values.projectId }}"
+  teamid: "{{ $.Values.teamId }}"
+  projectid: "{{ $.Values.projectId }}"
   component: "{{ .Release.Name }}"
 
 labels:
 - pairs:
-    release-version: "{{ .Values.releaseVersionTag  | default .Values.UNDEFINED }}"
+    release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
   includeTemplates: true
 
 configMapGenerator:
-- name: {{ .Values.projectId }}-{{ .Values.component }}-{{ .Values.metaInfoPostfix }}
+- name: {{ $.Values.projectId }}-{{ $.Values.component }}-{{ $.Values.metaInfoPostfix }}
   behavior: replace
   options:
     disableNameSuffixHash: true
   literals:
-  - projectid="{{ .Values.projectId }}"
+  - projectid="{{ $.Values.projectId }}"
   - component="{{ .Release.Name }}"
-  - profiles="{{ join "," .Values.profiles }}"
-  - scm-repo="{{ .Values.scmRepoName }}"
-  - src-commit-hash="{{ .Values.srcCommitHash }}"
-  - deployment-branch="{{ .Values.deploymentBranch | default .Values.UNDEFINED }}"
-  - release-version="{{ .Values.releaseVersionTag  | default .Values.UNDEFINED }}"
-  - code-base="{{ .Values.codeBase }}"
-  - build-number="{{ .Values.buildNumber }}"
+  - profiles="{{ join "," $.Values.profiles }}"
+  - scm-repo="{{ $.Values.scmRepoName }}"
+  - src-commit-hash="{{ $.Values.srcCommitHash }}"
+  - deployment-branch="{{ $.Values.deploymentBranch | default $.Values.UNDEFINED }}"
+  - release-version="{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
+  - code-base="{{ $.Values.codeBase }}"
+  - build-number="{{ $.Values.buildNumber }}"
   - deploy-time="{{ now | date "2006-01-02-15:04:05" }}"
 
