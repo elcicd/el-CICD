@@ -13,8 +13,6 @@ def call(Map args) {
         loggingUtils.errorBanner("NO COMPONENTS TO DEPLOY OR REMOVE")
     }
 
-    componentsToDeploy.each { it.flaggedForDeployment = true; it.flaggedForRemoval = false }
-    componentsToRemove.each { it.flaggedForDeployment = false; it.flaggedForRemoval = true }
 
     stage ("Clean up failed upgrades/installs") {
         loggingUtils.echoBanner("CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS")
@@ -23,7 +21,7 @@ def call(Map args) {
 
     stage("Remove component(s)") {
         if (componentsToRemove) {            
-            runComponentRemovalStages(projectInfo, componentsToRemove)
+            deploymentUtils.runComponentRemovalStages(projectInfo, componentsToRemove)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE: SKIPPING")
@@ -31,16 +29,20 @@ def call(Map args) {
     }
 
     stage("Deploy component(s)") {
-        if (componentsToRemove) {
-            loggingUtils.echoBanner("REMOVE COMPONENT(S):", componentsToRemove.collect { it.name }.join(', '))
-            
-            deploymentUtils.
+        if (componentsToDeploy) {
+            loggingUtils.echoBanner("DEPLOY COMPONENT(S):", componentsToDeploy.collect { it.name }.join(', '))
 
-            deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToRemove + componentsToDeploy)
+            deploymentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+        }
+        else {
+            loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
         }
     }
     
     stage("Summary") {
+        componentsToRemove.each { it.flaggedForRemoval = true }
+        componentsToDeploy.each { it.flaggedForDeployment = true }
+        
         deploymentUtils.outputDeploymentSummary(projectInfo)
     }
 }
