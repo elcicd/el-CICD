@@ -55,7 +55,7 @@ __main() {
             '--refresh-creds')
                 ELCICD_ADM_MSG="REFRESH CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_redentials')
+                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_credentials')
                 shift 1
             ;;
 
