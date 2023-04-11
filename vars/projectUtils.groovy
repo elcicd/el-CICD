@@ -62,9 +62,9 @@ def readProjectYaml(def teamId, def projectId) {
 
 def initProjectModuleData(def projectInfo) {
     projectInfo.workDir =  "${WORKSPACE}/${projectInfo.id}"
-    projectInfo.compDeploymentDirs = [:]
 
     projectInfo.components = projectInfo.components ?: []
+    projectInfo.deploymentDirs = [:]
     projectInfo.components.each { component ->
         component.isComponent = true
         setModuleData(projectInfo, component)
