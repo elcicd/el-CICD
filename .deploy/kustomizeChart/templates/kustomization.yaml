@@ -15,6 +15,9 @@ commonLabels:
 
 labels:
 - pairs:
+    scm-repo: "{{ $.Values.scmRepoName }}"
+    deployment-branch: "{{ $.Values.deploymentBranch }}"
+    src-commit-hash: "{{ $.Values.src-commit-hash }}"
     release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
   includeTemplates: true
 
