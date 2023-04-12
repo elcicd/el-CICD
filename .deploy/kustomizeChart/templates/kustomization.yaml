@@ -20,7 +20,6 @@ labels:
 
 configMapGenerator:
 - name: {{ $.Values.projectId }}-{{ $.Values.component }}-{{ $.Values.metaInfoPostfix }}
-  behavior: replace
   options:
     disableNameSuffixHash: true
   literals:
