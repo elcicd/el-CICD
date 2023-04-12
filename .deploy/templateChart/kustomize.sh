@@ -2,9 +2,11 @@
 set -e
 EL_CICD_KUSTOMIZE_DIR=${1}
 
-cat <&0 > ./${EL_CICD_KUSTOMIZE_DIR}/helm-all.yaml
+cd ${EL_CICD_KUSTOMIZE_DIR}
 
-kustomize edit add resource ${EL_CICD_KUSTOMIZE_DIR}/helm-all.yaml
-kustomize build ${EL_CICD_KUSTOMIZE_DIR}
+cat <&0 > ./helm-all.yaml
+
+kustomize edit add resource ./helm-all.yaml
+kustomize build .
 
 set +e
