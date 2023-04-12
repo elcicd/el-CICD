@@ -41,7 +41,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
 
-    def commonValues = ["elCicdProfiles='{${projectInfo.deployToEnv}}'",
+    def commonValues = ["'elCicdProfiles={${projectInfo.deployToEnv}}'",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
@@ -53,8 +53,8 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Component Deployments", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.appName=${component.name}",
-                            "elCicdDefaults.image=${componentImage}",
-                            "elCicdDefs.COMPONENT_NAME=${component.name}"]
+                          "elCicdDefaults.image=${componentImage}",
+                          "elCicdDefs.COMPONENT_NAME=${component.name}"]
 
         compValues.addAll(commonValues)
 
