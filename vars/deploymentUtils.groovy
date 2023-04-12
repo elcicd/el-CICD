@@ -75,7 +75,8 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
                         "metaInfoPostfix=${el.cicd.META_INFO_POSTFIX}"]
 
     componentsToDeploy.each { component ->
-        def compValues = ["codeBase=${component.codeBase}",
+        def compValues = ["component=${component.name}",
+                          "codeBase=${component.codeBase}",
                           "scmRepoName=${component.scmRepoName}",
                           "srcCommitHash=${component.srcCommitHash}",
                           "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
