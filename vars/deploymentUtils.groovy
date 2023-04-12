@@ -92,10 +92,13 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
         dir (component.deploymentDir) {
             sh """
                 cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR} .
+                if [[ -d ./${projectInfo.deployToEnv} ]]
+                then
+                    cp -rT ./${projectInfo.deployToEnv} .
+                fi
                 cp ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}/kustomize.sh .
 
-                mkdir ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
-
+                mkdir -p ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
                 ${shCmd.echo ''}
                 helm template \
                     --set-string ${compValues.join(' --set-string ')} \
@@ -113,25 +116,18 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
         sh """
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
 
-            if [[ -d ./${projectInfo.deployToEnv} ]]
-            then
-                VALUES_FILES+=\$(find ./${projectInfo.deployToEnv} -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
-                mkdir -p templates
-                cp -rT templates ..
-            fi
+            HELM_ARGS="--set-string ${compValues.join(' --set-string ')}
+                \${VALUES_FILES}
+                -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml
+                -n ${projectInfo.deployToNamespace}
+                --post-renderer ./kustomize.sh
+                ${component.name} ."
 
-            HELM_FLAGS=("template --dependency-update --debug" "upgrade --atomic --install --history-max=1")
-            for FLAGS in "\${HELM_FLAGS[@]}"
-            do
-                ${shCmd.echo ''}
-                helm \${FLAGS} \
-                    --set-string ${compValues.join(' --set-string ')} \
-                    \${VALUES_FILES} \
-                    -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
-                    -n ${projectInfo.deployToNamespace} \
-                    --post-renderer ./kustomize.sh \
-                    ${component.name} .
-            done
+            ${shCmd.echo ''}
+            helm template --dependency-update --debug \${HELM_ARGS}
+
+            ${shCmd.echo ''}
+            helm upgrade --atomic --install --history-max=1 \${HELM_ARGS}
         """
     }
 }
