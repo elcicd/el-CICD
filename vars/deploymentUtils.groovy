@@ -120,7 +120,7 @@ def helmUpgradeInstall(def projectInfo, def component, def compValues) {
                 \${VALUES_FILES}
                 -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml
                 -n ${projectInfo.deployToNamespace}
-                --post-renderer ./kustomize.sh
+                --post-renderer ./kustomize.sh --post-renderer-args ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
                 ${component.name} ."
 
             ${shCmd.echo ''}
