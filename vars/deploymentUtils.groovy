@@ -43,7 +43,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     def commonValues = ["elCicdProfiles={${projectInfo.deployToEnv}}",
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
-                        "elCicdDefaults.ingressHostDomain='${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'",
+                        "elCicdDefaults.ingressHostDomain=${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
                         "elCicdDefs.TEAM_ID=${projectInfo.teamId}",
                         "elCicdDefs.PROJECT_ID=${projectInfo.id}"]
