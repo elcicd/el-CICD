@@ -6,6 +6,11 @@ Kustomization YAML
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+resources:
+{{- if $.Values.componentKustDir }}
+- {{ $.Values.componentKustDir }}
+{{- end }}
+
 namespace: "{{ .Release.Namespace }}"
 
 commonLabels:
@@ -17,8 +22,9 @@ labels:
 - pairs:
     scm-repo: "{{ $.Values.scmRepoName }}"
     deployment-branch: "{{ $.Values.deploymentBranch }}"
-    src-commit-hash: "{{ $.Values.src-commit-hash }}"
+    src-commit-hash: "{{ $.Values.srcCommitHash }}"
     release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
+    code-base: "{{ $.Values.codeBase }}"
   includeTemplates: true
 
 configMapGenerator:

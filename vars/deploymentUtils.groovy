@@ -82,10 +82,10 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
                           "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
 
         if (fileExists("${component.deploymentDir}/${projectInfo.deployToEnv}/kustomization.yaml")) {
-            compValues.add("kustDir=${component.deploymentDir}/${projectInfo.deployToEnv}")
+            compValues.add("componentKustDir=${component.deploymentDir}/${projectInfo.deployToEnv}")
         }
         else if (fileExists("${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}/kustomization.yaml")) {
-            compValues.add("kustDir=${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}")
+            compValues.add("componentKustDir=${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}")
         }
 
         compValues.addAll(commonValues)
