@@ -6,6 +6,8 @@ Kustomization YAML
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+{{- $deployTime := (now | date "2006-01-02-15:04:05") }}
+
 resources:
 {{- if $.Values.componentKustDir }}
 - {{ $.Values.componentKustDir }}
@@ -25,6 +27,7 @@ labels:
     src-commit-hash: "{{ $.Values.srcCommitHash }}"
     release-version: "{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
     code-base: "{{ $.Values.codeBase }}"
+    deploy-time: "{{ $deployTime }}"
   includeTemplates: true
 
 configMapGenerator:
@@ -41,5 +44,5 @@ configMapGenerator:
   - release-version="{{ $.Values.releaseVersionTag  | default $.Values.UNDEFINED }}"
   - code-base="{{ $.Values.codeBase }}"
   - build-number="{{ $.Values.buildNumber }}"
-  - deploy-time="{{ now | date "2006-01-02-15:04:05" }}"
+  - deploy-time="{{ $deployTime }}"
 
