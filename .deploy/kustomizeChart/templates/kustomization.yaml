@@ -6,7 +6,7 @@ Kustomization YAML
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-{{- $deployTime := (now | date "2006-01-02-15:04:05") }}
+{{- $deployTime := (now | date "2006-01-02_15-04-05") }}
 
 resources:
 {{- if $.Values.componentKustDir }}
