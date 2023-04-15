@@ -164,12 +164,13 @@ _unknown_cmd_opt_msg_and_exit() {
 _confirm_logged_into_cluster() {
     echo
     echo "You must be logged into the cluster."
-    echo "el-CICD only confirms you are logged in."
-    echo "${_BOLD}DOUBLE-CHECK IT'S THE CORRECT CLUSTER${_REGULAR}."
     echo "Confirming..."
-    sleep 2
     oc whoami > /dev/null 2>&1
+    sleep 2
     echo "${_BOLD}Confirmed${_REGULAR}"
+    oc cluster-info
+    echo "el-CICD only confirms you are logged in."
+    echo "${_BOLD}VERIFY THE ABOVE INFORMATION TO MAKE SURE YOU'RE LOGGED INTO THE CORRECT CLUSTER${_REGULAR}."
 }
 
 _confirm_continue() {
