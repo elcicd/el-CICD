@@ -111,16 +111,6 @@ def setupProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        helm template --debug --set-string templateCommandRunning=true \
-            -f ${cicdConfigFile} \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
-            -n ${projectInfo.cicdMasterNamespace} \
-            ${chartName} \
-            elCicdCharts/elCicdChart
-
         helm upgrade --install --history-max=1  \
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
