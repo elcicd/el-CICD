@@ -111,7 +111,7 @@ def setupProjectCicdResources(def projectInfo) {
         cat ${cicdConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        helm template --debug --set-string templateCommandRunning=true
+        helm template --debug --set-string templateCommandRunning=true \g
             -f ${cicdConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
