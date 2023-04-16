@@ -1,12 +1,12 @@
 elCicdDefs:
   BUILD_COMPONENT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
-    component: ${BASE_APP_NAME}
+    component: ${BASE_OBJ_NAME}
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   BUILD_ARTIFACT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
-    artifact: ${BASE_APP_NAME}
+    artifact: ${BASE_OBJ_NAME}
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   SHARED_PIPELINE_LABELS:
@@ -18,7 +18,7 @@ elCicdDefs:
     projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
     isBuild: true,
-    pipelineName: '${APP_NAME}',
+    pipelineName: '${OBJ_NAME}',
     scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
     <hudson.model.ParametersDefinitionProperty>
@@ -32,7 +32,7 @@ elCicdDefs:
     </hudson.model.ParametersDefinitionProperty>
   RELEASE_CANDIDATE_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT},
-                pipelineName: '${APP_NAME}',,
+                pipelineName: '${OBJ_NAME}',,
                 teamId: '${TEAM_ID}',
                 projectId: ${PROJECT_ID},
                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
@@ -44,13 +44,13 @@ elCicdDefs:
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: config.xml
     config.xml: ${PIPELINE_TEMPLATE_XML}
-    path: ${PROJECT_ID}/jobs/${APP_NAME}/config.xml
+    path: ${PROJECT_ID}/jobs/${OBJ_NAME}/config.xml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
 
 elCicdTemplates:
 - templateName: configMap
-  appName: ${PROJECT_ID}-jenkins-folder
+  objName: ${PROJECT_ID}-jenkins-folder
   labels:
     teamid: ${TEAM_ID}
     projectid: ${PROJECT_ID}
@@ -58,57 +58,57 @@ elCicdTemplates:
   data: ${PROJECT_FOLDER_DATA}
 
 - templateName: configMap
-  appNames: ${BUILD_COMPONENT_PIPELINES}
-  appName: ${}-build-component
+  objNames: ${BUILD_COMPONENT_PIPELINES}
+  objName: ${}-build-component
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS_XML}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
                   agentBuildDependencyCache: ${AGENT_BUILD_DEPENDENCY_CACHE},
-                  componentName: '${BASE_APP_NAME}',
+                  componentName: '${BASE_OBJ_NAME}',
                   deployToNamespace: params.DEPLOY_TO_NAMESPACE,
                   recreate: params.REINSTALL]
       el.node(args) {
           buildComponent(args)
       }
     AUTH_TOKEN:
-      ${PROJECT_ID}-${BASE_APP_NAME}-scm-repo-private-contentkey
+      ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
   data: ${PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: configMap
-  appNames: ${BUILD_ARTIFACT_PIPELINES}
-  appName: ${}-build-artifact
+  objNames: ${BUILD_ARTIFACT_PIPELINES}
+  objName: ${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS_XML}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
-                  artifactName: '${BASE_APP_NAME}',
+                  artifactName: '${BASE_OBJ_NAME}',
                   isSnapshot: params.IS_SNAPSHOT]
       el.node(args) {
           buildArtifact(args)
       }
     AUTH_TOKEN:
-      ${PROJECT_ID}-${BASE_APP_NAME}-scm-repo-private-contentkey
+      ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
   data: ${PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: configMap
-  appNames:
+  objNames:
   - build-artifacts-and-components
   - promote-components
   - run-post-deployment-tests
   - redeploy-components
   - create-release-candidate
   - redeploy-release-candidate
-  appName: ${#}-${}
+  objName: ${#}-${}
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
     ARGS: |-
       def args = [teamId: '${TEAM_ID}',
                   projectId: '${PROJECT_ID}',
                   agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_APP_NAME}',
+                  pipelineName: '${BASE_OBJ_NAME}',
                   ${EXTRA_ARGS}]
     EL_CICD_API_CALL: |-
       ${ARGS}
@@ -151,7 +151,7 @@ elCicdTemplates:
   data: ${PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: roleBinding
-  appName: ${PROJECT_ID}-edit
+  objName: ${PROJECT_ID}-edit
   namespaces: ${CICD_NAMESPACES}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -165,23 +165,23 @@ elCicdTemplates:
     name: ${${NAME_SPACE}_GROUP}
 
 - templateName: copyResource
-  appNames: ${NONPROD_ENVS}
-  appName: el-cicd-${}-pull-secret
+  objNames: ${NONPROD_ENVS}
+  objName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
+  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
 
 - templateName: copyResource
-  appNames: ${SANDBOX_ENVS}
+  objNames: ${SANDBOX_ENVS}
   srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_APP_NAME}
+  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
 
 - templateName: persistentVolumeClaim
   anyProfiles:
   - jenkinsAgentPersistent
-  appName: jenkins-agent-home
+  objName: jenkins-agent-home
   storageRequest: ${AGENT_VOLUME_CAPACITY}
   accessMode: ReadWriteMany
 

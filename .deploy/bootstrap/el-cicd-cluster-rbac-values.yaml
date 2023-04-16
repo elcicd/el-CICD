@@ -1,6 +1,6 @@
 elCicdTemplates:
 - templateName: clusterRole
-  appName: elcicd-user
+  objName: elcicd-user
   mustHaveEveryProfile:
   - cicd
   - okd
@@ -16,7 +16,7 @@ elCicdTemplates:
 
 elCicdTemplates-sealed-secrets:
 - templateName: clusterRole
-  appName: sealed-secrets-management
+  objName: sealed-secrets-management
   mustHaveAnyProfile:
   - sealed-secrets
   labels:

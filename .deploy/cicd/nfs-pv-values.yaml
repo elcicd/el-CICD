@@ -1,7 +1,7 @@
 elCicdTemplates:
 - templateName: persistentVolume
-  appNames: ${NFS_APP_NAMES}
-  storageClassName: ${APP_NAME}
+  objNames: ${NFS_OBJ_NAMES}
+  storageClassName: ${OBJ_NAME}
   storageCapacity: ${STORAGE_CAPACITY}
   accessModes: ${ACCESS_MODES}
   nfs:
@@ -9,7 +9,7 @@ elCicdTemplates:
     server: ${SERVER}
 
 - templateName: persistentVolumeClaim
-  appNames: ${NFS_APP_NAMES}
+  objNames: ${NFS_OBJ_NAMES}
   namespace: ${NFS_NAMESPACE}
   storageRequest: ${STORAGE_CAPACITY}
   accessMode: ReadWriteMany

@@ -1,6 +1,6 @@
 elCicdTemplates:
 - templateName: job
-  appName: jenkins-pipeline-sync
+  objName: jenkins-pipeline-sync
   image: ${JENKINS_SYNC_JOB_IMAGE}
   imagePullSecret: el-cicd-jenkins-pull-secret
   projectedVolumeLabels:

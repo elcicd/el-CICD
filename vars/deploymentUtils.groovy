@@ -52,7 +52,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     def helmStages = concurrentUtils.createParallelStages("Component Deployments", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-        def compValues = ["elCicdDefaults.appName=${component.name}",
+        def compValues = ["elCicdDefaults.objName=${component.name}",
                           "elCicdDefaults.image=${componentImage}",
                           "elCicdDefs.COMPONENT_NAME=${component.name}"]
 

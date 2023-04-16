@@ -168,9 +168,6 @@ _confirm_logged_into_cluster() {
     oc whoami > /dev/null 2>&1
     sleep 2
     echo "${_BOLD}Confirmed${_REGULAR}"
-    oc cluster-info
-    echo "el-CICD only confirms you are logged in."
-    echo "${_BOLD}VERIFY THE ABOVE INFORMATION TO MAKE SURE YOU'RE LOGGED INTO THE CORRECT CLUSTER${_REGULAR}."
 }
 
 _confirm_continue() {

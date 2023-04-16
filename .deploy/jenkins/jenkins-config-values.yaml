@@ -19,7 +19,7 @@ elCicdDefs-jenkinsPersistent:
 
 elCicdTemplates:
 - templateName: deployment
-  appName: ${JENKINS_SERVICE_NAME}
+  objName: ${JENKINS_SERVICE_NAME}
   labels:
     name: ${JENKINS_SERVICE_NAME}
   image: ${JENKINS_IMAGE}
@@ -109,7 +109,7 @@ elCicdTemplates:
   - ${JENKINS_PERSISTENT_VOLUME}
 
 - templateName: service
-  appName: ${JENKINS_SERVICE_NAME}
+  objName: ${JENKINS_SERVICE_NAME}
   ports:
   - name: https
     port: 8080
@@ -117,7 +117,7 @@ elCicdTemplates:
     port: 50000
   
 - templateName: configMap
-  appName: ${JENKINS_CONFIG}
+  objName: ${JENKINS_CONFIG}
   data:
     ${JENKINS_CASC_YAML}: |-
       ${JENKINS_CASC_FILE}
@@ -126,7 +126,7 @@ elCicdTemplates:
     
 
 - templateName: limitRange
-  appName: jenkins
+  objName: jenkins
   limits:
   - default:
       memory: ${JENKINS_AGENT_MEMORY_LIMIT}
@@ -136,7 +136,7 @@ elCicdTemplates:
     type: Container
 
 - templateName: configMap
-  appName: openshift-jenkins-login-plugin-config
+  objName: openshift-jenkins-login-plugin-config
   mustHaveEveryProfile:
   - cicd
   - okd
@@ -148,16 +148,16 @@ elCicdTemplates:
     Job-Read: elcicd-user
 
 - templateName: ingress
-  appName: ${JENKINS_SERVICE_NAME}
+  objName: ${JENKINS_SERVICE_NAME}
   host: ${JENKINS_URL}
 
 - templateName: serviceAccount
-  appName: ${JENKINS_SERVICE_NAME}
+  objName: ${JENKINS_SERVICE_NAME}
   annotations:
     serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}/
 
 - templateName: clusterRoleBinding
-  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
+  objName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
   mustHaveAnyProfile:
   - onboarding
   mustNotHaveAnyProfile:
@@ -172,7 +172,7 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
+  objName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
   mustHaveAnyProfile:
   - cicd
   - okd
@@ -188,7 +188,7 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${JENKINS_SERVICE_NAME}-edit
+  objName: ${JENKINS_SERVICE_NAME}-edit
   mustHaveAnyProfile:
   - cicd
   mustNotHaveAnyProfile:
@@ -203,7 +203,7 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  appName: ${USER_GROUP}-jenkins-elcicd-user
+  objName: ${USER_GROUP}-jenkins-elcicd-user
   mustHaveEveryProfile:
   - user-group
   - okd
@@ -219,7 +219,7 @@ elCicdTemplates:
     apiGroup: rbac.authorization.k8s.io
 
 - templateName: roleBinding
-  appName: ${USER_GROUP}-jenkins-elcicd-user
+  objName: ${USER_GROUP}-jenkins-elcicd-user
   mustHaveEveryProfile:
   - user-group
   mustNotHaveAnyProfile:
@@ -237,20 +237,20 @@ elCicdTemplates:
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
   - jenkinsPersistent
-  appName: ${JENKINS_SERVICE_NAME}
+  objName: ${JENKINS_SERVICE_NAME}
   storageRequest: ${VOLUME_CAPACITY}
   accessMode: ReadWriteMany
 
 - templateName: configMap
   mustHaveAnyProfile:
   - onboarding
-  appName: ${EL_CICD_META_INFO_NAME}
+  objName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
 
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  appName: ${EL_CICD_META_INFO_NAME}
+  objName: ${EL_CICD_META_INFO_NAME}
   kind: ConfigMap
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
@@ -258,7 +258,7 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  appName: el-cicd-jenkins-pull-secret
+  objName: el-cicd-jenkins-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
@@ -266,8 +266,8 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  appNames: ${CICD_ENVS}
-  appName: el-cicd-${}-pull-secret
+  objNames: ${CICD_ENVS}
+  objName: el-cicd-${}-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
@@ -275,7 +275,7 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  appName: ${EL_CICD_BUILD_SECRETS_NAME}
+  objName: ${EL_CICD_BUILD_SECRETS_NAME}
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}

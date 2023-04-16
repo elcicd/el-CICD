@@ -41,7 +41,7 @@ elCicdDefs:
         </hudson.model.ChoiceParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>REINSTALL</name>
-          <description>If checked, will uninstall ${BASE_APP_NAME} completely before reinstalling</description>
+          <description>If checked, will uninstall ${BASE_OBJ_NAME} completely before reinstalling</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
@@ -61,7 +61,7 @@ elCicdDefs:
     
   PIPELINE_TEMPLATE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />

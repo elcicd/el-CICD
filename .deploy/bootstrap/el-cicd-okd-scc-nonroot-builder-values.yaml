@@ -38,7 +38,7 @@ elCicdRawYaml-scc:
 
 elCicdTemplates-okd:
 - templateName: clusterRole
-  appName: system:openshift:scc:nonroot-builder
+  objName: system:openshift:scc:nonroot-builder
   rules:
   - apiGroups:
     - security.openshift.io

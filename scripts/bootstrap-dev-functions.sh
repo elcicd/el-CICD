@@ -3,7 +3,7 @@
 
 _bootstrap_lab_environment() {
     set -eE
-    
+
     echo
     echo "${DEV_SETUP_WELCOME_MSG}"
 
@@ -29,10 +29,7 @@ _bootstrap_lab_environment() {
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
         _remove_image_registry
-        until [[ -z $(oc get project --ignore-not-found --no-headers ${DEMO_IMAGE_REGISTRY}) ]]
-        do
-            sleep 2
-        done
+        oc wait --for=delete namespace/${DEMO_IMAGE_REGISTRY}
 
         __setup_image_registries
     fi
@@ -62,10 +59,10 @@ __gather_lab_setup_info() {
     fi
 
     if [[ ${SETUP_CRC} != ${_YES} ]]
-    then        
+    then
         read -p 'Enter Cluster wildcard domain (leave blank if using a currently running OpenShift Local instance): ' TEMP_CLUSTER_WILDCARD_DOMAIN
         CLUSTER_WILDCARD_DOMAIN=${TEMP_CLUSTER_WILDCARD_DOMAIN:-${CLUSTER_WILDCARD_DOMAIN}}
-        
+
         _confirm_logged_into_cluster
     fi
 
@@ -78,7 +75,7 @@ __gather_lab_setup_info() {
         if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
-            
+
             printf "%s\n" "${SUDO_PWD}" | sudo -k -p '' -S echo 'verified'
         fi
     else
@@ -142,7 +139,7 @@ __gather_lab_setup_info() {
 __summarize_and_confirm_lab_setup_info() {
     echo
     echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
-    echo 
+    echo
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
@@ -150,8 +147,8 @@ __summarize_and_confirm_lab_setup_info() {
     else
         echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup."
     fi
-    echo "The cluster wildcard domain is: ${CLUSTER_WILDCARD_DOMAIN}"
 
+    echo
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
     then
         echo -n "An image registry ${_BOLD}WILL${_REGULAR} be installed on your cluster ${_BOLD}WITH"
@@ -160,15 +157,11 @@ __summarize_and_confirm_lab_setup_info() {
             echo -n "OUT"
         fi
         echo "${_REGULAR} an NFS share."
-
-        if [[ ${SETUP_CRC} != ${_YES} ]]
-        then
-            echo "You ${_BOLD}MUST${_REGULAR} be currently logged into a cluster as a cluster admin."
-        fi
     else
         echo "An image registry will ${_BOLD}NOT${_REGULAR} be installed on your cluster."
     fi
 
+    echo
     if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
     then
         echo "Credential files ${_BOLD}WILL${_REGULAR} be (re)generated."
@@ -176,15 +169,16 @@ __summarize_and_confirm_lab_setup_info() {
         echo "Credential files will ${_BOLD}NOT${_REGULAR} be (re)generated."
     fi
 
+    echo
     if [[ ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
         echo "el-CICD Git repositories ${_BOLD}WILL${_REGULAR} be intialized and pushed to ${EL_CICD_ORGANIZATION} at ${GIT_API_DOMAIN} if necessary."
     else
         echo "el-CICD Git repositories will ${_BOLD}NOT${_REGULAR} be intialized."
     fi
-
-    echo "Git token verified against ${EL_CICD_GIT_API_URL}/${EL_CICD_ORGANIZATION}."
     
+    _cluster_info
+
     echo
     echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
 
@@ -197,7 +191,7 @@ __bootstrap_clean_crc() {
     echo
     echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
-    
+
     CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
 
     echo
@@ -209,7 +203,7 @@ __bootstrap_clean_crc() {
 _start_crc() {
     CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
-    then    
+    then
         echo
         echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
         echo "[WARNING: use el-CICD CLI to restart your CRC instance if necessary (--start flag), since it isn't guaranteed to remember these values on restart.]"
@@ -267,33 +261,33 @@ __setup_image_registries() {
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
         __create_image_registry_nfs_share
-        
+
         DEMO_IMAGE_REGISTRY_PROFILES=${DEMO_IMAGE_REGISTRY_PROFILES},nfs
     fi
 
     _helm_repo_add_and_update_elCicdCharts
-        
+
     local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local APP_NAME=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}
-        local APP_NAMES=${APP_NAMES:+${APP_NAMES},}${APP_NAME}
+        local OBJ_NAME=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}
+        local OBJ_NAMES=${OBJ_NAMES:+${OBJ_NAMES},}${OBJ_NAME}
         local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_IMAGE_REGISTRY_USER_PWD})
-        local HTPASSWDS="${HTPASSWDS:+${HTPASSWDS} } --set-string elCicdDefs-htpasswd.${APP_NAME}_HTPASSWD=${HTPASSWD}"
+        local HTPASSWDS="${HTPASSWDS:+${HTPASSWDS} } --set-string elCicdDefs-htpasswd.${OBJ_NAME}_HTPASSWD=${HTPASSWD}"
     done
-    
+
     DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
-    
+
     local PROFILES='htpasswd'
     if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
     then
-        PROFILES="${PROFILES},nfs"
+        PROFILES+=",nfs"
     fi
-    
+
     set -x
     helm upgrade --install --atomic --create-namespace --history-max=1 \
         --set-string elCicdProfiles="{${PROFILES}}" \
-        --set-string elCicdDefs.APP_NAMES="{${APP_NAMES}}" \
+        --set-string elCicdDefs.OBJ_NAMES="{${OBJ_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
         ${HTPASSWDS} \
@@ -303,7 +297,7 @@ __setup_image_registries() {
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
     set +x
-        
+
     __register_insecure_registries
 
     echo
@@ -389,7 +383,7 @@ __create_git_repo() {
     if [[ ! -d ${EL_CICD_HOME}/${GIT_REPO_DIR}/.git ]]
     then
         git init ${EL_CICD_HOME}/${GIT_REPO_DIR}
-        ${GIT_COMMAND} add -A 
+        ${GIT_COMMAND} add -A
         ${GIT_COMMAND} commit -am 'Initial commit of el-CICD repositories by bootstrap script'
         ${GIT_COMMAND} config --global user.name ${EL_CICD_ORGANIZATION}
         ${GIT_COMMAND} config --global user.email ${EL_CICD_ORGANIZATION_EMAIL}

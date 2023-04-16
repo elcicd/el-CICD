@@ -2,13 +2,13 @@ elCicdDefs:
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: config.xml
     config.xml: ${PIPELINE_XML}
-    path: ${APP_NAME}/config.xml
+    path: ${OBJ_NAME}/config.xml
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
 
 elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
-  appNames:
+  objNames:
   - refresh-onboarded-projects
   - delete-project
   - delete-cicd-server
@@ -16,14 +16,14 @@ elCicdTemplates-master-pipelines-defs:
   data: ${PIPELINE_CONFIG_MAP_DATA}
   
 - templateName: configMap
-  appName: non-prod-project-onboarding
+  objName: non-prod-project-onboarding
   mustHaveAnyProfile:
   - nonprod
   labels: ${JENKINS_PIPELINE_LABEL}
   data: ${PIPELINE_CONFIG_MAP_DATA}
   
 - templateName: configMap
-  appName: prod-project-onboarding
+  objName: prod-project-onboarding
   mustHaveAnyProfile:
   - prod
   labels: ${JENKINS_PIPELINE_LABEL}
@@ -32,7 +32,7 @@ elCicdTemplates-master-pipelines-defs:
 elCicdDefs-non-prod-project-onboarding:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -71,7 +71,7 @@ elCicdDefs-non-prod-project-onboarding:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${APP_NAME}',
+                      pipelineName: '${OBJ_NAME}',
                       projectId: params.PROJECT_ID,
                       teamId: params.TEAM_ID,
                       rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
@@ -88,7 +88,7 @@ elCicdDefs-non-prod-project-onboarding:
 elCicdDefs-refresh-onboarded-projects:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -122,7 +122,7 @@ elCicdDefs-refresh-onboarded-projects:
 elCicdDefs-delete-project:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -155,7 +155,7 @@ elCicdDefs-delete-project:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${APP_NAME}',
+                      pipelineName: '${OBJ_NAME}',
                       projectId: params.PROJECT_ID,
                       deleteJenkinsCicdServer: params.DELETE_JENKINS_CICD_SERVER]
           el.node(args) {
@@ -171,7 +171,7 @@ elCicdDefs-delete-project:
 elCicdDefs-delete-cicd-server:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -199,7 +199,7 @@ elCicdDefs-delete-cicd-server:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${APP_NAME}',
+                      pipelineName: '${OBJ_NAME}',
                       teamId: params.TEAM_ID]
           el.node(args) {
               cicdServerDeletion(args)
@@ -216,7 +216,7 @@ elCicdDefs-delete-cicd-server:
 elCicdDefs-prod-project-onboarding:
   PIPELINE_XML: |-
     <flow-definition plugin="workflow-job">
-      <displayName>${APP_NAME}</displayName>
+      <displayName>${OBJ_NAME}</displayName>
       <keepDependencies>false</keepDependencies>
       <properties>
         <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
@@ -250,7 +250,7 @@ elCicdDefs-prod-project-onboarding:
           }
 
           def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${APP_NAME},
+                      pipelineName: '${OBJ_NAME},
                       teamId: params.TEAM_ID]
           el.node(args) {                    
               prodProjectOnboarding(args)

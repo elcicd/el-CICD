@@ -45,7 +45,7 @@ _bootstrap_el_cicd() {
     then
         _run_custom_config_script bootstrap-non-prod.sh
     fi
-    
+
     if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
         _run_custom_config_script bootstrap-prod.sh
@@ -64,22 +64,22 @@ __gather_bootstrap_info() {
     then
         _confirm_upgrade_install_sealed_secrets
     fi
-    
+
     IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
     JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
 }
 
-__summarize_and_confirm_bootstrap_run_with_user() {    
+__summarize_and_confirm_bootstrap_run_with_user() {
     echo
     echo "===================== ${_BOLD}SUMMARY${_REGULAR} ====================="
-        
+
     echo
     echo 'el-CICD Bootstrap will perform the following actions based on the summary below.'
     echo "${_BOLD}Please read CAREFULLY and verify this information is correct before proceeding.${_REGULAR}"
-    
+
     echo
     echo "${_BOLD}${ELCICD_ADM_MSG}${_REGULAR}"
-    
+
     if [[ ${INSTALL_SEALED_SECRETS} == ${_YES} ]]
     then
         echo
@@ -111,23 +111,33 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     fi
 
     echo
-    echo "Cluster API hostname: ${_BOLD}${CLUSTER_API_HOSTNAME}${_REGULAR}"
-    echo
-    echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
-
-    echo
     local EL_CICD_MASTER_NAMESPACE_RESULT
     case "${EL_CICD_MASTER_NAMESPACE_EXISTS}" in
         '') EL_CICD_MASTER_NAMESPACE_RESULT='create and install' ;;
          *) EL_CICD_MASTER_NAMESPACE_RESULT='refresh and upgrade' ;;
     esac
-    
+
     echo "${EL_CICD_MASTER_NAMESPACE} namespace and el-CICD Master: ${_BOLD}${EL_CICD_MASTER_NAMESPACE_RESULT}${_REGULAR}"
+
+    _cluster_info
 
     echo
     echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
 
     _confirm_continue
+}
+
+_cluster_info() {
+    echo
+    oc cluster-info | head -n 1
+    echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
+    
+    echo
+    echo "You ${_BOLD}MUST${_REGULAR} be currently logged into a cluster as a cluster admin."
+    if [[ ! -z ${OKD_VERSION} ]]
+    then
+        echo "Logged in as: ${_BOLD}$(oc whoami)${_REGULAR}"
+    fi
 }
 
 _create_and_source_meta_info_file() {
@@ -243,7 +253,7 @@ __bootstrap_el_cicd_onboarding_server() {
         oc new-project ${EL_CICD_MASTER_NAMESPACE}
     fi
     sleep 2
-    
+
     _create_rbac_helpers
 
     _create_env_image_registry_secrets
@@ -256,7 +266,7 @@ __create_onboarding_automation_server() {
     PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
-    
+
     echo
     echo 'Installing el-CICD Master server'
     echo
@@ -301,12 +311,12 @@ __create_onboarding_automation_server() {
     echo 'Running Jenkins pipeline sync job for el-CICD Master.'
     echo
     set -ex
-    helm upgrade --wait --wait-for-jobs --install --history-max=1  \
-                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
-                -n ${EL_CICD_MASTER_NAMESPACE} \
-                -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
-                jenkins-pipeline-sync \
-                elCicdCharts/elCicdChart
+    helm install --atomic --wait-for-jobs  \
+        --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
+        -n ${EL_CICD_MASTER_NAMESPACE} \
+        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
+        jenkins-pipeline-sync \
+        elCicdCharts/elCicdChart
     set +ex
 }
 

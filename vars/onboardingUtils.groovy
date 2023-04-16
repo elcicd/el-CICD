@@ -147,13 +147,13 @@ def getNfsCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
     
-    elCicdDefs.NFS_APP_NAMES = []
+    elCicdDefs.NFS_OBJ_NAMES = []
     projectInfo.nfsShares.each { nfsShare ->
         nfsShare.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
-                def appName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-                elCicdDefs.NFS_APP_NAMES << appName
+                def objName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
+                elCicdDefs.NFS_OBJ_NAMES << objName
 
                 nfsMap = [:]
                 nfsMap.CLAIM_NAME = nfsShare.claimName
@@ -163,7 +163,7 @@ def getNfsCicdConfigValues(def projectInfo) {
                 nfsMap.SERVER = nfsShare.server
                 nfsMap.NFS_NAMESPACE = namespace
 
-                cicdConfigValues["elCicdDefs-${appName}"] = nfsMap
+                cicdConfigValues["elCicdDefs-${objName}"] = nfsMap
             }
         }
     }

@@ -22,14 +22,14 @@ elCicdDefs-htpasswd:
   VOLUME_HTPASSWD:
     name: auth-vol
     secret:
-      secretName: ${APP_NAME}
+      secretName: ${OBJ_NAME}
       
 elCicdDefs-nfs:
   STORAGE_CLASS_NAME: demo-image-registry-nfs
   VOLUME_MNT_NFS:
     name: ${DEMO_IMAGE_REGISTRY}
     mountPath: /var/lib/registry
-    subPath: ${APP_NAME}
+    subPath: ${OBJ_NAME}
   VOLUME_NFS:
     name: ${DEMO_IMAGE_REGISTRY}
     persistentVolumeClaim:
@@ -37,7 +37,7 @@ elCicdDefs-nfs:
 
 elCicdTemplates:
 - templateName: deploymentServiceIngress
-  appNames: ${APP_NAMES}
+  objNames: ${OBJ_NAMES}
   image: registry
   port: ${PORT}
   env: ${ENV}
@@ -51,21 +51,21 @@ elCicdTemplates:
   - ${VOLUME_NFS}
 
 - templateName: limitRange
-  appName: demo-image-registry
+  objName: demo-image-registry
   limits:
   - defaultRequest:
       cpu: 200m
     type: Container
   
 - templateName: secret
-  appNames: ${APP_NAMES}
+  objNames: ${OBJ_NAMES}
   mustHaveAnyProfile:
   - htpasswd
   stringData:
-    htpasswd: ${${APP_NAME}_HTPASSWD}
+    htpasswd: ${${OBJ_NAME}_HTPASSWD}
     
 - templateName: persistentVolume
-  appName: ${DEMO_IMAGE_REGISTRY}-nfs
+  objName: ${DEMO_IMAGE_REGISTRY}-nfs
   mustHaveAnyProfile:
   - nfs
   storageClassName: ${STORAGE_CLASS_NAME}
@@ -77,7 +77,7 @@ elCicdTemplates:
     server: ${HOST_IP}
     
 - templateName: persistentVolumeClaim
-  appName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+  objName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
   mustHaveAnyProfile:
   - nfs
   storageClassName: ${STORAGE_CLASS_NAME}
