@@ -297,10 +297,10 @@ def createCompSshKeyValues(def projectInfo) {
                         set -x
                     """
                 )
-                
-            echo "sshKey: ${sshKey}"
             
             cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY': sshKey ]
         }
     }
+    
+    return cicdConfigValues
 }
