@@ -106,6 +106,8 @@ def setModuleData(def projectInfo, def module) {
     module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
     module.scmBranch = projectInfo.scmBranch
     module.scmDeployKeyJenkinsId = "${module.id}-${el.cicd.SCM_CREDS_POSTFIX}"
+    
+    echo "module.scmDeployKeyJenkinsId.getClass: $(module.scmDeployKeyJenkinsId.getClass()}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {

@@ -71,7 +71,7 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: "30", //"${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         imagePullSecrets: ["el-cicd-jenkins-pull-secret"],
         yaml: '''
           spec:
