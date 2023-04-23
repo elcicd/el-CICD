@@ -41,6 +41,7 @@ def call(Map args) {
             githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
         }
     }
+    parallel(buildStages)
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
