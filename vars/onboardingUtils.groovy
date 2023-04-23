@@ -284,8 +284,9 @@ def createCompSshKeyValues(def projectInfo) {
         dir(module.workDir) {
             echo "Creating deploy key for ${module.scmRepoName}"
             
+            def scmDeployKeyJenkinsId = "${module.scmDeployKeyJenkinsId}"
             def keygenScript = """
-                ssh-keygen -b 2048 -t rsa -f '${module.id}-${el.cicd.SCM_CREDS_POSTFIX}' \
+                ssh-keygen -b 2048 -t rsa -f '${scmDeployKeyJenkinsId}' \
                     -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 
                 SSH_KEY=$(cat ${module.scmDeployKeyJenkinsId})
