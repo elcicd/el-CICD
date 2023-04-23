@@ -79,7 +79,7 @@ def initProjectModuleData(def projectInfo) {
         setModuleData(projectInfo, artifact)
     }
 
-    projectInfo.artifacts = projectInfo.testModules ?: []
+    projectInfo.testModules = projectInfo.testModules ?: []
     projectInfo.testModules.each { testModule ->
         testModule.isTestModule = true
         setModuleData(projectInfo, testModule)
