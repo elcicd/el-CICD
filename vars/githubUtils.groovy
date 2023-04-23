@@ -8,7 +8,7 @@
 import groovy.transform.Field
 
 @Field
-def GITHUB_REST_API_HDR = "-H 'Accept: application/vnd.github.v3+json'"
+def GITHUB_REST_API_HDR = '-H "Accept: application/vnd.github+json"'
 
 def deleteProjectDeployKeys(def module) {
     def projectInfo = module.projectInfo
@@ -42,7 +42,7 @@ def addProjectDeployKey(def module, def keyFile) {
         sh """
              ${shCmd.echo  '', "CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
              
-            set -x
+            set +x
             cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
             sed -i -e 's/%DEPLOY_KEY_TITLE%/${projectInfo.repoDeployKeyId}/g' ${GITHUB_CREDS_FILE}
             GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
