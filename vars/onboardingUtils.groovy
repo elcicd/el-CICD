@@ -282,7 +282,7 @@ def createCompSshKeyValues(def projectInfo) {
     
     projectInfo.modules.each { module ->
         def keygenScript = """
-            ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
+            ssh-keygen -b 2048 -t rsa -f ${module.scmDeployKeyJenkinsId} \
                 -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
             
             SSH_KEY=$(cat ${module.scmDeployKeyJenkinsId})
