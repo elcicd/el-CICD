@@ -284,7 +284,7 @@ def createCompSshKeyValues(def projectInfo) {
         dir(module.workDir) {
             echo "Creating deploy key for ${module.scmRepoName}"
 
-            sh "ssh-keygen -b 2048 -t rsa -f "${module.scmDeployKeyJenkinsId}" -q -N '' 2>/dev/null <<< y >/dev/null"
+            sh "ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
             
             def sshKey = readFile(file: module.scmDeployKeyJenkinsId)            
             
