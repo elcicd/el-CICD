@@ -12,7 +12,7 @@ def GITHUB_REST_API_HDR = "-H 'Accept: application/vnd.github.v3+json'"
 
 def deleteProjectDeployKeys(def module) {
     def projectInfo = module.projectInfo
-    withCredentials([string(credentialsId: el.cicd.SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         def jqIdFilter = """jq '.[] | select(.title  == "${projectInfo.repoDeployKeyId}") | .id'"""
         
         def url = "https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${module.scmRepoName}/keys"
@@ -38,7 +38,7 @@ def addProjectDeployKey(def module, def keyFile) {
     TEMPLATE_FILE = 'githubDeployKey-template.json'
     def GITHUB_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
-    withCredentials([string(credentialsId: el.cicd.SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
         sh """
              ${shCmd.echo  '', "CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
              
@@ -65,7 +65,7 @@ def pushBuildWebhook(def module, def buildType) {
     TEMPLATE_FILE = 'githubWebhook-template.json'
     def WEBHOOK_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
         
-    withCredentials([string(credentialsId: el.cicd.SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
         sh """
             ${shCmd.echo  '', "CREATING NEW GIT WEBHOOK FOR: ${module.scmRepoName}", ''}
             

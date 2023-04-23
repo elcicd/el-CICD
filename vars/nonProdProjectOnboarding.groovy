@@ -29,7 +29,7 @@ def call(Map args) {
         onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
     }
     
-    stage('Push deploys keys to GitHub and cleanup') {
+    stage('Push deploy keys to GitHub and cleanup') {
         projectInfo.modules.each { module ->
             dir(module.workDir) {
                 githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
