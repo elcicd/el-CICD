@@ -277,7 +277,7 @@ def getCicdConfigValues(def projectInfo) {
     return cicdConfigValues
 }
 
-def createCompSshKeyValues((def projectInfo) {
+def createCompSshKeyValues(def projectInfo) {
     cicdConfigValues = [:]
     
     projectInfo.modules.each { module ->
