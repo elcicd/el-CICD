@@ -35,7 +35,7 @@ def configureCicdJenkinsUrls(def projectInfo) {
 }
 
 def getImageRegistryCredentialsId(def env) {
-    return "${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    return "${el.cicd.IMAGE_REGISTRY_PULL_SECRET_PREFIX}${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 }
 
 def copyElCicdCredentialsToCicdServer(def projectInfo, def envs) {
@@ -99,28 +99,6 @@ def deleteProjectDeployKeyFromJenkins(def projectInfo, def module) {
         sh """
             ${shCmd.echo ''}
             ${curlUtils.getCmd(curlUtils.POST)} ${projectInfo.jenkinsUrls.DELETE_CREDS}/${module.scmDeployKeyJenkinsId}/doDelete
-        """
-    }
-}
-
-def pushImageRegistryCredsToJenkins(def projectInfo, def credsId) {
-    withCredentials([usernamePassword(credentialsId: credsId,
-                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'IMAGE_REGISTRY_PASSWORD'),
-                     string(credentialsId: el.cicd.JENKINS_SERVICE_ACCOUNT_TOKEN_ID, variable: 'JENKINS_ACCESS_TOKEN')]) {
-        def JENKINS_CREDS_FILE = "${el.cicd.TEMPLATES_DIR}/jenkinsUserNamePwdCredentials.xml"
-        def curlCommand =
-            "${curlUtils.getCmd(curlUtils.POST, 'JENKINS_ACCESS_TOKEN')} ${curlUtils.XML_CONTEXT_HEADER} --data-binary @${JENKINS_CREDS_FILE}"
-
-        sh """
-            ${shCmd.echo ''}
-            SED_EXPR="s/%ID%/${credsId}/; s|%USERNAME%|\${IMAGE_REGISTRY_USERNAME}|; s|%PASSWORD%|\${IMAGE_REGISTRY_PASSWORD}|"
-            cat ${el.cicd.TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml | sed "\${SED_EXPR}" > ${JENKINS_CREDS_FILE}
-
-            ${curlCommand} ${projectInfo.jenkinsUrls.CREATE_CREDS}
-            ${curlCommand} -f ${projectInfo.jenkinsUrls.UPDATE_CREDS}/${credsId}/config.xml
-
-            rm -f ${JENKINS_CREDS_FILE}
         """
     }
 }

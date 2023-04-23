@@ -202,22 +202,22 @@ __bootstrap_clean_crc() {
 
 _start_crc() {
     CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
+    local CICD_PASSWORD=elcicd
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
     then
         echo
         echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
-        echo "[WARNING: use el-CICD CLI to restart your CRC instance if necessary (--start flag), since it isn't guaranteed to remember these values on restart.]"
+        echo "kubeadmin password is '${CICD_PASSWORD}'"
         echo
+        ${CRC_EXEC} config set kubeadmin-password ${CICD_PASSWORD}
         ${CRC_EXEC} config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
-        ${CRC_EXEC} start -c ${CRC_V_CPU} -m ${CRC_MEMORY} -d ${CRC_DISK} -p ${EL_CICD_HOME}/pull-secret.txt
+        ${CRC_EXEC} config set cpus ${CRC_V_CPU}
+        ${CRC_EXEC} config set memory ${CRC_MEMORY}
+        ${CRC_EXEC} config set disk-size ${CRC_DISK}
+        ${CRC_EXEC} start -p ${EL_CICD_HOME}/pull-secret.txt
 
         eval $(${CRC_EXEC} oc-env)
         source <(oc completion ${CRC_SHELL})
-
-        echo
-        echo "crc login as kubeadmin"
-        local CRC_LOGIN=$(${CRC_EXEC} console --credentials | sed -n 2p | sed -e "s/.*'\(.*\)'/\1/")
-        eval ${CRC_LOGIN} --insecure-skip-tls-verify
     fi
 }
 
@@ -334,13 +334,11 @@ __create_credentials() {
     echo
     echo 'Creating el-CICD read-only Git repository ssh key files'
     local __FILE="${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
-    local __COMMENT="EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE=${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
     ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
 
     echo
     echo 'Creating el-CICD-config read-only Git repository ssh key files'
     local __FILE="${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
-    local __COMMENT="EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE=${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
     ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
 
     echo

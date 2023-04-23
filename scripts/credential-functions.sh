@@ -27,12 +27,7 @@ _verify_pull_secret_files_exist() {
     local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
     for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
     do
-        if [[ ${PULL_SECRET_TYPE} == 'jenkins' ]]
-        then
-            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-        else
-            local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-        fi
+        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${IMAGE_REGISTRY_PULL_SECRET_PREFIX}${PULL_SECRET_TYPE@L}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 
         if [[ ! -f ${USERNAME_PWD_FILE} ]]
         then
@@ -176,76 +171,70 @@ _push_deploy_key_to_github() {
     rm -f ${GITHUB_CREDS_FILE}
 }
 
-_create_env_image_registry_secrets() {
+_create_jenkins_secrets() {
     local NONPROD_PULL_SECRET_TYPES="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS//:/ }"
     local PULL_SECRET_TYPES="JENKINS ${EL_CICD_MASTER_NONPROD:+${NONPROD_PULL_SECRET_TYPES} }${PRE_PROD_ENV}"
     PULL_SECRET_TYPES="${PULL_SECRET_TYPES:+${PULL_SECRET_TYPES} }${EL_CICD_MASTER_PROD:+${PROD_ENV}}"
-    
-    local SET_FLAGS=$(__create_helm_image_registry_env_flags "${PULL_SECRET_TYPES}") 
-    
+
+    local SET_FLAGS=$(__create_helm_image_registry_values_flags "${PULL_SECRET_TYPES}")
+
 	if [[ ! -z ${EL_CICD_MASTER_NONPROD} && ! -z "$(ls -A ${BUILD_SECRETS_FILE_DIR})" ]]
     then
         local PROFILE_FLAG="--set-string elCicdProfiles={builder-secrets}"
-        SET_FLAGS+="${SET_FLAGS:+ }$(_create_builder_secret_flags)"
+        SET_FLAGS+="${SET_FLAGS:+ }$(__create_builder_secret_flags)"
     fi
 
     echo
-    echo "Creating the pull secrets for image registry types: ${PULL_SECRET_TYPES}"
+    echo "Creating all Jenkins secrets..."
     echo
     local PULL_SECRET_NAMES=$(echo ${PULL_SECRET_TYPES@L} | sed -e 's/\s\+/,/g')
-    set -ex
-    helm upgrade --create-namespace --atomic --install --history-max=1 \
+    local GIT_REPO_KEYS="${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID},${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
+    set -e
+    helm upgrade --atomic --install --history-max=1 \
         ${PROFILE_FLAG}  \
         --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
         --set-string elCicdDefs.PULL_SECRET_NAMES="{${PULL_SECRET_NAMES}}" \
+        --set-string elCicdDefs.SCM_REPO_SSH_KEY_IDS="{${GIT_REPO_KEYS}}" \
+        --set-file elCicdDefs-${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}.SCM_REPO_SSH_KEY=${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} \
+        --set-file elCicdDefs-${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}.SCM_REPO_SSH_KEY=${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE} \
+        --set-string elCicdDefs.SCM_ACCESS_TOKEN_ID=${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID} \
+        --set-file elCicdDefs.SCM_ACCESS_TOKEN=${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE} \
         ${SET_FLAGS} \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-pull-secrets-values.yaml \
-        el-cicd-pull-secrets \
+        -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-jenkins-secrets-values.yaml \
+        el-cicd-jenkins-secrets \
         elCicdCharts/elCicdChart
-    set +ex
+    set +e
 }
 
-__create_helm_image_registry_env_flags() {
+__create_helm_image_registry_values_flags() {
     local PULL_SECRET_TYPES=${1}
 
     for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
     do
-        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${PULL_SECRET_TYPE@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/$(__get_pull_secret_id ${PULL_SECRET_TYPE})"
 
-        local SET_FLAGS+="${SET_FLAGS:+ }--set-file elCicdDefs-${PULL_SECRET_TYPE@L}.USERNAME_PWD=${USERNAME_PWD_FILE}"
-        
+        local USERNAME=$(jq -r .username ${USERNAME_PWD_FILE})
+        local PASSWORD=$(jq -r .password ${USERNAME_PWD_FILE})
+
+        local SET_FLAGS+="${SET_FLAGS:+ }--set-string elCicdDefs-${PULL_SECRET_TYPE@L}.REGISTRY_USERNAME=${USERNAME}"
+        SET_FLAGS+="${SET_FLAGS:+ }--set-string elCicdDefs-${PULL_SECRET_TYPE@L}.REGISTRY_PASSWORD=${PASSWORD}"
+
         local IMAGE_REGISTRY_URL=$(eval echo \${${PULL_SECRET_TYPE}${IMAGE_REGISTRY_POSTFIX}})
-        local SET_FLAGS+="${SET_FLAGS:+ }--set-string elCicdDefs-${PULL_SECRET_TYPE@L}.IMAGE_REGISTRY_URL=${IMAGE_REGISTRY_URL}"
+        SET_FLAGS+="${SET_FLAGS:+ }--set-string elCicdDefs-${PULL_SECRET_TYPE@L}.IMAGE_REGISTRY_URL=${IMAGE_REGISTRY_URL}"
     done
-    
+
     echo ${SET_FLAGS}
 }
 
-_create_builder_secret_flags() {
+__create_builder_secret_flags() {
     for BUILDER_SECRET_FILE in ${BUILD_SECRETS_FILE_DIR}/*
     do
         local BUILDER_SECRET_KEY=$(basename ${BUILDER_SECRET_FILE})
         local SET_FLAGS="${SET_FLAGS:+${SET_FLAGS} }--set-file elCicdDefs.BUILDER_SECRET_FILES.${BUILDER_SECRET_KEY//[.]/\\.}=${BUILDER_SECRET_FILE}"
     done
-    
+
     echo ${SET_FLAGS}
-}
-
-_push_access_token_to_jenkins() {
-    local JENKINS_DOMAIN=${1}
-    local CREDS_ID=${2}
-    local TKN_FILE=${3}
-
-    local SECRET_TOKEN=$(cat ${TKN_FILE})
-
-    # NOTE: using '|' (pipe) as a delimeter in sed TOKEN replacement, since '/' is a legitimate token character
-    local SECRET_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsTokenCredentials-template.xml | sed "s/%ID%/${CREDS_ID}/; s|%TOKEN%|${SECRET_TOKEN}|" > ${SECRET_FILE}
-
-    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${SECRET_FILE}
-
-    rm -f ${SECRET_FILE}
 }
 
 _push_username_pwd_to_jenkins() {
@@ -300,13 +289,20 @@ __push_creds_file_to_jenkins() {
 _podman_login() {
     echo
     echo -n 'Podman: '
-    JENKINS_USERNAME_PWD_FILE="jenkins${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-    IFS=':' read -r -a JENKINS_USERNAME_PWD <<< $(cat ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE})
-    if [[ ! -z ${JENKINS_USERNAME_PWD} ]]
+    JENKINS_USERNAME_PWD_FILE="${SECRET_FILE_DIR}/$(__get_pull_secret_id jenkins)"
+    local JENKINS_USERNAME=$(jq -r .username ${JENKINS_USERNAME_PWD_FILE})
+    local JENKINS_PASSWORD=$(jq -r .password ${JENKINS_USERNAME_PWD_FILE})
+    if [[ ! -z ${JENKINS_USERNAME} || ! -z ${JENKINS_PASSWORD} ]]
     then
-        podman login --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} -u ${JENKINS_USERNAME_PWD[0]} -p ${JENKINS_USERNAME_PWD[1]} ${JENKINS_IMAGE_REGISTRY}
+        set -e
+        podman login --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} -u ${JENKINS_USERNAME} -p ${JENKINS_PASSWORD} ${JENKINS_IMAGE_REGISTRY}
+        set +e
     else
         echo "ERROR: UNABLE TO FIND JENKINS IMAGE REGISTRY USERNAME/PASSWORD FILE: ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE}"
         exit 1
     fi
+}
+
+__get_pull_secret_id() {
+    echo "${IMAGE_REGISTRY_PULL_SECRET_PREFIX}${1@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 }

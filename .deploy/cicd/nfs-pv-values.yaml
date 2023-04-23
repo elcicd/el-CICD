@@ -13,5 +13,4 @@ elCicdTemplates:
   namespace: ${NFS_NAMESPACE}
   storageRequest: ${STORAGE_CAPACITY}
   accessMode: ReadWriteMany
-
   

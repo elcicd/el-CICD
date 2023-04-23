@@ -50,6 +50,9 @@ _bootstrap_el_cicd() {
     then
         _run_custom_config_script bootstrap-prod.sh
     fi
+    
+    echo 
+    echo 'Custom Onboarding Server Boostrap Script(s) Complete'
 
     echo
     echo "el-CICD Onboarding Server Bootstrap Script Complete:"
@@ -256,7 +259,7 @@ __bootstrap_el_cicd_onboarding_server() {
 
     _create_rbac_helpers
 
-    _create_env_image_registry_secrets
+    _create_jenkins_secrets
 
     __create_onboarding_automation_server
 }

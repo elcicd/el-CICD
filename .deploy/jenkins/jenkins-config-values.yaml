@@ -115,7 +115,7 @@ elCicdTemplates:
     port: 8080
   - name: jnlpport
     port: 50000
-  
+
 - templateName: configMap
   objName: ${JENKINS_CONFIG}
   data:
@@ -123,7 +123,7 @@ elCicdTemplates:
       ${JENKINS_CASC_FILE}
     ${JENKINS_PLUGINS_TXT}: |-
       ${JENKINS_PLUGINS_FILE}
-    
+
 
 - templateName: limitRange
   objName: jenkins
