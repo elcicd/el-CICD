@@ -182,13 +182,17 @@ def getNfsCicdConfigValues(def projectInfo) {
 def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
+    
+    elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
+        el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+        el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    ]
 
     elCicdDefs.TEAM_ID = projectInfo.teamId
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
     elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
-    elCicdDefs.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
     elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE

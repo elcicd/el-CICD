@@ -165,6 +165,12 @@ elCicdTemplates:
     name: ${${NAME_SPACE}_GROUP}
 
 - templateName: copyResource
+  objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
+  kind: Secret
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
+
+- templateName: copyResource
   objNames: ${NONPROD_ENVS}
   objName: el-cicd-${}-pull-secret
   kind: Secret
