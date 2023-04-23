@@ -271,7 +271,7 @@ def getCicdConfigValues(def projectInfo) {
         elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
     }
     
-    cicdConfigValues.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
+    elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
 
     cicdConfigValues.elCicdDefs = elCicdDefs
     return cicdConfigValues
