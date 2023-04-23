@@ -185,7 +185,7 @@ elCicdTemplates:
   toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
 
 - templateName: persistentVolumeClaim
-  anyProfiles:
+  mustHaveAnyProfile:
   - jenkinsAgentPersistent
   objName: jenkins-agent-home
   storageRequest: ${AGENT_VOLUME_CAPACITY}
