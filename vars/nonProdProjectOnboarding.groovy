@@ -46,6 +46,7 @@ def call(Map args) {
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
+        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
         projectInfo.buildModules.each { module ->
             if (!module.disableWebhook) {
                 githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
