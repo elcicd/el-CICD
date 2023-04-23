@@ -237,55 +237,6 @@ __create_builder_secret_flags() {
     echo ${SET_FLAGS}
 }
 
-_push_username_pwd_to_jenkins() {
-    local JENKINS_DOMAIN=${1}
-    local CREDS_ID=${2}
-    local TKN_FILE=${3}
-
-    IFS=':' read -ra USERNAME_PWD <<< $(cat ${TKN_FILE} | tr -d '[:space:]')
-
-    local JENKINS_CREDS_FILE=${SECRET_FILE_TEMP_DIR}/secret.xml
-    local SED_EXPR="s/%ID%/${CREDS_ID}/; s|%USERNAME%|${USERNAME_PWD[0]}|; s|%PASSWORD%|${USERNAME_PWD[1]}|"
-    cat ${EL_CICD_TEMPLATES_DIR}/jenkinsUsernamePasswordCreds-template.xml | sed "${SED_EXPR}" > ${JENKINS_CREDS_FILE}
-
-    __push_creds_file_to_jenkins ${JENKINS_DOMAIN} ${CREDS_ID} ${JENKINS_CREDS_FILE}
-
-    rm -f ${JENKINS_CREDS_FILE}
-}
-
-_push_ssh_creds_to_jenkins() {
-    local CREDS_ID=${2}
-    local DEPLOY_KEY_FILE=${3}
-
-    local TEMPLATE_FILE='jenkinsSshCredentials-template.xml'
-    local JENKINS_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
-    cp ${EL_CICD_TEMPLATES_DIR}/${TEMPLATE_FILE} ${JENKINS_CREDS_FILE}
-    sed -i -e "s/%UNIQUE_ID%/${CREDS_ID}/g" ${JENKINS_CREDS_FILE}
-    JENKINS_CREDS=$(<${JENKINS_CREDS_FILE})
-    echo "${JENKINS_CREDS//%PRIVATE_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${JENKINS_CREDS_FILE}
-
-    __push_creds_file_to_jenkins ${JENKINS_MASTER_URL} ${CREDS_ID} ${JENKINS_CREDS_FILE}
-
-    rm -f ${JENKINS_CREDS_FILE}
-}
-
-__push_creds_file_to_jenkins() {
-    local JENKINS_DOMAIN=${1}
-    local CREDS_ID=${2}
-    local JENKINS_CREDS_FILE=${3}
-
-    local JENKINS_CREDS_URL="https://${JENKINS_DOMAIN}/credentials/store/system/domain/_"
-
-    local OC_BEARER_TOKEN_HEADER="Authorization: Bearer $(oc whoami -t)"
-    local CONTENT_TYPE_XML="content-type:application/xml"
-
-    # Create and update to make sure it takes
-    curl -ksS -o /dev/null -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${JENKINS_CREDS_FILE} \
-        "${JENKINS_CREDS_URL}/createCredentials"
-    curl -fksS -X POST -H "${OC_BEARER_TOKEN_HEADER}" -H "${CONTENT_TYPE_XML}" --data-binary @${JENKINS_CREDS_FILE} \
-        "${JENKINS_CREDS_URL}/credential/${CREDS_ID}/config.xml"
-}
-
 _podman_login() {
     echo
     echo -n 'Podman: '

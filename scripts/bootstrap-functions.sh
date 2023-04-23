@@ -100,15 +100,15 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     if [[ ${JENKINS_BASE_AGENT_EXISTS} == ${_FALSE} ]]
     then
         echo
-        echo "${BOLD}WARNING: THE JENKINS BASE AGENT WAS NOT FOUND.${REGULAR}"
+        echo "${_BOLD}WARNING:${_REGULAR} THE JENKINS BASE AGENT WAS NOT FOUND."
         if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
         then
             echo
-            echo "${BOLD}JENKINS_SKIP_AGENT_BUILDS IS TRUE:${REGULAR} Jenkins agents will not be built."
+            echo "${_BOLD}JENKINS_SKIP_AGENT_BUILDS IS TRUE:${_REGULAR} Jenkins agents will not be built."
             echo "To manually rebuild Jenkins Agents, run the 'el-cicd-adm' utility with the --agents flag."
         else
             echo
-            echo "All Jenkins agents will be built."
+            echo "All Jenkins agents ${_BOLD}WILL BE BUILT${_REGULAR}."
             BUILD_JENKINS_AGENTS=${_TRUE}
         fi
     fi

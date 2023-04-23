@@ -126,6 +126,7 @@ __summarize_and_confirm_lab_tear_down() {
 _remove_existing_crc() {
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
+    set +e
     if [[ ! -z ${CRC_EXEC} ]]
     then
         echo
@@ -135,6 +136,7 @@ _remove_existing_crc() {
         echo 'Cleaning up the OpenShift Local install'
         ${CRC_EXEC} cleanup  2>/dev/null
     fi
+    set -e
 
     echo
     echo 'Removing old OpenShift Local installation directories'

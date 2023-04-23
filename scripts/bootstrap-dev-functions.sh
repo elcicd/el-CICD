@@ -18,12 +18,16 @@ _bootstrap_lab_environment() {
         __bootstrap_clean_crc
 
         __additional_cluster_config
-    else
-        CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
+    fi
+    
+    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
+    if [[ ! -z ${CRC_EXEC} ]]
+    then
         if [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
         then
             _start_crc
         fi
+        eval $(${CRC_EXEC} oc-env)
     fi
 
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
@@ -51,7 +55,7 @@ _bootstrap_lab_environment() {
 __gather_lab_setup_info() {
     echo
     CRC_TAR_XZ=$(ls ${EL_CICD_HOME}/crc-*.tar.xz 2>/dev/null | wc -l)
-    if [[ ${CRC_TAR_XZ} == '1' && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
+    if [[ ${CRC_TAR_XZ} -gt 0 && -f "${EL_CICD_HOME}/pull-secret.txt" ]]
     then
         SETUP_CRC=$(_get_yes_no_answer 'Do you wish to setup OpenShift Local? [Y/n] ')
     else
@@ -143,10 +147,13 @@ __summarize_and_confirm_lab_setup_info() {
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
-        echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be setup.  Login to kubeadmin will be automated."
+        echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be setup.  Initial login to kubeadmin will be automated."
     else
         echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup."
     fi
+    
+    echo
+    echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
 
     echo
     if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
@@ -176,8 +183,6 @@ __summarize_and_confirm_lab_setup_info() {
     else
         echo "el-CICD Git repositories will ${_BOLD}NOT${_REGULAR} be intialized."
     fi
-    
-    _cluster_info
 
     echo
     echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
@@ -190,7 +195,7 @@ __bootstrap_clean_crc() {
 
     echo
     echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
-    tar -xf ${EL_CICD_HOME}/crc*.tar.xz -C ${EL_CICD_HOME}
+    tar -xf ${EL_CICD_HOME}/crc-linux-amd64.tar.xz -C ${EL_CICD_HOME}
 
     CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
 
