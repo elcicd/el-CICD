@@ -334,12 +334,12 @@ __create_credentials() {
     echo
     echo 'Creating el-CICD read-only Git repository ssh key files'
     local __FILE="${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
-    ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
+    ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' 2>/dev/null <<< y >/dev/null
 
     echo
     echo 'Creating el-CICD-config read-only Git repository ssh key files'
     local __FILE="${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}"
-    ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' -C "${COMMENT}" 2>/dev/null <<< y >/dev/null
+    ssh-keygen -b 2048 -t rsa -f "${__FILE}" -q -N '' 2>/dev/null <<< y >/dev/null
 
     echo
     echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}"
