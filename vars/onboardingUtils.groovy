@@ -283,19 +283,21 @@ def createCompSshKeyValues(def projectInfo) {
     projectInfo.modules.each { module ->
         dir(module.workDir) {
             echo "Creating deploy key for ${module.scmRepoName}"
+    
+            echo "module.scmDeployKeyJenkinsId.getClass: ${module.scmDeployKeyJenkinsId.getClass()}"
             
-            def keygenScript = """
-                ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
-                    -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
+            // def keygenScript = """
+            //     ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
+            //         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 
-                SSH_KEY=$(cat ${module.scmDeployKeyJenkinsId})
-                rm -f ${module.scmDeployKeyJenkinsId}
-                echo ${SSH_KEY}
-            """
+            //     SSH_KEY=$(cat ${module.scmDeployKeyJenkinsId})
+            //     rm -f ${module.scmDeployKeyJenkinsId}
+            //     echo ${SSH_KEY}
+            // """
 
-            def sshKey =  sh(returnStdout: true, script: keygenScript)
+            // def sshKey =  sh(returnStdout: true, script: keygenScript)
             
-            cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY' : sshKey ]
+            // cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY' : sshKey ]
         }
     }
 }
