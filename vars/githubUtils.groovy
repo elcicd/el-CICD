@@ -55,7 +55,7 @@ def addProjectDeployKey(def module, def keyFile) {
                 
              ${shCmd.echo  '', "GIT DEPLOY KEY CREATED FOR: ${module.scmRepoName}", ''}
             
-            rm -f ${GITHUB_CREDS_FILE}
+            rm -f ${GITHUB_CREDS_FILE} ${keyFile}
         """
     }
 }

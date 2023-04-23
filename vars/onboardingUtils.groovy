@@ -290,7 +290,9 @@ def createCompSshKeyValues((def projectInfo) {
                            ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
                                -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                            
-                           cat ${module.scmDeployKeyJenkinsId}
+                           SSH_KEY=$(cat ${module.scmDeployKeyJenkinsId})
+                           rm -f ${module.scmDeployKeyJenkinsId}
+                           echo ${SSH_KEY}
                        """
                    )
             
