@@ -103,6 +103,12 @@ def setupProjectCicdResources(def projectInfo) {
 
     def cicdConfigFile = "cicd-config-values.yaml"
     writeFile(file: cicdConfigFile, text: cicdConfigValues)
+    
+    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
+    def moduleSshKeyValues= writeYaml(data: moduleSshKeyDefs, returnText: true)
+    
+    def cicdSshConfigFile = "module-ssh-values.yaml"
+    writeFile(file: cicdSshConfigFile, text: moduleSshKeyValues)
 
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
 
@@ -114,6 +120,7 @@ def setupProjectCicdResources(def projectInfo) {
         set +e
         if ! helm upgrade --install --history-max=1  \
             -f ${cicdConfigFile} \
+            -f ${cicdSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
@@ -263,7 +270,31 @@ def getCicdConfigValues(def projectInfo) {
         cicdConfigValues.elCicdProfiles += 'jenkinsAgentPersistent'
         elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
     }
+    
+    cicdConfigValues.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect( it.scmDeployKeyJenkinsId }
 
     cicdConfigValues.elCicdDefs = elCicdDefs
     return cicdConfigValues
+}
+
+def createCompSshKeyValues((def projectInfo) {
+    cicdConfigValues = [:]
+    
+    projectInfo.modules.each { module ->
+        dir(module.workDir) {
+            echo "Creating deploy key for ${module.scmRepoName}"
+
+            def sshKey = 
+                sh(returnStdout: true,
+                   script: """
+                           ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
+                               -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
+                           
+                           cat ${module.scmDeployKeyJenkinsId}
+                       """
+                   )
+            
+            cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY' : sshKey ]
+        }
+    }
 }

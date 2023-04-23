@@ -29,7 +29,14 @@ def call(Map args) {
         onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
     }
     
-    manageCicdCredentials([projectInfo: projectInfo, isNonProd: true])
+    stage('Push deploys keys to GitHub') {
+        projectInfo.modules.each { module ->
+            dir(module.workDir) {
+                githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
+                rm -f ${module.scmDeployKeyJenkinsId} ${module.scmDeployKeyJenkinsId}.pub
+            }
+        }
+    }
 
     stage('Push Webhook to GitHub for non-prod Jenkins') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")

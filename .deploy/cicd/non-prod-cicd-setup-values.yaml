@@ -184,6 +184,15 @@ elCicdTemplates:
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
 
+- templateName: secret
+  objNames: ${SCM_REPO_SSH_KEY_MODULE_IDS}
+  labels:
+    "jenkins.io/credentials-type": "basicSSHUserPrivateKey"
+  stringData:
+    username: "${OBJ_NAME}"
+    privateKey: |-
+      ${SCM_REPO_SSH_KEY}
+
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
   - jenkinsAgentPersistent
