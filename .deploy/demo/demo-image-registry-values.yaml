@@ -2,9 +2,6 @@ elCicdDefs:
   PORT: "5000"
   REGISTRY_HTTP_ADDR: "0.0.0.0"
   MEMORY: 256Mi
-  HTTP_ADDR:
-    name: REGISTRY_HTTP_ADDR
-    value: ${REGISTRY_HTTP_ADDR}:${PORT}
 
 elCicdDefs-htpasswd:
   ENV:
@@ -14,7 +11,8 @@ elCicdDefs-htpasswd:
     value: "Registry Realm"
   - name: REGISTRY_AUTH_HTPASSWD_PATH
     value: "/auth/htpasswd"
-  - ${HTTP_ADDR}
+  - name: REGISTRY_HTTP_SECRET
+    value: "elcicd-http-secret"
   VOLUME_MNT_HTPASSWD:
     name: auth-vol
     mountPath: "/auth"
