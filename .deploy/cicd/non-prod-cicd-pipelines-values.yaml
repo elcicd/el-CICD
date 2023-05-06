@@ -1,91 +1,57 @@
 elCicdDefs:
-  JENKINS_FOLDER: |-
-    <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder">
-      <properties />
-      <folderViews class="com.cloudbees.hudson.plugins.folder.views.DefaultFolderViewHolder">
-        <views>
-          <hudson.model.AllView>
-            <owner class="com.cloudbees.hudson.plugins.folder.Folder" reference="../../../.." />
-            <name>All</name>
-            <filterExecutors>false</filterExecutors>
-            <filterQueue>false</filterQueue>
-            <properties class="hudson.model.View$PropertyList" />
-          </hudson.model.AllView>
-        </views>
-        <tabBar class="hudson.views.DefaultViewsTabBar" />
-      </folderViews>
-      <healthMetrics />
-      <icon class="com.cloudbees.hudson.plugins.folder.icons.StockFolderIcon" />
-    </com.cloudbees.hudson.plugins.folder.Folder>
+  JENKINS_FOLDER_TEMPLATE: |-
+    folder('${PROJECT_ID}') {
+      displayName('${PROJECT_ID}')
+      description('el-CICD generated pipelines for ${PROJECT_ID}')
+    }
     
   SCM_BRANCH_BUILD_PARAM: |-
-    <hudson.model.StringParameterDefinition>
-        <name>SCM_BRANCH</name>
-        <description>Git branch to build</description>
-        <defaultValue>${SCM_BRANCH}</defaultValue>
-        <trim>true</trim>
-    </hudson.model.StringParameterDefinition>
+    stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
 
-  BUILD_COMPONENT_PARAMS_XML: |-
-    <hudson.model.ParametersDefinitionProperty>
-      <parameterDefinitions>
-        ${SCM_BRANCH_BUILD_PARAM}
-        <hudson.model.ChoiceParameterDefinition>
-          <name>DEPLOY_TO_NAMESPACE</name>
-          <description>Namespace to deploy to</description>
-          <choices class="java.util.Arrays$ArrayList">
-            <a class="string-array">
-              ${BUILD_NAMESPACE_CHOICES}
-            </a>
-          </choices>
-        </hudson.model.ChoiceParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>REINSTALL</name>
-          <description>If checked, will uninstall ${BASE_OBJ_NAME} completely before reinstalling</description>
-          <defaultValue>false</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-      </parameterDefinitions>
-    </hudson.model.ParametersDefinitionProperty>
+  BUILD_COMPONENT_PARAMS: |-
+    ${SCM_BRANCH_BUILD_PARAM}
+    choiceParam('DEPLOY_TO_NAMESPACE', [${BUILD_NAMESPACE_CHOICES}], 'Namespace to deploy to')
+    booleanParam('REINSTALL', true, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
 
-  BUILD_ARTIFACT_PARAMS_XML: |-
-    <hudson.model.ParametersDefinitionProperty>
-      <parameterDefinitions>
-        ${SCM_BRANCH_BUILD_PARAM}
-        <hudson.model.BooleanParameterDefinition>
-            <name>IS_SNAPSHOT</name>
-            <description>Is this a snapshot build?</description>
-            <defaultValue>true</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-      </parameterDefinitions>
-    </hudson.model.ParametersDefinitionProperty>
+  BUILD_ARTIFACT_PARAMS: |-
+    ${SCM_BRANCH_BUILD_PARAM}
+    booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
     
-  PIPELINE_TEMPLATE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-        ${PIPELINE_PARAMS}
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-        <script>  
-            node() {          
-                def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
-                def elCicdData = elcicdMetaData.data
-                
-                def scmMap = [$class: 'GitSCMSource',
-                              remote: elCicdData.EL_CICD_GIT_REPO,
-                              credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
-
-                el.initMetaData(elCicdData)
+  JENKINS_PIPELINE_TEMPLATE: |-
+    jobs:
+    - script: |-
+        pipelineJob('${PROJECT_ID}/${OBJ_NAME}') {
+            authenticationToken('${AUTH_TOKEN}')
+            disabled(false)
+            displayName('${OBJ_NAME}')
+            keepDependencies(false)
+            parameters {
+              ${PIPELINE_PARAMS}
             }
 
-            ${EL_CICD_API_CALL}
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <authToken>${AUTH_TOKEN}</authToken>
-      <disabled>false</disabled>
-    </flow-definition>
+            definition {
+                cps {
+                    script('''
+                        node() {          
+                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+                            def elCicdData = elcicdMetaData.data
+                            
+                            def scmMap = [$class: 'GitSCMSource',
+                                          remote: elCicdData.EL_CICD_GIT_REPO,
+                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                            library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+                            el.initMetaData(elCicdData)
+                        }
+
+                        ${EL_CICD_API_CALL}
+                    ''')
+                    sandbox(true)
+                }
+            }
+
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+        }

@@ -15,12 +15,12 @@ void call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
 
-    if (!projectInfo.builderNamespaces.find{ it == projectInfo.deployToNamespace})
+    if (!projectInfo.buildNamespaces.find{ it == projectInfo.deployToNamespace})
     {
         loggingUtils.errorBanner("--> NAMESPACE NOT ALLOWED: ${projectInfo.deployToNamespace} <--",
                                   '',
                                   "BUILDS MAY ONLY DEPLOY TO ONE OF THE FOLLOWING NAMESPACES:",
-                                  projectInfo.builderNamespaces.join(' '))
+                                  projectInfo.buildNamespaces.join(' '))
     }
 
     stage('Checkout code from repository') {

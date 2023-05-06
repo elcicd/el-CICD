@@ -217,7 +217,7 @@ __remove_git_repo() {
         https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR})
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 200 ]]
     then
-        curl -X DELETE -sI -o /dev/null -u :${__PAT} \
+        curl -X DELETE -sIL -o /dev/null -u :${__PAT} \
             ${GITHUB_REST_API_HDR}  https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}
         echo "${GIT_REPO_DIR} deleted from Git host ${EL_CICD_GIT_DOMAIN}/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}"
     else

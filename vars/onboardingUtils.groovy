@@ -19,7 +19,6 @@ def setupProjectCicdServer(def projectInfo) {
     def elCicdProfiles = 'cicd,user-group' + (el.cicd.OKD_VERSION ? ',okd' : '')
     elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     elCicdProfiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
-    elCicdProfiles += el.cicd.JENKINS_AGENT_PERSISTENT ? ',jenkinsAgentPersistent' : ''
 
     sh """
         ${shCmd.echo ''}
@@ -209,12 +208,11 @@ def getCicdConfigValues(def projectInfo) {
     elCicdDefs.SANDBOX_ENVS = []
     elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
 
-    elCicdDefs.BUILD_NAMESPACE_CHOICES = "<string>${projectInfo.devNamespace}</string>"
-    elCicdDefs.BUILD_NAMESPACE_CHOICES += projectInfo.sandboxEnvs.collect { "<string>${it}</string>" }.join('')
+    elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "'${it}'" }.join(', ')
 
-    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"<string>${it}</string>" }
-    elCicdDefs.REDEPLOY_ENV_CHOICES.add("<string>${projectInfo.preProdEnv}</string>")
-    elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join('')
+    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"'${it}'" }
+    elCicdDefs.REDEPLOY_ENV_CHOICES.add("'${projectInfo.preProdEnv}'")
+    elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.join(', ')
 
     cicdConfigValues.elCicdNamespaces = []
     cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
@@ -227,17 +225,13 @@ def getCicdConfigValues(def projectInfo) {
 
     def hasJenkinsAgentPersistent = false
     projectInfo.components.each { comp ->
-        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache
         cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
-            ['CODE_BASE' : comp.codeBase,
-             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || comp.agentBuildDependencyCache)}" ]
+            ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
-        hasJenkinsAgentPersistent = hasJenkinsAgentPersistent || projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache
         cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
-            ['CODE_BASE' : art.codeBase,
-             'AGENT_BUILD_DEPENDENCY_CACHE' : "${(projectInfo.agentBuildDependencyCache || art.agentBuildDependencyCache)}" ]
+            ['CODE_BASE' : art.codeBase ]
     }
 
     elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
@@ -263,11 +257,6 @@ def getCicdConfigValues(def projectInfo) {
     }
 
     cicdConfigValues.elCicdProfiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
-
-    if (hasJenkinsAgentPersistent) {
-        cicdConfigValues.elCicdProfiles += 'jenkinsAgentPersistent'
-        elCicdDefs.AGENT_VOLUME_CAPACITY = el.cicd.JENKINS_AGENT_VOLUME_CAPACITY
-    }
     
     elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
 

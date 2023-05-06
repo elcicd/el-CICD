@@ -150,8 +150,8 @@ def initProjectEnvNamespaceData(def projectInfo) {
     }
     projectInfo.nonProdNamespaces[projectInfo.preProdEnv] = projectInfo.preProdNamespace
 
-    projectInfo.builderNamespaces = [projectInfo.devNamespace]
-    projectInfo.allowsHotfixes && projectInfo.builderNamespaces << projectInfo.hotfixNamespace
+    projectInfo.buildNamespaces = [projectInfo.devNamespace]
+    projectInfo.allowsHotfixes && projectInfo.buildNamespaces << projectInfo.hotfixNamespace
 }
 
 def initProjectSandboxData(def projectInfo) {
@@ -165,7 +165,7 @@ def initProjectSandboxData(def projectInfo) {
             projectInfo.sandboxNamespaces[sandboxEnv] = "${projectInfo.id}-${sandboxEnv}"
         }
 
-        projectInfo.builderNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+        projectInfo.buildNamespaces.addAll(projectInfo.sandboxNamespaces.values())
     }
 }
 

@@ -1,43 +1,38 @@
+elCicdDefs:
+  JENKINS: jenkins
+  MOUNT_DIR: /mnt/casc-config
+  JOBS_DIR: jobs
+  JENKINS_CASC_RELOAD_URL: ${JENKINS}:8080/reload-configuration-as-code/?casc-reload-token=${CASC_RELOAD_TOKEN}
+  CASC_RELOAD_TOKEN: elcicd
+
 elCicdTemplates:
 - templateName: job
-  objName: jenkins-pipeline-sync
+  objName: ${JENKINS}-pipeline-sync
   image: ${JENKINS_SYNC_JOB_IMAGE}
-  imagePullSecret: el-cicd-jenkins-pull-secret
+  imagePullSecret: el-cicd-${JENKINS}-pull-secret
   projectedVolumeLabels:
-  - name: mounted-jenkins-jobs
-    mountPath: /mnt/mounted-jobs
+  - name: mounted-${JENKINS}-${JOBS_DIR}
+    mountPath: ${MOUNT_DIR}
     labels:
-    - jenkins-folder
-    - jenkins-pipeline
-  serviceAccountName: jenkins
+    - ${JENKINS}-folder
+    - ${JENKINS}-pipeline
+    - ${JENKINS}-casc
+  serviceAccountName: ${JENKINS}
   command: ["/bin/bash"]
   args:
   - -c
   - pwd;
     id;
+    set -x ;
+    mkdir ${JOBS_DIR};
+    cp ${MOUNT_DIR}/*.yaml ${JOBS_DIR};
+    chmod 777 -R ${JOBS_DIR};
+    cd ${JOBS_DIR};
     echo "Syncing Jenkins pipelines";
-    mkdir jobs;
-    cp -rLv /mnt/mounted-jobs/* jobs;
-    chmod 777 -R jobs;
-    JENKINS_POD=$(oc get pods -o custom-columns=:.metadata.name | grep jenkins | grep -v sync);
-    set -x;
-    oc exec -i $JENKINS_POD -- find /var/lib/jenkins/jobs -name config.xml -exec rm -f {} \; ;
-    set +x;
-    tar czf - jobs | oc exec -i $JENKINS_POD -- tar xzvf - -C /var/lib/jenkins/;
+    JENKINS_POD=$(oc get pods -l name=${JENKINS} --no-headers -o custom-columns=:.metadata.name);
+    oc exec -i $JENKINS_POD -- find /var/lib/${JENKINS}/${JOBS_DIR} -name config.xml -exec rm -vf {} \; ;
+    oc exec -i $JENKINS_POD -- find ${JENKINS_CONFIG_FILE_PATH} -name \*.yaml -exec rm -vf {} \; ;
+    tar cf - . | kubectl exec -i  $JENKINS_POD -- tar xf - -C ${JENKINS_CONFIG_FILE_PATH};
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
-    curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" jenkins:8080/safeRestart;
-    sleep 10;
-    echo;
-    until [[ $(curl -ksSL -o /dev/null -w "%{http_code}" jenkins:8080/login) != 200 ]]
-    do
-      echo "Waiting for Jenkins to restart...";
-      sleep 3;
-    done;
-    echo;
-    until [[ $(curl -ksSL -o /dev/null -w "%{http_code}" jenkins:8080/login) == 200 ]]
-    do
-      echo "Checking if Jenkins is up...";
-      sleep 3;
-    done;
-    echo;
-    echo "el-CICD Jenkins jobs updated";
+    curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_CASC_RELOAD_URL} ;
+    echo "el-CICD Jenkins ${JOBS_DIR} updated";

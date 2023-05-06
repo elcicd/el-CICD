@@ -1,8 +1,8 @@
 elCicdDefs:
   PIPELINE_CONFIG_MAP_DATA:
-    contentKey: config.xml
-    config.xml: ${PIPELINE_XML}
-    path: ${OBJ_NAME}/config.xml
+    contentKey: ${OBJ_NAME}
+    ${OBJ_NAME}: ${PIPELINE_JOBS_DSL}
+    path: ${OBJ_NAME}.yaml
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
 
@@ -14,250 +14,229 @@ elCicdTemplates-master-pipelines-defs:
   - delete-cicd-server
   labels: ${JENKINS_PIPELINE_LABEL}
   data: ${PIPELINE_CONFIG_MAP_DATA}
-  
+
 - templateName: configMap
   objName: non-prod-project-onboarding
   mustHaveAnyProfile:
   - nonprod
   labels: ${JENKINS_PIPELINE_LABEL}
   data: ${PIPELINE_CONFIG_MAP_DATA}
-  
+
 - templateName: configMap
   objName: prod-project-onboarding
   mustHaveAnyProfile:
   - prod
   labels: ${JENKINS_PIPELINE_LABEL}
   data: ${PIPELINE_CONFIG_MAP_DATA}
-  
+
 elCicdDefs-non-prod-project-onboarding:
-  PIPELINE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-        <hudson.model.ParametersDefinitionProperty>
-          <parameterDefinitions>
-            <hudson.model.StringParameterDefinition>
-              <name>TEAM_ID</name>
-              <description>Team Name</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-            <hudson.model.StringParameterDefinition>
-              <name>PROJECT_ID</name>
-              <description>Project ID</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-            <hudson.model.BooleanParameterDefinition>
-              <name>REBUILD_CICD_ENVS</name>
-              <description>Should all CICD environment(s) be destroyed and recreated from scratch?</description>
-              <defaultValue>false</defaultValue>
-            </hudson.model.BooleanParameterDefinition>
-          </parameterDefinitions>
-        </hudson.model.ParametersDefinitionProperty>
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cp">
-        <script>
-          node() {
-              def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
-              def elCicdData = elcicdMetaData.data
-              
-              def scmMap = [$class: 'GitSCMSource',
-                            remote: elCicdData.EL_CICD_GIT_REPO,
-                            credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+  PIPELINE_JOBS_DSL: |-
+    jobs:
+    - script: |-
+        pipelineJob('${OBJ_NAME}') {
+            description('Create the non-prod CICD environments, server, and pipelines for a project')
+            parameters {
+                stringParam('TEAM_ID', null, 'Team Name')
+                stringParam('PROJECT_ID', null, 'Project ID')
+                booleanParam('REBUILD_CICD_ENVS', false, 'Should all CICD namespace environment(s) be destroyed and recreated from scratch?')
+            }
 
-              el.initMetaData(elCicdData)
-          }
+            definition {
+                cps {
+                    script('''
+                        node() {
+                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+                            def elCicdData = elcicdMetaData.data
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${OBJ_NAME}',
-                      projectId: params.PROJECT_ID,
-                      teamId: params.TEAM_ID,
-                      rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
-          el.node(args) {                    
-              nonProdProjectOnboarding(args)
-          }
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <disabled>false</disabled>
-    </flow-definition>
+                            def scmMap = [$class: 'GitSCMSource',
+                                          remote: elCicdData.EL_CICD_GIT_REPO,
+                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                            library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+                            el.initMetaData(elCicdData)
+                        }
+
+                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                                    pipelineName: '${OBJ_NAME}',
+                                    teamId: params.TEAM_ID,
+                                    projectId: params.PROJECT_ID,
+                                    rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
+                        el.node(args) {
+                            nonProdProjectOnboarding(args)
+                        }
+                    ''')
+                    sandbox(true)
+                }
+            }
+
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+        }
 
 elCicdDefs-refresh-onboarded-projects:
-  PIPELINE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-        <script>
-          node() {
-              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+  PIPELINE_JOBS_DSL: |-
+    jobs:
+    - script: |-
+          pipelineJob('${OBJ_NAME}') {
+              description('Refresh the data, secrets, and pipelines for all onboarded projects')
+              parameters {
+              }
 
-              def scmMap = [$class: 'GitSCMSource',
-                            remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                            credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+              definition {
+                  cps {
+                      script('''
+                          node() {
+                              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
 
-              el.initMetaData(cicdMetaData.data)
+                              def scmMap = [$class: 'GitSCMSource',
+                                            remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                                            credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+                              el.initMetaData(cicdMetaData.data)
+                          }
+
+                          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                                      pipelineName: 'refresh-onboarded-projects',
+                                      isNonProd: true]
+                          el.node(args) {
+                              refreshOnboardedProjects(args)
+                          }
+                      ''')
+                      sandbox(true)
+                  }
+              }
+
+              throttleConcurrentBuilds {
+                  maxPerNode(1)
+                  maxTotal(1)
+              }
           }
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: 'refresh-onboarded-projects',
-                      isNonProd: true]
-          el.node(args) {
-              refreshOnboardedProjects(args)
-          }  
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <disabled>false</disabled>
-    </flow-definition>
-  
 elCicdDefs-delete-project:
-  PIPELINE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-        <hudson.model.ParametersDefinitionProperty>
-          <parameterDefinitions>
-            <hudson.model.StringParameterDefinition>
-              <name>PROJECT_ID</name>
-              <description>Project ID</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-            <hudson.model.BooleanParameterDefinition>
-              <name>DELETE_JENKINS_CICD_SERVER</name>
-              <description>Should the teamId's Jenkins CICD CICD Server be deleted, too?</description>
-              <defaultValue>false</defaultValue>
-            </hudson.model.BooleanParameterDefinition>
-          </parameterDefinitions>
-        </hudson.model.ParametersDefinitionProperty>
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-        <script>
-          node() {
-              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+  PIPELINE_JOBS_DSL: |-
+    jobs:
+    - script: |-
+        pipelineJob('${OBJ_NAME}') {
+            description('Delete an onboarded project')
+            parameters {
+                stringParam('TEAM_ID', null, 'Team Name')
+                stringParam('PROJECT_ID', null, 'Project ID')
+            }
 
-              def scmMap = [$class: 'GitSCMSource',
-                            remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                            credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+            definition {
+                cps {
+                    script('''
+                        node() {
+                            def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
 
-              el.initMetaData(cicdMetaData.data)
-          }
+                            def scmMap = [$class: 'GitSCMSource',
+                                          remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                                          credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                            library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${OBJ_NAME}',
-                      projectId: params.PROJECT_ID,
-                      deleteJenkinsCicdServer: params.DELETE_JENKINS_CICD_SERVER]
-          el.node(args) {
-              projectDeletion(args)
-          }
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <disabled>false</disabled>
-    </flow-definition>
-  
+                            el.initMetaData(cicdMetaData.data)
+                        }
+
+                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                                    pipelineName: '${OBJ_NAME}',
+                                    teamId: params.TEAM_ID,
+                                    projectId: params.PROJECT_ID,]
+                        el.node(args) {
+                            projectDeletion(args)
+                        }
+                    ''')
+                    sandbox(true)
+                }
+            }
+
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+        }
+
 elCicdDefs-delete-cicd-server:
-  PIPELINE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-        <hudson.model.ParametersDefinitionProperty>
-          <parameterDefinitions>
-            <hudson.model.StringParameterDefinition>
-              <name>TEAM_ID</name>
-              <description>Group ID</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-          </parameterDefinitions>
-        </hudson.model.ParametersDefinitionProperty>
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
-        <script>
-          node() {
-              def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+  PIPELINE_JOBS_DSL: |-
+    jobs:
+    - script: |-
+        pipelineJob('${OBJ_NAME}') {
+            description("Delete an team's CICD server")
+            parameters {
+                stringParam('TEAM_ID', null, 'Team Name')
+            }
 
-              def scmMap = [$class: 'GitSCMSource',
-                            remote: cicdMetaData.data.EL_CICD_GIT_REPO,
-                            credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+            definition {
+                cps {
+                    script('''
+                        node() {
+                            def cicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
 
-              el.initMetaData(cicdMetaData.data)
-          }
+                            def scmMap = [$class: 'GitSCMSource',
+                                          remote: cicdMetaData.data.EL_CICD_GIT_REPO,
+                                          credentialsId: cicdMetaData.data.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                            library(identifier: "el-CICD@${cicdMetaData.data.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${OBJ_NAME}',
-                      teamId: params.TEAM_ID]
-          el.node(args) {
-              cicdServerDeletion(args)
-          }
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <disabled>false</disabled>
-    </flow-definition>
-    
+                            el.initMetaData(cicdMetaData.data)
+                        }
 
-  
+                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                                    pipelineName: '${OBJ_NAME}',
+                                    teamId: params.TEAM_ID]
+                        el.node(args) {
+                            cicdServerDeletion(args)
+                        }
+                    ''')
+                    sandbox(true)
+                }
+            }
+
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+        }
+
 elCicdDefs-prod-project-onboarding:
-  PIPELINE_XML: |-
-    <flow-definition plugin="workflow-job">
-      <displayName>${OBJ_NAME}</displayName>
-      <keepDependencies>false</keepDependencies>
-      <properties>
-        <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty />
-        <hudson.model.ParametersDefinitionProperty>
-          <parameterDefinitions>
-            <hudson.model.StringParameterDefinition>
-              <name>TEAM_ID</name>
-              <description>Team Name</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-            <hudson.model.StringParameterDefinition>
-              <name>PROJECT_ID</name>
-              <description>Project ID</description>
-              <trim>true</trim>
-            </hudson.model.StringParameterDefinition>
-          </parameterDefinitions>
-        </hudson.model.ParametersDefinitionProperty>
-      </properties>
-      <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cp">
-        <script>
-          node() {
-              def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
-              def elCicdData = elcicdMetaData.data
-              
-              def scmMap = [$class: 'GitSCMSource',
-                            remote: elCicdData.EL_CICD_GIT_REPO,
-                            credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-              library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+  PIPELINE_JOBS_DSL: |-
+    jobs:
+    - script: |-
+        pipelineJob('${OBJ_NAME}') {
+            description("Create a team's prod CICD server")
+            parameters {
+                stringParam('TEAM_ID', null, 'Team Name')
+            }
 
-              el.initMetaData(elCicdData)
-          }
+            definition {
+                cps {
+                    script('''
+                        node() {
+                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+                            def elCicdData = elcicdMetaData.data
 
-          def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                      pipelineName: '${OBJ_NAME},
-                      teamId: params.TEAM_ID]
-          el.node(args) {                    
-              prodProjectOnboarding(args)
-          }
-        </script>
-        <sandbox>true</sandbox>
-      </definition>
-      <triggers />
-      <disabled>false</disabled>
-    </flow-definition>
+                            def scmMap = [$class: 'GitSCMSource',
+                                          remote: elCicdData.EL_CICD_GIT_REPO,
+                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
+                            library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+
+                            el.initMetaData(elCicdData)
+                        }
+
+                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                                    pipelineName: '${OBJ_NAME},
+                                    teamId: params.TEAM_ID]
+                        el.node(args) {
+                            prodProjectOnboarding(args)
+                        }
+                    ''')
+                    sandbox(true)
+                }
+            }
+
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+        }

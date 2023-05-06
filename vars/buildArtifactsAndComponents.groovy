@@ -15,7 +15,7 @@ def call(Map args) {
         def BUILD_ALL_COMPONENTS = 'Build All Components'
         def BUILD_ALL_ARTIFACTS = 'Build All Artifacts'
         def buildChoices = [BUILD_SELECTED, BUILD_ALL, BUILD_ALL_COMPONENTS, BUILD_ALL_ARTIFACTS]
-        List inputs = [choice(name: 'buildToNamespace', description: 'The namespace to build and deploy to', choices: projectInfo.builderNamespaces),
+        List inputs = [choice(name: 'buildToNamespace', description: 'The namespace to build and deploy to', choices: projectInfo.buildNamespaces),
                        choice(name: 'buildChoice',
                               description: 'Choose to build selected components, everything, all components, or all artifacts',
                               choices: buildChoices),

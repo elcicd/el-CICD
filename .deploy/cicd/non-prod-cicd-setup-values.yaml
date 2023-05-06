@@ -21,15 +21,7 @@ elCicdDefs:
     pipelineName: '${OBJ_NAME}',
     scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
-    <hudson.model.ParametersDefinitionProperty>
-        <parameterDefinitions>
-          <hudson.model.StringParameterDefinition>
-            <name>RELEASE_CANDIDATE_TAG</name>
-            <description>${RELEASE_CANDIDATE_TAG_DESCRIPTION}</description>
-            <trim>true</trim>
-          </hudson.model.StringParameterDefinition>
-        </parameterDefinitions>
-    </hudson.model.ParametersDefinitionProperty>
+    stringParam('RELEASE_CANDIDATE_TAG', null, '${RELEASE_CANDIDATE_TAG_DESCRIPTION}')
   RELEASE_CANDIDATE_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT},
                 pipelineName: '${OBJ_NAME}',,
@@ -38,13 +30,13 @@ elCicdDefs:
                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PROJECT_FOLDER_DATA:
     contentKey: config.xml
-    config.xml: ${JENKINS_FOLDER}
-    path: ${PROJECT_ID}/config.xml
+    ${OBJ_NAME}: ${JENKINS_FOLDER_TEMPLATE}
+    path: ${OBJ_NAME}.yaml
     optional: 'true'
   PIPELINE_CONFIG_MAP_DATA:
-    contentKey: config.xml
-    config.xml: ${PIPELINE_TEMPLATE_XML}
-    path: ${PROJECT_ID}/jobs/${OBJ_NAME}/config.xml
+    contentKey: ${OBJ_NAME}
+    ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
+    path: ${OBJ_NAME}.yaml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
 
@@ -62,10 +54,9 @@ elCicdTemplates:
   objName: ${}-build-component
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS_XML}
+    PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
-                  agentBuildDependencyCache: ${AGENT_BUILD_DEPENDENCY_CACHE},
                   componentName: '${BASE_OBJ_NAME}',
                   deployToNamespace: params.DEPLOY_TO_NAMESPACE,
                   recreate: params.REINSTALL]
@@ -81,7 +72,7 @@ elCicdTemplates:
   objName: ${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS_XML}
+    PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS}
     EL_CICD_API_CALL: |-
       def args = [${COMMON_BUILD_ARGS},
                   artifactName: '${BASE_OBJ_NAME}',
@@ -125,19 +116,7 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployComponents
     EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
-      <hudson.model.ParametersDefinitionProperty>
-          <parameterDefinitions>
-            <hudson.model.ChoiceParameterDefinition>
-              <name>REDEPLOY_ENVIRONMENT</name>
-              <description>Environment</description>
-              <choices class="java.util.Arrays$ArrayList">
-                <a class="string-array">
-                  ${REDEPLOY_ENV_CHOICES}
-                </a>
-              </choices>
-            </hudson.model.ChoiceParameterDefinition>
-          </parameterDefinitions>
-      </hudson.model.ParametersDefinitionProperty>
+      choiceParam('REDEPLOY_ENVIRONMENT', [${REDEPLOY_ENV_CHOICES}], 'Environment to redeploy')
   elCicdDefs-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
@@ -192,12 +171,5 @@ elCicdTemplates:
     username: "${OBJ_NAME}"
     privateKey: |-
       ${SCM_REPO_SSH_KEY}
-
-- templateName: persistentVolumeClaim
-  mustHaveAnyProfile:
-  - jenkinsAgentPersistent
-  objName: jenkins-agent-home
-  storageRequest: ${AGENT_VOLUME_CAPACITY}
-  accessMode: ReadWriteMany
 
 

@@ -127,7 +127,7 @@ __gather_lab_setup_info() {
             GITHUB_ACCESS_TOKEN=$(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})
         fi
 
-        local TOKEN_TEST_RESULT=$(curl -s -u :${GITHUB_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
+        local TOKEN_TEST_RESULT=$(curl -sL -u :${GITHUB_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
         if [[ -z ${TOKEN_TEST_RESULT} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
@@ -409,7 +409,7 @@ __create_remote_github_repo() {
 
     local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
 
-    REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    REMOTE_GIT_DIR_EXISTS=$(curl -sL -o /dev/null -w "%{http_code}" -X POST \
         -u :${GITHUB_ACCESS_TOKEN} \
         ${GITHUB_REST_API_HDR}  \
         https://${GIT_API_DOMAIN}/user/repos \

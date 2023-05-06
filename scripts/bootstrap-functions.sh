@@ -269,6 +269,10 @@ __create_onboarding_automation_server() {
     PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
+    
+    local JENKINS_DEPLOYMENT_NAME='jenkins'
+    
+    __remove_failed_jenkins_server ${JENKINS_DEPLOYMENT_NAME}
 
     echo
     echo 'Installing el-CICD Master server'
@@ -295,13 +299,23 @@ __create_onboarding_automation_server() {
         -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
-        jenkins \
+        ${JENKINS_DEPLOYMENT_NAME} \
         elCicdCharts/elCicdChart
     set +ex
 
     echo
     echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
+    
+    local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
+    local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')
+    if [[ ! -z ${TERMINATING_PODS} ]]
+    then
+        echo
+        echo 'Wait for old Jenkins pod to terminate...'
+
+        oc wait --for=delete pod ${TERMINATING_POD} -n ${EL_CICD_MASTER_NAMESPACE} --timeout=600s
+    fi
 
     if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
     then
@@ -314,13 +328,27 @@ __create_onboarding_automation_server() {
     echo 'Running Jenkins pipeline sync job for el-CICD Master.'
     echo
     set -ex
-    helm install --atomic --wait-for-jobs  \
+    helm install --atomic --wait-for-jobs \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
+        --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH}/ \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
         jenkins-pipeline-sync \
         elCicdCharts/elCicdChart
     set +ex
+    exit 1
+}
+
+__remove_failed_jenkins_server() {
+    local JENKINS_DEPLOYMENT_NAME=${1}
+    
+    if [[ ! -z $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${JENKINS_DEPLOYMENT_NAME}$) && \
+          $(oc get pods -l name=${JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
+    then
+        echo
+        echo 'Removing failed/incomplete Jenkins deployment'
+        helm uninstall ${JENKINS_DEPLOYMENT_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
+    fi
 }
 
 _helm_repo_add_and_update_elCicdCharts() {
