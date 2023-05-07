@@ -2,8 +2,8 @@ elCicdDefs:
   JENKINS: jenkins
   MOUNT_DIR: /mnt/casc-config
   JOBS_DIR: jobs
-  JENKINS_CASC_RELOAD_URL: ${JENKINS}:8080/reload-configuration-as-code/?casc-reload-token=${CASC_RELOAD_TOKEN}
-  CASC_RELOAD_TOKEN: elcicd
+  JENKINS_RELOAD_URL: ${JENKINS}:8080/reload
+  JENKINS_RELOAD_CASC_URL: ${JENKINS}:8080/reload-configuration-as-code/?casc-reload-token=elcicd
 
 elCicdTemplates:
 - templateName: job
@@ -30,9 +30,10 @@ elCicdTemplates:
     cd ${JOBS_DIR};
     echo "Syncing Jenkins pipelines";
     JENKINS_POD=$(oc get pods -l name=${JENKINS} --no-headers -o custom-columns=:.metadata.name);
-    oc exec -i $JENKINS_POD -- find /var/lib/${JENKINS}/${JOBS_DIR} -name config.xml -exec rm -vf {} \; ;
+    oc exec -i $JENKINS_POD -- \find /var/lib/${JENKINS}/${JOBS_DIR} -name config.xml -exec rm -vf {} \; ;
     oc exec -i $JENKINS_POD -- find ${JENKINS_CONFIG_FILE_PATH} -name \*.yaml -exec rm -vf {} \; ;
     tar cf - . | kubectl exec -i  $JENKINS_POD -- tar xf - -C ${JENKINS_CONFIG_FILE_PATH};
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
-    curl -ksS -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_CASC_RELOAD_URL} ;
+    curl -ksSL -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_URL} ;
+    curl -ksSL -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_CASC_URL} ;
     echo "el-CICD Jenkins ${JOBS_DIR} updated";

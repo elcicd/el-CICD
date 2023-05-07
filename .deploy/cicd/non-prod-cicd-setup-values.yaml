@@ -69,7 +69,7 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames: ${BUILD_ARTIFACT_PIPELINES}
-  objName: ${}-build-artifact
+  objName: ${PROJECT_ID}-${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS}
@@ -86,13 +86,13 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames:
-  - build-artifacts-and-components
-  - promote-components
-  - run-post-deployment-tests
-  - redeploy-components
-  - create-release-candidate
-  - redeploy-release-candidate
-  objName: ${#}-${}
+  - build-all
+  - promote
+  - run-tests
+  - redeploy-comps
+  - create-rls-cand
+  - redeploy-rls-cand
+  objName: ${#}-${PROJECT_ID}-${}
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
     ARGS: |-

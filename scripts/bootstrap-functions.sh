@@ -336,7 +336,6 @@ __create_onboarding_automation_server() {
         jenkins-pipeline-sync \
         elCicdCharts/elCicdChart
     set +ex
-    exit 1
 }
 
 __remove_failed_jenkins_server() {

@@ -33,13 +33,13 @@ elCicdDefs:
                 cps {
                     script('''
                         node() {          
-                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm ${env.EL_CICD_META_INFO_NAME} -o json")))
+                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
                             def elCicdData = elcicdMetaData.data
                             
                             def scmMap = [$class: 'GitSCMSource',
                                           remote: elCicdData.EL_CICD_GIT_REPO,
                                           credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                            library(identifier: "el-CICD@${elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME}", retriever: modernSCM(scmMap))
+                            library(identifier: "el-CICD@$elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME", retriever: modernSCM(scmMap))
 
                             el.initMetaData(elCicdData)
                         }
