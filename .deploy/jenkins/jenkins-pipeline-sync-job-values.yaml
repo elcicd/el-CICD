@@ -23,7 +23,7 @@ elCicdTemplates:
   - -c
   - pwd;
     id;
-    set -x ;
+    set -ex;
     mkdir ${JOBS_DIR};
     cp ${MOUNT_DIR}/*.yaml ${JOBS_DIR};
     chmod 777 -R ${JOBS_DIR};

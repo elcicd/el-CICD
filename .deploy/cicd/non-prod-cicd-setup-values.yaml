@@ -51,7 +51,7 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
-  objName: ${}-build-component
+  objName: ${PROJECT_ID}-${}-build-component
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS}
