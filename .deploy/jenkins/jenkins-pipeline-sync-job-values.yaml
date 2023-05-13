@@ -30,7 +30,7 @@ elCicdTemplates:
     cd ${JOBS_DIR};
     echo "Syncing Jenkins pipelines";
     JENKINS_POD=$(oc get pods -l name=${JENKINS} --no-headers -o custom-columns=:.metadata.name);
-    oc exec -i $JENKINS_POD -- \find /var/lib/${JENKINS}/${JOBS_DIR} -name config.xml -exec rm -vf {} \; ;
+    oc exec -i $JENKINS_POD -- find /var/lib/${JENKINS}/${JOBS_DIR} -name config.xml -exec rm -vf {} \; ;
     oc exec -i $JENKINS_POD -- find ${JENKINS_CONFIG_FILE_PATH} -name \*.yaml -exec rm -vf {} \; ;
     tar cf - . | kubectl exec -i  $JENKINS_POD -- tar xf - -C ${JENKINS_CONFIG_FILE_PATH};
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
