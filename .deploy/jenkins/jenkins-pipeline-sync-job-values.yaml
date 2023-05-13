@@ -34,6 +34,6 @@ elCicdTemplates:
     oc exec -i $JENKINS_POD -- find ${JENKINS_CONFIG_FILE_PATH} -name \*.yaml -exec rm -vf {} \; ;
     tar cf - . | kubectl exec -i  $JENKINS_POD -- tar xf - -C ${JENKINS_CONFIG_FILE_PATH};
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
-    curl -ksSL -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_URL} ;
-    curl -ksSL -o /dev/null -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_CASC_URL} ;
+    curl -ksSL -o /dev/null --fail-with-body -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_URL} ;
+    curl -ksSL -o /dev/null --fail-with-body -X POST -w '%{http_code}\n' -H "Authorization:Bearer $(oc whoami -t)" ${JENKINS_RELOAD_CASC_URL} ;
     echo "el-CICD Jenkins ${JOBS_DIR} updated";

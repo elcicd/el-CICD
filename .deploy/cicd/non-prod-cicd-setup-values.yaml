@@ -13,7 +13,7 @@ elCicdDefs:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
-  COMMON_BUILD_ARGS: |-
+  COMMON_BUILD_EL_CICD_API_ARGS: |-
     teamId: '${TEAM_ID}',
     projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
@@ -22,7 +22,7 @@ elCicdDefs:
     scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
     stringParam('RELEASE_CANDIDATE_TAG', null, '${RELEASE_CANDIDATE_TAG_DESCRIPTION}')
-  RELEASE_CANDIDATE_ARGS: |-
+  RELEASE_CANDIDATE_EL_CICD_API_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT},
                 pipelineName: '${OBJ_NAME}',,
                 teamId: '${TEAM_ID}',
@@ -55,14 +55,12 @@ elCicdTemplates:
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS}
-    EL_CICD_API_CALL: |-
+    EL_CICD_API_ARGS: |-
       def args = [${COMMON_BUILD_ARGS},
                   componentName: '${BASE_OBJ_NAME}',
                   deployToNamespace: params.DEPLOY_TO_NAMESPACE,
                   recreate: params.REINSTALL]
-      el.node(args) {
-          buildComponent(args)
-      }
+    EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
   data: ${PIPELINE_CONFIG_MAP_DATA}
@@ -73,13 +71,11 @@ elCicdTemplates:
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS}
-    EL_CICD_API_CALL: |-
+    EL_CICD_API_ARGS: |-
       def args = [${COMMON_BUILD_ARGS},
                   artifactName: '${BASE_OBJ_NAME}',
                   isSnapshot: params.IS_SNAPSHOT]
-      el.node(args) {
-          buildArtifact(args)
-      }
+    EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
   data: ${PIPELINE_CONFIG_MAP_DATA}
@@ -95,17 +91,12 @@ elCicdTemplates:
   objName: ${#}-${PROJECT_ID}-${}
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
-    ARGS: |-
+    EL_CICD_API_ARGS: |-
       def args = [teamId: '${TEAM_ID}',
                   projectId: '${PROJECT_ID}',
                   agent: el.cicd.JENKINS_AGENT_DEFAULT,
                   pipelineName: '${BASE_OBJ_NAME}',
                   ${EXTRA_ARGS}]
-    EL_CICD_API_CALL: |-
-      ${ARGS}
-      el.node(args) {
-          ${EL_CICD_API_METHOD}(args)
-      }
   elCicdDefs-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-promote-components:
