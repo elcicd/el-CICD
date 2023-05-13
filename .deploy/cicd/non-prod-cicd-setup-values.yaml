@@ -86,12 +86,12 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames:
-  - build-all
-  - promote
-  - run-tests
-  - redeploy-comps
-  - create-rls-cand
-  - redeploy-rls-cand
+  - build-artifacts-and-components
+  - promote-components
+  - run-post-deployment-tests
+  - redeploy-components
+  - create-release-candidate
+  - redeploy-release-candidate
   objName: ${#}-${PROJECT_ID}-${}
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:

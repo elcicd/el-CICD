@@ -67,9 +67,6 @@ __gather_bootstrap_info() {
     then
         _confirm_upgrade_install_sealed_secrets
     fi
-
-    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
-    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
 }
 
 __summarize_and_confirm_bootstrap_run_with_user() {
@@ -89,6 +86,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "Sealed Secrets ${SEALED_SECRETS_RELEASE_INFO} ${_BOLD}WILL${_REGULAR} be installed."
     fi
 
+    get_jenkins_image_sha
     if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
         echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}' image was not found."
@@ -273,6 +271,12 @@ __create_onboarding_automation_server() {
     local JENKINS_DEPLOYMENT_NAME='jenkins'
     
     __remove_failed_jenkins_server ${JENKINS_DEPLOYMENT_NAME}
+    
+
+    if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
+    then
+        get_jenkins_image_sha
+    fi
 
     echo
     echo 'Installing el-CICD Master server'

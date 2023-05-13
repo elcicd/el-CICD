@@ -83,3 +83,8 @@ _base_jenkins_agent_exists() {
     fi
 }
 
+get_jenkins_image_sha() {
+    local IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
+    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+}
+
