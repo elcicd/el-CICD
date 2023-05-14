@@ -50,8 +50,8 @@ _bootstrap_el_cicd() {
     then
         _run_custom_config_script bootstrap-prod.sh
     fi
-    
-    echo 
+
+    echo
     echo 'Custom Onboarding Server Boostrap Script(s) Complete'
 
     echo
@@ -132,7 +132,7 @@ _cluster_info() {
     echo
     oc cluster-info | head -n 1
     echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
-    
+
     echo
     echo "You ${_BOLD}MUST${_REGULAR} be currently logged into a cluster as a cluster admin."
     if [[ ! -z ${OKD_VERSION} ]]
@@ -267,11 +267,11 @@ __create_onboarding_automation_server() {
     PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
-    
+
     local JENKINS_DEPLOYMENT_NAME='jenkins'
-    
+
     __remove_failed_jenkins_server ${JENKINS_DEPLOYMENT_NAME}
-    
+
 
     if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
@@ -310,7 +310,8 @@ __create_onboarding_automation_server() {
     echo
     echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
-    
+
+    set -x
     local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')
     if [[ ! -z ${TERMINATING_PODS} ]]
@@ -320,6 +321,7 @@ __create_onboarding_automation_server() {
 
         oc wait --for=delete pod ${TERMINATING_POD} -n ${EL_CICD_MASTER_NAMESPACE} --timeout=600s
     fi
+    set +x
 
     if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
     then
@@ -344,7 +346,7 @@ __create_onboarding_automation_server() {
 
 __remove_failed_jenkins_server() {
     local JENKINS_DEPLOYMENT_NAME=${1}
-    
+
     if [[ ! -z $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${JENKINS_DEPLOYMENT_NAME}$) && \
           $(oc get pods -l name=${JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
     then

@@ -9,6 +9,7 @@ _build_el_cicd_jenkins_image() {
     set -e
     podman build --squash \
         --build-arg OKD_VERSION=${OKD_VERSION} \
+        --build-arg JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
         -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
         -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
         

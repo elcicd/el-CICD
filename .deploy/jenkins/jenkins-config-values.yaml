@@ -6,9 +6,9 @@ elCicdDefs:
   JENKINS_UC_INSECURE: "false"
   JENKINS_CASC: jenkins-casc
   JENKINS_PLUGINS: jenkins-plugins
+  JENKINS_PLUGINS_PATH: /var/lib/jenkins/${JENKINS_PLUGINS}
   JENKINS_CASC_YAML: jenkins-casc.yaml
   JENKINS_INSTALL_DIR: /var/lib/jenkins
-  JENKINS_PLUGINS_PATH: /var/lib/jenkins/${JENKINS_PLUGINS}
   JENKINS_PLUGINS_TXT: jenkins-plugins.txt
   CASC_RELOAD_TOKEN: elcicd
 
@@ -32,14 +32,16 @@ elCicdTemplates:
   - -c
   - if [[ -f $JENKINS_PLUGINS_FILE ]];
     then
-        echo "Installing Jenkins Plugins:" | tee -a /var/log/jenkins-startup.log;
-        cat $JENKINS_PLUGINS_FILE | tee -a /var/log/jenkins-startup.log;
+        echo "Installing Jenkins Plugins:";
+        cat $JENKINS_PLUGINS_FILE;
 
         echo;
         java -jar /usr/share/java/jenkins-plugin-manager.jar
             --war /usr/share/java/jenkins.war
             -f $JENKINS_PLUGINS_FILE
             --plugin-download-directory $JENKINS_HOME/plugins | tee -a /var/log/jenkins-startup.log;
+    else
+        echo "Jenkins plugins file not found $JENKINS_PLUGINS_FILE";
     fi;
 
     java -Djenkins.install.runSetupWizard=false
@@ -151,12 +153,24 @@ elCicdTemplates:
   mustHaveEveryProfile:
   - cicd
   - okd
+  mustNotHaveAnyProfile:
+  - onboarding
   data:
     Overall-Administer: edit
     Overall-Read: elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
+
+- templateName: configMap
+  objName: openshift-jenkins-login-plugin-config
+  mustHaveEveryProfile:
+  - onboarding
+  - okd
+  mustNotHaveAnyProfile:
+  - cicd
+  data:
+    Overall-Administer: edit
 
 - templateName: ingress
   objName: ${JENKINS_SERVICE_NAME}
@@ -200,10 +214,6 @@ elCicdTemplates:
 
 - templateName: roleBinding
   objName: ${JENKINS_SERVICE_NAME}-edit
-  mustHaveAnyProfile:
-  - cicd
-  mustNotHaveAnyProfile:
-  - onboarding
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
