@@ -20,7 +20,7 @@ elCicdDefs:
   RELEASE_CANDIDATE_EL_CICD_API_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT}, pipelineName: '${OBJ_NAME}', teamId: '${TEAM_ID}', projectId: ${PROJECT_ID}, releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PROJECT_FOLDER_DATA:
-    contentKey: config.xml
+    contentKey: ${OBJ_NAME}
     ${OBJ_NAME}: ${JENKINS_FOLDER_TEMPLATE}
     path: ${OBJ_NAME}.yaml
     optional: 'true'
