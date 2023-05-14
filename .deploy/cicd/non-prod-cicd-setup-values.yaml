@@ -19,11 +19,6 @@ elCicdDefs:
     stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
   RELEASE_CANDIDATE_EL_CICD_API_ARGS: |-
     def args = [agent: ${JENKINS_AGENT_DEFAULT}, pipelineName: '${OBJ_NAME}', teamId: '${TEAM_ID}', projectId: ${PROJECT_ID}, releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
-  PROJECT_FOLDER_DATA:
-    contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${JENKINS_FOLDER_TEMPLATE}
-    path: ${OBJ_NAME}.yaml
-    optional: 'true'
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
     ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
@@ -32,14 +27,6 @@ elCicdDefs:
   JENKINS_SERVICEACCOUNT_NAME: jenkins
 
 elCicdTemplates:
-- templateName: configMap
-  objName: ${PROJECT_ID}-jenkins-folder
-  labels:
-    teamid: ${TEAM_ID}
-    projectid: ${PROJECT_ID}
-    jenkins-folder: 'true'
-  data: ${PROJECT_FOLDER_DATA}
-
 - templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-component
