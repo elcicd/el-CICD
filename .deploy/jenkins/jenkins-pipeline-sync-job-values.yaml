@@ -24,7 +24,6 @@ elCicdTemplates:
     labels:
     - ${JENKINS}-folder
     - ${JENKINS}-pipeline
-    - ${JENKINS}-casc
   serviceAccountName: ${JENKINS}
   command: ["/bin/bash"]
   args:

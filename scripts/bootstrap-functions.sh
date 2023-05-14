@@ -264,6 +264,7 @@ __bootstrap_el_cicd_onboarding_server() {
 
 __create_onboarding_automation_server() {
     local PROFILES='onboarding'
+    PROFILES="${PROFILES}${OKD_VERSION:+,okd}"
     PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
     PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
@@ -281,7 +282,7 @@ __create_onboarding_automation_server() {
     echo
     echo 'Installing el-CICD Master server'
     echo
-    JENKINS_OPENSHIFT_ENABLE_OAUTH=$([[ OKD_VERSION ]] && echo 'true' || echo 'false')
+    JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
     helm upgrade --atomic --install --history-max=1 \
         --set-string elCicdProfiles="{${PROFILES}}" \

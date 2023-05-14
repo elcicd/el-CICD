@@ -4,13 +4,16 @@ elCicdDefs:
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_UC_INSECURE: "false"
-  JENKINS_CASC: jenkins-casc
-  JENKINS_PLUGINS: jenkins-plugins
-  JENKINS_PLUGINS_PATH: /var/lib/jenkins/${JENKINS_PLUGINS}
-  JENKINS_CASC_YAML: jenkins-casc.yaml
   JENKINS_INSTALL_DIR: /var/lib/jenkins
-  JENKINS_PLUGINS_TXT: jenkins-plugins.txt
+  
+  JENKINS_CASC: jenkins-casc
+  JENKINS_CASC_YAML: jenkins-casc.yaml
+  JENKINS_CASC_PATH: ${JENKINS_INSTALL_DIR}/${JENKINS_CASC}
   CASC_RELOAD_TOKEN: elcicd
+  
+  JENKINS_PLUGINS: jenkins-plugins
+  JENKINS_PLUGINS_TXT: jenkins-plugins.txt
+  JENKINS_PLUGINS_PATH: ${JENKINS_INSTALL_DIR}/${JENKINS_PLUGINS}
 
 elCicdDefs-jenkinsPersistent:
   JENKINS_PERSISTENT_VOLUME_MNT:
@@ -43,7 +46,9 @@ elCicdTemplates:
     else
         echo "Jenkins plugins file not found $JENKINS_PLUGINS_FILE";
     fi;
-
+    
+    cp ${JENKINS_CASC_PATH}/${JENKINS_CASC_YAML} ${JENKINS_CONFIG_FILE_PATH};
+    chmod 777 ${JENKINS_CONFIG_FILE_PATH}/${JENKINS_CASC_YAML};
     java -Djenkins.install.runSetupWizard=false
          -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
          $JENKINS_JAVA_OVERRIDES
@@ -104,6 +109,8 @@ elCicdTemplates:
   volumeMounts:
   - name: ${JENKINS_PLUGINS}
     mountPath: ${JENKINS_PLUGINS_PATH}
+  - name: ${JENKINS_CASC}
+    mountPath: ${JENKINS_CASC_PATH}
   - ${JENKINS_PERSISTENT_VOLUME_MNT}
   volumes:
   - name: ${JENKINS_PLUGINS}
@@ -112,6 +119,12 @@ elCicdTemplates:
       items:
       - key: ${JENKINS_PLUGINS_TXT}
         path: ${JENKINS_PLUGINS_TXT}
+  - name: ${JENKINS_CASC}
+    configMap:
+      name: ${JENKINS_CASC}
+      items:
+      - key: ${JENKINS_CASC_YAML}
+        path: ${JENKINS_CASC_YAML}
   - ${JENKINS_PERSISTENT_VOLUME}
 
 - templateName: service
@@ -124,17 +137,11 @@ elCicdTemplates:
 
 - templateName: configMap
   objName: ${JENKINS_CASC}
-  labels:
-    ${JENKINS_CASC}: 'true'
   data:
-    contentKey: ${JENKINS_CASC_YAML}
     ${JENKINS_CASC_YAML}: ${JENKINS_CASC_FILE}
-    path: ${JENKINS_CASC_YAML}
 
 - templateName: configMap
   objName: ${JENKINS_PLUGINS}
-  labels:
-    ${JENKINS_PLUGINS}: 'true'
   data:
     ${JENKINS_PLUGINS_TXT}: ${JENKINS_PLUGINS_FILE}
 
@@ -156,21 +163,11 @@ elCicdTemplates:
   mustNotHaveAnyProfile:
   - onboarding
   data:
-    Overall-Administer: edit
+    Overall-Administer: admin,edit
     Overall-Read: elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
-
-- templateName: configMap
-  objName: openshift-jenkins-login-plugin-config
-  mustHaveEveryProfile:
-  - onboarding
-  - okd
-  mustNotHaveAnyProfile:
-  - cicd
-  data:
-    Overall-Administer: edit
 
 - templateName: ingress
   objName: ${JENKINS_SERVICE_NAME}
