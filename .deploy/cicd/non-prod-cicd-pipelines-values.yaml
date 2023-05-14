@@ -1,9 +1,11 @@
 elCicdDefs:
   JENKINS_FOLDER_TEMPLATE: |-
-    folder('${PROJECT_ID}') {
-      displayName('${PROJECT_ID}')
-      description('el-CICD generated pipelines for ${PROJECT_ID}')
-    }
+    jobs:
+    - script: |-
+      folder('${PROJECT_ID}') {
+        displayName('${PROJECT_ID}')
+        description('el-CICD generated pipelines for ${PROJECT_ID}')
+      }
     
   SCM_BRANCH_BUILD_PARAM: |-
     stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
