@@ -107,7 +107,7 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployComponents
     EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
-      choiceParam('REDEPLOY_ENVIRONMENT', [${REDEPLOY_ENV_CHOICES}], 'Environment to redeploy')
+      choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
   elCicdDefs-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"

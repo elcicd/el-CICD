@@ -10,7 +10,7 @@ elCicdDefs:
 
   BUILD_COMPONENT_PARAMS: |-
     ${SCM_BRANCH_BUILD_PARAM}
-    choiceParam('DEPLOY_TO_NAMESPACE', [${BUILD_NAMESPACE_CHOICES}], 'Namespace to deploy to')
+    choiceParam('DEPLOY_TO_NAMESPACE', ${BUILD_NAMESPACE_CHOICES}, 'Namespace to deploy to')
     booleanParam('REINSTALL', true, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
 
   BUILD_ARTIFACT_PARAMS: |-
