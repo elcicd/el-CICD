@@ -209,10 +209,10 @@ def getCicdConfigValues(def projectInfo) {
     elCicdDefs.SANDBOX_ENVS = []
     elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
 
-    elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "\'${it}\'" }.toString()
+    elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "\"${it}\"" }.toString()
 
-    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect {"\'${it}\'" }
-    elCicdDefs.REDEPLOY_ENV_CHOICES.add("\'${projectInfo.preProdEnv}\'")
+    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect { it }
+    elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
 
     cicdConfigValues.elCicdNamespaces = []
