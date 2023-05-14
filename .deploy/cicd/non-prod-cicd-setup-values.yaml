@@ -14,20 +14,11 @@ elCicdDefs:
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
   COMMON_BUILD_EL_CICD_API_ARGS: |-
-    teamId: '${TEAM_ID}',
-    projectId: '${PROJECT_ID}',
-    agent: '${CODE_BASE}',
-    isBuild: true,
-    pipelineName: '${OBJ_NAME}',
-    scmBranch: params.SCM_BRANCH
+    teamId: '${TEAM_ID}', projectId: '${PROJECT_ID}', agent: '${CODE_BASE}', isBuild: true, pipelineName: '${OBJ_NAME}', scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
-    stringParam('RELEASE_CANDIDATE_TAG', null, '${RELEASE_CANDIDATE_TAG_DESCRIPTION}')
+    stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
   RELEASE_CANDIDATE_EL_CICD_API_ARGS: |-
-    def args = [agent: ${JENKINS_AGENT_DEFAULT},
-                pipelineName: '${OBJ_NAME}',,
-                teamId: '${TEAM_ID}',
-                projectId: ${PROJECT_ID},
-                releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+    def args = [agent: ${JENKINS_AGENT_DEFAULT}, pipelineName: '${OBJ_NAME}', teamId: '${TEAM_ID}', projectId: ${PROJECT_ID}, releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PROJECT_FOLDER_DATA:
     contentKey: config.xml
     ${OBJ_NAME}: ${JENKINS_FOLDER_TEMPLATE}
@@ -56,10 +47,7 @@ elCicdTemplates:
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS}
     EL_CICD_API_ARGS: |-
-      def args = [${COMMON_BUILD_ARGS},
-                  componentName: '${BASE_OBJ_NAME}',
-                  deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                  recreate: params.REINSTALL]
+      def args = [${COMMON_BUILD_ARGS}, componentName: '${BASE_OBJ_NAME}', deployToNamespace: params.DEPLOY_TO_NAMESPACE, recreate: params.REINSTALL]
     EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
@@ -72,9 +60,7 @@ elCicdTemplates:
   elCicdDefs:
     PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS}
     EL_CICD_API_ARGS: |-
-      def args = [${COMMON_BUILD_ARGS},
-                  artifactName: '${BASE_OBJ_NAME}',
-                  isSnapshot: params.IS_SNAPSHOT]
+      def args = [${COMMON_BUILD_ARGS}, artifactName: '${BASE_OBJ_NAME}', isSnapshot: params.IS_SNAPSHOT]
     EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
@@ -92,11 +78,7 @@ elCicdTemplates:
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
     EL_CICD_API_ARGS: |-
-      def args = [teamId: '${TEAM_ID}',
-                  projectId: '${PROJECT_ID}',
-                  agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_OBJ_NAME}',
-                  ${EXTRA_ARGS}]
+      def args = [teamId: '${TEAM_ID}', projectId: '${PROJECT_ID}', agent: el.cicd.JENKINS_AGENT_DEFAULT, pipelineName: '${BASE_OBJ_NAME}', ${EXTRA_ARGS}]
   elCicdDefs-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-promote-components:
@@ -112,7 +94,7 @@ elCicdTemplates:
     EL_CICD_API_METHOD: createReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
-    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')"
+    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
   elCicdDefs-redeploy-release-candidate:
     EL_CICD_API_METHOD: redeployReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
