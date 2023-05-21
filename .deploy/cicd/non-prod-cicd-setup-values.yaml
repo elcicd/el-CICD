@@ -13,7 +13,7 @@ elCicdDefs:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
-  COMMON_BUILD_EL_CICD_API_ARGS: |-
+  COMMON_BUILD_ARGS: |-
     teamId: '${TEAM_ID}',
     projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
