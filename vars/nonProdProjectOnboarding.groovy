@@ -17,7 +17,14 @@ def call(Map args) {
         if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
-            sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
+            sh """
+                if [[ ! -z \$(helm list -q | grep -E '^${projectInfo.id}\$) ]]
+                then
+                    helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
+                
+                    oc wait --for=delete namespace ${projectInfo.nonProdNamespaces.join(' ') g--timeout=600s
+                fi
+            """
         }
     }
 
