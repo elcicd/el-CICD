@@ -24,7 +24,7 @@ def call(Map args) {
                 
                     oc wait --for=delete namespace ${projectInfo.nonProdNamespaces.join(' ')} --timeout=600s
                 else
-                    ${shCmd.echo '--> CICD resources not found for project ${projectInfo.id}. Skipping...
+                    ${shCmd.echo "--> CICD resources not found for project ${projectInfo.id}. Skipping..."}
                 fi
             """
         }
