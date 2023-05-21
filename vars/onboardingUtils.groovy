@@ -75,7 +75,7 @@ def setupProjectNfsPvResources(def projectInfo) {
             PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.cicdMasterNamespace})
             if [[ ! -z \${PVS_INSTALLED} ]]
             then
-                helm uninstall ${chartName} -n ${projectInfo.cicdMasterNamespace}
+                helm uninstall --wait ${chartName} -n ${projectInfo.cicdMasterNamespace}
             fi
 
             if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
