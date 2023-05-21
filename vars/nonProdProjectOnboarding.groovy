@@ -17,9 +17,14 @@ def call(Map args) {
         if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
-            def chartName = onboardingUtils.getProjectPvChartName(projectInfo)
-
-            sh "helm uninstall ${projectInfo.id} ${chartName} -n ${projectInfo.cicdMasterNamespace}"
+            def chartName = projectInfo.nfsShares ? onboardingUtils.getProjectPvChartName(projectInfo) : ''
+            
+            sh """
+                if [[ ! -z \$(helm list -q | grep -E ^${projectInfo.id}\$) ]]
+                then
+                    helm uninstall ${projectInfo.id} ${chartName} -n ${projectInfo.cicdMasterNamespace}
+                fi
+                """
         }
     }
 
