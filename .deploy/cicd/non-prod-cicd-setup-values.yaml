@@ -20,8 +20,10 @@ elCicdDefs:
     isBuild: true,
     pipelineName: '${BASE_OBJ_NAME}',
     scmBranch: params.SCM_BRANCH
+  SCM_BRANCH_BUILD_PARAM: |-
+    stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
   RELEASE_CANDIDATE_PARAMS: |-
-    Parameters{
+    parameters {
       stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
     }
   PIPELINE_CONFIG_MAP_DATA:
@@ -60,7 +62,8 @@ elCicdTemplates:
   elCicdDefs:
     PIPELINE_PARAMS: |-
       parameters {
-        ${SCM_BRANCH_BUILD_PARAM}; booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
+        ${SCM_BRANCH_BUILD_PARAM}
+        booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
       }
     EL_CICD_API_ARGS: |-
       def args = [${COMMON_BUILD_ARGS},

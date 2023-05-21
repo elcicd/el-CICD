@@ -1,7 +1,4 @@
-elCicdDefs:
-  SCM_BRANCH_BUILD_PARAM: |-
-    stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
-    
+elCicdDefs:    
   JENKINS_PIPELINE_TEMPLATE: |-
     jobs:
     - script: |-
