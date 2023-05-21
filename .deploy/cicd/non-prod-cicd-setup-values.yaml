@@ -94,25 +94,25 @@ elCicdTemplates:
                   agent: el.cicd.JENKINS_AGENT_DEFAULT,
                   pipelineName: '${PIPELINE_NAME}',
                   ${EXTRA_ARGS}]
-  elCicdDefs-build-artifacts-and-components:
+  elCicdDefs-1-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
-  elCicdDefs-promote-components:
+  elCicdDefs-2-promote-components:
     EL_CICD_API_METHOD: promoteComponents
-  elCicdDefs-run-post-deployment-tests:
+  elCicdDefs-3-run-post-deployment-tests:
     EL_CICD_API_METHOD: runSystemTests
-  elCicdDefs-redeploy-components:
+  elCicdDefs-4-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
     EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
       parameters {
         choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
       }
-  elCicdDefs-create-release-candidate:
+  elCicdDefs-5-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
-  elCicdDefs-redeploy-release-candidate:
+  elCicdDefs-6-redeploy-release-candidate:
     EL_CICD_API_METHOD: redeployReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
