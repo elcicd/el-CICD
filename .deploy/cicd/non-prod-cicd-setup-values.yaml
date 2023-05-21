@@ -18,7 +18,7 @@ elCicdDefs:
     projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
     isBuild: true,
-    pipelineName: '${BASE_OBJ_NAME}',
+    pipelineName: '${PIPELINE_NAME}',
     scmBranch: params.SCM_BRANCH
   SCM_BRANCH_BUILD_PARAM: |-
     stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
@@ -26,7 +26,6 @@ elCicdDefs:
     parameters {
       stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
     }
-  PIPELINE_NAME: ${BASE_OBJ_NAME}
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
     ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
@@ -62,7 +61,7 @@ elCicdTemplates:
   objName: ${PROJECT_ID}-${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_NAME: ${BASE_OBJ_NAME}-artifact
+    PIPELINE_NAME: ${BASE_OBJ_NAME}-build-artifact
     PIPELINE_PARAMS: |-
       parameters {
         ${SCM_BRANCH_BUILD_PARAM}
@@ -79,20 +78,21 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames:
-  - build-artifacts-and-components
-  - promote-components
-  - run-post-deployment-tests
-  - redeploy-components
-  - create-release-candidate
-  - redeploy-release-candidate
-  objName: ${#}-${PROJECT_ID}-${}
+  - 1-build-artifacts-and-components
+  - 2-promote-components
+  - 3-run-post-deployment-tests
+  - 4-redeploy-components
+  - 5-create-release-candidate
+  - 6-redeploy-release-candidate
+  objName: ${PROJECT_ID}-${}
   labels: ${SHARED_PIPELINE_LABELS}
   elCicdDefs:
+    PIPELINE_NAME: ${BASE_OBJ_NAME}
     EL_CICD_API_ARGS: |-
       def args = [teamId: '${TEAM_ID}',
                   projectId: '${PROJECT_ID}',
                   agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${BASE_OBJ_NAME}',
+                  pipelineName: '${PIPELINE_NAME}',
                   ${EXTRA_ARGS}]
   elCicdDefs-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
