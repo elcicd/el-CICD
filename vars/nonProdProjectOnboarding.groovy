@@ -18,7 +18,7 @@ def call(Map args) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
             sh """
-                if [[ ! -z \$(helm list -q | grep -E '^${projectInfo.id}\$) ]]
+                if [[ ! -z \$(helm list -q | grep -E '^${projectInfo.id}\$') ]]
                 then
                     helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}
                 
