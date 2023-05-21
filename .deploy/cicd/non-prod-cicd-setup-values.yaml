@@ -30,7 +30,7 @@ elCicdDefs:
                 releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
-    ${BASE_OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
+    ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
     path: ${OBJ_NAME}.yaml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
