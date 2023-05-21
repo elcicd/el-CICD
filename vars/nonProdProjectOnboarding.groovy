@@ -17,21 +17,14 @@ def call(Map args) {
         if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
-            def chartName = projectInfo.nfsShares ? onboardingUtils.getProjectPvChartName(projectInfo) : ''
-            
-            sh """
-                if [[ ! -z \$(helm list -q | grep -E ^${projectInfo.id}\$) ]]
-                then
-                    helm uninstall ${projectInfo.id} ${chartName} -n ${projectInfo.cicdMasterNamespace}
-                fi
-                """
+            sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
         }
     }
 
     stage('Install/upgrade project CICD resources') {
-        onboardingUtils.setupProjectCicdResources(projectInfo)
-
         onboardingUtils.setupProjectNfsPvResources(projectInfo)
+        
+        onboardingUtils.setupProjectCicdResources(projectInfo)
 
         onboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
     }
