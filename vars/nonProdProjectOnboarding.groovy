@@ -9,16 +9,18 @@ def call(Map args) {
 
     def projectInfo = args.projectInfo
 
-    stage('Uninstall project CICD for baseline reinstall, if requested') {
+    stage("Install/upgrade CICD Jenkins") {
+        onboardingUtils.setupProjectCicdServer(projectInfo)
+    }
+
+    stage('Uninstall current project CICD resources (optional)') {
         if (args.rebuildCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
-            sh "helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
-        }
-    }
+            def chartName = onboardingUtils.getProjectPvChartName(projectInfo)
 
-    stage("Install/upgrade CICD Jenkins if necessary") {
-        onboardingUtils.setupProjectCicdServer(projectInfo)
+            sh "helm uninstall ${projectInfo.id} ${chartName} -n ${projectInfo.cicdMasterNamespace}"
+        }
     }
 
     stage('Install/upgrade project CICD resources') {
@@ -43,7 +45,7 @@ def call(Map args) {
     }
     parallel(buildStages)
 
-    stage('Push Webhook to GitHub for non-prod Jenkins') {
+    stage('Push Webhooks to GitHub') {
         loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
 
         jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
