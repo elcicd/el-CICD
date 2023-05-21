@@ -10,7 +10,7 @@ elCicdDefs:
         pipelineJob('${PROJECT_ID}/${PIPELINE_NAME}') {
             authenticationToken('${AUTH_TOKEN}')
             disabled(false)
-            displayName('${BASE_OBJ_NAME}')
+            displayName('${PIPELINE_NAME}')
             keepDependencies(false)
             ${PIPELINE_PARAMS}
 
