@@ -82,7 +82,7 @@ elCicdTemplates:
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
   - name: JENKINS_UC
-    value: http://updates.jenkins-ci.org/
+    value: https://updates.jenkins.io/update-center.json
   ports:
     - name: httpport
       containerPort: 8080
