@@ -20,9 +20,7 @@ def call(Map args) {
             sh """
                 if [[ ! -z \$(helm list -q | grep -E '^${projectInfo.id}\$') ]]
                 then
-                    helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}
-                
-                    oc wait --for=delete namespace ${projectInfo.nonProdNamespaces.values().join(' ')} --timeout=600s
+                    helm uninstall --wait ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}
                 else
                     ${shCmd.echo "--> CICD resources not found for project ${projectInfo.id}. Skipping..."}
                 fi
