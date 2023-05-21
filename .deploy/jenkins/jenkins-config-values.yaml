@@ -73,14 +73,16 @@ elCicdTemplates:
     value: ${JENKINS_SERVICE_NAME}
   - name: ENABLE_FATAL_ERROR_LOG_FILE
     value: ${ENABLE_FATAL_ERROR_LOG_FILE}
-  - name: JENKINS_UC_INSECURE
-    value: ${JENKINS_UC_INSECURE}
   - name: CASC_JENKINS_CONFIG
     value: ${JENKINS_CONFIG_FILE_PATH}
   - name: CASC_RELOAD_TOKEN
     value: ${CASC_RELOAD_TOKEN}
   - name: JENKINS_PLUGINS_FILE
     value: ${JENKINS_PLUGINS_PATH}/${JENKINS_PLUGINS_TXT}
+  - name: JENKINS_UC_INSECURE
+    value: ${JENKINS_UC_INSECURE}
+  - name: JENKINS_UC
+    value: http://updates.jenkins-ci.org/
   ports:
     - name: httpport
       containerPort: 8080
