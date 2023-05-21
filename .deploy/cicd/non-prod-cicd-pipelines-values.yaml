@@ -7,7 +7,7 @@ elCicdDefs:
           description('el-CICD generated pipelines for ${PROJECT_ID}')
         }
     - script: |-
-        pipelineJob('${PROJECT_ID}/${BASE_OBJ_NAME}') {
+        pipelineJob('${PROJECT_ID}/${PIPELINE_NAME}') {
             authenticationToken('${AUTH_TOKEN}')
             disabled(false)
             displayName('${BASE_OBJ_NAME}')

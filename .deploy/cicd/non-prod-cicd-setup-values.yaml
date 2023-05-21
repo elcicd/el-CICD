@@ -26,6 +26,7 @@ elCicdDefs:
     parameters {
       stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
     }
+  PIPELINE_NAME: ${BASE_OBJ_NAME}
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
     ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
@@ -39,6 +40,7 @@ elCicdTemplates:
   objName: ${PROJECT_ID}-${}-build-component
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
+    PIPELINE_NAME: ${BASE_OBJ_NAME}-build-component
     PIPELINE_PARAMS: |-
       parameters {
         ${SCM_BRANCH_BUILD_PARAM}
@@ -60,6 +62,7 @@ elCicdTemplates:
   objName: ${PROJECT_ID}-${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
+    PIPELINE_NAME: ${BASE_OBJ_NAME}-artifact
     PIPELINE_PARAMS: |-
       parameters {
         ${SCM_BRANCH_BUILD_PARAM}

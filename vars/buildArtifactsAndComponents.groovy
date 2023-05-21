@@ -63,7 +63,7 @@ def call(Map args) {
                 loggingUtils.echoBanner("BUILDING ${module.name}")
 
                 pipelineSuffix = projectInfo.components.contains(module) ? 'build-component' : 'build-artifact'
-                build(job: "../${projectInfo.id}/${module.name}-${pipelineSuffix}", wait: true)
+                build(job: "${module.name}-${pipelineSuffix}", wait: true)
 
                 loggingUtils.echoBanner("${module.name} BUILT AND DEPLOYED SUCCESSFULLY")
             }
