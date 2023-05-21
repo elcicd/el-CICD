@@ -226,12 +226,12 @@ def getCicdConfigValues(def projectInfo) {
 
     def hasJenkinsAgentPersistent = false
     projectInfo.components.each { comp ->
-        cicdConfigValues["elCicdDefs-${comp.name}-build-component"] =
+        cicdConfigValues["elCicdDefs-${comp.name}"] =
             ['CODE_BASE' : comp.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
-        cicdConfigValues["elCicdDefs-${art.name}-build-artifact"] =
+        cicdConfigValues["elCicdDefs-${art.name}"] =
             ['CODE_BASE' : art.codeBase ]
     }
 
