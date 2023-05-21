@@ -1,14 +1,6 @@
 elCicdDefs:
   SCM_BRANCH_BUILD_PARAM: |-
     stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
-
-  BUILD_COMPONENT_PARAMS: |-
-    ${SCM_BRANCH_BUILD_PARAM}
-    choiceParam('DEPLOY_TO_NAMESPACE', ${BUILD_NAMESPACE_CHOICES}, 'Namespace to deploy to')
-    booleanParam('REINSTALL', true, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
-
-  BUILD_ARTIFACT_PARAMS: |-
-    ${SCM_BRANCH_BUILD_PARAM}; booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
     
   JENKINS_PIPELINE_TEMPLATE: |-
     jobs:
@@ -23,9 +15,7 @@ elCicdDefs:
             disabled(false)
             displayName('${BASE_OBJ_NAME}')
             keepDependencies(false)
-            parameters {
-              ${PIPELINE_PARAMS}
-            }
+            ${PIPELINE_PARAMS}
 
             definition {
                 cps {

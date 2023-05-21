@@ -13,21 +13,17 @@ elCicdDefs:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
-  COMMON_BUILD_ARGS: |-
+  COMMON_BUILD_ARGS:
     teamId: '${TEAM_ID}',
     projectId: '${PROJECT_ID}',
     agent: '${CODE_BASE}',
     isBuild: true,
-    pipelineName: '${OBJ_NAME}',
+    pipelineName: '${BASE_OBJ_NAME}',
     scmBranch: params.SCM_BRANCH
   RELEASE_CANDIDATE_PARAMS: |-
-    stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
-  RELEASE_CANDIDATE_EL_CICD_API_ARGS: |-
-    def args = [agent: ${JENKINS_AGENT_DEFAULT},
-                pipelineName: '${OBJ_NAME}',
-                teamId: '${TEAM_ID}',
-                projectId: ${PROJECT_ID},
-                releaseCandidateTag: params.RELEASE_CANDIDATE_TAG]
+    Parameters{
+      stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
+    }
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
     ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
@@ -41,7 +37,12 @@ elCicdTemplates:
   objName: ${PROJECT_ID}-${}-build-component
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${BUILD_COMPONENT_PARAMS}
+    PIPELINE_PARAMS: |-
+      parameters {
+        ${SCM_BRANCH_BUILD_PARAM}
+        choiceParam('DEPLOY_TO_NAMESPACE', ${BUILD_NAMESPACE_CHOICES}, 'Namespace to deploy to')
+        booleanParam('REINSTALL', true, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
+      }
     EL_CICD_API_ARGS: |-
       def args = [${COMMON_BUILD_ARGS},
                   componentName: '${BASE_OBJ_NAME}',
@@ -57,7 +58,10 @@ elCicdTemplates:
   objName: ${PROJECT_ID}-${}-build-artifact
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
-    PIPELINE_PARAMS: ${BUILD_ARTIFACT_PARAMS}
+    PIPELINE_PARAMS: |-
+      parameters {
+        ${SCM_BRANCH_BUILD_PARAM}; booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
+      }
     EL_CICD_API_ARGS: |-
       def args = [${COMMON_BUILD_ARGS},
                   artifactName: '${BASE_OBJ_NAME}',
@@ -94,7 +98,9 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployComponents
     EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
-      choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
+      parameters {
+        choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
+      }
   elCicdDefs-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
