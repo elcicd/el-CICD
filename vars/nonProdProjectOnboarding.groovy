@@ -22,7 +22,9 @@ def call(Map args) {
                 then
                     helm uninstall ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}"
                 
-                    oc wait --for=delete namespace ${projectInfo.nonProdNamespaces.join(' ') g--timeout=600s
+                    oc wait --for=delete namespace ${projectInfo.nonProdNamespaces.join(' ')} --timeout=600s
+                else
+                    ${shCmd.echo '--> CICD resources not found for project ${projectInfo.id}. Skipping...
                 fi
             """
         }
