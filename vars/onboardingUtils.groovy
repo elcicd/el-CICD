@@ -172,7 +172,9 @@ def getPvCicdConfigValues(def projectInfo) {
                 elCicdDefs.VOLUME_OBJ_NAMES << objName
 
                 volumeMap = [:]
-                volumeMap.CLAIM_NAME = pv.claimName
+                volumeMap.CLAIM_NAME = pv.claimName 
+                volumeMap.VOLUME_MODE = pv.volumeMode
+                volumeMap.RECLAIM_POLICY = pv.reclaimPolicy
                 volumeMap.STORAGE_CAPACITY = pv.capacity
                 volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
                 volumeMap.VOLUME_NAMESPACE = namespace

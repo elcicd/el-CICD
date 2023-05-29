@@ -4,7 +4,9 @@ elCicdTemplates:
   storageClassName: ${OBJ_NAME}
   storageCapacity: ${STORAGE_CAPACITY}
   accessModes: ${ACCESS_MODES}
-  ${VOLUME_TYPE}: ${VOLUME_INFO}
+  persistentVolumeReclaimPolicy: ${RECLAIM_POLICY}
+  volumeMode: ${VOLUME_MODE}
+  ${VOLUME_TYPE}: ${VOLUME_DEF}
 
 - templateName: persistentVolumeClaim
   objNames: ${VOLUME_OBJ_NAMES}
