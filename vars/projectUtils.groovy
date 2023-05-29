@@ -223,9 +223,9 @@ def validateProjectPvs(def projectInfo, def pv) {
     assert pv.accessMode ==~
         /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
         "missing or invalid pv.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${pv.accessMode}'"
-    assert pv.volumeType ==~ /\w+/ : "missing or invalid pv.volumeType: '${pv.volumeType}'"
-    assert pv.volumeInfo : "missing pv.volumeInfo"
-    assert pv.claimName: "missing pv.claimName"
+    assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
+    assert pv.volumeDef : "missing volume definition, pv.volumeDef"
+    assert pv.claimName: "missing volume claim name, pv.claimName"
 }
 
 def cloneGitRepo(def module, def gitReference) {
