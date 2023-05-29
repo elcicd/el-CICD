@@ -179,7 +179,7 @@ def getPvCicdConfigValues(def projectInfo) {
                 volumeMap.VOLUME_TYPE = pv.volumeType
                 volumeMap.VOLUME_DEF = pv.volumeDef
 
-                cicdConfigValues["elCicdDefs-${objName}"] = pv.volumeMap
+                cicdConfigValues["elCicdDefs-${objName}"] = volumeMap
             }
         }
     }
