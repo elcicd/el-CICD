@@ -1,16 +1,14 @@
 elCicdTemplates:
 - templateName: persistentVolume
-  objNames: ${NFS_OBJ_NAMES}
+  objNames: ${VOLUME_OBJ_NAMES}
   storageClassName: ${OBJ_NAME}
   storageCapacity: ${STORAGE_CAPACITY}
   accessModes: ${ACCESS_MODES}
-  nfs:
-    path: ${PATH}
-    server: ${SERVER}
+  ${VOLUME_TYPE}: ${VOLUME_INFO}
 
 - templateName: persistentVolumeClaim
-  objNames: ${NFS_OBJ_NAMES}
-  namespace: ${NFS_NAMESPACE}
+  objNames: ${VOLUME_OBJ_NAMES}
+  namespace: ${VOLUME_NAMESPACE}
   storageRequest: ${STORAGE_CAPACITY}
   accessMode: ReadWriteMany
   

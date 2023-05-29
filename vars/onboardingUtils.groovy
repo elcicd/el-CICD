@@ -57,20 +57,20 @@ def setupProjectCicdServer(def projectInfo) {
 }
 
 def setupProjectNfsPvResources(def projectInfo) {
-    if (projectInfo.nfsShares) {
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD NFS Volumes")
+    if (projectInfo.persistenVolumes) {
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD VOLUME Volumes")
 
-        def projectDefs = getNfsCicdConfigValues(projectInfo)
-        def nfsCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
+        def projectDefs = getPvCicdConfigValues(projectInfo)
+        def volumeCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
 
-        def nfsCicdConfigFile = "nfs-cicd-config-values.yaml"
-        writeFile(file: nfsCicdConfigFile, text: nfsCicdConfigValues)
+        def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
+        writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
 
         def chartName = getProjectPvChartName(projectInfo)
 
         sh """
-            ${shCmd.echo '', "${projectInfo.id} PROJECT NFS VALUES:"}
-            cat ${nfsCicdConfigFile}
+            ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
+            cat ${volumeCicdConfigFile}
             
             PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.cicdMasterNamespace})
             if [[ ! -z \${PVS_INSTALLED} ]]
@@ -78,11 +78,11 @@ def setupProjectNfsPvResources(def projectInfo) {
                 helm uninstall --wait ${chartName} -n ${projectInfo.cicdMasterNamespace}
             fi
 
-            if [[ ! -z '${projectInfo.nfsShares ? 'hasPvs' : ''}' ]]
+            if [[ ! -z '${projectInfo.persistenVolumes ? 'hasPvs' : ''}' ]]
             then
                 helm install \
-                    -f ${nfsCicdConfigFile} \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/nfs-pv-values.yaml \
+                    -f ${volumeCicdConfigFile} \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/volume-pv-values.yaml \
                     -n ${projectInfo.cicdMasterNamespace} \
                     ${chartName} \
                     elCicdCharts/elCicdChart
@@ -159,27 +159,27 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
     """
 }
 
-def getNfsCicdConfigValues(def projectInfo) {
+def getPvCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
     
-    elCicdDefs.NFS_OBJ_NAMES = []
-    projectInfo.nfsShares.each { nfsShare ->
-        nfsShare.envs.each { env ->
+    elCicdDefs.VOLUME_OBJ_NAMES = []
+    projectInfo.persistenVolumes.each { pv ->
+        pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
-                def objName = "${el.cicd.NFS_PV_PREFIX}-${namespace}-${nfsShare.claimName}"
-                elCicdDefs.NFS_OBJ_NAMES << objName
+                def objName = "${el.cicd.VOLUME_PV_PREFIX}-${namespace}-${pv.claimName}"
+                elCicdDefs.VOLUME_OBJ_NAMES << objName
 
-                nfsMap = [:]
-                nfsMap.CLAIM_NAME = nfsShare.claimName
-                nfsMap.STORAGE_CAPACITY = nfsShare.capacity
-                nfsMap.ACCESS_MODES = nfsShare.accessModes ? nfsShare.accessModes : [nfsShare.accessMode]
-                nfsMap.PATH = nfsShare.exportPath
-                nfsMap.SERVER = nfsShare.server
-                nfsMap.NFS_NAMESPACE = namespace
+                volumeMap = [:]
+                volumeMap.CLAIM_NAME = pv.claimName
+                volumeMap.STORAGE_CAPACITY = pv.capacity
+                volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
+                volumeMap.VOLUME_NAMESPACE = namespace
+                volumeMap.VOLUME_TYPE = pv.volumeType
+                volumeMap.VOLUME_DEF = pv.volumeDef
 
-                cicdConfigValues["elCicdDefs-${objName}"] = nfsMap
+                cicdConfigValues["elCicdDefs-${objName}"] = pv.volumeMap
             }
         }
     }
