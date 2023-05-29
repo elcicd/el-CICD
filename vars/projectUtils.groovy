@@ -208,24 +208,24 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    projectInfo.persistenVolumes.each { nfsShare ->
-        validateNfsShare(projectInfo, nfsShare)
+    projectInfo.persistenVolumes.each { pv ->
+        validateProjectPvs(projectInfo, pv)
     }
 }
 
-def validateNfsShare(def projectInfo, def nfsShare) {
-    assert nfsShare.envs : "missing nfsshare environments"
-    nfsShare.envs.each { env ->
+def validateProjectPvs(def projectInfo, def pv) {
+    assert pv.envs : "missing persistent volume environments"
+    pv.envs.each { env ->
         assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
     }
 
-    assert nfsShare.capacity ==~ /\d{1,4}(Mi|Gi)/ : "nfsShare.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${nfsShare.capacity}'"
-    assert nfsShare.accessMode ==~
+    assert pv.capacity ==~ /\d{1,4}(Mi|Gi)/ : "pv.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${pv.capacity}'"
+    assert pv.accessMode ==~
         /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
-        "missing or invalid nfsShare.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${nfsShare.accessMode}'"
-    assert nfsShare.exportPath ==~ /\/([.\w-]+\/?)+/ : "missing or invalid nfsShare.nfsExportPath  /([.\\w-]+\\/?)+: '${nfsShare.nfsExportPath}'"
-    assert nfsShare.server : "missing nfsShare.nfsServer"
-    assert nfsShare.claimName: "missing nfsShare.claimName"
+        "missing or invalid pv.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${pv.accessMode}'"
+    assert pv.volumeType ==~ /\w+/ : "missing or invalid pv.volumeType: '${pv.volumeType}'"
+    assert pv.volumeInfo : "missing pv.volumeInfo"
+    assert pv.claimName: "missing pv.claimName"
 }
 
 def cloneGitRepo(def module, def gitReference) {
