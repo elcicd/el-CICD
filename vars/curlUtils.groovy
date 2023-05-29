@@ -33,6 +33,6 @@ def SILENT = '-o /dev/null'
 @Field
 def FAIL_SILENT = '-f 2>/dev/null'
 
-def getCmd(def httpVerb, String tokenName, def silent = true) {    
-    return """curl --retry 9 --retry-all-errors -ksSL -X ${httpVerb} ${silent ? SILENT : ''}  -H "Authorization: Bearer \${${tokenName}}" """
+def getCmd(def httpVerb, String tokenName, def silent = true, def retry = true) {    
+    return """curl ${retry ? '--retry 9 --retry-all-errors' : ''} -ksSL -X ${httpVerb} ${silent ? SILENT : ''}  -H "Authorization: Bearer \${${tokenName}}" """
 }
