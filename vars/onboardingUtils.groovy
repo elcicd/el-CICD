@@ -56,9 +56,9 @@ def setupProjectCicdServer(def projectInfo) {
     """
 }
 
-def setupProjectNfsPvResources(def projectInfo) {
+def setupProjectPvResources(def projectInfo) {
     if (projectInfo.persistenVolumes) {
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD VOLUME Volumes")
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PERSISTENT VOLUMES FPR PROJECT ${projectInfo.id}")
 
         def projectDefs = getPvCicdConfigValues(projectInfo)
         def volumeCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
