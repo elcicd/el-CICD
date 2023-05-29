@@ -60,8 +60,8 @@ def setupProjectPvResources(def projectInfo) {
     if (projectInfo.persistenVolumes) {
         loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PERSISTENT VOLUMES FPR PROJECT ${projectInfo.id}")
 
-        def projectDefs = getPvCicdConfigValues(projectInfo)
-        def volumeCicdConfigValues = writeYaml(data: projectDefs, returnText: true)
+        def pvYaml = getPvCicdConfigValues(projectInfo)
+        def volumeCicdConfigValues = writeYaml(data: pvYaml, returnText: true)
 
         def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
         writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
@@ -82,7 +82,7 @@ def setupProjectPvResources(def projectInfo) {
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/volume-pv-values.yaml \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
                     -n ${projectInfo.cicdMasterNamespace} \
                     ${chartName} \
                     elCicdCharts/elCicdChart
@@ -168,7 +168,7 @@ def getPvCicdConfigValues(def projectInfo) {
         pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
-                def objName = "${el.cicd.VOLUME_PV_PREFIX}-${namespace}-${pv.claimName}"
+                def objName = "${el.cicd.PV_PREFIX}-${namespace}-${pv.claimName}"
                 elCicdDefs.VOLUME_OBJ_NAMES << objName
 
                 volumeMap = [:]
