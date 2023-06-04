@@ -135,6 +135,7 @@ _remove_existing_crc() {
         ${CRC_EXEC} delete  2>/dev/null
         echo 'Cleaning up the OpenShift Local install'
         ${CRC_EXEC} cleanup  2>/dev/null
+        unset CRC_EXEC
     fi
     set -e
 

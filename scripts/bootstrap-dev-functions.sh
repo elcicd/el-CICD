@@ -197,7 +197,7 @@ __bootstrap_clean_crc() {
     echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
     tar -xf ${EL_CICD_HOME}/crc-linux-amd64.tar.xz -C ${EL_CICD_HOME}
 
-    CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
+    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
     echo
     ${CRC_EXEC} setup <<< 'y'
@@ -223,6 +223,9 @@ _start_crc() {
 
         eval $(${CRC_EXEC} oc-env)
         source <(oc completion ${CRC_SHELL})
+    else
+        echo 'crc exec not found; exiting'
+        exit 1
     fi
 }
 

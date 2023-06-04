@@ -76,7 +76,7 @@ __main() {
             '--sealed-secrets')
                 ELCICD_ADM_MSG="INSTALL/UPGRADE SEALED SECRETS"
 
-                EL_CICD_ADM_COMMANDS=('_check_upgrade_install_sealed_secrets' '_create_rbac_helpers')
+                EL_CICD_ADM_COMMANDS+=('_check_upgrade_install_sealed_secrets' '_create_rbac_helpers')
                 shift 1
             ;;
 
