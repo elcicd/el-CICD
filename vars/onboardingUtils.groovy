@@ -58,7 +58,7 @@ def setupProjectCicdServer(def projectInfo) {
 
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticVolumes) {
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PERSISTENT VOLUMES FOR PROJECT ${projectInfo.id}")
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
 
         def pvYaml = getPvCicdConfigValues(projectInfo)
         def volumeCicdConfigValues = writeYaml(data: pvYaml, returnText: true)
