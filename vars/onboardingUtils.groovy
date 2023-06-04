@@ -57,7 +57,7 @@ def setupProjectCicdServer(def projectInfo) {
 }
 
 def setupProjectPvResources(def projectInfo) {
-    if (projectInfo.persistenVolumes) {
+    if (projectInfo.staticVolumes) {
         loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PERSISTENT VOLUMES FPR PROJECT ${projectInfo.id}")
 
         def pvYaml = getPvCicdConfigValues(projectInfo)
@@ -78,7 +78,7 @@ def setupProjectPvResources(def projectInfo) {
                 helm uninstall --wait ${chartName} -n ${projectInfo.cicdMasterNamespace}
             fi
 
-            if [[ ! -z '${projectInfo.persistenVolumes ? 'hasPvs' : ''}' ]]
+            if [[ ! -z '${projectInfo.staticVolumes ? 'hasPvs' : ''}' ]]
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
@@ -164,24 +164,28 @@ def getPvCicdConfigValues(def projectInfo) {
     elCicdDefs = [:]
     
     elCicdDefs.VOLUME_OBJ_NAMES = []
-    projectInfo.persistenVolumes.each { pv ->
+    projectInfo.staticVolumes.each { pv ->
         pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
-                def objName = "${el.cicd.PV_PREFIX}-${namespace}-${pv.claimName}"
-                elCicdDefs.VOLUME_OBJ_NAMES << objName
+                projectInfo.components.each { component ->
+                    if (component.staticPvs.contains(pv.name)) {
+                        def objName = "${el.cicd.PV_PREFIX}-${pv.claimName}-${component.name}"
+                        elCicdDefs.VOLUME_OBJ_NAMES << objName
 
-                volumeMap = [:]
-                volumeMap.CLAIM_NAME = pv.claimName 
-                volumeMap.VOLUME_MODE = pv.volumeMode
-                volumeMap.RECLAIM_POLICY = pv.reclaimPolicy
-                volumeMap.STORAGE_CAPACITY = pv.capacity
-                volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
-                volumeMap.VOLUME_NAMESPACE = namespace
-                volumeMap.VOLUME_TYPE = pv.volumeType
-                volumeMap.VOLUME_DEF = pv.volumeDef
+                        volumeMap = [:]
+                        volumeMap.CLAIM_NAME = pv.claimName 
+                        volumeMap.VOLUME_MODE = pv.volumeMode
+                        volumeMap.RECLAIM_POLICY = pv.reclaimPolicy
+                        volumeMap.STORAGE_CAPACITY = pv.capacity
+                        volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
+                        volumeMap.VOLUME_NAMESPACE = namespace
+                        volumeMap.VOLUME_TYPE = pv.volumeType
+                        volumeMap.VOLUME_DEF = pv.volumeDef
 
-                cicdConfigValues["elCicdDefs-${objName}"] = volumeMap
+                        cicdConfigValues["elCicdDefs-${objName}"] = volumeMap
+                    }
+                }
             }
         }
     }
@@ -231,9 +235,9 @@ def getCicdConfigValues(def projectInfo) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     def hasJenkinsAgentPersistent = false
-    projectInfo.components.each { comp ->
-        cicdConfigValues["elCicdDefs-${comp.name}"] =
-            ['CODE_BASE' : comp.codeBase ]
+    projectInfo.components.each { component ->
+        cicdConfigValues["elCicdDefs-${component.name}"] =
+            ['CODE_BASE' : component.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
