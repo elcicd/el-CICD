@@ -32,7 +32,7 @@ def gatherProjectInfo(def teamId, def projectId) {
     initProjectSandboxData(projectInfo)
 
     projectInfo.resourceQuotas = projectInfo.resourceQuotas ?: [:]
-    projectInfo.staticVolumes = projectInfo.staticVolumes ?: []
+    projectInfo.staticPvs = projectInfo.staticPvs ?: []
 
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
     projectInfo.cicdMasterNamespace = "${projectInfo.teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
@@ -208,7 +208,7 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    projectInfo.staticVolumes.each { pv ->
+    projectInfo.staticPvs.each { pv ->
         validateProjectPvs(projectInfo, pv)
     }
 }

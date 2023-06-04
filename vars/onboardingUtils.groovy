@@ -57,7 +57,7 @@ def setupProjectCicdServer(def projectInfo) {
 }
 
 def setupProjectPvResources(def projectInfo) {
-    if (projectInfo.staticVolumes) {
+    if (projectInfo.staticPvs) {
         loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
 
         def pvYaml = getPvCicdConfigValues(projectInfo)
@@ -78,7 +78,7 @@ def setupProjectPvResources(def projectInfo) {
                 helm uninstall --wait ${chartName} -n ${projectInfo.cicdMasterNamespace}
             fi
 
-            if [[ ! -z '${projectInfo.staticVolumes ? 'hasPvs' : ''}' ]]
+            if [[ ! -z '${projectInfo.staticPvs ? 'hasPvs' : ''}' ]]
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
@@ -164,7 +164,7 @@ def getPvCicdConfigValues(def projectInfo) {
     elCicdDefs = [:]
     
     elCicdDefs.VOLUME_OBJ_NAMES = []
-    projectInfo.staticVolumes.each { pv ->
+    projectInfo.staticPvs.each { pv ->
         pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
