@@ -208,8 +208,7 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-        validateProjectPvs(projectInfo)
-    }
+    validateProjectPvs(projectInfo)
 }
 
 def validateProjectPvs(def projectInfo, def pv) {
