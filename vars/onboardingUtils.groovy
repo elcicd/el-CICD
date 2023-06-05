@@ -169,7 +169,7 @@ def getPvCicdConfigValues(def projectInfo) {
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
                 projectInfo.components.each { component ->
-                    if (component.staticPvs.?contains(pv.name)) {
+                    if (component.staticPvs?.contains(pv.name)) {
                         def objName = "${el.cicd.PV_PREFIX}-${pv.claimName}-${component.name}"
                         elCicdDefs.VOLUME_OBJ_NAMES << objName
 
