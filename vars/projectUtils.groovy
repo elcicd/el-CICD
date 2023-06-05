@@ -208,24 +208,28 @@ def validateProjectInfo(def projectInfo) {
         assert el.cicd.testEnvs.contains(env) : "test environment '${env}' must be in [${el.cicd.testEnvs}]"
     }
 
-    projectInfo.staticPvs.each { pv ->
-        validateProjectPvs(projectInfo, pv)
+        validateProjectPvs(projectInfo)
     }
 }
 
 def validateProjectPvs(def projectInfo, def pv) {
-    assert pv.envs : "missing persistent volume environments"
-    pv.envs.each { env ->
-        assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
-    }
+    pvMap = [:]
+    projectInfo.staticPvs.each { pv ->
+        assert pv.envs : "missing persistent volume environments"
+        pv.envs.each { env ->
+            assert projectInfo.nonProdEnvs.contains(env) || env == projectInfo.prodEnv
+        }
 
-    assert pv.capacity ==~ /\d{1,4}(Mi|Gi)/ : "pv.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${pv.capacity}'"
-    assert pv.accessMode ==~
-        /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
-        "missing or invalid pv.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${pv.accessMode}'"
-    assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
-    assert pv.volumeDef : "missing volume definition, pv.volumeDef"
-    assert pv.claimName: "missing volume claim name, pv.claimName"
+        assert pv.capacity ==~ /\d{1,4}(Mi|Gi)/ : "pv.capacity missing or invalid format \\d{1,4}(Mi|Gi): '${pv.capacity}'"
+        assert pv.accessMode ==~
+            /(ReadWriteOnce|ReadWriteMany|ReadOnly)/ :
+            "missing or invalid pv.accessMode (ReadWriteOnce|ReadWriteMany|ReadOnly): '${pv.accessMode}'"
+        assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
+        assert pv.volumeDef : "missing volume definition, pv.volumeDef"
+        
+        assert (pv.name && !pvMap[pv.name]): "each project static volume must have a unique name: ${pv.name ? pv.name : 'missing'}"
+        pvMap[pv.name] = true
+    }
 }
 
 def cloneGitRepo(def module, def gitReference) {
