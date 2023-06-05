@@ -226,7 +226,8 @@ def validateProjectPvs(def projectInfo) {
         assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
         assert pv.volumeDef : "missing volume definition, pv.volumeDef"
         
-        assert (pv.name && !pvMap[pv.name]): "each project static volume must have a unique name: ${pv.name ? pv.name : 'missing'}"
+        def msg = "each project static volume must have a unique name: ${pv.name ? pv.name : '<missing anmename>'}"
+        assert (pv.name && !pvMap[pv.name]): msg
         pvMap[pv.name] = true
     }
 }
