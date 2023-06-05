@@ -171,6 +171,7 @@ def getPvCicdConfigValues(def projectInfo) {
                 projectInfo.components.each { component ->
                     if (component.staticPvs.contains(pv.name)) {
                         def objName = "${el.cicd.PV_PREFIX}-${pv.name}-${component.name}"
+                        if (
                         elCicdDefs.VOLUME_OBJ_NAMES << objName
 
                         volumeMap = [:]

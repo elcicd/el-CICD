@@ -71,8 +71,6 @@ def initProjectModuleData(def projectInfo) {
         
         component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
         projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
-        
-        component.staticPvs = component.staticPvs ?: []
     }
 
     projectInfo.artifacts = projectInfo.artifacts ?: []
@@ -214,6 +212,7 @@ def validateProjectInfo(def projectInfo) {
 }
 
 def validateProjectPvs(def projectInfo) {
+    pvMap = [:]
     projectInfo.staticPvs.each { pv ->
         assert pv.envs : "missing persistent volume environments"
         pv.envs.each { env ->
@@ -227,7 +226,9 @@ def validateProjectPvs(def projectInfo) {
         assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
         assert pv.volumeDef : "missing volume definition, pv.volumeDef"
         
-        assert pv.name : "each project static volume must have a name"
+        def msg = "each project static volume must have a unique name: ${pv.name ? pv.name : '<missing name>'}"
+        assert (pv.name && !pvMap[pv.name]): msg
+        pvMap[pv.name] = true
     }
 }
 
