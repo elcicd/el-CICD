@@ -212,7 +212,6 @@ def validateProjectInfo(def projectInfo) {
 }
 
 def validateProjectPvs(def projectInfo) {
-    pvMap = [:]
     projectInfo.staticPvs.each { pv ->
         assert pv.envs : "missing persistent volume environments"
         pv.envs.each { env ->
@@ -226,9 +225,7 @@ def validateProjectPvs(def projectInfo) {
         assert pv.volumeType ==~ /\w+/ : "missing volume type, pv.volumeType: '${pv.volumeType}'"
         assert pv.volumeDef : "missing volume definition, pv.volumeDef"
         
-        def msg = "each project static volume must have a unique name: ${pv.name ? pv.name : '<missing anmename>'}"
-        assert (pv.name && !pvMap[pv.name]): msg
-        pvMap[pv.name] = true
+        assert pv.name : "each project static volume must have a name"
     }
 }
 
