@@ -71,6 +71,8 @@ def initProjectModuleData(def projectInfo) {
         
         component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
         projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
+        
+        component.staticPvs = component.staticPvs ?: []
     }
 
     projectInfo.artifacts = projectInfo.artifacts ?: []
