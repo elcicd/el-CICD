@@ -211,7 +211,7 @@ def validateProjectInfo(def projectInfo) {
     validateProjectPvs(projectInfo)
 }
 
-def validateProjectPvs(def projectInfo, def pv) {
+def validateProjectPvs(def projectInfo) {
     pvMap = [:]
     projectInfo.staticPvs.each { pv ->
         assert pv.envs : "missing persistent volume environments"
