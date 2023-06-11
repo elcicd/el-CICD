@@ -249,12 +249,6 @@ __bootstrap_el_cicd_onboarding_server() {
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     echo
 
-    if [[ -z $(oc get project ${EL_CICD_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)  ]]
-    then
-        oc new-project ${EL_CICD_MASTER_NAMESPACE}
-    fi
-    sleep 2
-
     _create_rbac_helpers
 
     _create_jenkins_secrets
