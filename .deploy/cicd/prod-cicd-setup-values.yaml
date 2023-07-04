@@ -1,0 +1,50 @@
+elCicdDefs-prod:
+  PIPELINE_NAME: ${BASE_OBJ_NAME}
+  EL_CICD_API_ARGS: |-
+    def args = [teamId: '${TEAM_ID}',
+                agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                pipelineName: '${PIPELINE_NAME}',
+                project: params.PROJECT_ID,
+                version: params.VERSION
+                ${EXTRA_PIPELINE_ARGS}]
+                
+elCicdDefs-deploy-project-to-prod:
+  PIPELINE_DESCRIPTION: 'Deploy to production environment'
+  EL_CICD_API_METHOD: deployProjectToProd
+  EXTRA_PIPELINE_ARGS: |-
+    variant: params.VERSION,
+    variant: params.VARIANT
+  PIPELINE_PARAMS: |-
+    parameters {
+      stringParam('VERSION', null, "Release version to deploy (WARNING: DO NOT prefix with a 'v'")
+      stringParam('VARIANT', null, "Variant of version to deploy; e.g. 'east', 'west', 'french', 'english', or 'pre'")
+    }
+    
+elCicdDefs-promote-project-to-prod:
+  PIPELINE_DESCRIPTION: 'Create production deployment branch in project repository from release candidates of components'
+  EL_CICD_API_METHOD: promoteProjectToProd
+  EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
+  PIPELINE_PARAMS: |-
+    parameters {
+      stringParam('RELEASE_CANDIDATE_TAG', null, "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v')")
+    }
+
+elCicdTemplates-prod:
+- templateName: configMap
+  objNames:
+  - deploy-project-to-prod
+  - promote-project-to-prod
+  mustHaveEveryProfile:
+  - prod
+  labels:
+    teamId: ${TEAM_ID}
+    jenkins-pipeline: 'true'
+    jenkins-shared-pipeline: 'true'
+  data: ${PIPELINE_CONFIG_MAP_DATA}
+
+- templateName: copyResource
+  objNames: ${PROD_ENVS}
+  objName: el-cicd-${}-pull-secret
+  kind: Secret
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
