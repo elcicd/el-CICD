@@ -5,12 +5,12 @@
  */
 
 def call(Map args) {
-    nonProdOnboardingUtils.init()
+    onboardTeamCicdServerUtils.init()
 
     def projectInfo = args.projectInfo
 
     stage("Install/upgrade CICD Jenkins") {
-        nonProdOnboardingUtils.setupProjectCicdServer(projectInfo)
+        onboardTeamCicdServerUtils.setupProjectCicdServer(projectInfo)
     }
 
     stage('Uninstall current project CICD resources (optional)') {
@@ -33,11 +33,11 @@ def call(Map args) {
     }
 
     stage('Install/upgrade project CICD resources') {        
-        nonProdOnboardingUtils.setupProjectCicdResources(projectInfo)
+        onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
         
-        nonProdOnboardingUtils.setupProjectPvResources(projectInfo)
+        onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
 
-        nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+        onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")

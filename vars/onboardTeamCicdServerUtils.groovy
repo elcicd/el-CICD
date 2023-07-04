@@ -49,15 +49,17 @@ def setupProjectCicdServer(def teamInfo) {
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml/prod-pipeline-values.yaml
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml
             jenkins \
             elCicdCharts/elCicdChart
 
         ${shCmd.echo ''}
-        ${shCmd.echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'}
-        sleep 5
+        ${shCmd.echo 'JENKINS UP'}
+        sleep 1
     """
 }
 
@@ -242,12 +244,12 @@ def getCicdConfigValues(def projectInfo) {
     def hasJenkinsAgentPersistent = false
     projectInfo.components.each { component ->
         cicdConfigValues["elCicdDefs-${component.name}"] =
-            ['CODE_BASE' : component.codeBase ]
+            ['EL_CICD_AGENT' : component.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
         cicdConfigValues["elCicdDefs-${art.name}"] =
-            ['CODE_BASE' : art.codeBase ]
+            ['EL_CICD_AGENT' : art.codeBase ]
     }
 
     elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()

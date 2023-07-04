@@ -32,7 +32,7 @@ def call(Map args) {
             helm uninstall ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} --wait --no-hooks
         """
         
-        nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+        onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
         
         loggingUtils.echoBanner("${projectInfo.id} REMOVED FROM CLUSTER")
     }

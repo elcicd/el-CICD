@@ -7,7 +7,7 @@
  */
 
 def call(Map args) {
-    nonProdOnboardingUtils.init()
+    onboardTeamCicdServerUtils.init()
 
     jenkinsRefresh = [:]
     cicdProjects = []
@@ -54,13 +54,13 @@ def call(Map args) {
     projectInfos.addAll(jenkinsRefresh.values())
     stage('refresh each CICD server') {
         projectInfos.each { projectInfo ->
-            nonProdOnboardingUtils.setupProjectCicdServer(projectInfo)
+            onboardTeamCicdServerUtils.setupProjectCicdServer(projectInfo)
         }
     }
     
     stage("refresh each project's CICD") {
         cicdProjects.each { projectInfo ->
-            nonProdOnboardingUtils.setupProjectCicdResources(projectInfo)
+            onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
         }
     }
     
@@ -108,7 +108,7 @@ def syncPipelines(def projectInfos) {
         def projectInfo = projectUtils.synchronizedRemoveListItem(projectInfos)
         if (projectInfo) {
             loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.teamInfo.cicdMasterNamespace}")
-            nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+            onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
         }
     }
 }

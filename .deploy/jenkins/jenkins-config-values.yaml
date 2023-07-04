@@ -286,37 +286,4 @@ elCicdTemplates:
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-  
-- templateName: configMap
-  objNames:
-  - deploy-to-prod
-  - promote-to-prod
-  mustHaveEveryProfile:
-  - cicd
-  - prod
-  labels:
-    teamId: ${TEAM_ID}
-    jenkins-pipeline: 'true'
-    jenkins-shared-pipeline: 'true'
-  elCicdDefs:
-    PIPELINE_NAME: ${BASE_OBJ_NAME}
-    EL_CICD_API_ARGS: |-
-      def args = [teamId: '${TEAM_ID}',
-                  agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${PIPELINE_NAME}',
-                  project: params.PROJECT_ID,
-                  version: params.VERSION
-                  ${EXTRA_PIPELINE_ARGS}]
-  elCicdDefs-deploy-to-prod:
-    EL_CICD_API_METHOD: deployToProd
-    EXTRA_PIPELINE_ARGS: "variant: params.VARIANT"
-    PIPELINE_PARAMS: ${PROD_DEPLOY_PARAMS}
-    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
-  elCicdDefs-promote-to-prod:
-    EL_CICD_API_METHOD: promoteComponents
-    EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
-    PIPELINE_PARAMS: ${PROD_PROMOTE_PARAMS}
-    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
-  data: ${PIPELINE_CONFIG_MAP_DATA}
-
 

@@ -1,4 +1,4 @@
-elCicdDefs:
+elCicdDefs-nonprod:
   BUILD_COMPONENT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     component: ${BASE_OBJ_NAME}
@@ -9,7 +9,7 @@ elCicdDefs:
     artifact: ${BASE_OBJ_NAME}
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
-  SHARED_PIPELINE_LABELS:
+  SHARED_PROJECT_PIPELINE_LABELS:
     projectid: ${PROJECT_ID}
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
@@ -26,17 +26,13 @@ elCicdDefs:
     parameters {
       stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
     }
-  PIPELINE_CONFIG_MAP_DATA:
-    contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
-    path: ${OBJ_NAME}.yaml
-    optional: 'true'
-  JENKINS_SERVICEACCOUNT_NAME: jenkins
 
 elCicdTemplates:  
 - templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-component
+  mustHaveEveryProfile:
+  - nonprod
   labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_NAME: ${BASE_OBJ_NAME}-build-component
@@ -59,6 +55,8 @@ elCicdTemplates:
 - templateName: configMap
   objNames: ${BUILD_ARTIFACT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-artifact
+  mustHaveEveryProfile:
+  - nonprod
   labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_NAME: ${BASE_OBJ_NAME}-build-artifact
@@ -85,7 +83,9 @@ elCicdTemplates:
   - 5-create-release-candidate
   - 6-redeploy-release-candidate
   objName: ${PROJECT_ID}-${}
-  labels: ${SHARED_PIPELINE_LABELS}
+  mustHaveEveryProfile:
+  - nonprod
+  labels: ${SHARED_PROJECT_PIPELINE_LABELS}
   elCicdDefs:
     PIPELINE_NAME: ${BASE_OBJ_NAME}
     EL_CICD_API_ARGS: |-
@@ -121,6 +121,8 @@ elCicdTemplates:
 
 - templateName: roleBinding
   objName: ${PROJECT_ID}-edit
+  mustHaveEveryProfile:
+  - nonprod
   namespaces: ${CICD_NAMESPACES}
   roleRef:
     apiGroup: rbac.authorization.k8s.io
@@ -128,16 +130,10 @@ elCicdTemplates:
     name: edit
   subjects:
   - kind: ServiceAccount
-    name: ${JENKINS_SERVICEACCOUNT_NAME}
+    name: jenkins
     namespace: ${RELEASE_NAMESPACE}
   - kind: Group
     name: ${${NAME_SPACE}_GROUP}
-
-- templateName: copyResource
-  objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
   objNames: ${NONPROD_ENVS}
@@ -148,16 +144,9 @@ elCicdTemplates:
 
 - templateName: copyResource
   objNames: ${SANDBOX_ENVS}
+  mustHaveEveryProfile:
+  - nonprod
   srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
-
-- templateName: secret
-  objNames: ${SCM_REPO_SSH_KEY_MODULE_IDS}
-  labels:
-    "jenkins.io/credentials-type": "basicSSHUserPrivateKey"
-  stringData:
-    username: "${OBJ_NAME}"
-    privateKey: |-
-      ${SCM_REPO_SSH_KEY}

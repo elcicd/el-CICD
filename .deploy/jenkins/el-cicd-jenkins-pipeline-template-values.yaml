@@ -1,5 +1,11 @@
 elCicdDefs:
   EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
+  
+  PIPELINE_CONFIG_MAP_DATA:
+    contentKey: ${OBJ_NAME}
+    ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
+    path: ${OBJ_NAME}.yaml
+  
   JENKINS_FOLDER_TEMPLATE: |-
     jobs:
     - script: |-

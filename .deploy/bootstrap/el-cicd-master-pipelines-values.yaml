@@ -1,8 +1,4 @@
 elCicdDefs:
-  PIPELINE_CONFIG_MAP_DATA:
-    contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
-    path: ${OBJ_NAME}.yaml
   PIPELINE_NAMES:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
