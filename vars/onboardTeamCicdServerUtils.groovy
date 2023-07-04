@@ -21,7 +21,7 @@ def setupProjectCicdServer(def teamInfo) {
                          (el.cicd.EL_CICD_MASTER_PROD ? ',prod' : '') +
                          (el.cicd.OKD_VERSION ? ',okd' : '')
     elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
-    elCicdProfiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
+    elCicdProfiles += el.cicd.JENKINS_CICD_PERSISTENT ? ',jenkinsPersistent' : ''
 
     sh """
         ${shCmd.echo ''}
@@ -39,13 +39,15 @@ def setupProjectCicdServer(def teamInfo) {
             --set-string elCicdDefs.JENKINS_UC=${el.cicd.JENKINS_UC} \
             --set-string elCicdDefs.JENKINS_UC_INSECURE=${el.cicd.JENKINS_UC_INSECURE} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
-            --set-string elCicdDefs.JENKINS_CPU_REQUEST=${el.cicd.JENKINS_MASTER_CPU_REQUEST} \
-            --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${el.cicd.JENKINS_MASTER_MEMORY_LIMIT} \
+            --set-string elCicdDefs.JENKINS_CPU_REQUEST=${el.cicd.JENKINS_CICD_CPU_REQUEST} \
+            --set-string elCicdDefs.JENKINS_MEMORY_REQUEST=${el.cicd.JENKINS_CICD_MEMORY_REQUEST} \
+            --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${el.cicd.JENKINS_CICD_MEMORY_LIMIT} \
             --set-string elCicdDefs.JENKINS_AGENT_CPU_REQUEST=${el.cicd.JENKINS_AGENT_CPU_REQUEST} \
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${el.cicd.JENKINS_AGENT_MEMORY_REQUEST} \
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${el.cicd.JENKINS_AGENT_MEMORY_LIMIT} \
-            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_VOLUME_CAPACITY} \
-            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
+            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_CICD_VOLUME_CAPACITY} \
+            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_CICD_VOLUME_CAPACITY} \
+            --set-string elCicdDefs.JENKINS_NUM_EXECUTORS=${el.cicd.JENKINS_CICD_NUM_EXECUTORS} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \

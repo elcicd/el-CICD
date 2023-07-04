@@ -54,7 +54,14 @@ elCicdTemplates:
   serviceAccountName: ${JENKINS_SERVICE_NAME}
   env:
   - name: JENKINS_JAVA_OVERRIDES
-    value: -D-XX:+UseCompressedOops
+    value: -D-XX:+UseParallelGC 
+           -D-XX:MinHeapFreeRatio=5
+           -D-XX:MaxHeapFreeRatio=10
+           -D-XX:GCTimeRatio=4
+           -D-XX:AdaptiveSizePolicyWeight=90
+           -D-XX:+UnlockExperimentalVMOptions
+           -D-XX:+UseCGroupMemoryLimitForHeap
+           -Dsun.zip.disableMemoryMapping=true
   - name: OPENSHIFT_ENABLE_OAUTH
     value: ${OPENSHIFT_ENABLE_OAUTH}
   - name: OPENSHIFT_ENABLE_REDIRECT_PROMPT
@@ -79,6 +86,8 @@ elCicdTemplates:
     value: ${JENKINS_UC}
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
+  - name: JENKINS_NUM_EXECUTORS
+    value: ${JENKINS_NUM_EXECUTORS}
   ports:
     - name: httpport
       containerPort: 8080
@@ -100,7 +109,7 @@ elCicdTemplates:
     timeoutSeconds: 240
   resources:
     limits:
-      memory: ${JENKINS_MEMORY_LIMIT}
+      memory: ${JENKINS_MEMORY_REQUEST}
     requests:
       memory: ${JENKINS_MEMORY_LIMIT}
       cpu: ${JENKINS_CPU_REQUEST}
