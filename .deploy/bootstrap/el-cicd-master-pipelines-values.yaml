@@ -4,9 +4,8 @@ elCicdDefs:
     ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
     path: ${OBJ_NAME}.yaml
   PIPELINE_NAMES:
-  - team-cicd-onboarding
+  - onboard-team-cicd-server
   - refresh-team-cicd-servers
-  - delete-team-cicd-server
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
   PIPELINE_PARAMS: |-
@@ -28,27 +27,30 @@ elCicdDefs-nonprod:
     teamId: params.TEAM_ID,
     projectIds: params.PROJECT_ID,
   PIPELINE_NAMES:
-  - team-cicd-onboarding
-  - update-all-onboarded-team-cicd
+  - onboard-team-cicd-server
+  - refresh-team-cicd-servers
   - delete-team-project
   
-elCicdDefs-team-cicd-onboarding:
-  PIPELINE_DESCRIPTION: 'Onboard a team CICD server'
+elCicdDefs-onboard-team-cicd-server:
+  PIPELINE_DESCRIPTION: 'Onboard or update a prod team CICD server for promotions and deployments'
   EL_CICD_API_METHOD: onboardTeamCicdServer
 
-elCicdDefs-team-cicd-onboarding-nonprod:
-  PIPELINE_DESCRIPTION: 'Onboard a team CICD server and/or project'
+elCicdDefs-onboard-team-cicd-server-nonprod:
+  PIPELINE_DESCRIPTION: 'Onboard or update a team CICD server and/or project'
   EXTRA_PIPELINE_PARAMS: |-
     ${PROJECT_ID_PIPELINE_PARAM}
     booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
   EL_CICD_API_ARGS: |-
     rebuildCicdEnvs: params.REBUILD_CICD_ENVS
 
-elCicdDefs-update-all-onboarded-team-cicd:
-  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server and/or projects"
+elCicdDefs-refresh-team-cicd-servers:
+  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server"
   PIPELINE_PARAMS:
   EL_CICD_API_ARGS:
-  EL_CICD_API_METHOD: updateAllOnboardedCicd
+  EL_CICD_API_METHOD: refreshTeamCicdServers
+  
+elCicdDefs-refresh-team-cicd-servers-nonprod:
+  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server and/or projects"
 
 elCicdDefs-delete-team-project-nonprod:
   PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"

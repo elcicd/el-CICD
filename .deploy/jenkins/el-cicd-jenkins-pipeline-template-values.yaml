@@ -20,7 +20,7 @@ elCicdDefs:
                 maxTotal(1)
             }
             
-            description('${PIPELINE_DESCRIPTION}')
+            description("${PIPELINE_DESCRIPTION}")
             displayName('${OBJ_NAME}')
             ${PIPELINE_PARAMS}
 

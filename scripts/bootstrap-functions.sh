@@ -285,6 +285,8 @@ __create_onboarding_automation_server() {
         --set-string elCicdProfiles="{${PROFILES}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
+        --set-string elCicdDefs.JENKINS_UC=${JENKINS_UC} \
+        --set-string elCicdDefs.JENKINS_UC_INSECURE=${JENKINS_UC_INSECURE} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
         --set-string elCicdDefs.JENKINS_CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
         --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${JENKINS_MASTER_MEMORY_LIMIT} \
@@ -307,8 +309,8 @@ __create_onboarding_automation_server() {
     set +ex
 
     echo
-    echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
-    sleep 5
+    echo 'JENKINS UP'
+    sleep 1
 
     local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')

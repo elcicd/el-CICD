@@ -3,7 +3,6 @@ elCicdDefs:
   DISABLE_ADMINISTRATIVE_MONITORS: "false"
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
-  JENKINS_UC_INSECURE: "false"
   JENKINS_INSTALL_DIR: /var/lib/jenkins
   
   JENKINS_CASC: jenkins-casc
@@ -35,11 +34,8 @@ elCicdTemplates:
   - -c
   - if [[ -f $JENKINS_PLUGINS_FILE ]];
     then
-        echo "Installing Jenkins Plugins:";
-        cat $JENKINS_PLUGINS_FILE;
-
-        echo;
         java -jar /usr/share/java/jenkins-plugin-manager.jar
+            --verbose
             --war /usr/share/java/jenkins.war
             -f $JENKINS_PLUGINS_FILE
             --plugin-download-directory $JENKINS_HOME/plugins | tee -a /var/log/jenkins-startup.log;
@@ -79,10 +75,10 @@ elCicdTemplates:
     value: ${CASC_RELOAD_TOKEN}
   - name: JENKINS_PLUGINS_FILE
     value: ${JENKINS_PLUGINS_PATH}/${JENKINS_PLUGINS_TXT}
+  - name: JENKINS_UC
+    value: ${JENKINS_UC}
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
-  - name: JENKINS_UC
-    value: https://get.jenkins.io/updates/update-center.json
   ports:
     - name: httpport
       containerPort: 8080

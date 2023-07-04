@@ -36,6 +36,8 @@ def setupProjectCicdServer(def teamInfo) {
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
             --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
             --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
+            --set-string elCicdDefs.JENKINS_UC=${el.cicd.JENKINS_UC} \
+            --set-string elCicdDefs.JENKINS_UC_INSECURE=${el.cicd.JENKINS_UC_INSECURE} \
             --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
             --set-string elCicdDefs.JENKINS_CPU_REQUEST=${el.cicd.JENKINS_MASTER_CPU_REQUEST} \
             --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${el.cicd.JENKINS_MASTER_MEMORY_LIMIT} \
