@@ -10,7 +10,7 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def configureCicdJenkinsUrls(def projectInfo) {
     projectInfo.jenkinsUrls = [:]
-    projectInfo.jenkinsUrls.HOST = "https://${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    projectInfo.jenkinsUrls.HOST = "https://${projectInfo.teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
 }
 
 def getImageRegistryCredentialsId(def env) {

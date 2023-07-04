@@ -18,10 +18,10 @@ def call(Map args) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
             sh """
-                HELM_CHART=\$(helm list -q -n ${projectInfo.cicdMasterNamespace} | grep -E '^${projectInfo.id}\$')
+                HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} | grep -E '^${projectInfo.id}\$')
                 if [[ ! -z \${HELM_CHART} ]]
                 then
-                    helm uninstall --wait ${projectInfo.id} -n ${projectInfo.cicdMasterNamespace}
+                    helm uninstall --wait ${projectInfo.id} -n ${projectInfo.teamInfo.cicdMasterNamespace}
                 else
                     ${shCmd.echo "--> CICD resources not found for project ${projectInfo.id}. Skipping..."}
                 fi
@@ -37,7 +37,7 @@ def call(Map args) {
         
         nonProdOnboardingUtils.setupProjectPvResources(projectInfo)
 
-        nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
+        nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")

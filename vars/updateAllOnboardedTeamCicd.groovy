@@ -25,10 +25,10 @@ def call(Map args) {
                 def projectInfo = projectUtils.gatherProjectInfoStage(projectId)
 
                 def jenkinsServerExists =
-                    sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.cicdMasterNamespace}")
+                    sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.teamInfo.cicdMasterNamespace}")
                     
                 if (jenkinsServerExists) {
-                    jenkinsRefresh[projectInfo.cicdMasterNamespace] = projectInfo
+                    jenkinsRefresh[projectInfo.teamInfo.cicdMasterNamespace] = projectInfo
                     
                     def cicdProjectsExist =
                         sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.devNamespace}")
@@ -41,7 +41,7 @@ def call(Map args) {
                     }
                 }
                 else {
-                    jenkinsNoRefresh += projectInfo.projectInfo.cicdMasterNamespace
+                    jenkinsNoRefresh += projectInfo.projectInfo.teamInfo.cicdMasterNamespace
                 }
             }
             
@@ -107,8 +107,8 @@ def syncPipelines(def projectInfos) {
     while (projectInfos) {
         def projectInfo = projectUtils.synchronizedRemoveListItem(projectInfos)
         if (projectInfo) {
-            loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.cicdMasterNamespace}")
-            nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.cicdMasterNamespace)
+            loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.teamInfo.cicdMasterNamespace}")
+            nonProdOnboardingUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
         }
     }
 }

@@ -5,30 +5,28 @@
  */
  
 def gatherTeamInfo(def teamId) {
-    return [teamId: teamId, cicdMasterNamespace: "${teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"]
+    assert teamInfo : "teamId (${teamId}) cannot be empty"
+    
+    return [id: teamId, cicdMasterNamespace: "${teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"]
 }
 
-def gatherProjectInfoStage(def teamId, def projectIds) {
-    def projectInfos
+def gatherProjectInfoStage(def teamInfo, def projectId) {
+    def projectInfo
     stage('Gather project information') {
-        loggingUtils.echoBanner("TEAM: ${teamId}", "GATHER PROJECT INFORMATION FOR:", "${projectIds}")
-        
-        projectIds = projectIds.split(/\s*,\s*/).collect { it.trim() }
+        loggingUtils.echoBanner("GATHER INFORMATION FOR PROJECT ${projectId} IN TEAM ${teamInfo.id}")
 
-        projectInfos = projectIds.collect { projectId ->
-            gatherProjectInfo(teamId, projectId.trim())
-        }
+        projectInfo = gatherProjectInfo(teamInfo, projectId)
     }
 
-    return projectInfos
+    return projectInfo
 }
 
-def gatherProjectInfo(def teamId, def projectId) {
-    assert teamId && projectId : "teamId (${teamId}) and (${projectId}) cannot be empty"
+def gatherProjectInfo(def teamInfo, def projectId) {
+    assert teamInfo && projectId : "teamInfo (${teamInfo?.id}) and (${projectId}) cannot be empty"
 
-    def projectInfo = readProjectYaml(teamId, projectId)
+    def projectInfo = readProjectYaml(teamInfo, projectId)
 
-    projectInfo.teamId = teamId
+    projectInfo.teamInfo = teamInfo
     projectInfo.id = projectId
 
     projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
@@ -43,17 +41,16 @@ def gatherProjectInfo(def teamId, def projectId) {
     projectInfo.staticPvs = projectInfo.staticPvs ?: []
 
     projectInfo.defaultRbacGroup = projectInfo.rbacGroups[el.cicd.DEFAULT] ?: projectInfo.rbacGroups[projectInfo.devEnv]
-    projectInfo.cicdMasterNamespace = "${projectInfo.teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"
 
     validateProjectInfo(projectInfo)
 
     return projectInfo
 }
 
-def readProjectYaml(def teamId, def projectId) {
+def readProjectYaml(def teamInfo, def projectId) {
     def projectInfo
     dir (el.cicd.PROJECT_DEFS_DIR) {
-        def projectFile = findFiles(glob: "**/${teamId}/${projectId}.yaml")
+        def projectFile = findFiles(glob: "**/${teamInfo.id}/${projectId}.yaml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.yml")
         projectFile = projectFile ?: findFiles(glob: "**/${projectId}.json")
 
@@ -61,7 +58,7 @@ def readProjectYaml(def teamId, def projectId) {
             projectInfo = readYaml file: projectFile[0].path
         }
         else {
-            loggingUtils.errorBanner("PROJECT NOT FOUND: ${teamId}/${projectId}")
+            loggingUtils.errorBanner("PROJECT NOT FOUND: ${teamInfo.id}/${projectId}")
         }
     }
 

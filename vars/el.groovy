@@ -87,9 +87,13 @@ def node(Map args, Closure body) {
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
+                
+                if (args.teamId) {
+                    args.teamInfo = projectUtils.gatherTeamInfo(args.teamId)
+                }
 
                 if (args.projectId) {
-                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.teamId, args.projectId)
+                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
                 }
 
                 runHookScript(el.cicd.INIT, args)

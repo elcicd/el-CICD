@@ -45,7 +45,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                         "elCicdDefaults.imagePullSecret=${imagePullSecret}",
                         "elCicdDefaults.ingressHostDomain=${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
                         "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
-                        "elCicdDefs.TEAM_ID=${projectInfo.teamId}",
+                        "elCicdDefs.TEAM_ID=${projectInfo.teamInfo.id}",
                         "elCicdDefs.PROJECT_ID=${projectInfo.id}"]
 
     sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
@@ -68,7 +68,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
 def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def commonValues = ["profiles=${projectInfo.deployToEnv}",
-                        "teamId=${projectInfo.teamId}",
+                        "teamId=${projectInfo.teamInfo.id}",
                         "projectId=${projectInfo.id}",
                         "releaseVersion=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
                         "buildNumber=\${BUILD_NUMBER}",

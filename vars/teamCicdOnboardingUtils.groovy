@@ -75,10 +75,10 @@ def setupProjectPvResources(def projectInfo) {
             ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
             cat ${volumeCicdConfigFile}
             
-            PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.cicdMasterNamespace})
+            PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
             if [[ ! -z \${PVS_INSTALLED} ]]
             then
-                helm uninstall --wait ${chartName} -n ${projectInfo.cicdMasterNamespace}
+                helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
             fi
 
             if [[ ! -z '${projectInfo.staticPvs ? 'hasPvs' : ''}' ]]
@@ -86,7 +86,7 @@ def setupProjectPvResources(def projectInfo) {
                 helm install \
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
-                    -n ${projectInfo.cicdMasterNamespace} \
+                    -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
                     elCicdCharts/elCicdChart
             fi
@@ -129,12 +129,12 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
-            -n ${projectInfo.cicdMasterNamespace} \
+            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
             elCicdCharts/elCicdChart
         then
             set -e
-            helm uninstall ${chartName} -n ${projectInfo.cicdMasterNamespace}
+            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
             exit 1
         fi
         set -e
@@ -206,7 +206,7 @@ def getCicdConfigValues(def projectInfo) {
         el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     ]
 
-    elCicdDefs.TEAM_ID = projectInfo.teamId
+    elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
