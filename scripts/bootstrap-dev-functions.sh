@@ -142,7 +142,7 @@ __gather_lab_setup_info() {
 
 __summarize_and_confirm_lab_setup_info() {
     echo
-    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
+    echo "${_BOLD}===================== ${_BOLD}SUMMARY${_REGULAR} =====================${_REGULAR}"
     echo
 
     if [[ ${SETUP_CRC} == ${_YES} ]]
@@ -185,7 +185,7 @@ __summarize_and_confirm_lab_setup_info() {
     fi
 
     echo
-    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
+    echo "${_BOLD}=================== ${_BOLD}END SUMMARY${_REGULAR} ===================${_REGULAR}"
 
     _confirm_continue
 }

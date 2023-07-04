@@ -1,226 +1,61 @@
 elCicdDefs:
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${PIPELINE_JOBS_DSL}
+    ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
     path: ${OBJ_NAME}.yaml
+  PIPELINE_NAMES:
+  - create-or-update-team-cicd-server
+  - refresh-team-cicd-servers
+  - delete-team-cicd-server
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
+  PIPELINE_PARAMS: |-
+    parameters {
+      stringParam('TEAM_ID', null, 'Team ID')
+    }
+  EL_CICD_API_ARGS: |-
+    teamId: params.TEAM_ID
+    
+elCicdDefs-nonprod:
+  PIPELINE_PARAMS: |-
+    parameters {
+      stringParam('TEAM_ID', null, 'Team ID')
+      stringParam('PROJECT_IDS', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
+      ${EXTRA_PIPELINE_PARAMS}
+    }
+  EL_CICD_API_ARGS: |-
+    teamId: params.TEAM_ID,
+    projectIds: params.PROJECT_IDS,
+  PIPELINE_NAMES:
+  - create-or-update-team-cicd-server
+  - update-team-cicd-servers-and-projects
+  - delete-projects
+  - delete-team-cicd-server
+  
+elCicdDefs-create-or-update-team-cicd-server:
+  EL_CICD_API_METHOD: createOrUpdateTeamCicdServer
+
+elCicdDefs-create-or-update-team-cicd-server-nonprod:
+  EXTRA_PIPELINE_PARAMS: |-
+    booleanParam('ONBOARD_ALL_PROJECTS', false, 'Create all projects defined for the team?')
+    booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
+  EL_CICD_API_ARGS: |-
+    onboardAllProjects: params.ONBOARD_ALL_PROJECTS,
+    rebuildCicdEnvs: params.REBUILD_CICD_ENVS
+
+elCicdDefs-update-team-cicd-servers-and-projects:
+  PIPELINE_PARAMS:
+  EL_CICD_API_ARGS:
+  EL_CICD_API_METHOD: updateTeamCicdServersAndProjects
+
+elCicdDefs-delete-projects-nonprod:
+  EL_CICD_API_METHOD: deleteProjects
+
+elCicdDefs-delete-team-cicd-server:
+  EL_CICD_API_METHOD: deleteTeamCicdServer
 
 elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
-  objNames:
-  - refresh-onboarded-projects
-  - delete-project
-  - delete-cicd-server
+  objNames: ${PIPELINE_NAMES}
   labels: ${JENKINS_PIPELINE_LABEL}
   data: ${PIPELINE_CONFIG_MAP_DATA}
-
-- templateName: configMap
-  objName: non-prod-project-onboarding
-  mustHaveAnyProfile:
-  - nonprod
-  labels: ${JENKINS_PIPELINE_LABEL}
-  data: ${PIPELINE_CONFIG_MAP_DATA}
-
-- templateName: configMap
-  objName: prod-project-onboarding
-  mustHaveAnyProfile:
-  - prod
-  labels: ${JENKINS_PIPELINE_LABEL}
-  data: ${PIPELINE_CONFIG_MAP_DATA}
-
-elCicdDefs-non-prod-project-onboarding:
-  NON_PROD_PARAMS: "
-      stringParam('TEAM_ID', null, 'Team Name');
-      stringParam('PROJECT_ID', null, 'Project ID');
-      booleanParam('REBUILD_CICD_ENVS', false, 'Should all CICD namespace environment(s) be destroyed and recreated from scratch?');
-    "
-  PIPELINE_JOBS_DSL: |-
-    jobs:
-    - script: |-
-        pipelineJob('${OBJ_NAME}') {
-            description('Create the non-prod CICD environments, server, and pipelines for a project')
-            parameters {
-              ${NON_PROD_PARAMS}
-            }
-
-            definition {
-                cps {
-                    script('''
-                        node() {
-                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
-                            def elCicdData = elcicdMetaData.data
-
-                            def scmMap = [$class: 'GitSCMSource',
-                                          remote: elCicdData.EL_CICD_GIT_REPO,
-                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                            library(identifier: "el-CICD@$elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME", retriever: modernSCM(scmMap))
-
-                            el.initMetaData(elCicdData)
-                        }
-
-                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                                    pipelineName: '${OBJ_NAME}',
-                                    teamId: params.TEAM_ID,
-                                    projectId: params.PROJECT_ID,
-                                    rebuildCicdEnvs: params.REBUILD_CICD_ENVS]
-                        el.node(args) {
-                            nonProdProjectOnboarding(args)
-                        }
-                    ''')
-                    sandbox(true)
-                }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
-            }
-        }
-
-elCicdDefs-refresh-onboarded-projects:
-  PIPELINE_JOBS_DSL: |-
-    jobs:
-    - script: |-
-        pipelineJob('${OBJ_NAME}') {
-            description('Refresh the data, secrets, and pipelines for all onboarded projects')
-
-            definition {
-                cps {
-                    script('''
-                        node() {
-                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
-                            def elCicdData = elcicdMetaData.data
-
-                            def scmMap = [$class: 'GitSCMSource',
-                                          remote: elCicdData.EL_CICD_GIT_REPO,
-                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                            library(identifier: "el-CICD@$elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME", retriever: modernSCM(scmMap))
-
-                            el.initMetaData(elCicdData)
-                        }
-
-                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                                    pipelineName: 'refresh-onboarded-projects',
-                                    isNonProd: true]
-                        el.node(args) {
-                            refreshOnboardedProjects(args)
-                        }
-                    ''')
-                    sandbox(true)
-                }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
-            }
-        }
-
-elCicdDefs-delete-project:
-  PIPELINE_JOBS_DSL: |-
-    jobs:
-    - script: |-
-        pipelineJob('${OBJ_NAME}') {
-            description('Delete an onboarded project')
-            parameters {
-                stringParam('TEAM_ID', null, 'Team Name')
-                stringParam('PROJECT_ID', null, 'Project ID')
-            }
-
-            definition {
-                cps {
-                    script('''
-                        node() {
-                            def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
-                            def elCicdData = elcicdMetaData.data
-
-                            def scmMap = [$class: 'GitSCMSource',
-                                          remote: elCicdData.EL_CICD_GIT_REPO,
-                                          credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
-                            library(identifier: "el-CICD@$elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME", retriever: modernSCM(scmMap))
-
-                            el.initMetaData(elCicdData)
-                        }
-
-                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                                    pipelineName: '${OBJ_NAME}',
-                                    teamId: params.TEAM_ID,
-                                    projectId: params.PROJECT_ID,]
-                        el.node(args) {
-                            projectDeletion(args)
-                        }
-                    ''')
-                    sandbox(true)
-                }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
-            }
-        }
-
-elCicdDefs-delete-cicd-server:
-  PIPELINE_JOBS_DSL: |-
-    jobs:
-    - script: |-
-        pipelineJob('${OBJ_NAME}') {
-            description("Delete an team's CICD server")
-            parameters {
-                stringParam('TEAM_ID', null, 'Team Name')
-            }
-
-            definition {
-                cps {
-                    script('''
-                        ${GET_EL_CICD_SHARED_LIB_SCRIPT}
-
-                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                                    pipelineName: '${OBJ_NAME}',
-                                    teamId: params.TEAM_ID]
-                        el.node(args) {
-                            cicdServerDeletion(args)
-                        }
-                    ''')
-                    sandbox(true)
-                }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
-            }
-        }
-
-elCicdDefs-prod-project-onboarding:
-  PIPELINE_JOBS_DSL: |-
-    jobs:
-    - script: |-
-        pipelineJob('${OBJ_NAME}') {
-            description("Create a team's prod CICD server")
-            parameters {
-                stringParam('TEAM_ID', null, 'Team Name')
-            }
-
-            definition {
-                cps {
-                    script('''
-                        ${GET_EL_CICD_SHARED_LIB_SCRIPT}
-
-                        def args = [agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                                    pipelineName: '${OBJ_NAME},
-                                    teamId: params.TEAM_ID]
-                        el.node(args) {
-                            prodProjectOnboarding(args)
-                        }
-                    ''')
-                    sandbox(true)
-                }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
-            }
-        }

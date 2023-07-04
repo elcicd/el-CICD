@@ -82,7 +82,7 @@ elCicdTemplates:
   - name: JENKINS_UC_INSECURE
     value: ${JENKINS_UC_INSECURE}
   - name: JENKINS_UC
-    value: https://mirrors.jenkins.io/updates/update-center.json
+    value: https://get.jenkins.io/updates/update-center.json
   ports:
     - name: httpport
       containerPort: 8080
@@ -178,7 +178,7 @@ elCicdTemplates:
 - templateName: serviceAccount
   objName: ${JENKINS_SERVICE_NAME}
   annotations:
-    serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}/
+    serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}
 
 - templateName: clusterRoleBinding
   objName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
@@ -286,18 +286,41 @@ elCicdTemplates:
 - templateName: copyResource
   mustHaveAnyProfile:
   - cicd
-  objNames: ${CICD_ENVS}
-  objName: el-cicd-${}-pull-secret
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
-
-- templateName: copyResource
-  mustHaveAnyProfile:
-  - cicd
   objName: ${EL_CICD_BUILD_SECRETS_NAME}
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
+  
+- templateName: configMap
+  objNames:
+  - deploy-to-prod
+  - promote-to-prod
+  mustHaveEveryProfile:
+  - cicd
+  - prod
+  labels:
+    teamId: ${TEAM_ID}
+    jenkins-pipeline: 'true'
+    jenkins-shared-pipeline: 'true'
+  elCicdDefs:
+    PIPELINE_NAME: ${BASE_OBJ_NAME}
+    EL_CICD_API_ARGS: |-
+      def args = [teamId: '${TEAM_ID}',
+                  agent: el.cicd.JENKINS_AGENT_DEFAULT,
+                  pipelineName: '${PIPELINE_NAME}',
+                  project: params.PROJECT_ID,
+                  version: params.VERSION
+                  ${EXTRA_PIPELINE_ARGS}]
+  elCicdDefs-deploy-to-prod:
+    EL_CICD_API_METHOD: deployToProd
+    EXTRA_PIPELINE_ARGS: "variant: params.VARIANT"
+    PIPELINE_PARAMS: ${PROD_DEPLOY_PARAMS}
+    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
+  elCicdDefs-promote-to-prod:
+    EL_CICD_API_METHOD: promoteComponents
+    EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
+    PIPELINE_PARAMS: ${PROD_PROMOTE_PARAMS}
+    RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
+  data: ${PIPELINE_CONFIG_MAP_DATA}
 
 

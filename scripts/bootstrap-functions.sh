@@ -199,6 +199,9 @@ __create_meta_info_file() {
 
     # remove blank lines, comments, and any trailing whitespace
     sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
+    
+    echo "EL_CICD_MASTER_NONPROD=${EL_CICD_MASTER_NONPROD}" >> ${META_INFO_FILE_TMP}
+    echo "EL_CICD_MASTER_PROD=${EL_CICD_MASTER_PROD}" >> ${META_INFO_FILE_TMP}
 
     sort -o ${META_INFO_FILE_TMP} ${META_INFO_FILE_TMP}
 
@@ -297,6 +300,7 @@ __create_onboarding_automation_server() {
         -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
+        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
         ${JENKINS_DEPLOYMENT_NAME} \
         elCicdCharts/elCicdChart
@@ -306,7 +310,6 @@ __create_onboarding_automation_server() {
     echo 'JENKINS UP: sleep for 5 seconds to make sure server REST api is ready'
     sleep 5
 
-    set -x
     local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')
     if [[ ! -z ${TERMINATING_PODS} ]]
@@ -316,13 +319,12 @@ __create_onboarding_automation_server() {
 
         oc wait --for=delete pod ${TERMINATING_POD} -n ${EL_CICD_MASTER_NAMESPACE} --timeout=600s
     fi
-    set +x
 
-    if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep jenkins-pipeline-sync) ]]
+    if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep sync-jenkins-pipelines) ]]
     then
         echo
         echo 'Removing old Jenkins pipeline sync job.'
-        helm uninstall jenkins-pipeline-sync -n ${EL_CICD_MASTER_NAMESPACE}
+        helm uninstall sync-jenkins-pipelines -n ${EL_CICD_MASTER_NAMESPACE}
     fi
 
     echo
@@ -333,8 +335,8 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH}/ \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-pipeline-sync-job-values.yaml \
-        jenkins-pipeline-sync \
+        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
+        sync-jenkins-pipelines \
         elCicdCharts/elCicdChart
     set +ex
 }

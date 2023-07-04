@@ -28,12 +28,12 @@ elCicdDefs:
     }
   PIPELINE_CONFIG_MAP_DATA:
     contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${JENKINS_PIPELINE_TEMPLATE}
+    ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
     path: ${OBJ_NAME}.yaml
     optional: 'true'
   JENKINS_SERVICEACCOUNT_NAME: jenkins
 
-elCicdTemplates:
+elCicdTemplates:  
 - templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-component
@@ -93,7 +93,7 @@ elCicdTemplates:
                   projectId: '${PROJECT_ID}',
                   agent: el.cicd.JENKINS_AGENT_DEFAULT,
                   pipelineName: '${PIPELINE_NAME}',
-                  ${EXTRA_ARGS}]
+                  ${EXTRA_PIPELINE_ARGS}]
   elCicdDefs-1-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-2-promote-components:
@@ -102,19 +102,19 @@ elCicdTemplates:
     EL_CICD_API_METHOD: runSystemTests
   elCicdDefs-4-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
-    EXTRA_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
+    EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
       parameters {
         choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
       }
   elCicdDefs-5-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
-    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
+    EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Release Candidate Tag (WARNING: DO NOT prefix your tag with a 'v'"
   elCicdDefs-6-redeploy-release-candidate:
     EL_CICD_API_METHOD: redeployReleaseCandidate
-    EXTRA_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
+    EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
   data: ${PIPELINE_CONFIG_MAP_DATA}
@@ -161,5 +161,3 @@ elCicdTemplates:
     username: "${OBJ_NAME}"
     privateKey: |-
       ${SCM_REPO_SSH_KEY}
-
-

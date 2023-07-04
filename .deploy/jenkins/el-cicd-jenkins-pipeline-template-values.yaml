@@ -1,26 +1,30 @@
-elCicdDefs:    
-  JENKINS_PIPELINE_TEMPLATE: |-
+elCicdDefs:
+  EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
+  JENKINS_FOLDER_TEMPLATE: |-
     jobs:
     - script: |-
-        folder('${PROJECT_ID}') {
-          displayName('${PROJECT_ID}')
-          description('el-CICD generated pipelines for ${PROJECT_ID}')
+        folder('${FOLDER_NAME}') {
+          displayName('${FOOLDER_NAME}')
+          description('el-CICD generated pipelines for ${FOOLDER_NAME}')
         }
+        
+  JENKINS_PIPELINE_DSL_TEMPLATE: |-
+    jobs:
     - script: |-
-        pipelineJob('${PROJECT_ID}/${PIPELINE_NAME}') {
+        pipelineJob('${FOLDER_NAME}/${OBJ_NAME}') {
             authenticationToken('${AUTH_TOKEN}')
             disabled(false)
-            displayName('${PIPELINE_NAME}')
+            displayName('${OBJ_NAME}')
             keepDependencies(false)
             ${PIPELINE_PARAMS}
 
             definition {
                 cps {
                     script('''
-                        node() {          
+                        node() {
                             def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
                             def elCicdData = elcicdMetaData.data
-                            
+
                             def scmMap = [$class: 'GitSCMSource',
                                           remote: elCicdData.EL_CICD_GIT_REPO,
                                           credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
@@ -29,7 +33,11 @@ elCicdDefs:
                             el.initMetaData(elCicdData)
                         }
 
-                        ${EL_CICD_API_ARGS}
+                        def args = [
+                            agent: ${EL_CICD_AGENT},
+                            pipelineName: '${OBJ_NAME}',
+                            ${EL_CICD_API_ARGS}
+                        ]
                         el.node(args) {
                             ${EL_CICD_API_METHOD}(args)
                         }

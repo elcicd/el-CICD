@@ -79,7 +79,7 @@ __gather_lab_tear_down_info() {
 
 __summarize_and_confirm_lab_tear_down() {
     echo
-    echo "${_BOLD}===================== SUMMARY =====================${_REGULAR}"
+    echo "${_BOLD}===================== ${_BOLD}SUMMARY${_REGULAR} =====================${_REGULAR}"
     echo 
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
@@ -118,7 +118,7 @@ __summarize_and_confirm_lab_tear_down() {
     echo " be removed from ${EL_CICD_ORGANIZATION} on the Git host."
     
     echo
-    echo "${_BOLD}=================== END SUMMARY ===================${_REGULAR}"
+    echo "${_BOLD}=================== ${_BOLD}END SUMMARY${_REGULAR} ===================${_REGULAR}"
 
     _confirm_continue
 }
