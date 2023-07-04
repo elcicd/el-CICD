@@ -27,6 +27,9 @@ def call(Map args) {
                 fi
             """
         }
+        else {
+            echo '--> REBUILD CICD ENVIRONMENTS NOT SELECTED; Skipping...'
+        }
     }
 
     stage('Install/upgrade project CICD resources') {        

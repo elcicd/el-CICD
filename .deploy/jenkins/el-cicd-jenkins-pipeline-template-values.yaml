@@ -7,15 +7,21 @@ elCicdDefs:
           displayName('${FOOLDER_NAME}')
           description('el-CICD generated pipelines for ${FOOLDER_NAME}')
         }
-        
+
   JENKINS_PIPELINE_DSL_TEMPLATE: |-
     jobs:
     - script: |-
         pipelineJob('${FOLDER_NAME}/${OBJ_NAME}') {
             authenticationToken('${AUTH_TOKEN}')
             disabled(false)
-            displayName('${OBJ_NAME}')
             keepDependencies(false)
+            throttleConcurrentBuilds {
+                maxPerNode(1)
+                maxTotal(1)
+            }
+            
+            description('${PIPELINE_DESCRIPTION}')
+            displayName('${OBJ_NAME}')
             ${PIPELINE_PARAMS}
 
             definition {
@@ -44,10 +50,5 @@ elCicdDefs:
                     ''')
                     sandbox(true)
                 }
-            }
-
-            throttleConcurrentBuilds {
-                maxPerNode(1)
-                maxTotal(1)
             }
         }

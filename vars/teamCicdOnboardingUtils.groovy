@@ -11,12 +11,15 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
 }
 
-def setupProjectCicdServer(def projectInfo, def isProd) {
-    def rbacGroups = projectInfo.rbacGroups.toMapString()
-    loggingUtils.echoBanner("CREATING ${projectInfo.cicdMasterNamespace} PROJECT AND JENKINS FOR THE FOLLOWING GROUPS:", rbacGroups)
+def setupProjectCicdServer(def teamInfo) {
+    loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.teamId}")
 
-    def jenkinsUrl = "${projectInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-    def elCicdProfiles = 'cicd,user-group' + (isProd ? ',prod' : '') + (el.cicd.OKD_VERSION ? ',okd' : '')
+    def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    
+    def elCicdProfiles = 'cicd,user-group' +
+                         (el.cicd.EL_CICD_MASTER_NON_PROD ? ',nonprod' : '') +
+                         (el.cicd.EL_CICD_MASTER_PROD ? ',prod' : '') +
+                         (el.cicd.OKD_VERSION ? ',okd' : '')
     elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     elCicdProfiles += el.cicd.JENKINS_PERSISTENT ? ',jenkinsPersistent' : ''
 
@@ -27,7 +30,7 @@ def setupProjectCicdServer(def projectInfo, def isProd) {
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
-            --set-string elCicdDefs.USER_GROUP=${projectInfo.teamId} \
+            --set-string elCicdDefs.USER_GROUP=${teamInfo.teamId} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
@@ -43,7 +46,7 @@ def setupProjectCicdServer(def projectInfo, def isProd) {
             --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_PLUGINS_FILE} \
-            -n ${projectInfo.cicdMasterNamespace} \
+            -n ${teamInfo.cicdMasterNamespace} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml/prod-pipeline-values.yaml
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \

@@ -3,16 +3,24 @@
  *
  * General pipeline utilities
  */
+ 
+def gatherTeamInfo(def teamId) {
+    return [teamId: teamId, cicdMasterNamespace: "${teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"]
+}
 
-def gatherProjectInfoStage(def teamId, def projectId) {
-    def projectInfo
+def gatherProjectInfoStage(def teamId, def projectIds) {
+    def projectInfos
     stage('Gather project information') {
-        loggingUtils.echoBanner("GATHER PROJECT INFORMATION FOR ${projectId} IN ${teamId}")
+        loggingUtils.echoBanner("TEAM: ${teamId}", "GATHER PROJECT INFORMATION FOR:", "${projectIds}")
+        
+        projectIds = projectIds.split(/\s*,\s*/).collect { it.trim() }
 
-        projectInfo = gatherProjectInfo(teamId, projectId)
+        projectInfos = projectIds.collect { projectId ->
+            gatherProjectInfo(teamId, projectId.trim())
+        }
     }
 
-    return projectInfo
+    return projectInfos
 }
 
 def gatherProjectInfo(def teamId, def projectId) {

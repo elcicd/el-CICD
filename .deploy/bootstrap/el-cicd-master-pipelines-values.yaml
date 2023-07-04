@@ -4,7 +4,7 @@ elCicdDefs:
     ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
     path: ${OBJ_NAME}.yaml
   PIPELINE_NAMES:
-  - create-or-update-team-cicd-server
+  - team-cicd-onboarding
   - refresh-team-cicd-servers
   - delete-team-cicd-server
   JENKINS_PIPELINE_LABEL:
@@ -20,39 +20,40 @@ elCicdDefs-nonprod:
   PIPELINE_PARAMS: |-
     parameters {
       stringParam('TEAM_ID', null, 'Team ID')
-      stringParam('PROJECT_IDS', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
       ${EXTRA_PIPELINE_PARAMS}
     }
+  PROJECT_ID_PIPELINE_PARAM: |-
+    stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
   EL_CICD_API_ARGS: |-
     teamId: params.TEAM_ID,
-    projectIds: params.PROJECT_IDS,
+    projectIds: params.PROJECT_ID,
   PIPELINE_NAMES:
-  - create-or-update-team-cicd-server
-  - update-team-cicd-servers-and-projects
-  - delete-projects
-  - delete-team-cicd-server
+  - team-cicd-onboarding
+  - update-all-onboarded-team-cicd
+  - delete-team-project
   
-elCicdDefs-create-or-update-team-cicd-server:
-  EL_CICD_API_METHOD: createOrUpdateTeamCicdServer
+elCicdDefs-team-cicd-onboarding:
+  PIPELINE_DESCRIPTION: 'Onboard a team CICD server'
+  EL_CICD_API_METHOD: onboardTeamCicdServer
 
-elCicdDefs-create-or-update-team-cicd-server-nonprod:
+elCicdDefs-team-cicd-onboarding-nonprod:
+  PIPELINE_DESCRIPTION: 'Onboard a team CICD server and/or project'
   EXTRA_PIPELINE_PARAMS: |-
-    booleanParam('ONBOARD_ALL_PROJECTS', false, 'Create all projects defined for the team?')
+    ${PROJECT_ID_PIPELINE_PARAM}
     booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
   EL_CICD_API_ARGS: |-
-    onboardAllProjects: params.ONBOARD_ALL_PROJECTS,
     rebuildCicdEnvs: params.REBUILD_CICD_ENVS
 
-elCicdDefs-update-team-cicd-servers-and-projects:
+elCicdDefs-update-all-onboarded-team-cicd:
+  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server and/or projects"
   PIPELINE_PARAMS:
   EL_CICD_API_ARGS:
-  EL_CICD_API_METHOD: updateTeamCicdServersAndProjects
+  EL_CICD_API_METHOD: updateAllOnboardedCicd
 
-elCicdDefs-delete-projects-nonprod:
-  EL_CICD_API_METHOD: deleteProjects
-
-elCicdDefs-delete-team-cicd-server:
-  EL_CICD_API_METHOD: deleteTeamCicdServer
+elCicdDefs-delete-team-project-nonprod:
+  PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
+  EXTRA_PIPELINE_PARAMS: ${PROJECT_ID_PIPELINE_PARAM}
+  EL_CICD_API_METHOD: deleteTeamProject
 
 elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
