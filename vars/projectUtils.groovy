@@ -5,7 +5,7 @@
  */
  
 def gatherTeamInfo(def teamId) {
-    assert teamInfo : "teamId (${teamId}) cannot be empty"
+    assert teamId : "teamId (${teamId}) cannot be empty"
     
     return [id: teamId, cicdMasterNamespace: "${teamId}-${el.cicd.EL_CICD_MASTER_NAMESPACE}"]
 }

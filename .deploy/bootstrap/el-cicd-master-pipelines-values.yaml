@@ -7,25 +7,22 @@ elCicdDefs:
   PIPELINE_PARAMS: |-
     parameters {
       stringParam('TEAM_ID', null, 'Team ID')
+      ${EXTRA_PIPELINE_PARAMS}
     }
   EL_CICD_API_ARGS: |-
     teamId: params.TEAM_ID
     
 elCicdDefs-nonprod:
-  PIPELINE_PARAMS: |-
-    parameters {
-      stringParam('TEAM_ID', null, 'Team ID')
-      ${EXTRA_PIPELINE_PARAMS}
-    }
-  PROJECT_ID_PIPELINE_PARAM: |-
-    stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
-  EL_CICD_API_ARGS: |-
-    teamId: params.TEAM_ID,
-    projectIds: params.PROJECT_ID,
   PIPELINE_NAMES:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
   - delete-team-project
+  PROJECT_ID_PIPELINE_PARAM: |-
+    stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
+  EL_CICD_API_ARGS: |-
+    teamId: params.TEAM_ID,
+    projectId: params.PROJECT_ID,
+    ${EXTRA_EL_CICD_API_ARGS}
   
 elCicdDefs-onboard-team-cicd-server:
   PIPELINE_DESCRIPTION: 'Onboard or update a prod team CICD server for promotions and deployments'
@@ -36,7 +33,7 @@ elCicdDefs-onboard-team-cicd-server-nonprod:
   EXTRA_PIPELINE_PARAMS: |-
     ${PROJECT_ID_PIPELINE_PARAM}
     booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
-  EL_CICD_API_ARGS: |-
+  EXTRA_EL_CICD_API_ARGS: |-
     rebuildCicdEnvs: params.REBUILD_CICD_ENVS
 
 elCicdDefs-refresh-team-cicd-servers:
