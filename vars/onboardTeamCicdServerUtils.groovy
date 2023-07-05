@@ -24,7 +24,7 @@ def setupTeamCicdServer(def teamInfo) {
 
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
-            --set-file ${jenkinsConfigFile}
+            --set-file ${jenkinsConfigFile} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \
