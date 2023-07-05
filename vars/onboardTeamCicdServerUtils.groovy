@@ -22,6 +22,9 @@ def setupTeamCicdServer(def teamInfo) {
                          (el.cicd.OKD_VERSION ? ',okd' : '')
     elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
     elCicdProfiles += el.cicd.JENKINS_CICD_PERSISTENT ? ',jenkinsPersistent' : ''
+    
+    elCicdReadOnlyPrivateKeys = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    elCicdReadOnlyPrivateKeys += ",${el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
 
     sh """
         ${shCmd.echo ''}
@@ -30,6 +33,7 @@ def setupTeamCicdServer(def teamInfo) {
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
+            --set-string=elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS='{${elCicdReadOnlyPrivateKeys}}' \
             --set-string elCicdDefs.USER_GROUP=${teamInfo.id} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
@@ -49,7 +53,6 @@ def setupTeamCicdServer(def teamInfo) {
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
@@ -205,11 +208,6 @@ def getPvCicdConfigValues(def projectInfo) {
 def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
-    
-    elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
-        el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
-        el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    ]
 
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id

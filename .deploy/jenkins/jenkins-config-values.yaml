@@ -271,25 +271,33 @@ elCicdTemplates:
   data: ${EL_CICD_META_INFO}
 
 - templateName: copyResource
+  objName: ${EL_CICD_META_INFO_NAME}
   mustHaveAnyProfile:
   - cicd
-  objName: ${EL_CICD_META_INFO_NAME}
   kind: ConfigMap
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
-
+  
 - templateName: copyResource
+  objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
   mustHaveAnyProfile:
   - cicd
-  objName: el-cicd-jenkins-pull-secret
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
 
 - templateName: copyResource
+  objName: el-cicd-jenkins-pull-secret
   mustHaveAnyProfile:
   - cicd
+  kind: Secret
+  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
+  toNamespace: ${RELEASE_NAMESPACE}
+
+- templateName: copyResource
   objName: ${EL_CICD_BUILD_SECRETS_NAME}
+  mustHaveAnyProfile:
+  - cicd
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}

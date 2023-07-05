@@ -1,10 +1,4 @@
 elCicdTemplates-common-cicd:
-- templateName: copyResource
-  objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
-
 - templateName: secret
   objNames: ${SCM_REPO_SSH_KEY_MODULE_IDS}
   labels:
