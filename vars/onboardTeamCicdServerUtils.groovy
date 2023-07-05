@@ -12,7 +12,7 @@ def init() {
 }
 
 def setupTeamCicdServer(def teamInfo) {
-    loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.teamId}")
+    loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.id}")
 
     def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     
@@ -30,7 +30,7 @@ def setupTeamCicdServer(def teamInfo) {
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
             --set-string elCicdProfiles='{${elCicdProfiles}}' \
-            --set-string elCicdDefs.USER_GROUP=${teamInfo.teamId} \
+            --set-string elCicdDefs.USER_GROUP=${teamInfo.id} \
             --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
             --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
             --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
