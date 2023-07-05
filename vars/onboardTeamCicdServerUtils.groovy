@@ -159,8 +159,8 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
             elCicdCharts/elCicdChart
