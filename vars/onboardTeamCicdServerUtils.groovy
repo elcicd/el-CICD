@@ -14,13 +14,16 @@ def init() {
 def setupTeamCicdServer(def teamInfo) {
     loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.id}")
 
-    def jenkinsDefs = getJenkinsConfigValues()
+    def jenkinsDefs = getJenkinsConfigValues(teamInfo)
     def jenkinsConfigFile = "jenkins-config-values.yaml"
     def jenkinsConfigValues = writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
     
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+        
+        ${shCmd.echo ''}
+        cat ${jenkinsConfigFile}
 
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
@@ -41,11 +44,9 @@ def setupTeamCicdServer(def teamInfo) {
     """
 }
 
-def getJenkinsConfigValues() {
+def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues = [:]
     elCicdDefs = [:]
-
-    def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     
     jenkinsConfigValues.elCicdProfiles = ['cicd', 'user-group']
     
@@ -72,8 +73,8 @@ def getJenkinsConfigValues() {
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
     elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
-    elCicdDefs.JENKINS_IMAGE = el.cicd.JENKINS_IMAGE_REGISTRY}/el.cicd.JENKINS_IMAGE_NAME
-    elCicdDefs.JENKINS_URL = jenkinsUrl
+    elCicdDefs.JENKINS_IMAGE = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME}"
+    elCicdDefs.JENKINS_URL = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     elCicdDefs.JENKINS_UC = el.cicd.JENKINS_UC
     elCicdDefs.JENKINS_UC_INSECURE = el.cicd.JENKINS_UC_INSECURE
     elCicdDefs.OPENSHIFT_ENABLE_OAUTH = el.cicd.OKD_VERSION ? 'true' : 'false'
