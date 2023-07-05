@@ -14,42 +14,17 @@ def init() {
 def setupTeamCicdServer(def teamInfo) {
     loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.id}")
 
-    def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    def jenkinsDefs = getJenkinsConfigValues()
+    def jenkinsConfigFile = "jenkins-config-values.yaml"
+    def jenkinsConfigValues = writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
     
-    def elCicdProfiles = 'cicd,user-group' +
-                         (el.cicd.EL_CICD_MASTER_NON_PROD ? ',nonprod' : '') +
-                         (el.cicd.EL_CICD_MASTER_PROD ? ',prod' : '') +
-                         (el.cicd.OKD_VERSION ? ',okd' : '')
-    elCicdProfiles += sh(returnStdout: true, script: 'oc get pods -o name -n kube-system | grep sealed-secrets') ? ',sealed-secrets' : ''
-    elCicdProfiles += el.cicd.JENKINS_CICD_PERSISTENT ? ',jenkinsPersistent' : ''
-    
-    elCicdReadOnlyPrivateKeys = el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
-    elCicdReadOnlyPrivateKeys += ",${el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
-
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
         helm upgrade --atomic --install --create-namespace --history-max=1 \
-            --set-string elCicdProfiles='{${elCicdProfiles}}' \
-            --set-string=elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS='{${elCicdReadOnlyPrivateKeys}}' \
-            --set-string elCicdDefs.USER_GROUP=${teamInfo.id} \
-            --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${el.cicd.EL_CICD_META_INFO_NAME} \
-            --set-string elCicdDefs.EL_CICD_BUILD_SECRETS_NAME=${el.cicd.EL_CICD_BUILD_SECRETS_NAME} \
-            --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${el.cicd.EL_CICD_MASTER_NAMESPACE} \
-            --set-string elCicdDefs.JENKINS_IMAGE=${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME} \
-            --set-string elCicdDefs.JENKINS_URL=${jenkinsUrl} \
-            --set-string elCicdDefs.JENKINS_UC=${el.cicd.JENKINS_UC} \
-            --set-string elCicdDefs.JENKINS_UC_INSECURE=${el.cicd.JENKINS_UC_INSECURE} \
-            --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH="${el.cicd.OKD_VERSION ? 'true' : 'false'}" \
-            --set-string elCicdDefs.JENKINS_CPU_REQUEST=${el.cicd.JENKINS_CICD_CPU_REQUEST} \
-            --set-string elCicdDefs.JENKINS_MEMORY_REQUEST=${el.cicd.JENKINS_CICD_MEMORY_REQUEST} \
-            --set-string elCicdDefs.JENKINS_MEMORY_LIMIT=${el.cicd.JENKINS_CICD_MEMORY_LIMIT} \
-            --set-string elCicdDefs.JENKINS_AGENT_CPU_REQUEST=${el.cicd.JENKINS_AGENT_CPU_REQUEST} \
-            --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${el.cicd.JENKINS_AGENT_MEMORY_REQUEST} \
-            --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${el.cicd.JENKINS_AGENT_MEMORY_LIMIT} \
-            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_CICD_VOLUME_CAPACITY} \
+            --set-file ${jenkinsConfigFile}
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \
@@ -64,6 +39,55 @@ def setupTeamCicdServer(def teamInfo) {
         ${shCmd.echo 'JENKINS UP'}
         sleep 1
     """
+}
+
+def getJenkinsConfigValues() {
+    jenkinsConfigValues = [:]
+    elCicdDefs = [:]
+
+    def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    
+    jenkinsConfigValues.elCicdProfiles = ['cicd', 'user-group']
+    
+    if (el.cicd.EL_CICD_MASTER_NON_PROD.toBoolean()) {
+        jenkinsConfigValues.elCicdProfiles += 'nonprod'
+    }
+    
+    if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
+        jenkinsConfigValues.elCicdProfiles += 'prod'
+        
+        elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
+    }
+    
+    if (el.cicd.OKD_VERSION.toBoolean()) {
+        jenkinsConfigValues.elCicdProfiles += 'okd'
+    }
+    
+    elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
+        el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
+        el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
+    ]
+    
+    elCicdDefs.USER_GROUP = teamInfo.id
+    elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
+    elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
+    elCicdDefs.JENKINS_IMAGE = el.cicd.JENKINS_IMAGE_REGISTRY}/el.cicd.JENKINS_IMAGE_NAME
+    elCicdDefs.JENKINS_URL = jenkinsUrl
+    elCicdDefs.JENKINS_UC = el.cicd.JENKINS_UC
+    elCicdDefs.JENKINS_UC_INSECURE = el.cicd.JENKINS_UC_INSECURE
+    elCicdDefs.OPENSHIFT_ENABLE_OAUTH = el.cicd.OKD_VERSION ? 'true' : 'false'
+    elCicdDefs.JENKINS_CPU_REQUEST = el.cicd.JENKINS_CICD_CPU_REQUEST
+    elCicdDefs.JENKINS_MEMORY_REQUEST = el.cicd.JENKINS_CICD_MEMORY_REQUEST
+    elCicdDefs.JENKINS_MEMORY_LIMIT = el.cicd.JENKINS_CICD_MEMORY_LIMIT
+    elCicdDefs.JENKINS_AGENT_CPU_REQUEST = el.cicd.JENKINS_AGENT_CPU_REQUEST
+    elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST = el.cicd.JENKINS_AGENT_MEMORY_REQUEST
+    elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT = el.cicd.JENKINS_AGENT_MEMORY_LIMIT
+    elCicdDefs.VOLUME_CAPACITY = el.cicd.JENKINS_CICD_VOLUME_CAPACITY
+    
+    jenkinsConfigValues.elCicdDefs = elCicdDefs
+    
+    return jenkinsConfigValues
 }
 
 def setupProjectPvResources(def projectInfo) {
