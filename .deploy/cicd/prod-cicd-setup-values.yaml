@@ -41,10 +41,3 @@ elCicdTemplates-prod:
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
   data: ${PIPELINE_CONFIG_MAP_DATA}
-
-- templateName: copyResource
-  objNames: ${PROD_ENVS}
-  objName: el-cicd-${}-pull-secret
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
