@@ -50,11 +50,11 @@ def getJenkinsConfigValues(def teamInfo) {
     
     jenkinsConfigValues.elCicdProfiles = ['cicd', 'user-group']
     
-    if (el.cicd.EL_CICD_MASTER_NON_PROD.toBoolean()) {
+    if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
         jenkinsConfigValues.elCicdProfiles += 'nonprod'
     }
     
-    if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
+    if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
         jenkinsConfigValues.elCicdProfiles += 'prod'
         
         elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
