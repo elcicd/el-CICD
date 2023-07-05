@@ -54,7 +54,7 @@ def setupTeamCicdServer(def teamInfo) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
             jenkins \
             elCicdCharts/elCicdChart
 
