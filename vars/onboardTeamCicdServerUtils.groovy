@@ -54,7 +54,6 @@ def setupTeamCicdServer(def teamInfo) {
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
             -n ${teamInfo.cicdMasterNamespace} \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-cicd-setup-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
