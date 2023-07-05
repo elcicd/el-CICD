@@ -292,7 +292,6 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_AGENT_CPU_REQUEST=${JENKINS_AGENT_CPU_REQUEST} \
         --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${JENKINS_AGENT_MEMORY_REQUEST} \
         --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${JENKINS_AGENT_MEMORY_LIMIT} \
-        --set-string elCicdDefs.JENKINS_NUM_EXECUTORS=${JENKINS_MASTER_NUM_EXECUTORS} \
         --set-string elCicdDefs.VOLUME_CAPACITY=${JENKINS_MASTER_VOLUME_CAPACITY} \
         --set-string elCicdDefs.EL_CICD_META_INFO_NAME=${EL_CICD_META_INFO_NAME} \
         --set-string elCicdDefs.JENKINS_UC=${JENKINS_UC} \

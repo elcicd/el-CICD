@@ -11,7 +11,7 @@ def init() {
     writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
 }
 
-def setupProjectCicdServer(def teamInfo) {
+def setupTeamCicdServer(def teamInfo) {
     loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.teamId}")
 
     def jenkinsUrl = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
@@ -45,7 +45,6 @@ def setupProjectCicdServer(def teamInfo) {
             --set-string elCicdDefs.JENKINS_AGENT_CPU_REQUEST=${el.cicd.JENKINS_AGENT_CPU_REQUEST} \
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST=${el.cicd.JENKINS_AGENT_MEMORY_REQUEST} \
             --set-string elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT=${el.cicd.JENKINS_AGENT_MEMORY_LIMIT} \
-            --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_CICD_VOLUME_CAPACITY} \
             --set-string elCicdDefs.VOLUME_CAPACITY=${el.cicd.JENKINS_CICD_VOLUME_CAPACITY} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \

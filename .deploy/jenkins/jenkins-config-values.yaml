@@ -148,7 +148,7 @@ elCicdTemplates:
 - templateName: configMap
   objName: ${JENKINS_PLUGINS}
   data:
-    ${JENKINS_PLUGINS_TXT}: ${JENKINS_CICD_PLUGINS_FILE}
+    ${JENKINS_PLUGINS_TXT}: ${JENKINS_PLUGINS_FILE}
 
 - templateName: limitRange
   objName: jenkins

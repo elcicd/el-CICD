@@ -54,7 +54,7 @@ def call(Map args) {
     projectInfos.addAll(jenkinsRefresh.values())
     stage('refresh each CICD server') {
         projectInfos.each { projectInfo ->
-            onboardTeamCicdServerUtils.setupProjectCicdServer(projectInfo)
+            onboardTeamCicdServerUtils.setupTeamCicdServer(projectInfo)
         }
     }
     

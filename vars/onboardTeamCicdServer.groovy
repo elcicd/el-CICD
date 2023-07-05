@@ -7,10 +7,11 @@
 def call(Map args) {
     onboardTeamCicdServerUtils.init()
 
+    def teamInfo = args.teamInfo
     def projectInfo = args.projectInfo
 
     stage("Install/upgrade CICD Jenkins") {
-        onboardTeamCicdServerUtils.setupProjectCicdServer(projectInfo)
+        onboardTeamCicdServerUtils.setupTeamCicdServer(teamInfo)
     }
 
     stage('Uninstall current project CICD resources (optional)') {
