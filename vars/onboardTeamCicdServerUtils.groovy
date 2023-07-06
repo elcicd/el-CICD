@@ -38,9 +38,9 @@ def setupTeamCicdServer(def teamInfo) {
             jenkins \
             elCicdCharts/elCicdChart
 
+        sleep 3
         ${shCmd.echo ''}
         ${shCmd.echo 'JENKINS UP'}
-        sleep 1
     """
 }
 
@@ -321,7 +321,7 @@ def createElCicdProfiles(def configValues, def elCicdDefs) {
         elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
     }
     
-    if (el.cicd.OKD_VERSION.toBoolean()) {
+    if (el.cicd.OKD_VERSION) {
         configValues.elCicdProfiles += 'okd'
     }
 }
