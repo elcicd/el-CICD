@@ -199,7 +199,7 @@ __create_meta_info_file() {
 
     # remove blank lines, comments, and any trailing whitespace
     sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
-    
+
     echo "EL_CICD_MASTER_NONPROD=${EL_CICD_MASTER_NONPROD}" >> ${META_INFO_FILE_TMP}
     echo "EL_CICD_MASTER_PROD=${EL_CICD_MASTER_PROD}" >> ${META_INFO_FILE_TMP}
 
@@ -281,7 +281,7 @@ __create_onboarding_automation_server() {
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
-    helm upgrade --atomic --install --history-max=1 \
+    helm upgrade --atomic --install --cleanup-on-fail --history-max=1 \
         --set-string elCicdProfiles="{${PROFILES}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
@@ -308,10 +308,10 @@ __create_onboarding_automation_server() {
         ${JENKINS_DEPLOYMENT_NAME} \
         elCicdCharts/elCicdChart
     set +ex
+    sleep 3
 
     echo
     echo 'JENKINS UP'
-    sleep 1
 
     local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')

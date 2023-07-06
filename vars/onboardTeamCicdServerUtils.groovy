@@ -308,7 +308,7 @@ def createCompSshKeyValues(def projectInfo) {
 }
 
 def getCommonProfiles(def configValues, def elCicdDefs) {    
-    configValues.elCicdProfiles += ['cicd']
+    configValues.elCicdProfiles = ['cicd']
     
     if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
         configValues.elCicdProfiles += 'nonprod'
