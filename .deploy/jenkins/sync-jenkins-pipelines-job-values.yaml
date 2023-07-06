@@ -30,6 +30,7 @@ elCicdTemplates:
   - -c
   - pwd;
     id;
+    oc whoami;
     set -x;
     mkdir ${JOBS_DIR};
     cp -rLv ${MOUNT_DIR}/*.yaml ${JOBS_DIR};
