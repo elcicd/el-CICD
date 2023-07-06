@@ -48,7 +48,7 @@ def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= jenkinsConfigValues.elCicdDefs
     
-    jenkinsConfigValues.elCicdProfiles = getCommonProfiles(jenkinsConfigValues, elCicdDefs)
+    createElCicdProfiles(jenkinsConfigValues, elCicdDefs)
     jenkinsConfigValues.elCicdProfiles += ['user-group']
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
@@ -215,7 +215,7 @@ def getCicdConfigValues(def projectInfo) {
     cicdConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= cicdConfigValues.elCicdDefs
     
-    cicdConfigValues.elCicdProfiles = getCommonProfiles(cicdConfigValues, elCicdDefs)
+    createElCicdProfiles(cicdConfigValues, elCicdDefs)
     cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
     
 
@@ -307,7 +307,7 @@ def createCompSshKeyValues(def projectInfo) {
     return cicdConfigValues
 }
 
-def getCommonProfiles(def configValues, def elCicdDefs) {    
+def createElCicdProfiles(def configValues, def elCicdDefs) {    
     configValues.elCicdProfiles = ['cicd']
     
     if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
