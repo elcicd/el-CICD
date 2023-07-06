@@ -10,8 +10,8 @@ elCicdDefs:
     jobs:
     - script: |-
         folder('${FOLDER_NAME}') {
-          displayName('${FOOLDER_NAME}')
-          description('el-CICD generated pipelines for ${FOOLDER_NAME}')
+          displayName('${FOLDER_NAME}')
+          description('el-CICD generated pipelines for ${FOLDER_NAME}')
         }
 
   JENKINS_PIPELINE_DSL_TEMPLATE: |-

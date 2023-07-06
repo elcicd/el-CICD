@@ -164,7 +164,6 @@ elCicdTemplates:
   objName: openshift-jenkins-login-plugin-config
   mustHaveEveryProfile:
   - cicd
-  - okd
   mustNotHaveAnyProfile:
   - onboarding
   data:
@@ -225,38 +224,6 @@ elCicdTemplates:
     name: ${JENKINS_SERVICE_NAME}
     namespace: ${RELEASE_NAMESPACE}
 
-- templateName: roleBinding
-  objName: ${USER_GROUP}-jenkins-elcicd-user
-  mustHaveEveryProfile:
-  - user-group
-  - okd
-  mustNotHaveAnyProfile:
-  - onboarding
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: elcicd-user
-  subjects:
-  - kind: Group
-    name: ${USER_GROUP}
-    apiGroup: rbac.authorization.k8s.io
-
-- templateName: roleBinding
-  objName: ${USER_GROUP}-jenkins-elcicd-user
-  mustHaveEveryProfile:
-  - user-group
-  mustNotHaveAnyProfile:
-  - onboarding
-  - okd
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: view
-  subjects:
-  - kind: Group
-    name: ${USER_GROUP}
-    apiGroup: rbac.authorization.k8s.io
-
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
   - jenkinsPersistent
@@ -269,6 +236,19 @@ elCicdTemplates:
   - onboarding
   objName: ${EL_CICD_META_INFO_NAME}
   data: ${EL_CICD_META_INFO}
+
+- templateName: roleBinding
+  objName: ${USER_GROUP}-jenkins-elcicd-user
+  mustHaveAnyProfile:
+  - cicd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: elcicd-user
+  subjects:
+  - kind: Group
+    name: ${USER_GROUP}
+    apiGroup: rbac.authorization.k8s.io
 
 - templateName: copyResource
   objName: ${EL_CICD_META_INFO_NAME}
@@ -305,7 +285,7 @@ elCicdTemplates:
 - templateName: copyResource
   objNames: ${PROD_ENVS}
   objName: el-cicd-${}-pull-secret
-  mustHaveAnyProfile:
+  mustHaveEveryProfile:
   - cicd
   - prod
   kind: Secret

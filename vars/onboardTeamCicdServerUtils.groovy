@@ -45,24 +45,11 @@ def setupTeamCicdServer(def teamInfo) {
 }
 
 def getJenkinsConfigValues(def teamInfo) {
-    jenkinsConfigValues = [:]
-    elCicdDefs = [:]
+    jenkinsConfigValues = [elCicdDefs: [:]]
+    def elCicdDefs= jenkinsConfigValues.elCicdDefs
     
-    jenkinsConfigValues.elCicdProfiles = ['cicd', 'user-group']
-    
-    if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
-        jenkinsConfigValues.elCicdProfiles += 'nonprod'
-    }
-    
-    if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
-        jenkinsConfigValues.elCicdProfiles += 'prod'
-        
-        elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
-    }
-    
-    if (el.cicd.OKD_VERSION.toBoolean()) {
-        jenkinsConfigValues.elCicdProfiles += 'okd'
-    }
+    jenkinsConfigValues.elCicdProfiles = getCommonProfiles(jenkinsConfigValues, elCicdDefs)
+    jenkinsConfigValues.elCicdProfiles += ['user-group']
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
         el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
@@ -85,8 +72,6 @@ def getJenkinsConfigValues(def teamInfo) {
     elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST = el.cicd.JENKINS_AGENT_MEMORY_REQUEST
     elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT = el.cicd.JENKINS_AGENT_MEMORY_LIMIT
     elCicdDefs.VOLUME_CAPACITY = el.cicd.JENKINS_CICD_VOLUME_CAPACITY
-    
-    jenkinsConfigValues.elCicdDefs = elCicdDefs
     
     return jenkinsConfigValues
 }
@@ -135,18 +120,15 @@ def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
 
     def projectDefs = getCicdConfigValues(projectInfo)
-    def cicdConfigValues = writeYaml(data: projectDefs, returnText: true)
-
     def cicdConfigFile = "cicd-config-values.yaml"
-    writeFile(file: cicdConfigFile, text: cicdConfigValues)
+    writeYaml(file: cicdConfigFile, data: projectDefs)
     
     def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def moduleSshKeyValues= writeYaml(data: moduleSshKeyDefs, returnText: true)
-    
     def cicdSshConfigFile = "module-ssh-values.yaml"
-    writeFile(file: cicdSshConfigFile, text: moduleSshKeyValues)
+    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
 
-    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ? projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
+        projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
@@ -196,7 +178,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 
 def getPvCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
-    elCicdDefs = [:]
+    elCicdDefs: [:]
     
     elCicdDefs.VOLUME_OBJ_NAMES = []
     projectInfo.staticPvs.each { pv ->
@@ -230,11 +212,16 @@ def getPvCicdConfigValues(def projectInfo) {
 }
 
 def getCicdConfigValues(def projectInfo) {
-    cicdConfigValues = [:]
-    elCicdDefs = [:]
+    cicdConfigValues = [elCicdDefs: [:]]
+    def elCicdDefs= cicdConfigValues.elCicdDefs
+    
+    cicdConfigValues.elCicdProfiles = getCommonProfiles(cicdConfigValues, elCicdDefs)
+    cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
+    
 
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
+    elCicdDefs.FOLDER_NAME = projectInfo.id
     elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
     elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
@@ -296,12 +283,9 @@ def getCicdConfigValues(def projectInfo) {
         def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
         elCicdDefs["${namespace}_GROUP"] = group
     }
-
-    cicdConfigValues.elCicdProfiles = (el.cicd.OKD_VERSION ? ['cicd', 'okd'] : ['cicd']) + rqProfiles.keySet()
     
     elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
 
-    cicdConfigValues.elCicdDefs = elCicdDefs
     return cicdConfigValues
 }
 
@@ -321,4 +305,22 @@ def createCompSshKeyValues(def projectInfo) {
     }
     
     return cicdConfigValues
+}
+
+def getCommonProfiles(def configValues, def elCicdDefs) {    
+    configValues.elCicdProfiles += ['cicd']
+    
+    if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
+        configValues.elCicdProfiles += 'nonprod'
+    }
+    
+    if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
+        configValues.elCicdProfiles += 'prod'
+        
+        elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
+    }
+    
+    if (el.cicd.OKD_VERSION.toBoolean()) {
+        configValues.elCicdProfiles += 'okd'
+    }
 }
