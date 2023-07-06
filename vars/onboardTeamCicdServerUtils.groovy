@@ -216,7 +216,6 @@ def getCicdConfigValues(def projectInfo) {
     def elCicdDefs= cicdConfigValues.elCicdDefs
     
     createElCicdProfiles(cicdConfigValues, elCicdDefs)
-    cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
     
 
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
@@ -277,6 +276,7 @@ def getCicdConfigValues(def projectInfo) {
             rqProfiles[rqName] = 'placeHolder'
         }
     }
+    cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
 
     cicdEnvs.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
