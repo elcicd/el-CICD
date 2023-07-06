@@ -178,7 +178,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 
 def getPvCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
-    elCicdDefs: [:]
+    elCicdDefs = [:]
     
     elCicdDefs.VOLUME_OBJ_NAMES = []
     projectInfo.staticPvs.each { pv ->
