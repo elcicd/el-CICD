@@ -27,7 +27,13 @@ elCicdDefs-nonprod:
       stringParam('RELEASE_CANDIDATE_TAG', null, "${RELEASE_CANDIDATE_TAG_DESCRIPTION}")
     }
 
-elCicdTemplates:  
+elCicdTemplates:
+- templateName: configMap
+  objName: ${FOLDER_NAME}
+  labels:
+    jenkins-pipeline: 'true'
+  data: ${PIPELINE_FOLDER_CONFIG_MAP_DATA}
+
 - templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-component

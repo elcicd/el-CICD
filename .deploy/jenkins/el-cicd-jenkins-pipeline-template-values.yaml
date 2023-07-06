@@ -6,6 +6,11 @@ elCicdDefs:
     ${OBJ_NAME}: ${JENKINS_PIPELINE_DSL_TEMPLATE}
     path: ${OBJ_NAME}.yaml
   
+  PIPELINE_FOLDER_CONFIG_MAP_DATA:
+    contentKey: ${OBJ_NAME}
+    ${OBJ_NAME}: ${JENKINS_FOLDER_TEMPLATE}
+    path: ${OBJ_NAME}.yaml
+  
   JENKINS_FOLDER_TEMPLATE: |-
     jobs:
     - script: |-
@@ -17,7 +22,7 @@ elCicdDefs:
   JENKINS_PIPELINE_DSL_TEMPLATE: |-
     jobs:
     - script: |-
-        pipelineJob('${FOLDER_NAME}/${OBJ_NAME}') {
+        pipelineJob('${FOLDER_NAME}/${BASE_OBJ_NAME}') {
             authenticationToken('${AUTH_TOKEN}')
             disabled(false)
             keepDependencies(false)
