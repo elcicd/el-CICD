@@ -169,7 +169,7 @@ elCicdTemplates:
   - onboarding
   data:
     Overall-Administer: admin,edit
-    Overall-Read: admin,edit,elcicd-user
+    Overall-Read: elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
