@@ -72,6 +72,7 @@ def getJenkinsConfigValues(def teamInfo) {
     elCicdDefs.JENKINS_AGENT_MEMORY_REQUEST = el.cicd.JENKINS_AGENT_MEMORY_REQUEST
     elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT = el.cicd.JENKINS_AGENT_MEMORY_LIMIT
     elCicdDefs.VOLUME_CAPACITY = el.cicd.JENKINS_CICD_VOLUME_CAPACITY
+    eelCicdDefs.JENKINS_CONFIG_FILE_PATH = el.cicd.JENKINS_CONFIG_FILE_PATH
     
     return jenkinsConfigValues
 }

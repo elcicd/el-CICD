@@ -164,14 +164,26 @@ elCicdTemplates:
   objName: openshift-jenkins-login-plugin-config
   mustHaveEveryProfile:
   - cicd
+  - okd
   mustNotHaveAnyProfile:
   - onboarding
   data:
     Overall-Administer: admin,edit
-    Overall-Read: elcicd-user
+    Overall-Read: admin,edit,elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
+
+- templateName: configMap
+  objName: openshift-jenkins-login-plugin-config
+  mustHaveEveryProfile:
+  - okd
+  - onboarding
+  mustNotHaveAnyProfile:
+  - cicd
+  data:
+    Overall-Administer: admin
+    Overall-Read: admin
 
 - templateName: ingress
   objName: ${JENKINS_SERVICE_NAME}
