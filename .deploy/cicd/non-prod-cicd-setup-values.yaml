@@ -29,12 +29,6 @@ elCicdDefs-nonprod:
 
 elCicdTemplates:
 - templateName: configMap
-  objName: ${FOLDER_NAME}
-  labels:
-    jenkins-pipeline: 'true'
-  data: ${PIPELINE_FOLDER_CONFIG_MAP_DATA}
-
-- templateName: configMap
   objNames: ${BUILD_COMPONENT_PIPELINES}
   objName: ${PROJECT_ID}-${}-build-component
   mustHaveEveryProfile:
@@ -56,7 +50,7 @@ elCicdTemplates:
     EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
-  data: ${PIPELINE_CONFIG_MAP_DATA}
+  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: configMap
   objNames: ${BUILD_ARTIFACT_PIPELINES}
@@ -78,7 +72,7 @@ elCicdTemplates:
     EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
-  data: ${PIPELINE_CONFIG_MAP_DATA}
+  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: configMap
   objNames:
@@ -123,7 +117,7 @@ elCicdTemplates:
     EXTRA_PIPELINE_ARGS: "releaseCandidateTag: params.RELEASE_CANDIDATE_TAG"
     PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     RELEASE_CANDIDATE_TAG_DESCRIPTION: "Previously used release candidate tag for redeployment to the project pre-prod environment"
-  data: ${PIPELINE_CONFIG_MAP_DATA}
+  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
 
 - templateName: roleBinding
   objName: ${PROJECT_ID}-edit

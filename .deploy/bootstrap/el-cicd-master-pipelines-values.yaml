@@ -54,4 +54,4 @@ elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
   objNames: ${PIPELINE_NAMES}
   labels: ${JENKINS_PIPELINE_LABEL}
-  data: ${PIPELINE_CONFIG_MAP_DATA}
+  data: ${TEAM_PIPELINE_CONFIG_MAP_DATA}

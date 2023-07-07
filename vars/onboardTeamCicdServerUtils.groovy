@@ -217,7 +217,6 @@ def getCicdConfigValues(def projectInfo) {
     def elCicdDefs= cicdConfigValues.elCicdDefs
     
     createElCicdProfiles(cicdConfigValues, elCicdDefs)
-    
 
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id

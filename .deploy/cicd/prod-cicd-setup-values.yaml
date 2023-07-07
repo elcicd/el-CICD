@@ -40,4 +40,4 @@ elCicdTemplates-prod:
     teamId: ${TEAM_ID}
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
-  data: ${PIPELINE_CONFIG_MAP_DATA}
+  data: ${TEAM_PIPELINE_CONFIG_MAP_DATA}
