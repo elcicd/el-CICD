@@ -30,7 +30,7 @@ elCicdDefs:
           }
           
           description("${PIPELINE_DESCRIPTION}")
-          displayName('${OBJ_NAME}')
+          displayName('${BASE_OBJ_NAME}')
           ${PIPELINE_PARAMS}
 
           definition {
