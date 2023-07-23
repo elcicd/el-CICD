@@ -8,7 +8,7 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    projectUtils.setProjectReleaseVersion(projectInfo, args.releaseCandidateTag)
+    projectInfoUtils.versionTag = args.versionTag
 
     projectInfo.deployToEnv = projectInfo.preProdEnv
     projectInfo.deployToNamespace = projectInfo.preProdNamespace
@@ -22,7 +22,7 @@ def call(Map args) {
         projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateGitTag }
 
         if (!projectInfo.componentsToRedeploy)  {
-            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.releaseCandidateTag}")
+            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.versionTag}")
         }
     }
 
@@ -32,12 +32,12 @@ def call(Map args) {
         projectInfo.componentsToRedeploy.each { component ->
             component.srcCommitHash = component.releaseCandidateGitTag.split('-').last()
             component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${component.srcCommitHash}"
-            projectUtils.cloneGitRepo(component, component.deploymentBranch)
+            projectInfoUtils.cloneGitRepo(component, component.deploymentBranch)
         }
     }
 
     stage('Verify release candidate images exist for redeployment') {
-        loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}:",
+        loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.versionTag}:",
                                 projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
@@ -66,18 +66,18 @@ def call(Map args) {
         }
 
         if (!allImagesExist) {
-            def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseCandidateTag}"
+            def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.versionTag}"
             loggingUtils.errorBanner(msg)
         }
     }
 
     stage('Confirm release candidate deployment') {
         def msg = loggingUtils.echoBanner(
-            "CONFIRM REDEPLOYMENT OF ${projectInfo.releaseCandidateTag} to ${projectInfo.deployToNamespace}",
+            "CONFIRM REDEPLOYMENT OF ${projectInfo.versionTag} to ${projectInfo.deployToNamespace}",
             '',
             '===========================================',
             '',
-            "--> Components in verion ${projectInfo.releaseCandidateTag} to be deployed:",
+            "--> Components in verion ${projectInfo.versionTag} to be deployed:",
             projectInfo.componentsToRedeploy.collect { it.name }.join(', '),
             '',
             '---',
@@ -89,7 +89,7 @@ def call(Map args) {
             '',
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
             '',
-            "Should Release Candidate ${projectInfo.releaseCandidateTag} be redeployed in ${projectInfo.deployToNamespace}?"
+            "Should Release Candidate ${projectInfo.versionTag} be redeployed in ${projectInfo.deployToNamespace}?"
         )
 
         jenkinsUtils.displayInputWithTimeout(msg, args)

@@ -1,8 +1,5 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Utility class defining the Jenkins agents' pods, executing the pipeline code on agent pods, el-CICD scripting framework around pods.
- * Also processes el-CICD metadata into global map.
  */
 
 import groovy.transform.Field
@@ -89,11 +86,11 @@ def node(Map args, Closure body) {
                 runHookScript(el.cicd.PRE, args)
                 
                 if (args.teamId) {
-                    args.teamInfo = projectUtils.gatherTeamInfo(args.teamId)
+                    args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
                 }
 
                 if (args.projectId) {
-                    args.projectInfo = projectUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
+                    args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
                 }
 
                 runHookScript(el.cicd.INIT, args)

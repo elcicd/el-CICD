@@ -176,14 +176,6 @@ def initProjectSandboxData(def projectInfo) {
     }
 }
 
-def setProjectReleaseVersion(def projectInfo, def releaseCandidateTag) {
-    assert releaseCandidateTag ==~ el.cicd.RELEASE_CANDIDATE_TAG_REGEX:
-        "Release Candidate tag  must match the pattern ${el.cicd.RELEASE_CANDIDATE_TAG_REGEX}: ${releaseCandidateTag}"
-
-    projectInfo.releaseCandidateTag = releaseCandidateTag
-    projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${releaseCandidateTag}"
-}
-
 def validateProjectInfo(def projectInfo) {
     assert projectInfo.rbacGroups : 'missing rbacGroups'
 
@@ -241,7 +233,7 @@ def validateProjectPvs(def projectInfo) {
 
 def cloneGitRepo(def module, def gitReference) {
     dir (module.workDir) {
-        checkout([$class: 'GitSCM',
+        checkout scmGit([
                   branches: [[ name: gitReference ]],
                   userRemoteConfigs: [[ credentialsId: module.scmDeployKeyJenkinsId, url: module.repoUrl ]]
                ])

@@ -40,7 +40,7 @@ def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing 
         dir(module.workDir) {
             loggingUtils.echoBanner("CLONING ${module.scmRepoName}:${projectInfo.scmBranch} FROM SCM")
             
-            projectUtils.cloneGitRepo(module, projectInfo.scmBranch)
+            projectInfoUtils.cloneGitRepo(module, projectInfo.scmBranch)
             
             if (postProcessing) {
                 postProcessing(module)

@@ -1,7 +1,5 @@
-/*
+/* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Defines the implementation of the component promotion pipeline.
  */
  
 def getUserPromotionRemovalSelections(def projectInfo, def args) {
@@ -110,8 +108,8 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     projectInfo.componentsToPromote.each { component ->
         component.srcCommitHash = commitHashMap[component.name]
         if (component.srcCommitHash) {
-            component.previousDeploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
-            component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
+            component.previousDeploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+            component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
             
             println "--> ${component.name} deployed in ${projectInfo.deployFromNamespace} src commit hash: ${component.srcCommitHash}"
         }

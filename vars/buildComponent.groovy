@@ -26,7 +26,7 @@ void call(Map args) {
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")
 
-        projectUtils.cloneGitRepo(component, component.scmBranch)
+        projectInfoUtils.cloneGitRepo(component, component.scmBranch)
 
         dir (component.workDir) {
             sh """

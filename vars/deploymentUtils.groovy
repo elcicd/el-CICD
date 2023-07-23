@@ -58,7 +58,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
         compValues.addAll(commonValues)
 
-        helmUpgradeInstall(projectInfo, component, compValues)
+        deployComponent(projectInfo, component, compValues)
     }
 
     parallel(helmStages)
@@ -70,7 +70,7 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def commonValues = ["profiles=${projectInfo.deployToEnv}",
                         "teamId=${projectInfo.teamInfo.id}",
                         "projectId=${projectInfo.id}",
-                        "releaseVersion=${projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED}",
+                        "releaseVersion=${projectInfo.versionTag ?: el.cicd.UNDEFINED}",
                         "buildNumber=\${BUILD_NUMBER}",
                         "metaInfoPostfix=${el.cicd.META_INFO_POSTFIX}"]
 
@@ -112,7 +112,7 @@ def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
     }
 }
 
-def helmUpgradeInstall(def projectInfo, def component, def compValues) {
+def deployComponent(def projectInfo, def component, def compValues) {
     dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
         sh """
             VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')

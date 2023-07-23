@@ -17,7 +17,7 @@ void call(Map args) {
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${artifact.scmRepoName} REPO, REFERENCE: ${artifact.scmBranch}")
 
-        projectUtils.cloneGitRepo(artifact, artifact.scmBranch)
+        projectInfoUtils.cloneGitRepo(artifact, artifact.scmBranch)
 
         dir (artifact.workDir) {
             sh """

@@ -10,9 +10,8 @@ def call(Map args) {
     def deployAll = args.deployAll
 
     def projectInfo = args.projectInfo
-    projectInfo.releaseCandidateTag = args.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX) ? 
-        args.releaseCandidateTag.substring(el.cicd.RELEASE_VERSION_PREFIX.length()) : args.releaseCandidateTag
-    projectInfo.releaseVersionTag = "${el.cicd.RELEASE_VERSION_PREFIX}${projectInfo.releaseCandidateTag}"
+    projectInfo.versionTag = args.versionTag
+
     projectInfo.deployToEnv = projectInfo.prodEnv
     if (args.releaseRegion) {
         projectInfo.releaseRegion = args.releaseRegion
@@ -33,10 +32,10 @@ def call(Map args) {
         projectInfo.componentsInRelease = projectInfo.components.findAll { it.releaseCandidateGitTag }
 
         if (!projectInfo.componentsInRelease)  {
-            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
+            loggingUtils.errorBanner("${projectInfo.versionTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
         else if (projectInfo.components.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
-            loggingUtils.errorBanner("${projectInfo.releaseCandidateTag}: BAD SCM STATE FOR RELEASE",
+            loggingUtils.errorBanner("${projectInfo.versionTag}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
                                       "Release Tags: ${projectInfo.components.collect{ it.releaseCandidateGitTag }}",
                                       "Release Branches: ${projectInfo.components.collect{ it.deploymentBranch }}")
@@ -44,14 +43,14 @@ def call(Map args) {
     }
 
     stage('Verify images are ready for deployment') {
-        loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.releaseCandidateTag}:",
+        loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.versionTag}:",
                                  projectInfo.componentsInRelease.collect { it.name }.join(', '))
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
         withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(PROMOTION_ENV_FROM),
                          variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
-            def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersionTag : projectInfo.releaseCandidateTag
+            def imageTag = projectInfo.hasBeenReleased ? projectInfo.versionTag : projectInfo.versionTag
 
             projectInfo.components.each { component ->
                 if (component.releaseCandidateGitTag) {
@@ -86,7 +85,7 @@ def call(Map args) {
         projectInfo.components.each { component ->
             def refName = component.deploymentBranch ?: component.releaseCandidateGitTag
             if (refName) {
-                projectUtils.cloneGitRepo(component, refName)
+                projectInfoUtils.cloneGitRepo(component, refName)
             }
         }
     }
@@ -96,7 +95,7 @@ def call(Map args) {
 
         def metaInfoReleaseShell =
             "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
-        def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.releaseVersionTag
+        def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.versionTag
 
         def metaInfoRegionShell =
             "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
@@ -119,8 +118,8 @@ def call(Map args) {
 
     stage('Confirm release to production') {
         def promotionOrDeploymentMsg = projectInfo.hasBeenReleased ?
-            "CONFIRM REDEPLOYMENT OF ${projectInfo.releaseVersionTag}" :
-            "CONFIRM PROMOTION AND DEPLOYMENT OF RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}"
+            "CONFIRM REDEPLOYMENT OF ${projectInfo.versionTag}" :
+            "CONFIRM PROMOTION AND DEPLOYMENT OF RELEASE CANDIDATE ${projectInfo.versionTag}"
 
         def deployAllMsg = (projectInfo.hasBeenReleased && deployAll) ?
             '-> YOU HAVE ELECTED TO REDEPLOY ALL COMPONENTS:' :
@@ -163,15 +162,15 @@ def call(Map args) {
             {
                 projectInfo.componentsInRelease.each { component ->
                     def copyImageCmd =
-                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseCandidateTag,
-                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseVersionTag)
+                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.versionTag,
+                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.versionTag)
 
                     sh """
                         ${shCmd.echo ''}
                         ${copyImageCmd}
                         ${shCmd.echo '',
                                     '******',
-                                    "${component.name}: ${projectInfo.releaseCandidateTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersionTag} in ${projectInfo.prodEnv}",
+                                    "${component.name}: ${projectInfo.versionTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.versionTag} in ${projectInfo.prodEnv}",
                                     '******'}
                     """
                 }
@@ -211,7 +210,7 @@ def call(Map args) {
     deployComponents(projectInfo: projectInfo,
                      componentsToDeploy: projectInfo.componentsToDeploy,
                      componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateGitTag },
-                     imageTag: projectInfo.releaseVersionTag)
+                     imageTag: projectInfo.versionTag)
 
     deployToProductionUtils.updateProjectMetaInfo(projectInfo)
 

@@ -8,55 +8,18 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    projectUtils.setProjectReleaseVersion(projectInfo, args.releaseCandidateTag)
+    projectInfo.versionTag = args.versionTag
 
-    stage('Verify image(s) with Release Candidate tags do NOT exist in pre-prod image registry') {
-        loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.releaseCandidateTag}")
-
-        if (projectInfo.releaseCandidateTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX)) {
-           loggingUtils.errorBanner("Release Candidate tags cannot start with '${el.cicd.RELEASE_VERSION_PREFIX}'.",
-                        "'${el.cicd.RELEASE_VERSION_PREFIX}' will prefix Release Versions when Release Candidates are promoted.")
-        }
-
-        def imageExists = true
-        withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                         usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
-            imageExists = projectInfo.components.find { component ->
-                def verifyImageCmd = shCmd.verifyImage(projectInfo.PRE_PROD_ENV,
-                                                       'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                                       'PRE_PROD_IMAGE_REGISTRY_PWD',
-                                                       component.id,
-                                                       projectInfo.releaseCandidateTag)
-
-                return sh(returnStdout: true, script: verifyImageCmd)
-            }
-        }
-
-        if (imageExists) {
-            def msg = "Version tag exists in pre-prod image registry for ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused"
-            loggingUtils.errorBanner("PRODUCTION MANIFEST FOR RELEASE CANDIDATE FAILED for ${projectInfo.releaseCandidateTag}:", msg)
-        }
+    stage('Verify version tag does not exist in SCM') {
+        verifyVersionTagDoesNotExistInScm(projectInfo)
     }
 
-    stage('Verify Release Candidate version tag doesn\'t exist in SCM') {
-        loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.releaseCandidateTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
-
-        projectInfo.components.each { component ->
-            dir(component.workDir) {
-                projectUtils.cloneGitRepo(component, projectInfo.scmBranch)
-
-                def gitTagCheck = "git tag --list '${projectInfo.releaseCandidateTag}-*' | wc -l | tr -d '[:space:]'"
-                versionTagExists = sh(returnStdout: true, script: gitTagCheck) != '0'
-                if (versionTagExists) {
-                    loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseCandidateTag} existsin SCM, and CANNOT be reused")
-                }
-            }
-        }
+    stage('Verify version tag do NOT exist in pre-prod image registry') {
+        verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
     }
 
     stage ('Select components to tag as Release Candidate') {
-        loggingUtils.echoBanner("SELECT COMPONENTS TO TAG AS RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}",
+        loggingUtils.echoBanner("SELECT COMPONENTS TO TAG AS RELEASE CANDIDATE ${projectInfo.versionTag}",
                                 '',
                                 "NOTE: Only components currently deployed in ${projectInfo.preProdNamespace} will be considered")
 
@@ -70,7 +33,7 @@ def call(Map args) {
                 component.releaseCandidateAvailable = true
                 component.srcCommitHash = hashData.split(':')[1]
 
-                component.deploymentBranch = projectUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
+                component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
                 dir(component.workDir) {
                     sh """
                         git checkout ${component.deploymentBranch}
@@ -88,7 +51,7 @@ def call(Map args) {
             loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
         }
 
-        def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.releaseCandidateTag}"
+        def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
         def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
         projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
@@ -110,13 +73,13 @@ def call(Map args) {
         def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
 
         def msg = loggingUtils.echoBanner(
-            "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseCandidateTag}",
+            "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
             '',
             '===========================================',
             '',
             '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
-            "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.releaseCandidateTag} IN THE PRE-PROD IMAGE REGISTRY",
-            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.releaseCandidateTag}-<src-commit-hash>:",
+            "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
+            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
             '',
             promotionNames,
             '',
@@ -130,18 +93,18 @@ def call(Map args) {
             '',
             '===========================================',
             '',
-            "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.releaseCandidateTag}",
+            "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
             '',
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
             '',
-            "Should Release Candidate ${projectInfo.releaseCandidateTag} be created?"
+            "Should Release Candidate ${projectInfo.versionTag} be created?"
         )
 
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
     stage('Tag all images') {
-        loggingUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.releaseCandidateTag}")
+        loggingUtils.echoBanner("TAG ALL RELEASE CANDIDATE IMAGES IN ${projectInfo.preProdEnv} AS ${projectInfo.versionTag}")
 
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
                          usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
@@ -152,9 +115,9 @@ def call(Map args) {
                                                  'PRE_PROD_IMAGE_REGISTRY_PWD',
                                                  component.id,
                                                  projectInfo.preProdEnv,
-                                                 projectInfo.releaseCandidateTag)
+                                                 projectInfo.versionTag)
 
-                def msg = "Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.releaseCandidateTag}"
+                def msg = "Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.versionTag}"
                 sh """
                     ${shCmd.echo ''}
                     ${tagImageCmd}
@@ -165,13 +128,13 @@ def call(Map args) {
     }
 
     stage('Tag all images and configuration commits') {
-        loggingUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON EACH MICROSERVICE DEPLOYMENT BRANCH FOR RELEASE CANDIDATE ${projectInfo.releaseCandidateTag}")
+        loggingUtils.echoBanner("TAG GIT DEPLOYMENT COMMIT HASHES ON EACH MICROSERVICE DEPLOYMENT BRANCH FOR RELEASE CANDIDATE ${projectInfo.versionTag}")
 
         projectInfo.components.each { component ->
             if (component.promote) {
                 dir(component.workDir) {
                     withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-                        def gitReleaseCandidateTag = "${projectInfo.releaseCandidateTag}-${component.srcCommitHash}"
+                        def gitReleaseCandidateTag = "${projectInfo.versionTag}-${component.srcCommitHash}"
                         sh """
                             CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
                             ${shCmd.echo "--> Tagging Release Candidate in '${component.scmRepoName}' in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}

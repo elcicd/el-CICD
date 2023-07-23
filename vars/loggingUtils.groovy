@@ -1,7 +1,5 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Pipeline logging utilities
  */
 
 def echoBanner(def ... msgs) {

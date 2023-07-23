@@ -22,7 +22,7 @@ def call(Map args) {
             jenkinsNoRefresh = []
             allProjectFiles.each { projectFile ->
                 def projectId = projectFile.name.split('[.]')[0]
-                def projectInfo = projectUtils.gatherProjectInfoStage(projectId)
+                def projectInfo = projectInfoUtils.gatherProjectInfoStage(projectId)
 
                 def jenkinsServerExists =
                     sh(returnStdout: true, script: "oc get projects --no-headers --ignore-not-found ${projectInfo.teamInfo.cicdMasterNamespace}")
@@ -105,7 +105,7 @@ def call(Map args) {
 
 def syncPipelines(def projectInfos) {
     while (projectInfos) {
-        def projectInfo = projectUtils.synchronizedRemoveListItem(projectInfos)
+        def projectInfo = projectInfoUtils.synchronizedRemoveListItem(projectInfos)
         if (projectInfo) {
             loggingUtils.echoBanner("SYNCING JENKINS PIPELINES IN ${projectInfo.teamInfo.cicdMasterNamespace}")
             onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
