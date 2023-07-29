@@ -6,7 +6,7 @@ _build_el_cicd_jenkins_image() {
     echo
     __init_jenkins_build
 
-    set -e
+    set -ex
     podman build --squash \
         --build-arg OKD_VERSION=${OKD_VERSION} \
         --build-arg JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
@@ -14,7 +14,7 @@ _build_el_cicd_jenkins_image() {
         -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
         
     podman push --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
-    set +e
+    set +ex
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
     set +e
@@ -58,6 +58,7 @@ _build_el_cicd_jenkins_agent_images() {
 
             set -e            
             podman build --squash \
+                --build-arg OKD_VERSION=${OKD_VERSION} \
                 --build-arg JENKINS_IMAGE_REGISTRY=${JENKINS_IMAGE_REGISTRY} \
                 -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
                 -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
