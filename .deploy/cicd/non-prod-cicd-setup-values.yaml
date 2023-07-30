@@ -43,10 +43,10 @@ elCicdTemplates:
         booleanParam('REINSTALL', false, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
       }
     EL_CICD_API_ARGS: |-
-      def args = [${COMMON_BUILD_ARGS},
-                  componentName: '${BASE_OBJ_NAME}',
-                  deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-                  recreate: params.REINSTALL]
+      ${COMMON_BUILD_ARGS},
+      componentName: '${BASE_OBJ_NAME}',
+      deployToNamespace: params.DEPLOY_TO_NAMESPACE,
+      recreate: params.REINSTALL,
     EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
@@ -89,11 +89,11 @@ elCicdTemplates:
   elCicdDefs:
     PIPELINE_NAME: ${BASE_OBJ_NAME}
     EL_CICD_API_ARGS: |-
-      def args = [teamId: '${TEAM_ID}',
-                  projectId: '${PROJECT_ID}',
-                  agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                  pipelineName: '${PIPELINE_NAME}',
-                  ${EXTRA_PIPELINE_ARGS}]
+      teamId: '${TEAM_ID}',
+      projectId: '${PROJECT_ID}',
+      agent: el.cicd.JENKINS_AGENT_DEFAULT,
+      pipelineName: '${PIPELINE_NAME}',
+      ${EXTRA_PIPELINE_ARGS}
   elCicdDefs-1-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-2-promote-components:
