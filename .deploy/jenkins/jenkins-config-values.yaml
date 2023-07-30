@@ -314,14 +314,4 @@ elCicdTemplates:
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
 
-- templateName: copyResource
-  objNames: ${SANDBOX_ENVS}
-  mustHaveEveryProfile:
-  - cicd
-  - nonprod
-  srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
-
 
