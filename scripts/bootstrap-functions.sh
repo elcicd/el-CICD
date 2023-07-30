@@ -281,7 +281,7 @@ __create_onboarding_automation_server() {
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
-    helm upgrade --atomic --install --cleanup-on-fail --history-max=1 \
+    helm upgrade --atomic --install --cleanup-on-fail --history-max=1 --timeout 10m0s \
         --set-string elCicdProfiles="{${PROFILES}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \

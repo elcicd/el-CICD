@@ -17,6 +17,7 @@ elCicdDefs-nonprod:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
   - delete-team-project
+  PIPELINE_NAME: ${OBJ_NAME}
   PROJECT_ID_PIPELINE_PARAM: |-
     stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
   EL_CICD_API_ARGS: |-
