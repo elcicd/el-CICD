@@ -33,9 +33,7 @@ def call(Map args) {
         }
     }
 
-    stage('Install/upgrade project CICD resources') {
-        onboardTeamCicdServerUtils.setupProjectRepoSecrets(projectInfo, nonprod)
-        
+    stage('Install/upgrade project CICD resources') {        
         onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
         
         onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)

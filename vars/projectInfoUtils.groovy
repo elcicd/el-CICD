@@ -118,10 +118,13 @@ def setModuleData(def projectInfo, def module) {
 
 
 def setModuleScmDeployKeyJenkinsId(def projectInfo, def module) {
-    saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
-    saUid = sh(returnStdout: true, script: saUidScript)
-    if (saUid) {
-        module.scmDeployKeyJenkinsId = "${module.name}-${projectInfo.teamInfo.cicdMasterNamespace}-${saUid}-${el.cicd.SCM_CREDS_POSTFIX}"
+    if (!projectInfo.teamInfo.serviceAccountUid) {
+        saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
+        projectInfo.serviceAccountUid = sh(returnStdout: true, script: saUidScript)
+    }
+    
+    if (projectInfo.teamInfo.serviceAccountUid) {
+        module.scmDeployKeyJenkinsId = "${module.name}-${projectInfo.teamInfo.cicdMasterNamespace}-${serviceAccountUid}-${el.cicd.SCM_CREDS_POSTFIX}"
     }
 }
 

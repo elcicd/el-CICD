@@ -117,18 +117,6 @@ def getProjectPvChartName(def projectInfo) {
         "${projectInfo.id}-pv" : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 }
 
-def setupProjectRepoSecrets(def projectInfo) {
-    loggingUtils.echoBanner("CONFIGURE ${projectInfo.id} SECRETS")
-    
-    sh """
-        helm upgrade --install --atomic --history-max=1  \
-            -f ${cicdSshConfigFile} \
-            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-            ${projectInfo.id}-scm-secrets \
-            elCicdCharts/elCicdChart
-    """
-}
-
 def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
 
