@@ -51,8 +51,13 @@ def getJenkinsConfigValues(def teamInfo) {
     createElCicdProfiles(jenkinsConfigValues, elCicdDefs)
     jenkinsConfigValues.elCicdProfiles += ['user-group']
     
+    if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
+        elCicdDefs.NONPROD_ENVS = []
+        elCicdDefs.NONPROD_ENVS.addAll(el.cicd.nonProdEnvs)
+    }
+    
     if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
-        elCicdDefs.PROD_ENVS = [el.cicd.preProdEnv, el.cicd.prodEnv]
+        elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ? [projectInfo.prodEnv] : [projectInfo.preProdEnv, projectInfo.prodEnv]
     }
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
