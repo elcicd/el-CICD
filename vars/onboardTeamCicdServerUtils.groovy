@@ -51,6 +51,18 @@ def getJenkinsConfigValues(def teamInfo) {
     createElCicdProfiles(jenkinsConfigValues, elCicdDefs)
     jenkinsConfigValues.elCicdProfiles += ['user-group']
     
+    if (el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean()) {
+        elCicdDefs.NONPROD_ENVS = []
+        elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
+        
+        elCicdDefs.SANDBOX_ENVS = []
+        elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
+    }
+    
+    if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
+        elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ? [projectInfo.prodEnv] : [projectInfo.preProdEnv, projectInfo.prodEnv]
+    }
+    
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
         el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
         el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
@@ -229,12 +241,7 @@ def getCicdConfigValues(def projectInfo) {
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
     elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
-    elCicdDefs.NONPROD_ENVS = []
-    elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     elCicdDefs.DEV_ENV = projectInfo.devEnv
-
-    elCicdDefs.SANDBOX_ENVS = []
-    elCicdDefs.SANDBOX_ENVS.addAll(projectInfo.sandboxEnvs)
 
     elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "\"${it}\"" }.toString()
 
@@ -322,8 +329,6 @@ def createElCicdProfiles(def configValues, def elCicdDefs) {
     
     if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
         configValues.elCicdProfiles += 'prod'
-        
-        elCicdDefs.PROD_ENVS = [el.cicd.PRE_PROD_ENV.toLowerCase(), el.cicd.PROD_ENV.toLowerCase()]
     }
     
     if (el.cicd.OKD_VERSION) {

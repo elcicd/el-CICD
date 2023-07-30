@@ -133,21 +133,3 @@ elCicdTemplates:
     namespace: ${RELEASE_NAMESPACE}
   - kind: Group
     name: ${${NAME_SPACE}_GROUP}
-
-- templateName: copyResource
-  objNames: ${NONPROD_ENVS}
-  objName: el-cicd-${}-pull-secret
-  mustHaveEveryProfile:
-  - nonprod
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
-
-- templateName: copyResource
-  objNames: ${SANDBOX_ENVS}
-  mustHaveEveryProfile:
-  - nonprod
-  srcMetadataName: el-cicd-${DEV_ENV}-pull-secret
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
