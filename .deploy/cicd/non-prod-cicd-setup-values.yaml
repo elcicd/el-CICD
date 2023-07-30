@@ -14,6 +14,7 @@ elCicdDefs-nonprod:
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
   COMMON_BUILD_ARGS: |-
+    agent:  '${CODE_BASE}',
     teamId: '${TEAM_ID}',
     projectId: '${PROJECT_ID}',
     isBuild: true,

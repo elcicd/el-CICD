@@ -20,8 +20,8 @@ elCicdDefs-nonprod:
   PIPELINE_NAME: ${OBJ_NAME}
   PROJECT_ID_PIPELINE_PARAM: |-
     stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
-  EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
   EL_CICD_API_ARGS: |-
+    agent:  el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: params.TEAM_ID,
     projectId: params.PROJECT_ID,
     ${EXTRA_EL_CICD_API_ARGS}

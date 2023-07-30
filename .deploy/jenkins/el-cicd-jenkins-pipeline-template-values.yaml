@@ -49,7 +49,6 @@ elCicdDefs:
                       }
 
                       def args = [
-                          agent: ${EL_CICD_AGENT},
                           pipelineName: '${PIPELINE_NAME}',
                           ${EL_CICD_API_ARGS}
                       ]

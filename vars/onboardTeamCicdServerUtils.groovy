@@ -253,12 +253,12 @@ def getCicdConfigValues(def projectInfo) {
     def hasJenkinsAgentPersistent = false
     projectInfo.components.each { component ->
         cicdConfigValues["elCicdDefs-${component.name}"] =
-            ['EL_CICD_AGENT' : "'${component.codeBase}'" ]
+            ['CODE_BASE' : component.codeBase ]
     }
 
     projectInfo.artifacts.each { art ->
         cicdConfigValues["elCicdDefs-${art.name}"] =
-            ['EL_CICD_AGENT' : "'${art.codeBase}'" ]
+            ['CODE_BASE' : art.codeBase ]
     }
 
     elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
