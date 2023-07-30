@@ -29,7 +29,7 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     projectInfo.teamInfo = teamInfo
     projectInfo.id = projectId
 
-    projectInfo.repoDeployKeyId = "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}"
+    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     initProjectModuleData(projectInfo)
 
@@ -45,6 +45,18 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     validateProjectInfo(projectInfo)
 
     return projectInfo
+}
+
+def setRemoteRepoDeployKeyId(def projectInfo) {
+    if (!projectInfo.teamInfo.serviceAccountUid) {
+        saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
+        projectInfo.teamInfo.serviceAccountUid = sh(returnStdout: true, script: saUidScript)
+    }
+    
+    if (projectInfo.teamInfo.serviceAccountUid) {
+        projectInfo.repoDeployKeyId =
+            "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}|${projectInfo.teamInfo.serviceAccountUid}"
+    }
 }
 
 def readProjectYaml(def teamInfo, def projectId) {
@@ -112,21 +124,7 @@ def setModuleData(def projectInfo, def module) {
 
     module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
     module.scmBranch = projectInfo.scmBranch
-    
-    setModuleScmDeployKeyJenkinsId(projectInfo, module)
-}
-
-
-def setModuleScmDeployKeyJenkinsId(def projectInfo, def module) {
-    if (!projectInfo.teamInfo.serviceAccountUid) {
-        saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
-        projectInfo.teamInfo.serviceAccountUid = sh(returnStdout: true, script: saUidScript)
-    }
-    
-    if (projectInfo.teamInfo.serviceAccountUid) {
-        module.scmDeployKeyJenkinsId =
-            "${module.name}-${projectInfo.teamInfo.cicdMasterNamespace}-${projectInfo.teamInfo.serviceAccountUid}-${el.cicd.SCM_CREDS_POSTFIX}"
-    }
+    module.scmDeployKeyJenkinsId = "${projectInfo.id}-${module.name}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {

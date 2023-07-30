@@ -41,6 +41,8 @@ def call(Map args) {
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
+    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
+    
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
     def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
         githubUtils.deleteProjectDeployKeys(module)
