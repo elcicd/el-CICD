@@ -52,7 +52,7 @@ def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues.elCicdProfiles += ['user-group']
     
     if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
-        elCicdDefs.PROD_ENVS = [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
+        elCicdDefs.PROD_ENVS = [el.cicd.preProdEnv, el.cicd.prodEnv]
     }
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
