@@ -304,14 +304,3 @@ elCicdTemplates:
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
   toNamespace: ${RELEASE_NAMESPACE}
 
-- templateName: copyResource
-  objNames: ${NONPROD_ENVS}
-  objName: el-cicd-${}-pull-secret
-  mustHaveEveryProfile:
-  - cicd
-  - nonprod
-  kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
-
-
