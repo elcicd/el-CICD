@@ -16,9 +16,7 @@ elCicdDefs-nonprod:
   COMMON_BUILD_ARGS: |-
     teamId: '${TEAM_ID}',
     projectId: '${PROJECT_ID}',
-    agent: '${CODE_BASE}',
     isBuild: true,
-    pipelineName: '${PIPELINE_NAME}',
     scmBranch: params.SCM_BRANCH
   SCM_BRANCH_BUILD_PARAM: |-
     stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
@@ -87,12 +85,12 @@ elCicdTemplates:
   - nonprod
   labels: ${SHARED_PROJECT_PIPELINE_LABELS}
   elCicdDefs:
+    EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
     PIPELINE_NAME: ${BASE_OBJ_NAME}
     EL_CICD_API_ARGS: |-
+      agent: el.cicd.JENKINS_AGENT_DEFAULT,
       teamId: '${TEAM_ID}',
       projectId: '${PROJECT_ID}',
-      agent: el.cicd.JENKINS_AGENT_DEFAULT,
-      pipelineName: '${PIPELINE_NAME}',
       ${EXTRA_PIPELINE_ARGS}
   elCicdDefs-1-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
