@@ -120,14 +120,10 @@ def getProjectPvChartName(def projectInfo) {
 def setupProjectRepoSecrets(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE ${projectInfo.id} SECRETS")
     
-    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def cicdSshConfigFile = "module-ssh-values.yaml"
-    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
-    
     sh """
         helm upgrade --install --atomic --history-max=1  \
             -f ${cicdSshConfigFile} \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
+            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${projectInfo.id}-scm-secrets \
             elCicdCharts/elCicdChart
     """
@@ -139,6 +135,10 @@ def setupProjectCicdResources(def projectInfo) {
     def projectDefs = getCicdConfigValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
+    
+    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
+    def cicdSshConfigFile = "module-ssh-values.yaml"
+    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
 
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
         projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
@@ -156,6 +156,7 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
             elCicdCharts/elCicdChart
@@ -261,6 +262,13 @@ def getCicdConfigValues(def projectInfo) {
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
+    
+    elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
+        if (!module.scmDeployKeyJenkinsId) { 
+            projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
+        }
+        return module.scmDeployKeyJenkinsId 
+    }
 
     def hasJenkinsAgentPersistent = false
     projectInfo.components.each { component ->
@@ -301,8 +309,6 @@ def getCicdConfigValues(def projectInfo) {
 
 def createCompSshKeyValues(def projectInfo) {
     cicdConfigValues = [:]
-    
-    cicdConfigValues["elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS"] = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
     
     projectInfo.modules.each { module ->
         dir(module.workDir) {

@@ -112,7 +112,17 @@ def setModuleData(def projectInfo, def module) {
 
     module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
     module.scmBranch = projectInfo.scmBranch
-    module.scmDeployKeyJenkinsId = "${module.name}-${el.cicd.SCM_CREDS_POSTFIX}"
+    
+    setModuleScmDeployKeyJenkinsId(projectInfo, module)
+}
+
+
+def setModuleScmDeployKeyJenkinsId(def projectInfo, def module) {
+    saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
+    saUid = sh(returnStdout: true, script: saUidScript)
+    if (saUid) {
+        module.scmDeployKeyJenkinsId = "${module.name}-${projectInfo.teamInfo.cicdMasterNamespace}-${saUid}-${el.cicd.SCM_CREDS_POSTFIX}"
+    }
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {
