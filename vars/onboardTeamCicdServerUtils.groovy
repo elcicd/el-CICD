@@ -57,7 +57,7 @@ def getJenkinsConfigValues(def teamInfo) {
     }
     
     if (el.cicd.EL_CICD_MASTER_PROD?.toBoolean()) {
-        elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ? [projectInfo.prodEnv] : [projectInfo.preProdEnv, projectInfo.prodEnv]
+        elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
     }
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
