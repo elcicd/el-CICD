@@ -65,9 +65,9 @@ elCicdTemplates:
         booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
       }
     EL_CICD_API_ARGS: |-
-      def args = [${COMMON_BUILD_ARGS},
-                  artifactName: '${BASE_OBJ_NAME}',
-                  isSnapshot: params.IS_SNAPSHOT]
+      ${COMMON_BUILD_ARGS},
+      artifactName: '${BASE_OBJ_NAME}',
+      isSnapshot: params.IS_SNAPSHOT
     EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
       ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
