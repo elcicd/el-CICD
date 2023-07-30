@@ -29,7 +29,7 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     projectInfo.teamInfo = teamInfo
     projectInfo.id = projectId
 
-    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
+    setRemoteRepoDeployKeyId(projectInfo)
 
     initProjectModuleData(projectInfo)
 
