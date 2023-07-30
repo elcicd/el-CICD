@@ -190,7 +190,7 @@ _create_jenkins_secrets() {
     local PULL_SECRET_NAMES=$(echo ${PULL_SECRET_TYPES@L} | sed -e 's/\s\+/,/g')
     local GIT_REPO_KEYS="${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID},${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
     set -e
-    helm upgrade --atomic --install --history-max=1 --create-namespace \
+    helm upgrade --install --atomic --history-max=1 --create-namespace \
         ${PROFILE_FLAG}  \
         --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
         --set-string elCicdDefs.PULL_SECRET_NAMES="{${PULL_SECRET_NAMES}}" \

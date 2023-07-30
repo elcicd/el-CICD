@@ -26,7 +26,7 @@ def setupTeamCicdServer(def teamInfo) {
         cat ${jenkinsConfigFile}
 
         ${shCmd.echo ''}
-        helm upgrade --atomic --install --create-namespace --history-max=1 --timeout 10m0s \
+        helm upgrade --install --atomic --create-namespace --history-max=1 --timeout 10m0s \
             -f ${jenkinsConfigFile} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
@@ -117,16 +117,28 @@ def getProjectPvChartName(def projectInfo) {
         "${projectInfo.id}-pv" : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 }
 
+def setupProjectRepoSecrets(def projectInfo) {
+    loggingUtils.echoBanner("CONFIGURE ${projectInfo.id} SECRETS")
+    
+    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
+    def cicdSshConfigFile = "module-ssh-values.yaml"
+    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
+    
+    sh """
+        helm upgrade --install --atomic --history-max=1  \
+            -f ${cicdSshConfigFile} \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
+            ${projectInfo.id}-scm-secrets \
+            elCicdCharts/elCicdChart
+    """
+}
+
 def setupProjectCicdResources(def projectInfo) {
     loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
 
     def projectDefs = getCicdConfigValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
-    
-    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def cicdSshConfigFile = "module-ssh-values.yaml"
-    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
 
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
         projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
@@ -134,7 +146,6 @@ def setupProjectCicdResources(def projectInfo) {
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${cicdConfigFile}
-        cat ${cicdSshConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
@@ -284,14 +295,14 @@ def getCicdConfigValues(def projectInfo) {
         def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
         elCicdDefs["${namespace}_GROUP"] = group
     }
-    
-    elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
 
     return cicdConfigValues
 }
 
 def createCompSshKeyValues(def projectInfo) {
     cicdConfigValues = [:]
+    
+    cicdConfigValues["elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS"] = projectInfo.modules.collect{ it.scmDeployKeyJenkinsId }
     
     projectInfo.modules.each { module ->
         dir(module.workDir) {

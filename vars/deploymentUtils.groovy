@@ -128,7 +128,7 @@ def deployComponent(def projectInfo, def component, def compValues) {
             helm template --dependency-update --debug \${HELM_ARGS}
 
             ${shCmd.echo ''}
-            helm upgrade --atomic --install --history-max=1 \${HELM_ARGS}
+            helm upgrade --install --atomic --history-max=1 \${HELM_ARGS}
         """
     }
 }
