@@ -80,7 +80,7 @@ __gather_lab_setup_info() {
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
 
-            printf "%s\n" "${SUDO_PWD}" | sudo -k -p '' -S echo 'verified'
+            printf "%s\n" "${SUDO_PWD}" | sudo -p '' -S echo 'verified'
         fi
     else
         echo 'IF NOT ALREADY DONE, proper values for your chosen image registry must be set in the el-CICD configuration files.'
