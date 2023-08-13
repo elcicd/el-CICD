@@ -11,35 +11,23 @@ def call(Map args) {
     projectInfo.versionTag = args.versionTag
 
     stage('Verify version tag does not exist in SCM') {
+        loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
+
         createReleaseCandidateUtils.verifyVersionTagDoesNotExistInScm(projectInfo)
     }
 
     stage('Verify version tag does NOT exist in pre-prod image registry') {
+        loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.versionTag}")
+
         createReleaseCandidateUtils.verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
     }
-    
-    stage("Checkout all components deployed in ${projectInfo.PRE_PROD_ENV}") {
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
-        def msNameHashData = sh(returnStdout: true, script: script)
-        
-        def components = projectInfo.components.findAll { component ->
-            return msNameHashData.find("${component.name}:[0-9a-z]{7}")        
-        }
-        
-        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
-            component.releaseCandidateAvailable = true
-            component.srcCommitHash = msNameHashData.split(':')[1]
 
-            component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
-            dir(component.workDir) {
-                sh """
-                    git checkout ${component.deploymentBranch}
-                """
-            }
-        }
+    stage("Checkout all components deployed in ${projectInfo.PRE_PROD_ENV}") {
+        loggingUtils.echoBanner("CHECK OUT ALL COMPONENTS DEPLOYED IN ${projectInfo.PRE_PROD_ENV}")
+        
+        createReleaseCandidateUtils.checkoutAllPreProdDeployedComponents(projectInfo)
     }
-    
+
     stage ('Select components to tag as Release Candidate') {
         loggingUtils.echoBanner("SELECT COMPONENTS TO TAG AS RELEASE CANDIDATE ${projectInfo.versionTag}",
                                 '',

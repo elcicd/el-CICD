@@ -3,8 +3,6 @@
  */
  
  def verifyVersionTagDoesNotExistInScm(def projectInfo) {
-    loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
-
     projectInfo.components.each { component ->
         dir(component.workDir) {
             withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
@@ -19,8 +17,6 @@
  }
  
  def verifyReleaseCandidateImagesDoNotExistInImageRegistry(def projectInfo) {
-    loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.versionTag}")
-
     def imageExists = true
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
                      usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
@@ -39,5 +35,24 @@
     if (imageExists) {
         def msg = "Version tag exists in pre-prod image registry for ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused"
         loggingUtils.errorBanner("CREATING RELEASE CANDIDATE VERSION ${projectInfo.versionTag} FAILED: ", msg)
+    }
+ }
+ 
+ def checkoutAllPreProdDeployedComponents(def projectInfo) {
+    def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
+    def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+    def msNameHashData = sh(returnStdout: true, script: script)
+    
+    def components = projectInfo.components.findAll { component ->
+        return msNameHashData.find("${component.name}:[0-9a-z]{7}")        
+    }
+    
+    concurrentUtils.runCloneGitReposStages(projectInfo, components) { component ->
+        component.releaseCandidateAvailable = true
+
+        component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
+        dir(component.workDir) {
+            sh "git checkout ${component.deploymentBranch}"
+        }
     }
  }
