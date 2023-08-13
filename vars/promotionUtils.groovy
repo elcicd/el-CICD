@@ -108,8 +108,8 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     projectInfo.componentsToPromote.each { component ->
         component.srcCommitHash = commitHashMap[component.name]
         if (component.srcCommitHash) {
-            component.previousDeploymentBranch = projectInfoUtils.checkoutAllAvailableComponents(projectInfo, component, projectInfo.deployFromEnv)
-            component.deploymentBranch = projectInfoUtils.checkoutAllAvailableComponents(projectInfo, component, projectInfo.deployToEnv)
+            component.previousDeploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployFromEnv)
+            component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.deployToEnv)
             
             println "--> ${component.name} deployed in ${projectInfo.deployFromNamespace} src commit hash: ${component.srcCommitHash}"
         }
