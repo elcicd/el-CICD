@@ -2,6 +2,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
  
+ def verifyVersionTagDoesNotExistInScm(def projectInfo) {
+    loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
+
+    projectInfo.components.each { component ->
+        dir(component.workDir) {
+            def tagExists = sh(returnStdout: true, script: "git ls-remote ${component.scmRepo} --tags ${projectInfo.versionTag}")
+            if (tagExists) {
+                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} existsin SCM, and CANNOT be reused")
+            }
+        }
+    }
+ }
+ 
  def verifyReleaseCandidateImagesDoNotExistInImageRegistry(def projectInfo) {
     loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.versionTag}")
 
@@ -28,18 +41,5 @@
     if (imageExists) {
         def msg = "Version tag exists in pre-prod image registry for ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused"
         loggingUtils.errorBanner("PRODUCTION MANIFEST FOR RELEASE CANDIDATE FAILED for ${projectInfo.versionTag}:", msg)
-    }
- }
- 
- def verifyVersionTagDoesNotExistInScm(def projectInfo) {
-    loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
-
-    projectInfo.components.each { component ->
-        dir(component.workDir) {
-            def tagExists = sh(returnStdout: true, script: "git ls-remote ${component.scmRepo} --tags ${projectInfo.versionTag}")
-            if (tagExists) {
-                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} existsin SCM, and CANNOT be reused")
-            }
-        }
     }
  }
