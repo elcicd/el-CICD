@@ -5,10 +5,23 @@
  * a realized el-CICD/resources/buildconfigs/create-release-candidate-template
  *
  */
+ 
+import 
+
+@Field
+SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
 
 def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.versionTag = args.versionTag
+    
+    if (args.strictSemver && !SEMVER_REGEX.matches(projectInfo.versionTag) {
+        loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
+                                 '',
+                                 "${projectInfo.versionTag} in NOT a valid SemVer",
+                                 '',
+                                 'Disable strict SemVer validation or see https://semver.org/ for more information')
+    }
 
     stage('Verify version tag does not exist in SCM') {
         loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")

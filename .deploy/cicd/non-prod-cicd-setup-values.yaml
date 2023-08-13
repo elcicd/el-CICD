@@ -21,7 +21,7 @@ elCicdDefs-nonprod:
     scmBranch: params.SCM_BRANCH
   SCM_BRANCH_BUILD_PARAM: |-
     stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
-  RELEASE_CANDIDATE_PARAMS: |-
+  REDEPLOY_RELEASE_CANDIDATE_PARAMS: |-
     parameters {
       stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
     }
@@ -101,20 +101,29 @@ elCicdTemplates:
     EL_CICD_API_METHOD: runSystemTests
   elCicdDefs-4-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
-    EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
     PIPELINE_PARAMS: |-
       parameters {
         choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
       }
+    EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-5-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
-    EXTRA_PIPELINE_ARGS: "versionTag: params.VERSION_TAG"
-    PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
+    PIPELINE_PARAMS: |-
+      parameters {
+        stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
+        booleanParam('STRICT_SEMVER', true, 'Enable strict SemVer validation (https://semver.org/)')
+      }
+    EXTRA_PIPELINE_ARGS: |-
+      versionTag: params.VERSION_TAG,
+      strictSemver: params.STRICT_SEMVER
     VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
   elCicdDefs-6-redeploy-release-candidate:
     EL_CICD_API_METHOD: redeployReleaseCandidate
+    PIPELINE_PARAMS:  |-
+      parameters {
+        stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
+      }
     EXTRA_PIPELINE_ARGS: "versionTag: params.VERSION_TAG"
-    PIPELINE_PARAMS: ${RELEASE_CANDIDATE_PARAMS}
     VERSION_TAG_DESCRIPTION: "Release candidate version tag to redeploy to the project pre-prod environment"
   data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
 
