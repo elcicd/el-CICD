@@ -15,7 +15,7 @@ def checkoutAllRepos(def projectInfo) {
     
     if (!projectInfo.components.find { it.promote }) {
         def msg = "RELEASE CANDIDATE DOES NOT EXIST IN SCM: ${projectInfo.versionTag}"
-        loggingUtils.errorBanner("msg", msg)
+        loggingUtils.errorBanner(msg)
     }
 }
 
@@ -23,23 +23,32 @@ def confirmPromotion(def projectInfo, def args) {
     def promotionComps = projectInfo.components.findAll{ it.promote }.collect { it.name }.join(', ')
     def skippedComps = projectInfo.components.findAll{ !it.promote }
     
-    def msg = pipelineUtils.createBanner(
-        "CONFIRM THE RELEASE MANIFEST FOR VERSION ${projectInfo.versionTag}:",
+    def msg = loggingUtils.echoBanner(
+        "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
         '',
         '===========================================',
         '',
-        "-> Release Version Tag: ${projectInfo.releaseCandidateTag}",
+        '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
+        "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
+        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
         '',
-        'Components in Release to be PROMOTED:',
-        promotionComps,
+        promotionNames,
         '',
-        'Components NOT in Release:',
-        skippedComps ? skippedComps.collect { it.name }.join(', ') : 'None',
+        '---',
+        '',
+        '-> IGNORED COMPONENTS IN THIS VERSION:',
+        '   - Will NOT be deployed in prod',
+        '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
+        '',
+        removalNames,
+        '',
         '===========================================',
         '',
-        'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
+        "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
         '',
-        "Should Release Candidate version ${projectInfo.releaseCandidateTag} be promoted?"
+        'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
+        '',
+        "Should Release Candidate ${projectInfo.versionTag} be created?"
     )
     
     jenkinsUtils.displayInputWithTimeout(msg, args)

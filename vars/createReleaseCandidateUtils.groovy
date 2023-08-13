@@ -38,7 +38,7 @@
     }
  }
  
- def checkoutAllPreProdDeployedComponents(def projectInfo) {
+ def checkoutAllAvailableComponents(def projectInfo) {
     def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
     def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
     def msNameHashData = sh(returnStdout: true, script: script)
@@ -55,4 +55,67 @@
             sh "git checkout ${component.deploymentBranch}"
         }
     }
+ }
+ 
+ def selectReleaseCandidateComponents(def projectInfo) {
+    projectInfo.componentsAvailable = projectInfo.components.findAll { it.releaseCandidateAvailable }
+    def inputs = projectInfo.componentsAvailable.collect { component ->
+        booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
+    }
+
+    if (!inputs) {
+        loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
+    }
+
+    def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
+    def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
+
+    projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
+        def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
+        if (answer) {
+            component.promote = true
+        }
+
+        return component.promote
+    }
+
+    if (!projectInfo.componentsToTag) {
+        loggingUtils.errorBanner("NO COMPONENTS SELECTED TO TAG!")
+    }
+ }
+ 
+ def confirmReleaseCandidateManifest(def projectInfo, def args) {
+    def promotionNames = projectInfo.componentsToTag.collect { "${it.name}" }
+    def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
+
+    def msg = loggingUtils.createBanner(
+        "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
+        '',
+        '===========================================',
+        '',
+        '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
+        "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
+        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
+        '',
+        promotionNames,
+        '',
+        '---',
+        '',
+        '-> IGNORED COMPONENTS IN THIS VERSION:',
+        '   - Will NOT be deployed in prod',
+        '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
+        '',
+        removalNames,
+        '',
+        '===========================================',
+        '',
+        "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
+        '',
+        'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
+        '',
+        "Should Release Candidate ${projectInfo.versionTag} be created?",
+        ''
+    )
+
+    jenkinsUtils.displayInputWithTimeout(msg, args)
  }

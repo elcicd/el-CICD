@@ -25,7 +25,7 @@ def call(Map args) {
     stage("Checkout all components deployed in ${projectInfo.PRE_PROD_ENV}") {
         loggingUtils.echoBanner("CHECK OUT ALL COMPONENTS DEPLOYED IN ${projectInfo.PRE_PROD_ENV}")
         
-        createReleaseCandidateUtils.checkoutAllPreProdDeployedComponents(projectInfo)
+        createReleaseCandidateUtils.checkoutAllAvailableComponents(projectInfo)
     }
 
     stage ('Select components to tag as Release Candidate') {
@@ -33,65 +33,11 @@ def call(Map args) {
                                 '',
                                 "NOTE: Only components currently deployed in ${projectInfo.preProdNamespace} will be considered")
 
-        projectInfo.componentsAvailable = projectInfo.components.findAll { it.releaseCandidateAvailable }
-        def inputs = projectInfo.componentsAvailable.collect { component ->
-            booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
-        }
-
-        if (!inputs) {
-            loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
-        }
-
-        def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
-        def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
-
-        projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
-            def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
-            if (answer) {
-                component.promote = true
-            }
-
-            return component.promote
-        }
-
-        if (!projectInfo.componentsToTag) {
-            loggingUtils.errorBanner("NO COMPONENTS SELECTED TO TAG!")
-        }
+        createReleaseCandidateUtils.selectReleaseCandidateComponents(projectInfo)
     }
 
     stage('Confirm production manifest for release version') {
-        def promotionNames = projectInfo.componentsToTag.collect { "${it.name}" }
-        def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
-
-        def msg = loggingUtils.echoBanner(
-            "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
-            '',
-            '===========================================',
-            '',
-            '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
-            "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
-            "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
-            '',
-            promotionNames,
-            '',
-            '---',
-            '',
-            '-> IGNORED COMPONENTS IN THIS VERSION:',
-            '   - Will NOT be deployed in prod',
-            '   - WILL BE REMOVED FROM prod if currently deployed and this version is promoted',
-            '',
-            removalNames,
-            '',
-            '===========================================',
-            '',
-            "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
-            '',
-            'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
-            '',
-            "Should Release Candidate ${projectInfo.versionTag} be created?"
-        )
-
-        jenkinsUtils.displayInputWithTimeout(msg, args)
+        createReleaseCandidateUtils.confirmReleaseCandidateManifest(projectInfo, args)
     }
 
     stage('Tag all images') {
