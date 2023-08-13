@@ -14,35 +14,38 @@ def call(Map args) {
         createReleaseCandidateUtils.verifyVersionTagDoesNotExistInScm(projectInfo)
     }
 
-    stage('Verify version tag do NOT exist in pre-prod image registry') {
+    stage('Verify version tag does NOT exist in pre-prod image registry') {
         createReleaseCandidateUtils.verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
     }
+    
+    stage("Checkout all components deployed in ${projectInfo.PRE_PROD_ENV}") {
+        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
+        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+        def msNameHashData = sh(returnStdout: true, script: script)
+        
+        def components = projectInfo.components.findAll { component ->
+            return msNameHashData.find("${component.name}:[0-9a-z]{7}")        
+        }
+        
+        concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
+            component.releaseCandidateAvailable = true
+            component.srcCommitHash = msNameHashData.split(':')[1]
 
+            component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
+            dir(component.workDir) {
+                sh """
+                    git checkout ${component.deploymentBranch}
+                """
+            }
+        }
+    }
+    
     stage ('Select components to tag as Release Candidate') {
         loggingUtils.echoBanner("SELECT COMPONENTS TO TAG AS RELEASE CANDIDATE ${projectInfo.versionTag}",
                                 '',
                                 "NOTE: Only components currently deployed in ${projectInfo.preProdNamespace} will be considered")
 
-        def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
-        def msNameHashData = sh(returnStdout: true, script: script)
-
-        projectInfo.components.each { component ->
-            def hashData = msNameHashData.find("${component.name}:[0-9a-z]{7}")
-            if (hashData) {
-                component.releaseCandidateAvailable = true
-                component.srcCommitHash = hashData.split(':')[1]
-
-                component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
-                dir(component.workDir) {
-                    sh """
-                        git checkout ${component.deploymentBranch}
-                    """
-                }
-            }
-        }
-
-        projectInfo.componentsAvailable = projectInfo.components.findAll {it.releaseCandidateAvailable }
+        projectInfo.componentsAvailable = projectInfo.components.findAll { it.releaseCandidateAvailable }
         def inputs = projectInfo.componentsAvailable.collect { component ->
             booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
         }

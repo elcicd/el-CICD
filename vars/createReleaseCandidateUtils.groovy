@@ -21,15 +21,10 @@
  def verifyReleaseCandidateImagesDoNotExistInImageRegistry(def projectInfo) {
     loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.versionTag}")
 
-    if (projectInfo.versionTag.startsWith(el.cicd.RELEASE_VERSION_PREFIX)) {
-        loggingUtils.errorBanner("Release Candidate tags cannot start with '${el.cicd.RELEASE_VERSION_PREFIX}'.",
-                    "'${el.cicd.RELEASE_VERSION_PREFIX}' will prefix Release Versions when Release Candidates are promoted.")
-    }
-
     def imageExists = true
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                        usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                        passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                     usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                     passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
         imageExists = projectInfo.components.find { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.PRE_PROD_ENV,
                                                    'PRE_PROD_IMAGE_REGISTRY_USERNAME',
@@ -43,6 +38,6 @@
 
     if (imageExists) {
         def msg = "Version tag exists in pre-prod image registry for ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused"
-        loggingUtils.errorBanner("PRODUCTION MANIFEST FOR RELEASE CANDIDATE FAILED for ${projectInfo.versionTag}:", msg)
+        loggingUtils.errorBanner("CREATING RELEASE CANDIDATE VERSION ${projectInfo.versionTag} FAILED: ", msg)
     }
  }
