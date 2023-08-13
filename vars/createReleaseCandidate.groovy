@@ -11,11 +11,11 @@ def call(Map args) {
     projectInfo.versionTag = args.versionTag
 
     stage('Verify version tag does not exist in SCM') {
-        verifyVersionTagDoesNotExistInScm(projectInfo)
+        createReleaseCandidateUtils.verifyVersionTagDoesNotExistInScm(projectInfo)
     }
 
     stage('Verify version tag do NOT exist in pre-prod image registry') {
-        verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
+        createReleaseCandidateUtils.verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
     }
 
     stage ('Select components to tag as Release Candidate') {
