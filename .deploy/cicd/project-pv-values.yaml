@@ -11,6 +11,7 @@ elCicdTemplates:
 - templateName: persistentVolumeClaim
   objNames: ${VOLUME_OBJ_NAMES}
   namespace: ${VOLUME_NAMESPACE}
+  storageClassName: ${OBJ_NAME}
   storageRequest: ${STORAGE_CAPACITY}
   accessMode: ReadWriteMany
   
