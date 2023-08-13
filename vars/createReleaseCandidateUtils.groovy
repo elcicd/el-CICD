@@ -58,20 +58,20 @@
     def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
     def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
-    projectInfo.componentsInReleaseCandidate = componentsAvailable.findAll { component ->
+    projectInfo.releaseCandidateComponents = componentsAvailable.findAll { component ->
         def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
         component.promote = answer ? true : false
 
         return component.promote
     }
 
-    if (!projectInfo.componentsToTag) {
+    if (!projectInfo.releaseCandidateComponents) {
         loggingUtils.errorBanner("NO COMPONENTS SELECTED TO TAG!")
     }
  }
 
  def confirmReleaseCandidateManifest(def projectInfo, def args) {
-    def promotionNames = projectInfo.componentsInReleaseCandidate.collect { "${it.name}" }
+    def promotionNames = projectInfo.releaseCandidateComponents.collect { "${it.name}" }
     def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
 
     def msg = loggingUtils.createBanner(
@@ -106,7 +106,7 @@
  }
 
  def createReleaseCandidate(def projectInfo) {
-    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsInReleaseCandidate) { component ->
+    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComponents) { component ->
         def gitReleaseCandidateTag = "${projectInfo.versionTag}-${component.srcCommitHash}"
         def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
                                             'PRE_PROD_IMAGE_REGISTRY_USERNAME',
