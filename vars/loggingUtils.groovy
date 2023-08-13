@@ -5,7 +5,7 @@
 import groovy.transform.Field
  
 @Field
-def BANNER_SEPARATOR = loggingUtils.BANNER_SEPARATOR
+def BANNER_SEPARATOR = '==========================================='
 
 def echoBanner(def ... msgs) {
     echo createBanner(msgs)
