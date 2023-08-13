@@ -58,7 +58,7 @@
     def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
     def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
-    projectInfo.componentsInReleaseCandidate componentsAvailable.findAll { component ->
+    projectInfo.componentsInReleaseCandidate = componentsAvailable.findAll { component ->
         def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
         component.promote = answer ? true : false
 
