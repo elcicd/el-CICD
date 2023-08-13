@@ -14,22 +14,32 @@ SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z
 def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.versionTag = args.versionTag
-    
-    if (args.strictSemver && !SEMVER_REGEX.matches(projectInfo.versionTag) {
-        loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
-                                 '',
-                                 "${projectInfo.versionTag} in NOT a valid SemVer",
-                                 '',
-                                 'Disable strict SemVer validation or see https://semver.org/ for more information')
-    }
 
-    stage('Verify version tag does not exist in SCM') {
+    stage('Check version tag is valid SemVer') {
+        if (args.strictSemver) {
+            loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.versionTag} IS VALID SEMVER")
+            
+            if (!SEMVER_REGEX.matches(projectInfo.versionTag)) {
+                loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
+                                         '',
+                                         "${projectInfo.versionTag} in NOT a valid SemVer",
+                                         '',
+                                         'Disable strict SemVer validation or see https://semver.org/ for more information')
+            }
+            else {
+                echo "--> Version Tag ${projectInfo.versionTag} confirmed valid"
+            }
+        }
+        else {
+            loggingUtils.echoBanner("SEMVER VALIDATION DISABLED; SKIPPING...}")
+        }
+    }
+        
+    stage('Validate version tag unused') {
         loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.versionTag} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
 
         createReleaseCandidateUtils.verifyVersionTagDoesNotExistInScm(projectInfo)
-    }
-
-    stage('Verify version tag does NOT exist in pre-prod image registry') {
+        
         loggingUtils.echoBanner("VERIFY IMAGE(S) DO NOT EXIST IN PRE-PROD IMAGE REGISTRY AS ${projectInfo.versionTag}")
 
         createReleaseCandidateUtils.verifyReleaseCandidateImagesDoNotExistInImageRegistry(projectInfo)
