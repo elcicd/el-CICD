@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
  
+import groovy.transform.Field
+ 
 @Field
 def BANNER_SEPARATOR = loggingUtils.BANNER_SEPARATOR
 
