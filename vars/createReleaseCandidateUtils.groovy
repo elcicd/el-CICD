@@ -7,7 +7,7 @@
 
     projectInfo.components.each { component ->
         dir(component.workDir) {
-            def tagExists = sh(returnStdout: true, script: "git ls-remote ${component.scmRepoName} --tags ${projectInfo.versionTag}")
+            def tagExists = sh(returnStdout: true, script: "git ls-remote origin --tags ${projectInfo.versionTag}")
             if (tagExists) {
                 loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} existsin SCM, and CANNOT be reused")
             }
