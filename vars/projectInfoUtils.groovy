@@ -122,7 +122,7 @@ def setModuleData(def projectInfo, def module) {
 
     module.workDir = "${WORKSPACE}/${module.scmRepoName}"
 
-    module.repoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+    module.scmRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
     module.scmBranch = projectInfo.scmBranch
     module.scmDeployKeyJenkinsId = "${projectInfo.id}-${module.name}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
@@ -247,7 +247,7 @@ def cloneGitRepo(def module, def gitReference) {
     dir (module.workDir) {
         checkout scmGit([
                   branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: module.scmDeployKeyJenkinsId, url: module.repoUrl ]]
+                  userRemoteConfigs: [[ credentialsId: module.scmDeployKeyJenkinsId, url: module.scmRepoUrl ]]
                ])
 
         def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")

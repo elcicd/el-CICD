@@ -78,7 +78,7 @@ void call(Map args) {
                 sh """
                     chmod 777 Dockerfile
                 
-                    echo "\nLABEL SRC_COMMIT_REPO='${component.repoUrl}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_REPO='${component.scmRepoUrl}'" >> Dockerfile
                     echo "\nLABEL SRC_COMMIT_BRANCH='${component.scmBranch}'" >> Dockerfile
                     echo "\nLABEL SRC_COMMIT_HASH='${component.srcCommitHash}'" >> Dockerfile
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile

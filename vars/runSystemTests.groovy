@@ -77,7 +77,7 @@ def createTestNode(def codeBase, def projectInfo, def testModule, def components
                     stage ('Pull test code') {
                         loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.scmRepoName}")
                         dir(testModule.workDir) {
-                            git url: testModule.repoUrl,
+                            git url: testModule.scmRepoUrl,
                                 branch: projectInfo.scmTestBranch,
                                 credentialsId: testModule.scmDeployKeyJenkinsId
                         }
