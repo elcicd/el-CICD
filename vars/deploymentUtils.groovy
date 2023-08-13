@@ -50,7 +50,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
     sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
 
-    def helmStages = concurrentUtils.createParallelStages("Component Deployments", components) { component ->
+    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
         def compValues = ["elCicdDefaults.objName=${component.name}",
                           "elCicdDefaults.image=${componentImage}",

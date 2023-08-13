@@ -131,7 +131,7 @@ def runPromoteImagesStages(def projectInfo) {
                                       usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
                                       passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
     {
-        def stageTitle = "Promote And Tag Images"
+        def stageTitle = "Promoting"
         def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
                                     
