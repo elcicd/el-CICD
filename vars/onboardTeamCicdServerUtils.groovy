@@ -101,12 +101,6 @@ def setupProjectPvResources(def projectInfo) {
         sh """
             ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
             cat ${volumeCicdConfigFile}
-            
-            PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
-            if [[ ! -z \${PVS_INSTALLED} ]]
-            then
-                helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            fi
 
             if [[ ! -z '${projectInfo.staticPvs ? 'hasPvs' : ''}' ]]
             then
@@ -116,6 +110,9 @@ def setupProjectPvResources(def projectInfo) {
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
                     elCicdCharts/elCicdChart
+            elif [[ $(helm list --short | grep ${chartName} ]]
+                helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            then
             fi
         """
     }
