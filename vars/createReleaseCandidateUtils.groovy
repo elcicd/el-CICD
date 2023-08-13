@@ -57,7 +57,7 @@
     }
  }
  
- def selectReleaseCandidateComponents(def projectInfo) {
+ def selectReleaseCandidateComponents(def projectInfo, def args) {
     projectInfo.componentsAvailable = projectInfo.components.findAll { it.releaseCandidateAvailable }
     def inputs = projectInfo.componentsAvailable.collect { component ->
         booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")

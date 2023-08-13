@@ -33,7 +33,7 @@ def call(Map args) {
                                 '',
                                 "NOTE: Only components currently deployed in ${projectInfo.preProdNamespace} will be considered")
 
-        createReleaseCandidateUtils.selectReleaseCandidateComponents(projectInfo)
+        createReleaseCandidateUtils.selectReleaseCandidateComponents(projectInfo, args)
     }
 
     stage('Confirm production manifest for release version') {
