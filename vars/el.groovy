@@ -143,16 +143,16 @@ def initializePipeline() {
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
-            ${shCmd.echo("\n=======================\n")}
+            ${shCmd.echo("\n${loggingUtils.BANNER_SEPARATOR}\n")}
             ${shCmd.echo 'OCP Runtime'}
             oc version
-            ${shCmd.echo "\n=======================\n"}
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Helm Version'}
             helm version
-            ${shCmd.echo "\n=======================\n"}
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Jenkins Service Account'}
             oc whoami
-            ${shCmd.echo "\n======================="}
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
         """
 
         dir (el.cicd.EL_CICD_DIR) {

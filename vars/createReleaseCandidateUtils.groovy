@@ -1,7 +1,7 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
- 
+
  def verifyVersionTagDoesNotExistInScm(def projectInfo) {
     projectInfo.components.each { component ->
         dir(component.workDir) {
@@ -15,7 +15,7 @@
         }
     }
  }
- 
+
  def verifyReleaseCandidateImagesDoNotExistInImageRegistry(def projectInfo) {
     def imageExists = true
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
@@ -37,29 +37,17 @@
         loggingUtils.errorBanner("CREATING RELEASE CANDIDATE VERSION ${projectInfo.versionTag} FAILED: ", msg)
     }
  }
- 
- def checkoutAllAvailableComponents(def projectInfo) {
+
+ def selectReleaseCandidateComponents(def projectInfo, def args) {
     def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
     def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
     def msNameHashData = sh(returnStdout: true, script: script)
-    
-    def components = projectInfo.components.findAll { component ->
-        return msNameHashData.find("${component.name}:[0-9a-z]{7}")        
-    }
-    
-    concurrentUtils.runCloneGitReposStages(projectInfo, components) { component ->
-        component.releaseCandidateAvailable = true
 
-        component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
-        dir(component.workDir) {
-            sh "git checkout ${component.deploymentBranch}"
-        }
+    def componentsAvailable = projectInfo.components.findAll { component ->
+        msNameHashData.find("${component.name}:[0-9a-z]{7}")
     }
- }
- 
- def selectReleaseCandidateComponents(def projectInfo, def args) {
-    projectInfo.componentsAvailable = projectInfo.components.findAll { it.releaseCandidateAvailable }
-    def inputs = projectInfo.componentsAvailable.collect { component ->
+
+    def inputs = componentsAvailable.collect { component ->
         booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
     }
 
@@ -70,11 +58,9 @@
     def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
     def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
-    projectInfo.componentsToTag = projectInfo.componentsAvailable.findAll { component ->
+    projectInfo.componentsInReleaseCandidate componentsAvailable.findAll { component ->
         def answer = (inputs.size() > 1) ? cicdInfo[component.name] : cicdInfo
-        if (answer) {
-            component.promote = true
-        }
+        component.promote = answer ? true : false
 
         return component.promote
     }
@@ -83,9 +69,9 @@
         loggingUtils.errorBanner("NO COMPONENTS SELECTED TO TAG!")
     }
  }
- 
+
  def confirmReleaseCandidateManifest(def projectInfo, def args) {
-    def promotionNames = projectInfo.componentsToTag.collect { "${it.name}" }
+    def promotionNames = projectInfo.componentsInReleaseCandidate.collect { "${it.name}" }
     def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
 
     def msg = loggingUtils.createBanner(
@@ -117,4 +103,36 @@
     )
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
+ }
+
+ def createReleaseCandidate(def projectInfo) {
+    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsInReleaseCandidate) { component ->
+        def gitReleaseCandidateTag = "${projectInfo.versionTag}-${component.srcCommitHash}"
+        def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
+                                            'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                            'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                            component.id,
+                                            projectInfo.preProdEnv,
+                                            projectInfo.versionTag)
+        component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
+
+        dir(component.workDir) {
+            withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
+                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
+                                              usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                              passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                sh """
+                    git checkout ${component.deploymentBranch}
+                    CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+                    ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
+                    ${shCmd.echo ''}
+                    ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+
+                    ${tagImageCmd}
+                    ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.versionTag}"}
+                    ${shCmd.echo ''}
+                """
+            }
+        }
+    }
  }
