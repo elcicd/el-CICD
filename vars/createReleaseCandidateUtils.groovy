@@ -9,7 +9,7 @@
         dir(component.workDir) {
             withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                 def tagExists = sh(returnStdout: true,
-                                   script: ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git ls-remote ${component.scmRepoUrl} --tags ${projectInfo.versionTag}"})
+                                   script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git ls-remote ${component.scmRepoUrl} --tags ${projectInfo.versionTag}"))
                 if (tagExists) {
                     loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} exists in SCM, and CANNOT be reused")
                 }
