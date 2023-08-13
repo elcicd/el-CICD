@@ -19,10 +19,10 @@ def call(Map args) {
         if (args.strictSemver) {
             loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.versionTag} IS VALID SEMVER")
             
-            if (!SEMVER_REGEX.matches(projectInfo.versionTag)) {
+            if (!projectInfo.versionTag.matches(SEMVER_REGEX)) {
                 loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
                                          '',
-                                         "${projectInfo.versionTag} in NOT a valid SemVer",
+                                         "${projectInfo.versionTag} is NOT a valid SemVer",
                                          '',
                                          'Disable strict SemVer validation or see https://semver.org/ for more information')
             }
