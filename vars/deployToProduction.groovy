@@ -140,7 +140,7 @@ def call(Map args) {
             '-> All other components and their associated resources NOT in this release WILL BE REMOVED!',
             projectInfo.components.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
             '',
-            '===========================================',
+            loggingUtils.BANNER_SEPARATOR,
             '',
             'PLEASE REREAD THE ABOVE RELEASE MANIFEST CAREFULLY AND PROCEED WITH CAUTION',
             '',

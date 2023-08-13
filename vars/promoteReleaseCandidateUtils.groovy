@@ -26,7 +26,7 @@ def confirmPromotion(def projectInfo, def args) {
     def msg = loggingUtils.echoBanner(
         "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
         '',
-        '===========================================',
+        loggingUtils.BANNER_SEPARATOR,
         '',
         '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
         "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
@@ -42,7 +42,7 @@ def confirmPromotion(def projectInfo, def args) {
         '',
         removalNames,
         '',
-        '===========================================',
+        loggingUtils.BANNER_SEPARATOR,
         '',
         "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
         '',

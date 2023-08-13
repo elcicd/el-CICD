@@ -75,7 +75,7 @@ def call(Map args) {
         def msg = loggingUtils.echoBanner(
             "CONFIRM REDEPLOYMENT OF ${projectInfo.versionTag} to ${projectInfo.deployToNamespace}",
             '',
-            '===========================================',
+            loggingUtils.BANNER_SEPARATOR,
             '',
             "--> Components in verion ${projectInfo.versionTag} to be deployed:",
             projectInfo.componentsToRedeploy.collect { it.name }.join(', '),
@@ -85,7 +85,7 @@ def call(Map args) {
             "--> Components to be removed from ${projectInfo.deployToNamespace} if present:",
             projectInfo.componentsToRemove.collect { it.name }.join(', '),
             '',
-            '===========================================',
+            loggingUtils.BANNER_SEPARATOR,
             '',
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
             '',

@@ -91,7 +91,7 @@
     def msg = loggingUtils.createBanner(
         "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
         '',
-        '===========================================',
+        loggingUtils.BANNER_SEPARATOR,
         '',
         '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
         "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
@@ -107,14 +107,13 @@
         '',
         removalNames,
         '',
-        '===========================================',
+        loggingUtils.BANNER_SEPARATOR,
         '',
         "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
         '',
         'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
         '',
         "Should Release Candidate ${projectInfo.versionTag} be created?",
-        ''
     )
 
     jenkinsUtils.displayInputWithTimeout(msg, args)

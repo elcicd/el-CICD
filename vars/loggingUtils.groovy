@@ -1,6 +1,9 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+ 
+@Field
+def BANNER_SEPARATOR = loggingUtils.BANNER_SEPARATOR
 
 def echoBanner(def ... msgs) {
     echo createBanner(msgs)
@@ -16,11 +19,11 @@ def errorBanner(def ... msgs) {
 
 def createBanner(def ... msgs) {
     return """
-        ===========================================
+        ${BANNER_SEPARATOR}
 
         ${msgFlatten(null, msgs).join("\n        ")}
 
-        ===========================================
+        ${BANNER_SEPARATOR}
     """
 }
 
