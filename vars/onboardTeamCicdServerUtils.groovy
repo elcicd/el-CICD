@@ -109,7 +109,7 @@ def setupProjectPvResources(def projectInfo) {
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-                    ${chartName} \
+                    pv-chart \
                     elCicdCharts/elCicdChart
             elif [[ $(helm list --short | grep ${chartName} ]]
                 helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
