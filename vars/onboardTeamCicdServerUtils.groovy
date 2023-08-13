@@ -97,6 +97,7 @@ def setupProjectPvResources(def projectInfo) {
         writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
 
         def chartName = getProjectPvChartName(projectInfo)
+        echo "chartName: ${chartName}"
 
         sh """
             ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
