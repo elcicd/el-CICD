@@ -36,6 +36,8 @@ def call(Map args) {
     stage('Install/upgrade project CICD resources') {        
         onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
         
+        onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
+        
         onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
 
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)

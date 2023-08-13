@@ -86,6 +86,17 @@ def getJenkinsConfigValues(def teamInfo) {
     return jenkinsConfigValues
 }
 
+def resetProjectPvResources(def projectInfo) {
+    def chartName = getProjectPvChartName(projectInfo)
+    sh """
+        PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
+        if [[ ! -z \${PVS_INSTALLED} ]]
+        then
+            helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+        fi
+    """
+}
+
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticPvs) {
         loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
@@ -101,12 +112,6 @@ def setupProjectPvResources(def projectInfo) {
         sh """
             ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
             cat ${volumeCicdConfigFile}
-            
-            PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
-            if [[ ! -z \${PVS_INSTALLED} ]]
-            then
-                helm uninstall --wait ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            fi
 
             if [[ ! -z '${projectInfo.staticPvs ? 'hasPvs' : ''}' ]]
             then
