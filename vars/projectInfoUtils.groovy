@@ -223,15 +223,16 @@ def validateProjectInfo(def projectInfo) {
     assert projectInfo.scmBranch : "missing git branch"
     assert ((projectInfo.modules.size() - projectInfo.testModules.size()) > 0) : "No components or artifacts defined"
 
-    projectInfo.modules.each { module ->
-        assert module.scmRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${module.scmRepoName}"
-        assert module.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${module.codeBase}"
+    projectInfo.buildModules.each { buildModule ->
+        assert buildModule.scmRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${module.scmRepoName}"
+        assert buildModule.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${module.codeBase}"
     }
 
     projectInfo.testModules.each { testModule ->
+        assert testModule.codeBase ==~ /[a-z-]+/ : "bad codeBase name, [a-z-]+: ${module.codeBase}"
         testModule.componentRepos.each { scmRepoName ->
             assert projectInfo.components.find { it.scmRepoName == scmRepoName }  : "System test has undefined component repo ${scmRepoName}"
-        }
+        }        
     }
 
     projectInfo.enabledTestEnvs.each { env ->
