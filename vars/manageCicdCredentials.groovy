@@ -37,7 +37,7 @@ def call(Map args) {
 
                 jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.scmDeployKeyJenkinsId, module.scmDeployKeyJenkinsId)
 
-                githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
+                githubUtils.addProjectDeployKey(projectInfo, module, "${module.scmDeployKeyJenkinsId}.pub")
 
                 sh "rm -f ${module.scmDeployKeyJenkinsId} ${module.scmDeployKeyJenkinsId}.pub"
             }
