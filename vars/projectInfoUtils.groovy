@@ -104,6 +104,10 @@ def initProjectModuleData(def projectInfo) {
         setModuleData(projectInfo, testModule)
     }
     
+    if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
+        createProjectModule(projectInfo)
+    }
+    
     projectInfo.buildModules = []
     projectInfo.buildModules.addAll(projectInfo.components)
     projectInfo.buildModules.addAll(projectInfo.artifacts)
@@ -125,6 +129,17 @@ def setModuleData(def projectInfo, def module) {
     module.scmRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
     module.scmBranch = projectInfo.scmBranch
     module.scmDeployKeyJenkinsId = "${projectInfo.id}-${module.name}-${el.cicd.SCM_CREDS_POSTFIX}"
+}
+
+def createProjectModule(def projectInfo) {
+    projectInfo.projectModule = [scmRepoName: projectInfo.id]
+    projectInfo.projectModule.name = projectInfo.id
+    projectInfo.projectModule.id = projectInfo.id
+    
+    projectInfo.projectModule.workDir = "${WORKSPACE}/${module.scmRepoName}"
+    
+    projectInfo.projectModule.scmRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
+    projectInfo.projectModule.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {

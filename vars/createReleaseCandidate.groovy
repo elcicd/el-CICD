@@ -5,11 +5,7 @@
  * a realized el-CICD/resources/buildconfigs/create-release-candidate-template
  *
  */
- 
-import groovy.transform.Field
 
-@Field
-SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
 
 def call(Map args) {
     def projectInfo = args.projectInfo
@@ -17,18 +13,9 @@ def call(Map args) {
 
     stage('Check version tag is valid SemVer') {
         if (args.strictSemver) {
-            loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.versionTag} IS VALID SEMVER")
+            loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.versionTag} IS VALID SEMVER WIHOUT BUILD INFO")
             
-            if (!projectInfo.versionTag.matches(SEMVER_REGEX)) {
-                loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
-                                         '',
-                                         "${projectInfo.versionTag} is NOT a valid SemVer",
-                                         '',
-                                         'Disable strict SemVer validation or see https://semver.org/ for more information')
-            }
-            else {
-                echo "--> Version Tag ${projectInfo.versionTag} confirmed valid"
-            }
+            createReleaseCandidateUtils.verifyVersionTagValidSemver(projectInfo)
         }
         else {
             loggingUtils.echoBanner("SEMVER VALIDATION DISABLED; SKIPPING...}")

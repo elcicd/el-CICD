@@ -7,13 +7,13 @@ void call(Map args) {
     def projectInfo.versionTag = args.versionTag
 
     stage ('Validate release Candidate') {
-        promoteReleaseCandidateUtils.gatherReleaseCandidateInfo(projectInfo)
+        promoteProjectToProdUtils.gatherReleaseCandidateInfo(projectInfo)
         
-        promoteReleaseCandidateUtils.verifyReleaseCandidate(projectInfo)
+        promoteProjectToProdUtils.verifyReleaseCandidate(projectInfo)
     }
 
     stage('Summarize and confirm promotion') {
-        promoteReleaseCandidateUtils.confirmPromotion(projectInfo)
+        promoteProjectToProdUtils.confirmPromotion(projectInfo)
     } 
 
     stage ('Checkout release component repos') {

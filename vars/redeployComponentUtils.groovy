@@ -15,22 +15,20 @@ def checkoutAllRepos(def projectInfo) {
 
     def deployedMarker = '<DEPLOYED>'
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.components) { component ->
-        dir(component.workDir) {
-            def compToBranch = compNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
-            component.deploymentBranch = compToBranch ? compToBranch.split(':')[1] : ''
-            component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
+        def compToBranch = compNameDepBranch.find { it.startsWith("${component.name}:${branchPrefix}") }
+        component.deploymentBranch = compToBranch ? compToBranch.split(':')[1] : ''
+        component.deploymentImageTag = component.deploymentBranch.replaceAll("${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
-            def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
-            branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
+        def branchesAndTimes = sh(returnStdout: true, script: branchesAndTimesScript).trim()
+        branchesAndTimes = branchesAndTimes.replaceAll("origin/${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-", '')
 
-            def deployLine
-            branchesAndTimes.split('\n').each { line ->
-                deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
-            }
-
-            component.deployBranchesAndTimes =
-                deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
+        def deployLine
+        branchesAndTimes.split('\n').each { line ->
+            deployLine = !deployLine && line.startsWith(component.deploymentImageTag) ? line : deployLine
         }
+
+        component.deployBranchesAndTimes =
+            deployLine ? branchesAndTimes.replace(deployLine, "${deployLine} ${deployedMarker}") : branchesAndTimes
     }
 }
 

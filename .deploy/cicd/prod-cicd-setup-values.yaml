@@ -21,7 +21,7 @@ elCicdDefs-deploy-project-to-prod:
     }
     
 elCicdDefs-promote-project-to-prod:
-  PIPELINE_DESCRIPTION: 'Create production deployment branch in project repository from release candidates of components'
+  PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
   EL_CICD_API_METHOD: promoteProjectToProd
   PIPELINE_PARAMS: |-
     parameters {

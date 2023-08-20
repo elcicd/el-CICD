@@ -1,16 +1,32 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+ 
+import groovy.transform.Field
+
+@Field
+SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?))$/
+
+def verifyVersionTagValidSemver(projectInfo) {    
+    if (!projectInfo.versionTag.matches(SEMVER_REGEX)) {
+        loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
+                                 '',
+                                 "${projectInfo.versionTag} is NOT a valid SemVer",
+                                 '',
+                                 'Disable strict SemVer validation or see https://semver.org/ for more information')
+    }
+    else {
+        echo "--> Version Tag ${projectInfo.versionTag} confirmed valid"
+    }
+ }
 
  def verifyVersionTagDoesNotExistInScm(def projectInfo) {
     projectInfo.components.each { component ->
-        dir(component.workDir) {
-            withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-                def versionTagCheck = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"/
-                def tagExists = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagCheck))
-                if (tagExists) {
-                    loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} exists in SCM, and CANNOT be reused")
-                }
+        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"/
+            def tagExists = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
+            if (tagExists) {
+                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} exists in SCM (${}), and CANNOT be reused")
             }
         }
     }
@@ -39,20 +55,14 @@
  }
 
  def selectReleaseCandidateComponents(def projectInfo, def args) {
-    def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
-    def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
-    def msNameHashData = sh(returnStdout: true, script: script)
+    def componentsAvailable = getAvailableComponents(projectInfo)
 
-    def componentsAvailable = projectInfo.components.findAll { component ->
-        msNameHashData.find("${component.name}:[0-9a-z]{7}")
+    if (!componentsAvailable) {
+        loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
     }
 
     def inputs = componentsAvailable.collect { component ->
         booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
-    }
-
-    if (!inputs) {
-        loggingUtils.errorBanner("NO COMPONENTS AVAILABLE TO TAG!")
     }
 
     def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
@@ -70,6 +80,27 @@
     }
  }
 
+ def getAvailableComponents(def projectInfo) {
+    def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
+    def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+
+    def msNameHashData = sh(returnStdout: true, script: script).split(' ')
+    msNameHashMap = [:]
+    msNameHashData.each {
+        def kv = it.split(':')
+        if (kv) {
+            msNameHashData.put(kv[0], kv[1])
+        }
+    }
+
+    return projectInfo.components.findAll { component ->
+        if (msNameHashData.keySet().contains(component.name)) {
+            component.srcCommitHash = msNameHashData[component.name]
+            return true
+        }
+    }
+ }
+
  def confirmReleaseCandidateManifest(def projectInfo, def args) {
     def promotionNames = projectInfo.releaseCandidateComponents.collect { "${it.name}" }
     def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
@@ -81,7 +112,7 @@
         '',
         '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
         "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
-        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-has>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
+        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-hash>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
         '',
         promotionNames,
         '',
@@ -116,23 +147,21 @@
                                             projectInfo.versionTag)
         component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
 
-        dir(component.workDir) {
-            withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
-                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                                              usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                              passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
-                sh """
-                    git checkout ${component.deploymentBranch}
-                    CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-                    ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
-                    ${shCmd.echo ''}
-                    ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
+                            usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
+                                            usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                            passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+            sh """
+                git checkout ${component.deploymentBranch}
+                CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+                ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
+                ${shCmd.echo ''}
+                ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
 
-                    ${tagImageCmd}
-                    ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.versionTag}"}
-                    ${shCmd.echo ''}
-                """
-            }
+                ${tagImageCmd}
+                ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.versionTag}"}
+                ${shCmd.echo ''}
+            """
         }
     }
  }
