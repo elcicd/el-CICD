@@ -54,8 +54,7 @@ def setRemoteRepoDeployKeyId(def projectInfo) {
     }
     
     if (projectInfo.teamInfo.serviceAccountUid) {
-        projectInfo.repoDeployKeyId =
-            "${el.cicd.EL_CICD_DEPLOY_KEY_TITLE_PREFIX}|${projectInfo.id}|${projectInfo.teamInfo.serviceAccountUid}"
+        projectInfo.repoDeployKeyId = "${projectInfo.teamInfo.cicdMasterNamespace}|${projectInfo.id}"
     }
 }
 

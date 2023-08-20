@@ -108,10 +108,11 @@ _install_sealed_secrets() {
     echo
     echo "Installing Sealed Secrets ${_BOLD}${SEALED_SECRETS_RELEASE_INFO}${_REGULAR}"
     echo
-    helm upgrade --install --atomic sealed-secrets --history-max 2 -n kube-system \
+    helm upgrade --install --atomic sealed-secrets --history-max 2 \
                  --set-string fullnameOverride=sealed-secrets-controller \
                  --repo https://bitnami-labs.github.io/sealed-secrets \
                  --version ${SEALED_SECRETS_CHART_VERSION} \
+                 -n kube-system \
                  sealed-secrets
     echo
     echo '================= SEALED SECRETS ================='
@@ -200,8 +201,8 @@ _create_jenkins_secrets() {
         --set-string elCicdDefs.SCM_ACCESS_TOKEN_ID=${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID} \
         --set-file elCicdDefs.SCM_ACCESS_TOKEN=${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE} \
         ${SET_FLAGS} \
-        -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-jenkins-secrets-values.yaml \
+        -n ${EL_CICD_MASTER_NAMESPACE} \
         el-cicd-jenkins-secrets \
         elCicdCharts/elCicdChart
     set +e

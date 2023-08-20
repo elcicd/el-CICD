@@ -300,8 +300,8 @@ __setup_image_registries() {
         --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
         ${HTPASSWDS} \
         --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
-        -n ${DEMO_IMAGE_REGISTRY} \
         -f ${EL_CICD_DIR}/${DEMO_CHART_DEPLOY_DIR}/demo-image-registry-values.yaml \
+        -n ${DEMO_IMAGE_REGISTRY} \
         ${DEMO_IMAGE_REGISTRY} \
         elCicdCharts/elCicdChart
     set +x

@@ -120,8 +120,8 @@ def deployComponent(def projectInfo, def component, def compValues) {
             HELM_ARGS="--set-string ${compValues.join(' --set-string ')}
                 \${VALUES_FILES}
                 -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml
-                -n ${projectInfo.deployToNamespace}
                 --post-renderer ./kustomize.sh --post-renderer-args ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
+                -n ${projectInfo.deployToNamespace}
                 ${component.name} ."
 
             ${shCmd.echo ''}

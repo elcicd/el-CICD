@@ -156,13 +156,10 @@ _create_and_source_meta_info_file() {
     local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd.conf
 
     local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-bootstrap.conf
-    local EL_CICD_CONFIG_BOOTSTRAP_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-default-bootstrap.conf
 
     local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-runtime.conf
-    local EL_CICD_CONFIG_RUNTIME_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-default-runtime.conf
 
     local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-lab-setup.conf
-    local EL_CICD_CONFIG_LAB_CONF=${EL_CICD_CONFIG_BOOTSTRAP_DIR}/config-lab-setup.conf
 
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
@@ -300,11 +297,11 @@ __create_onboarding_automation_server() {
         --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
         --set-file elCicdDefs.JENKINS_CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
         --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
-        -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+        -n ${EL_CICD_MASTER_NAMESPACE} \
         ${JENKINS_DEPLOYMENT_NAME} \
         elCicdCharts/elCicdChart
     set +ex
