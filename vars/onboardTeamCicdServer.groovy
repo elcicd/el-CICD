@@ -33,34 +33,25 @@ def call(Map args) {
         }
     }
 
-    stage('Install/upgrade project CICD resources') {        
+    stage('Install/upgrade project CICD resources') {
+        loggingUtils.echoBanner("DEPLOY RESOURCES ${projectInfo.teamInfo.cicdMasterNamespace} TO SUPPORT PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
-        
+
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
         onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
-        
         onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
 
+        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH CONFIGURATION")
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
-    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
-    
-    loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
-    def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
-        githubUtils.deleteProjectDeployKeys(module)
+    stage('Configure SCM deploy keys') {
+        loggingUtils.echoBanner("CONFIGURE SCM DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
+        onboardTeamCicdServerUtils.configureDeployKeys(projectInfo)
     }
-    parallel(buildStages)
 
-    loggingUtils.echoBanner("ADDING DEPLOY KEYS FOR PROJECT ${projectInfo.id} GIT REPOS")
-    buildStages =  concurrentUtils.createParallelStages('Add SCM deploy keys', projectInfo.modules) { module ->
-        dir(module.workDir) {
-            githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
-        }
-    }
-    parallel(buildStages)
-
-    stage('Push Webhooks to GitHub') {
-        loggingUtils.echoBanner("PUSH ${projectInfo.id} NON-PROD JENKINS WEBHOOK TO EACH GIT REPO")
+    stage('Push Webhooks to SCM') {
+        loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH SCM REPO")
 
         jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
         projectInfo.buildModules.each { module ->

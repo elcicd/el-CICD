@@ -37,25 +37,27 @@ def addProjectDeployKey(def module, def keyFile) {
     TEMPLATE_FILE = 'githubDeployKey-template.json'
     def GITHUB_CREDS_FILE = "${el.cicd.TEMP_DIR}/${TEMPLATE_FILE}"
     
-    withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {        
-        sh """
-             ${shCmd.echo  '', "CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
-             
-            set +x
-            cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
-            sed -i -e 's/%DEPLOY_KEY_TITLE%/${projectInfo.repoDeployKeyId}/g' ${GITHUB_CREDS_FILE}
-            GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
-            echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
-            set -x
-            
-            ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
-                -d @${GITHUB_CREDS_FILE} https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${module.scmRepoName}/keys \
-                 | jq 'del(.key)'
+    withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {      
+        dir(module.workDir) {  
+            sh """
+                ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
                 
-             ${shCmd.echo  '', "GIT DEPLOY KEY CREATED FOR: ${module.scmRepoName}", ''}
-            
-            rm -f ${GITHUB_CREDS_FILE} ${keyFile}
-        """
+                set +x
+                cp ${el.cicd.TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
+                sed -i -e 's/%DEPLOY_KEY_TITLE%/${projectInfo.repoDeployKeyId}/g' ${GITHUB_CREDS_FILE}
+                GITHUB_CREDS=\$(<${GITHUB_CREDS_FILE})
+                echo "\${GITHUB_CREDS//%DEPLOY_KEY%/\$(<${keyFile})}" > ${GITHUB_CREDS_FILE}
+                set -x
+                
+                ${curlUtils.getCmd(curlUtils.POST, 'GITHUB_ACCESS_TOKEN', false)} ${GITHUB_REST_API_HDR} \
+                    -d @${GITHUB_CREDS_FILE} https://${projectInfo.scmRestApiHost}/repos/${projectInfo.scmOrganization}/${module.scmRepoName}/keys \
+                    | jq 'del(.key)'
+                    
+                ${shCmd.echo  '', "--> GIT DEPLOY KEY CREATED FOR: ${module.scmRepoName}", ''}
+                
+                rm -f ${GITHUB_CREDS_FILE} ${keyFile}
+            """
+        }
     }
 }
 

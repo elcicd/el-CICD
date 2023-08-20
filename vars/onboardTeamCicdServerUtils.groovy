@@ -99,8 +99,6 @@ def resetProjectPvResources(def projectInfo) {
 
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticPvs) {
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
-
         def pvYaml = getPvCicdConfigValues(projectInfo)
         def volumeCicdConfigValues = writeYaml(data: pvYaml, returnText: true)
 
@@ -132,8 +130,6 @@ def getProjectPvChartName(def projectInfo) {
 }
 
 def setupProjectCicdResources(def projectInfo) {
-    loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD PROJECT ${projectInfo.id} CICD")
-
     def projectDefs = getCicdConfigValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
@@ -190,6 +186,20 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
             sync-jenkins-pipelines \
             elCicdCharts/elCicdChart
     """
+}
+
+def configureDeployKeys(def projectInfo) {
+    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
+
+    def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
+        githubUtils.deleteProjectDeployKeys(module)
+    }
+    parallel(buildStages)
+
+    buildStages =  concurrentUtils.createParallelStages('Add SCM deploy keys', projectInfo.modules) { module ->
+        githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
+    }
+    parallel(buildStages)
 }
 
 def getPvCicdConfigValues(def projectInfo) {
