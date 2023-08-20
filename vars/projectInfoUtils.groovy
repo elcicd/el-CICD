@@ -104,10 +104,6 @@ def initProjectModuleData(def projectInfo) {
         setModuleData(projectInfo, testModule)
     }
     
-    if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
-        createProjectModule(projectInfo)
-    }
-    
     projectInfo.buildModules = []
     projectInfo.buildModules.addAll(projectInfo.components)
     projectInfo.buildModules.addAll(projectInfo.artifacts)
@@ -116,6 +112,11 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.modules.addAll(projectInfo.components)
     projectInfo.modules.addAll(projectInfo.artifacts)
     projectInfo.modules.addAll(projectInfo.testModules)
+    
+    if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
+        createProjectModule(projectInfo)
+        projectInfo.modules.add(projectInfo.projectModule)
+    }
 }
 
 def setModuleData(def projectInfo, def module) {
