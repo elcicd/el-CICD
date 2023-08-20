@@ -26,13 +26,13 @@ void call(Map args) {
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")
 
-        projectInfoUtils.cloneGitRepo(component, component.scmBranch)
-
-        dir (component.workDir) {
+        projectInfoUtils.cloneGitRepo(component, component.scmBranch) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
             """
+        
+            component.srcCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
         }
     }
 

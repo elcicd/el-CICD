@@ -261,15 +261,16 @@ def validateProjectPvs(def projectInfo) {
     }
 }
 
-def cloneGitRepo(def module, def gitReference) {
+def cloneGitRepo(def module, def gitReference, Closure body = null) {
     dir (module.workDir) {
         checkout scmGit([
-                  branches: [[ name: gitReference ]],
-                  userRemoteConfigs: [[ credentialsId: module.scmDeployKeyJenkinsId, url: module.scmRepoUrl ]]
-               ])
-
-        def currentHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
-        module.srcCommitHash = module.srcCommitHash ?: currentHash
+            branches: [[ name: gitReference ]],
+            userRemoteConfigs: [[ credentialsId: module.scmDeployKeyJenkinsId, url: module.scmRepoUrl ]]
+        ])
+        
+        if (body) {
+            body(module)
+        }
     }
 }
 

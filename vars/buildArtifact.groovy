@@ -17,13 +17,13 @@ void call(Map args) {
     stage('Checkout code from repository') {
         loggingUtils.echoBanner("CLONING ${artifact.scmRepoName} REPO, REFERENCE: ${artifact.scmBranch}")
 
-        projectInfoUtils.cloneGitRepo(artifact, artifact.scmBranch)
-
-        dir (artifact.workDir) {
+        projectInfoUtils.cloneGitRepo(artifact, artifact.scmBranch) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
             """
+        
+            artifact.srcCommitHash = sh(returnStdout: true, script: "git rev-parse --short HEAD | tr -d '[:space:]'")
         }
     }
 
