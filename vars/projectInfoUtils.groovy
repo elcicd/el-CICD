@@ -225,12 +225,12 @@ def validateProjectInfo(def projectInfo) {
     assert ((projectInfo.modules.size() - projectInfo.testModules.size()) > 0) : "No components or artifacts defined"
 
     projectInfo.buildModules.each { buildModule ->
-        assert buildModule.scmRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.scmRepoName}"
+        assert buildModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z][a-z0-9-]+: ${buildModule.codeBase}"
         assert buildModule.codeBase ==~ /[a-z-][a-z0-9]+/ : "bad codeBase name, [a-z-][a-z0-9]+: ${buildModule.codeBase}"
     }
 
     projectInfo.testModules.each { testModule ->
-        assert testModule.codeBase ==~ /[a-z-][a-z0-9]+/ : "bad codeBase name, [a-z-][a-z0-9]+: ${testModule.codeBase}"
+        assert testModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z][a-z0-9-]+: ${testModule.codeBase}"
         testModule.componentRepos.each { scmRepoName ->
             assert projectInfo.components.find { it.scmRepoName == scmRepoName }  : "System test has undefined component repo ${scmRepoName}"
         }        
