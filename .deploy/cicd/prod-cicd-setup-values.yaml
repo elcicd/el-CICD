@@ -1,13 +1,22 @@
 elCicdDefs-prod:
   PIPELINE_NAME: ${BASE_OBJ_NAME}
   EL_CICD_API_ARGS: |-
-    pipelineName: '${PIPELINE_NAME}',
     agent: el.cicd.JENKINS_AGENT_DEFAULT,
-    teamId: '${TEAM_ID}',
-    projectId: '${PROJECT_ID}',
+    teamId: '${USER_GROUP}',
+    projectId: params.PROJECT_ID,
     version: params.VERSION_TAG,
     ${EXTRA_PIPELINE_ARGS}
-  VERSION_TAG_PARAM: stringParam('VERSION_TAG', null, "Version")
+  PIPELINE_PARAMS: |-
+    stringParam('PROJECT_ID', null, "Name of project")
+    stringParam('VERSION_TAG', null, "Version")
+    
+elCicdDefs-promote-project-to-prod:
+  PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
+  EL_CICD_API_METHOD: promoteProjectToProd
+  PIPELINE_PARAMS: |-
+    parameters {
+      ${PIPELINE_PARAMS}
+    }
                 
 elCicdDefs-deploy-project-to-prod:
   PIPELINE_DESCRIPTION: 'Deploy to production environment'
@@ -16,16 +25,8 @@ elCicdDefs-deploy-project-to-prod:
     variant: params.VARIANT
   PIPELINE_PARAMS: |-
     parameters {
-      ${VERSION_TAG_PARAM}
+      ${PIPELINE_PARAMS}
       stringParam('VARIANT', null, "Variant of version to deploy; e.g. 'east', 'west', 'french', 'english', or 'pre'")
-    }
-    
-elCicdDefs-promote-project-to-prod:
-  PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
-  EL_CICD_API_METHOD: promoteProjectToProd
-  PIPELINE_PARAMS: |-
-    parameters {
-      ${VERSION_TAG_PARAM}
     }
 
 elCicdTemplates-prod:
