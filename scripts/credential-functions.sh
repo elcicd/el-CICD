@@ -240,7 +240,7 @@ __create_builder_secret_flags() {
 
 _podman_login() {
     echo
-    echo -n 'Podman: '
+    echo "Podman login to Jenkins image registry [${JENKINS_IMAGE_REGISTRY}]:"
     JENKINS_USERNAME_PWD_FILE="${SECRET_FILE_DIR}/$(__get_pull_secret_id jenkins)"
     local JENKINS_USERNAME=$(jq -r .username ${JENKINS_USERNAME_PWD_FILE})
     local JENKINS_PASSWORD=$(jq -r .password ${JENKINS_USERNAME_PWD_FILE})

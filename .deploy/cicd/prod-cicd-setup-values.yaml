@@ -1,12 +1,12 @@
 elCicdDefs-prod:
   PIPELINE_NAME: ${BASE_OBJ_NAME}
   EL_CICD_API_ARGS: |-
-    def args = [teamId: '${TEAM_ID}',
-                agent: el.cicd.JENKINS_AGENT_DEFAULT,
-                pipelineName: '${PIPELINE_NAME}',
-                project: params.PROJECT_ID,
-                version: params.VERSION_TAG,
-                ${EXTRA_PIPELINE_ARGS}]
+    pipelineName: '${PIPELINE_NAME}',
+    agent: el.cicd.JENKINS_AGENT_DEFAULT,
+    teamId: '${TEAM_ID}',
+    projectId: '${PROJECT_ID}',
+    version: params.VERSION_TAG,
+    ${EXTRA_PIPELINE_ARGS}
   VERSION_TAG_PARAM: stringParam('VERSION_TAG', null, "Version")
                 
 elCicdDefs-deploy-project-to-prod:

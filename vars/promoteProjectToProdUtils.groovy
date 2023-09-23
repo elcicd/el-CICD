@@ -7,18 +7,12 @@ def gatherReleaseCandidateRepos(def projectInfo) {
         versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"/
         component.releaseCandidateScmTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
         
-        return component.releaseCandidateScmTag
+        return component.releaseCandidatcmTag
     }
-
-    if (!projectInfo.releaseCandidateComps) {
-        def msg = "NO COMPONENTS HAVE BEEN TAGGED AS RELEASE CANDIDATE ${projectInfo.versionTag} IN SCM"
-        loggingUtils.errorBanner(msg)
-    }
-
 }
 
 def confirmPromotion(def projectInfo, def args) {
-    def msg = loggingUtils.echoBanner(
+    def msg = loggingUtils.createBanner(
         "CONFIRM CREATION OF RELEASE ${projectInfo.versionTag}",
         '',
         loggingUtils.BANNER_SEPARATOR,
@@ -46,10 +40,23 @@ def confirmPromotion(def projectInfo, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
-def checkoutReleaseCandidateRepos(def projectInfo) {
+def checkoutAllRepos(def projectInfo) {
     def modules = [].addAll(projectInfo.releaseCandidateComps)
     modules.add(projectInfo.projectModule)
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
-        sh "git checkout ${component.releaseCandidateScmTag}"
+        sh "git checkout -B ${module.releaseCandidateScmTag}"
+    }
+    
+    projectInfoUtils.cloneGitRepo(projectInfo.projectModule)
+}
+
+def createReleaseRepo(def projectInfo) {
+    projectInfo.releaseCandidateComps.each { component ->
+        compDeployWorkDir = "${projectInfo.module.workDir}/${component.scmRepoName}"
+        sh"""
+            git checkout -B ${projectInfo.versionTag}
+            mkdir ${compDeployWorkDir}
+            cp -R ${component.workDir}/.deploy ${compDeployWorkDir}
+        """
     }
 }

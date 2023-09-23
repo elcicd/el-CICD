@@ -162,12 +162,15 @@ _unknown_cmd_opt_msg_and_exit() {
 }
 
 _confirm_logged_into_cluster() {
-    echo
-    echo "You must be logged into the cluster."
-    echo "Confirming..."
-    oc whoami > /dev/null 2>&1
-    sleep 2
-    echo "${_BOLD}Confirmed${_REGULAR}"
+    if [[ -d ${HOME}/.crc ]]
+    then
+        echo
+        echo "You must be logged into the cluster."
+        echo "Confirming..."
+        oc whoami > /dev/null 2>&1
+        sleep 2
+        echo "${_BOLD}Confirmed${_REGULAR}"
+    fi
 }
 
 _confirm_continue() {
