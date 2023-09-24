@@ -6,7 +6,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
     projectInfo.releaseCandidateComps = projectInfo.components.findAll{ component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
             versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.versionTag}-*'/
-            scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
+            scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
 
             echo "scmRepoTag: ${scmRepoTag}"
             if (scmRepoTag) {
