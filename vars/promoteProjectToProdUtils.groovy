@@ -5,16 +5,16 @@
 def gatherReleaseCandidateRepos(def projectInfo) {
     projectInfo.releaseCandidateComps = projectInfo.components.findAll{ component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.versionTag}-[a-z0-9]\{7\}'/
+            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.versionTag}-*'/
             scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
 
             if (scmRepoTag) {
-                echo "-> RELEASE ${projectInfo.verstionTag} COMPONENT FOUND: ${component.scmRepoName}"
+                echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName}"
                 component.releaseCandidateGitTag = scmRepoTag.subString(scmRepoTag.lastIndexOf('/'))
                 assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
             }
             else {
-                echo "-> Release ${projectInfo.verstionTag} component NOT found: ${component.scmRepoName}"
+                echo "-> Release ${projectInfo.versionTag} component NOT found: ${component.scmRepoName}"
             }
 
             return component.releaseCandidatcmTag
