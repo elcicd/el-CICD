@@ -2,7 +2,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-void call(Map args) {
+void call(Map args) {    
+    if (!args.versionTag) {
+        loggingUtils.errorBanner("VERSION TAG NOT ENTERED")
+    }
+    
     def projectInfo = args.projectInfo
     projectInfo.versionTag = args.versionTag
 
