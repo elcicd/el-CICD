@@ -60,7 +60,7 @@ def confirmPromotion(def projectInfo, def args) {
     ]
     
     
-    def msg = loggingUtils.createBanner(msgArray)g
+    def msg = loggingUtils.createBanner(msgArray)
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
