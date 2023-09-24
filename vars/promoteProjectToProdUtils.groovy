@@ -76,7 +76,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 
 def createReleaseRepo(def projectInfo) {
     projectInfo.releaseCandidateComps.each { component ->
-    echo "component: ${component}
+    echo "component: ${component}"
         compDeployWorkDir = "${projectInfo.module.workDir}/${component.scmRepoName}"
         sh"""
             git checkout -B ${projectInfo.versionTag}
