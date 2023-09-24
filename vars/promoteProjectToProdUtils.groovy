@@ -11,8 +11,9 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             if (scmRepoTag) {
                 echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName}"
                 component.releaseCandidateGitTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
-                assert component.releaseCandidateGitTag ==~ /${projectInfo.versionTag}-[\w]{7}/ :
-                    "${component.releaseCandidateGitTag} is not a proper version tag"
+                def msg =  "${component.releaseCandidateGitTag} is not a proper version tag"
+                assert component.releaseCandidateGitTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
+                   
             }
             else {
                 echo "-> Release ${projectInfo.versionTag} component NOT found: ${component.scmRepoName}"
