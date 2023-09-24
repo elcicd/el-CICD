@@ -10,7 +10,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
 
             if (scmRepoTag) {
                 echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName}"
-                component.releaseCandidateGitTag = scmRepoTag.subString(scmRepoTag.lastIndexOf('/'))
+                component.releaseCandidateGitTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/'))
                 assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
             }
             else {
