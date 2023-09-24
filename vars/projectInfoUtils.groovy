@@ -132,7 +132,7 @@ def setModuleData(def projectInfo, def module) {
 }
 
 def createProjectModule(def projectInfo) {
-    def module = {scmRepoName: projectInfo.id]
+    def module = [scmRepoName: projectInfo.id]
     module.projectInfo = projectInfo
     
     module.name = projectInfo.id
