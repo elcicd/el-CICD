@@ -17,7 +17,7 @@ void call(Map args) {
     }
 
     stage('Summarize and confirm promotion') {
-        promoteProjectToProdUtils.confirmPromotion(projectInfo)
+        promoteProjectToProdUtils.confirmPromotion(projectInfo, args)
     }
 
     stage ('Checkout release component repos') {
