@@ -25,7 +25,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
 }
 
 def confirmPromotion(def projectInfo, def args) {
-    def msg = loggingUtils.createBanner(
+    def msgArray = [
         "CONFIRM CREATION OF RELEASE ${projectInfo.versionTag}",
         '',
         loggingUtils.BANNER_SEPARATOR,
@@ -37,9 +37,18 @@ def confirmPromotion(def projectInfo, def args) {
         '',
         '-> COMPONENTS IN RELEASE:',
         projectInfo.releaseCandidateComps.collect { it.name },
-        '',
-        '-> COMPONENTS NOT IN THIS RELEASE:',
-        projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name },
+    ]
+    
+    def compsNotInRelease = projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name }
+    if (compsNotInRelease) {
+        msgArray += [
+            '',
+            '-> COMPONENTS NOT IN THIS RELEASE:',
+            projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name },
+        ]
+    }
+    
+    msgArray += [
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
@@ -48,7 +57,10 @@ def confirmPromotion(def projectInfo, def args) {
         'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
         '',
         "Should Release ${projectInfo.versionTag} be created?"
-    )
+    ]
+    
+    
+    def msg = loggingUtils.createBanner(msgArray)g
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
