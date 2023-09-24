@@ -132,18 +132,9 @@ def setModuleData(def projectInfo, def module) {
 }
 
 def createProjectModule(def projectInfo) {
-    def module = [scmRepoName: projectInfo.id]
-    module.projectInfo = projectInfo
-    
-    module.name = projectInfo.id
-    module.id = projectInfo.id
-    
-    module.workDir = "${WORKSPACE}/${module.scmRepoName}"
-    
-    module.scmRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
-    module.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.SCM_CREDS_POSTFIX}"
-    
-    projectInfo.projectModule = module
+    projectInfo.projectModule = [scmRepoName: projectInfo.id]
+    setModuleData(projectInfo, projectInfo.projectModule)
+    moduprojectInfo.projectModule.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {
