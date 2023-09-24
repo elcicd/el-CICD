@@ -39,7 +39,7 @@ def confirmPromotion(def projectInfo, def args) {
         projectInfo.releaseCandidateComps.collect { it.name },
         '',
         '-> COMPONENTS NOT IN THIS RELEASE:',
-        projectInfo.components.findAll{ !it.promote }.collect { it.name },
+        projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name },
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
