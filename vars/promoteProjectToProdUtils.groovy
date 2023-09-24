@@ -22,38 +22,6 @@ def gatherReleaseCandidateRepos(def projectInfo) {
     }
 }
 
-def gatherReleaseCandidateRepos(def projectInfo) {
-    projectInfo.hasBeenReleased = false
-    projectInfo.components.each { component ->
-        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            def gitCmd = "git ls-remote ${component.scmRepoUrl} 'refs/tags/${projectInfo.versionTag}-\\d{7}'"
-            def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
-
-            if (branchAndTagNames) {
-                branchAndTagNames = branchAndTagNames.split('\n')
-                assert branchAndTagNames.size() < 3
-                branchAndTagNames = branchAndTagNames.each { name ->
-                    if (name.contains('/tags/')) {
-                        component.releaseCandidateGitTag = name.trim().find( /[\w.-]+$/)
-                        assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateGitTag}"
-                    }
-                    else {
-                        projectInfo.hasBeenReleased = true
-                        component.deploymentBranch = name.trim().find( /[\w.-]+$/)
-                        assert component.deploymentBranch ==~ "${projectInfo.versionTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${component.name}]: ${component.deploymentBranch}"
-                    }
-                }
-                component.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)
-            }
-            else {
-                echo "--> NO RELEASE CANDIDATE OR VERSION INFORMATION FOUND FOR: ${component.name}"
-            }
-        }
-    }
-}
-
 def confirmPromotion(def projectInfo, def args) {
     def msg = loggingUtils.createBanner(
         "CONFIRM CREATION OF RELEASE ${projectInfo.versionTag}",
