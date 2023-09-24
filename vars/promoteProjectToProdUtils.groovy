@@ -65,14 +65,14 @@ def confirmPromotion(def projectInfo, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
-def checkoutAllRepos(def projectInfo) {
-    def modules = [].addAll(projectInfo.releaseCandidateComps)
+def checkoutReleaseCandidateRepos(def projectInfo) {
+    projectInfo.projectModule.releaseCandidateScmTag = projectInfo.versionTag
+
+    def modules = [projectInfo.projectModule].addAll(projectInfo.releaseCandidateComps)
     modules.add(projectInfo.projectModule)
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
-
-    projectInfoUtils.cloneGitRepo(projectInfo.projectModule)
 }
 
 def createReleaseRepo(def projectInfo) {
