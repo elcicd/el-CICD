@@ -71,6 +71,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
+        echo "Checking branch ${module.name}:${module.releaseCandidateScmTag}"
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
 }
@@ -79,7 +80,6 @@ def createReleaseRepo(def projectInfo) {
     projectInfo.releaseCandidateComps.each { component ->
         compDeployWorkDir = "${projectInfo.module.workDir}/${component.scmRepoName}"
         sh"""
-            git checkout -B ${projectInfo.versionTag}
             mkdir ${compDeployWorkDir}
             cp -R ${component.workDir}/.deploy ${compDeployWorkDir}
         """
