@@ -4,7 +4,7 @@ elCicdDefs-prod:
     agent: el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: '${USER_GROUP}',
     projectId: params.PROJECT_ID,
-    version: params.VERSION_TAG,
+    versionTag: params.VERSION_TAG,
     ${EXTRA_PIPELINE_ARGS}
   PROD_PIPELINE_PARAMS: |-
     stringParam('PROJECT_ID', null, "Name of project")
