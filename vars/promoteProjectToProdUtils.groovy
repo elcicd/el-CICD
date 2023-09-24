@@ -5,14 +5,53 @@
 def gatherReleaseCandidateRepos(def projectInfo) {
     projectInfo.releaseCandidateComps = projectInfo.components.findAll{ component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            versionTagScript = /set +e; git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"; set -e/
-            component.releaseCandidateScmTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
-            
-            if (component.releaseCandidateScmTag) {
-                "FOUND COMPONENT IN RELEASE -> ${component.scmRepoName}"
+            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.versionTag}-[a-z0-9]\{7\}'/
+            scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
+
+            if (scmRepoTag) {
+                echo "-> RELEASE ${projectInfo.verstionTag} COMPONENT FOUND: ${component.scmRepoName}"
+                component.releaseCandidateGitTag = scmRepoTag.subString(scmRepoTag.lastIndexOf('/'))
+                assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
             }
-            
+            else {
+                echo "-> Release ${projectInfo.verstionTag} component NOT found: ${component.scmRepoName}"
+            }
+
+            msg = component.releaseCandidateScmTag ?
+
             return component.releaseCandidatcmTag
+        }
+    }
+}
+
+def gatherReleaseCandidateRepos(def projectInfo) {
+    projectInfo.hasBeenReleased = false
+    projectInfo.components.each { component ->
+        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            def gitCmd = "git ls-remote ${component.scmRepoUrl} 'refs/tags/${projectInfo.versionTag}-\\d{7}'"
+            def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
+
+            if (branchAndTagNames) {
+                branchAndTagNames = branchAndTagNames.split('\n')
+                assert branchAndTagNames.size() < 3
+                branchAndTagNames = branchAndTagNames.each { name ->
+                    if (name.contains('/tags/')) {
+                        component.releaseCandidateGitTag = name.trim().find( /[\w.-]+$/)
+                        assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateGitTag}"
+                    }
+                    else {
+                        projectInfo.hasBeenReleased = true
+                        component.deploymentBranch = name.trim().find( /[\w.-]+$/)
+                        assert component.deploymentBranch ==~ "${projectInfo.versionTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${component.name}]: ${component.deploymentBranch}"
+                    }
+                }
+                component.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)
+            }
+            else {
+                echo "--> NO RELEASE CANDIDATE OR VERSION INFORMATION FOUND FOR: ${component.name}"
+            }
         }
     }
 }
@@ -52,7 +91,7 @@ def checkoutAllRepos(def projectInfo) {
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
-    
+
     projectInfoUtils.cloneGitRepo(projectInfo.projectModule)
 }
 
