@@ -69,7 +69,6 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     projectInfo.projectModule.releaseCandidateScmTag = projectInfo.versionTag
 
     def modules = [projectInfo.projectModule].addAll(projectInfo.releaseCandidateComps)
-    modules.add(projectInfo.projectModule)
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
