@@ -70,10 +70,17 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
-    concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
+    
+    modules.each {
+        projectInfoUtils.cloneGitRepo((projectInfo, modules) { module ->
         echo "Checking branch ${module.name}:${module.releaseCandidateScmTag}"
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
+    
+    // concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
+    //     echo "Checking branch ${module.name}:${module.releaseCandidateScmTag}"
+    //     sh "git checkout -B ${module.releaseCandidateScmTag}"
+    // }
 }
 
 def createReleaseRepo(def projectInfo) {

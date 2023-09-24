@@ -263,7 +263,7 @@ def validateProjectPvs(def projectInfo) {
     }
 }
 
-def cloneGitRepo(def module, def gitReference = null, Closure body = null) {
+def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = null) {
     gitReference = gitReference ?: 'origin/(master|main)'
     dir (module.workDir) {
         checkout scmGit(
@@ -276,9 +276,7 @@ def cloneGitRepo(def module, def gitReference = null, Closure body = null) {
             ]
         )
         
-        if (body) {
-            body(module)
-        }
+        postProcessing?.call(module)
     }
 }
 
