@@ -8,13 +8,10 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.versionTag}-*'/
             scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
 
-            echo "scmRepoTag: ${scmRepoTag}"
             if (scmRepoTag) {
                 scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
                 echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
                 component.releaseCandidateGitTag = scmRepoTag
-                def msg =  "${component.releaseCandidateGitTag} is not a proper version tag"
-                println "msg: ${msg}"
                 assert component.releaseCandidateGitTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
                    
             }
@@ -25,6 +22,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             return component.releaseCandidatcmTag
         }
     }
+    echo "projectInfo.releaseCandidateComps: ${projectInfo.releaseCandidateComps}"
 }
 
 def confirmPromotion(def projectInfo, def args) {
