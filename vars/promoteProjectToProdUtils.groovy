@@ -78,7 +78,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 
 def createReleaseRepo(def projectInfo) {
     projectInfo.releaseCandidateComps.each { component ->
-        compDeployWorkDir = "${projectInfo.module.workDir}/${component.scmRepoName}"
+        compDeployWorkDir = "${projectInfo.projectModule.workDir}/${component.scmRepoName}"
         sh"""
             mkdir ${compDeployWorkDir}
             cp -R ${component.workDir}/.deploy ${compDeployWorkDir}
