@@ -18,8 +18,8 @@ def call(Map args) {
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
-        projectInfo.componentsToRedeploy = projectInfo.components.findAll { it.releaseCandidateGitTag }
-        projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateGitTag }
+        projectInfo.componentsToRedeploy = projectInfo.components.findAll { it.releaseCandidateScmTag }
+        projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateScmTag }
 
         if (!projectInfo.componentsToRedeploy)  {
             loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.versionTag}")
@@ -30,7 +30,7 @@ def call(Map args) {
         loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
         projectInfo.componentsToRedeploy.each { component ->
-            component.srcCommitHash = component.releaseCandidateGitTag.split('-').last()
+            component.srcCommitHash = component.releaseCandidateScmTag.split('-').last()
             component.deploymentBranch = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.preProdEnv}-${component.srcCommitHash}"
             projectInfoUtils.cloneGitRepo(component, component.deploymentBranch)
         }

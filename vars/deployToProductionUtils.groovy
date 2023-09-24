@@ -16,9 +16,9 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
                 assert branchAndTagNames.size() < 3
                 branchAndTagNames = branchAndTagNames.each { name ->
                     if (name.contains('/tags/')) {
-                        component.releaseCandidateGitTag = name.trim().find( /[\w.-]+$/)
-                        assert component.releaseCandidateGitTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
-                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateGitTag}"
+                        component.releaseCandidateScmTag = name.trim().find( /[\w.-]+$/)
+                        assert component.releaseCandidateScmTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
+                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateScmTag}"
                     }
                     else {
                         projectInfo.hasBeenReleased = true

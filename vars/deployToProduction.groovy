@@ -29,15 +29,15 @@ def call(Map args) {
 
         deployToProductionUtils.gatherAllVersionGitTagsAndBranches(projectInfo)
 
-        projectInfo.componentsInRelease = projectInfo.components.findAll { it.releaseCandidateGitTag }
+        projectInfo.componentsInRelease = projectInfo.components.findAll { it.releaseCandidateScmTag }
 
         if (!projectInfo.componentsInRelease)  {
             loggingUtils.errorBanner("${projectInfo.versionTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
-        else if (projectInfo.components.find{ it.deploymentBranch && !it.releaseCandidateGitTag })  {
+        else if (projectInfo.components.find{ it.deploymentBranch && !it.releaseCandidateScmTag })  {
             loggingUtils.errorBanner("${projectInfo.versionTag}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
-                                      "Release Tags: ${projectInfo.components.collect{ it.releaseCandidateGitTag }}",
+                                      "Release Tags: ${projectInfo.components.collect{ it.releaseCandidateScmTag }}",
                                       "Release Branches: ${projectInfo.components.collect{ it.deploymentBranch }}")
         }
     }
@@ -53,7 +53,7 @@ def call(Map args) {
             def imageTag = projectInfo.hasBeenReleased ? projectInfo.versionTag : projectInfo.versionTag
 
             projectInfo.components.each { component ->
-                if (component.releaseCandidateGitTag) {
+                if (component.releaseCandidateScmTag) {
                     def copyImageCmd =
                         shCmd.verifyImage(PROMOTION_ENV_FROM, 'IMAGE_REGISTRY_PULL_TOKEN', component.id, imageTag)
                     def imageFound = sh(returnStdout: true, script: "${copyImageCmd}").trim()
@@ -83,7 +83,7 @@ def call(Map args) {
         loggingUtils.echoBanner("CLONE MICROSERVICE REPOSITORIES")
 
         projectInfo.components.each { component ->
-            def refName = component.deploymentBranch ?: component.releaseCandidateGitTag
+            def refName = component.deploymentBranch ?: component.releaseCandidateScmTag
             if (refName) {
                 projectInfoUtils.cloneGitRepo(component, refName)
             }
@@ -138,7 +138,7 @@ def call(Map args) {
             projectInfo.componentsToDeploy.collect { it.name }.join(', '),
             '',
             '-> All other components and their associated resources NOT in this release WILL BE REMOVED!',
-            projectInfo.components.findAll { !it.releaseCandidateGitTag }.collect { it.name }.join(', '),
+            projectInfo.components.findAll { !it.releaseCandidateScmTag }.collect { it.name }.join(', '),
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
@@ -187,8 +187,8 @@ def call(Map args) {
 
         if (!projectInfo.hasBeenReleased) {
             projectInfo.components.each { component ->
-                if (component.releaseCandidateGitTag) {
-                    component.deploymentBranch = "v${component.releaseCandidateGitTag}"
+                if (component.releaseCandidateScmTag) {
+                    component.deploymentBranch = "v${component.releaseCandidateScmTag}"
                     dir(component.workDir) {
                         withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                             sh """
@@ -209,7 +209,7 @@ def call(Map args) {
 
     deployComponents(projectInfo: projectInfo,
                      componentsToDeploy: projectInfo.componentsToDeploy,
-                     componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateGitTag },
+                     componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateScmTag },
                      imageTag: projectInfo.versionTag)
 
     deployToProductionUtils.updateProjectMetaInfo(projectInfo)

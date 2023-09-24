@@ -11,18 +11,17 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             if (scmRepoTag) {
                 scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
                 echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
-                component.releaseCandidateGitTag = scmRepoTag
-                assert component.releaseCandidateGitTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
+                component.releaseCandidateScmTag = scmRepoTag
+                assert component.releaseCandidateScmTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
                    
             }
             else {
                 echo "-> Release ${projectInfo.versionTag} component NOT found: ${component.scmRepoName}"
             }
 
-            return component.releaseCandidatcmTag
+            return component.releaseCandidateScmTag
         }
     }
-    echo "projectInfo.releaseCandidateComps: ${projectInfo.releaseCandidateComps}"
 }
 
 def confirmPromotion(def projectInfo, def args) {
