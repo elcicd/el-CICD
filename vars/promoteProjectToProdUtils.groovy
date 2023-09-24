@@ -4,10 +4,12 @@
 
 def gatherReleaseCandidateRepos(def projectInfo) {
     projectInfo.releaseCandidateComps = projectInfo.components.findAll{ component ->
-        versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"/
-        component.releaseCandidateScmTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
-        
-        return component.releaseCandidatcmTag
+        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}"/
+            component.releaseCandidateScmTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
+            
+            return component.releaseCandidatcmTag
+        }
     }
 }
 

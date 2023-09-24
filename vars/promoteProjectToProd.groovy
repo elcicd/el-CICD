@@ -7,7 +7,7 @@ void call(Map args) {
     projectInfo.versionTag = args.versionTag
 
     stage ('Validate release Candidate') {
-        loggingUtils.echoBanner("VALIDATING RELEASE CANDIDATE ${projectInfo.versionTag}")
+        loggingUtils.echoBanner("VALIDATING ${projectInfo.id} RELEASE CANDIDATE ${projectInfo.versionTag}")
 
         promoteProjectToProdUtils.gatherReleaseCandidateRepos(projectInfo)
         
