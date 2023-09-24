@@ -4,7 +4,7 @@
 
 void call(Map args) {
     def projectInfo = args.projectInfo
-    def projectInfo.versionTag = args.versionTag
+    projectInfo.versionTag = args.versionTag
 
     stage ('Validate release Candidate') {
         loggingUtils.echoBanner("VALIDATING RELEASE CANDIDATE ${projectInfo.versionTag}")
