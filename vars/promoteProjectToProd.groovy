@@ -28,14 +28,16 @@ void call(Map args) {
         loggingUtils.echoBanner("CLONE PROJECT AND RELEASE CANDIDATE COMPONENT REPOS")
 
         promoteProjectToProdUtils.checkoutReleaseCandidateRepos(projectInfo)
-        
-        loggingUtils.errorBanner("TESTING COMPLETE")
     }
 
     stage ('Create release') {
         loggingUtils.echoBanner("CREATE RELEASE REPO")
 
         promoteProjectToProdUtils.createReleaseRepo(projectInfo)
+        
+        sh "ls -alR ${projectInfo.projectModule.workDir}"
+        
+        loggingUtils.errorBanner("TESTING COMPLETE")
         
     }
 
