@@ -10,9 +10,11 @@ def gatherReleaseCandidateRepos(def projectInfo) {
 
             echo "scmRepoTag: ${scmRepoTag}"
             if (scmRepoTag) {
-                echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)}"
-                component.releaseCandidateGitTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
+                scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
+                echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
+                component.releaseCandidateGitTag = scmRepoTag
                 def msg =  "${component.releaseCandidateGitTag} is not a proper version tag"
+                println "msg: ${msg}"
                 assert component.releaseCandidateGitTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
                    
             }
