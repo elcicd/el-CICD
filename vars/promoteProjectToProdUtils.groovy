@@ -71,8 +71,8 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
     
-    modules.each { module ->
-        projectInfoUtils.cloneGitRepo(module, projectInfo.scmBranch) { module ->
+    modules.each { mod ->
+        projectInfoUtils.cloneGitRepo(mod, projectInfo.scmBranch) { module ->
             echo "Checking out branch ${module.name}:${module.releaseCandidateScmTag}"
             sh "git checkout -B ${module.releaseCandidateScmTag}"
         }
