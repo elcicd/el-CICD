@@ -17,8 +17,6 @@ def gatherReleaseCandidateRepos(def projectInfo) {
                 echo "-> Release ${projectInfo.verstionTag} component NOT found: ${component.scmRepoName}"
             }
 
-            msg = component.releaseCandidateScmTag ?
-
             return component.releaseCandidatcmTag
         }
     }
