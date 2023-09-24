@@ -134,7 +134,7 @@ def setModuleData(def projectInfo, def module) {
 def createProjectModule(def projectInfo) {
     projectInfo.projectModule = [scmRepoName: projectInfo.id]
     setModuleData(projectInfo, projectInfo.projectModule)
-    moduprojectInfo.projectModule.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.SCM_CREDS_POSTFIX}"
+    projectInfo.projectModule.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.SCM_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {
