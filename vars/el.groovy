@@ -48,7 +48,7 @@ def node(Map args, Closure body) {
     assert args.agent
     
     def volumeDefs = [
-        emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
+        emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)        
     ]
     
     if (args.isBuild) {
@@ -62,11 +62,15 @@ def node(Map args, Closure body) {
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         imagePullSecrets: ["el-cicd-jenkins-pull-secret"],
-        yaml: '''
+        yaml: """
           spec:
+            containers:
+              envFrom:
+                configMapRef:
+                  name: ${el.cicd.EL_CICD_META_INFO_NAME}
             securityContext:
               fsGroup: 1001
-        ''',
+        """,
         containers: [
             containerTemplate(
                 name: 'jnlp',

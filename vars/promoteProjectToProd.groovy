@@ -33,12 +33,7 @@ void call(Map args) {
     stage ('Create release') {
         loggingUtils.echoBanner("CREATE RELEASE REPO")
 
-        promoteProjectToProdUtils.createReleaseRepo(projectInfo)
-        
-        sh "ls -alR ${projectInfo.projectModule.workDir}"
-        
-        loggingUtils.errorBanner("TESTING COMPLETE")
-        
+        promoteProjectToProdUtils.createReleaseRepo(projectInfo)        
     }
 
     stage ('Commit and push release') {

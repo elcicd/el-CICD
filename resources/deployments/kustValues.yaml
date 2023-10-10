@@ -1,0 +1,4 @@
+elCicdTemplates-kustomize:
+- templateName: kustomization
+  resources:
+  - el-cicd-all.yaml

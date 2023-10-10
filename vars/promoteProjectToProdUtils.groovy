@@ -13,7 +13,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
                 echo "-> RELEASE ${projectInfo.versionTag} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
                 component.releaseCandidateScmTag = scmRepoTag
                 assert component.releaseCandidateScmTag ==~ /${projectInfo.versionTag}-[\w]{7}/ : msg
-                   
+
             }
             else {
                 echo "-> Release ${projectInfo.versionTag} component NOT found: ${component.scmRepoName}"
@@ -38,7 +38,7 @@ def confirmPromotion(def projectInfo, def args) {
         '-> COMPONENTS IN RELEASE:',
         projectInfo.releaseCandidateComps.collect { it.name },
     ]
-    
+
     def compsNotInRelease = projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name }
     if (compsNotInRelease) {
         msgArray += [
@@ -47,7 +47,7 @@ def confirmPromotion(def projectInfo, def args) {
             projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name },
         ]
     }
-    
+
     msgArray += [
         '',
         loggingUtils.BANNER_SEPARATOR,
@@ -58,8 +58,8 @@ def confirmPromotion(def projectInfo, def args) {
         '',
         "Should Release ${projectInfo.versionTag} be created?"
     ]
-    
-    
+
+
     def msg = loggingUtils.createBanner(msgArray)
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
@@ -70,18 +70,20 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
-    
+
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh "git checkout -B ${module.releaseCandidateScmTag}"
     }
 }
 
 def createReleaseRepo(def projectInfo) {
+    deploymentUtils.setupComponentDeploymentDirs(projectInfo, projectInfo.releaseCandidateComps)
+    
     projectInfo.releaseCandidateComps.each { component ->
         compDeployWorkDir = "${projectInfo.projectModule.workDir}/${component.scmRepoName}"
         sh"""
             mkdir ${compDeployWorkDir}
-            cp -R ${component.workDir}/.deploy ${compDeployWorkDir}
+            cp -R ${component.deploymentDir}/* ${compDeployWorkDir}/charts/
         """
     }
 }
