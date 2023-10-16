@@ -1,0 +1,20 @@
+#!/bin/bash
+#!/bin/bash
+set -e
+
+KUSTOMIZE_DIR=${1}
+EL_CICD_KUSTOMIZE_DIR=${2}
+BASE_KUSTOMIZE_DIR=${3}
+PRE_KUST_HELM_FILE=${4}
+POST_KUST_HELM_FILE=${5}
+
+cd ${KUSTOMIZE_DIR}
+
+cat <&0 > ${BASE_KUSTOMIZE_DIR}/${PRE_KUST_HELM_FILE}
+(cd ${BASE_KUSTOMIZE_DIR} && kustomize edit add resource ${PRE_KUST_HELM_FILE})
+
+kustomize build ${EL_CICD_KUSTOMIZE_DIR} > ${POST_KUST_HELM_FILE}
+
+cat ${POST_KUST_HELM_FILE}
+
+set +e

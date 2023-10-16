@@ -4,7 +4,7 @@
  * Utility methods for apply OKD resources
  */
 
- def cleanupFailedInstalls(def projectInfo) {
+def cleanupFailedInstalls(def projectInfo) {
     sh """
         COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
         if [[ ! -z \${COMPONENT_NAMES} ]]
@@ -32,105 +32,132 @@ def runComponentRemovalStages(def projectInfo, def components) {
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def runComponentDeploymentStages(def projectInfo, def components) {
-    setupComponentDeploymentDirs(projectInfo, components)
-
-    def ENV_TO = projectInfo.deployToEnv.toUpperCase()
-    def imageRegistry = el.cicd["${ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
-    def imagePullSecret = jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv)
-
-    def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
-
-    def commonValues = ["elCicdProfiles={${projectInfo.deployToEnv}}",
-                        "elCicdDefaults.imagePullSecret=${imagePullSecret}",
-                        "elCicdDefaults.ingressHostDomain=${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
-                        "elCicdDefs.SDLC_ENV=${projectInfo.deployToEnv}",
-                        "elCicdDefs.TEAM_ID=${projectInfo.teamInfo.id}",
-                        "elCicdDefs.PROJECT_ID=${projectInfo.id}"]
-
-    sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
-
-    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
-        def componentImage = "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
-        def compValues = ["elCicdDefaults.objName=${component.name}",
-                          "elCicdDefaults.image=${componentImage}",
-                          "elCicdDefs.COMPONENT_NAME=${component.name}"]
-
-        compValues.addAll(commonValues)
-
-        deployComponent(projectInfo, component, compValues)
-    }
-
-    parallel(helmStages)
-
-    waitForAllTerminatingPodsToFinish(projectInfo)
-}
-
-def setupComponentDeploymentDirs(def projectInfo, def componentsToDeploy) {
-    def commonValues = ["profiles=${projectInfo.deployToEnv}",
-                        "teamId=${projectInfo.teamInfo.id}",
-                        "projectId=${projectInfo.id}",
-                        "releaseVersion=${projectInfo.versionTag ?: el.cicd.UNDEFINED}",
-                        "buildNumber=\${BUILD_NUMBER}",
-                        "metaInfoPostfix=${el.cicd.META_INFO_POSTFIX}"]
-
+def setupHelmValuesFile(def projectInfo, def componentsToDeploy) {
+    def valueFilePattern = '*values.y*ml'
+    def valuesDirs = "${valueFilePattern} ${projectInfo.deployToEnv}/${valueFilePattern}"
+    valuesDirs += projectInfo.releaseVariant ? " ${projectInfo.releaseVariant} ${projectInfo.deployToEnv}-${projectinfo.releaseVariant}/${valueFilePattern}" : ''
+    
+    def commonHelmValues = getProjectCommonHelmValues(projectInfo)
+    def tmpValuesFile = 'values.yaml.tmp'
     componentsToDeploy.each { component ->
-        def compValues = ["component=${component.name}",
-                          "codeBase=${component.codeBase}",
-                          "scmRepoName=${component.scmRepoName}",
-                          "srcCommitHash=${component.srcCommitHash}",
-                          "deploymentBranch=${component.deploymentBranch ?: el.cicd.UNDEFINED}"]
-
-        if (fileExists("${component.deploymentDir}/${projectInfo.deployToEnv}/kustomization.yaml")) {
-            compValues.add("componentKustDir=${component.deploymentDir}/${projectInfo.deployToEnv}")
-        }
-        else if (fileExists("${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}/kustomization.yaml")) {
-            compValues.add("componentKustDir=${component.deploymentDir}/${el.cicd.KUSTOMIZE_BASE_DIR}")
-        }
-
-        compValues.addAll(commonValues)
-
-        dir (component.deploymentDir) {
-            sh """
-                cp -rTn ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR} .
-                if [[ -d ./${projectInfo.deployToEnv} ]]
-                then
-                    cp -rT ./${projectInfo.deployToEnv} .
-                fi
-                cp ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}/kustomize.sh .
-
-                mkdir -p ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
-                ${shCmd.echo ''}
-                helm template \
-                    --set-string ${compValues.join(' --set-string ')} \
-                    -n ${projectInfo.deployToNamespace} \
-                    ${component.name} \
-                    ${el.cicd.EL_CICD_DIR}/${el.cicd.KUSTOMIZE_CHART_DIR} \
-                    > ./${el.cicd.EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
+        def compHelmValues = commonHelmValues +
+                         ["  objName: ${component.name}",
+                          "  image: ${componentImage}",
+                          "  COMPONENT_NAME=${component.name}"]
+        dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
+            sh """                
+                rm -f ${tmpValuesFile}
+                VALUES_FILES=\$(ls --reverse ${valuesDirs} 2>/dev/null)
+                for VALUES_FILE in \${VALUES_FILES} elCicdValues.yaml
+                do
+                    echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
+                    cat \${VALUES_FILE} >> ${tmpValuesFile}
+                done
+                echo ${compHelmValues.join('\n')} >> ${tmpValuesFile}
+                
+                rm -rf \${VALUES_FILES} \$(ls -d */ | grep -v -e charts -e templates -e kustomize | tr '\n' ' ')
+                mv values.yaml.tmp values.yaml
+        
+                ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
+                
+                cat values.yaml
             """
         }
     }
 }
 
-def deployComponent(def projectInfo, def component, def compValues) {
-    dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-        sh """
-            VALUES_FILES=\$(find . -maxdepth 1 -type f \\( -name *values*.yaml -o -name *values*.yml -o -name *values*.json \\) -printf '-f %f ')
+def getProjectCommonHelmValues(def projectInfo) {
+    return ["elCicdProfiles: {${projectInfo.deployToEnv}}",
+            "elCicdDefaults:",
+            "  imagePullSecret: ${imagePullSecret}",
+            "  ingressHostDomain: ${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
+            "  SDLC_ENV: ${projectInfo.deployToEnv}",
+            "  TEAM_ID: ${projectInfo.teamInfo.id}",
+            "  PROJECT_ID: ${projectInfo.id}"]
+}
 
-            HELM_ARGS="--set-string ${compValues.join(' --set-string ')}
-                \${VALUES_FILES}
-                -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml
-                --post-renderer ./kustomize.sh --post-renderer-args ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
-                -n ${projectInfo.deployToNamespace}
-                ${component.name} ."
-
-            ${shCmd.echo ''}
-            helm template --dependency-update --debug \${HELM_ARGS}
-
-            ${shCmd.echo ''}
-            helm upgrade --install --atomic --history-max=1 \${HELM_ARGS}
-        """
+def setupKustomizeOverlays(def projectInfo, def componentsToDeploy) {
+    componentsToDeploy.each { component ->
+        def kustFile = 'kustomization.yaml'
+        
+        def bases = projectInfo.releaseVariant ? "${projectInfo.deployToEnv}-${projectinfo.releaseVariant} " : ''
+        bases += "${projectInfo.deployToEnv} ${el.cicd.BASE_KUSTOMIZE_DIR}"
+        
+        dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
+            mkdir -p el.cicd.KUSTOMIZE_DIR
+            dir(el.cicd.KUSTOMIZE_DIR) {
+                sh """
+                    for BASE in \${BASES}
+                    do
+                        KUST_DIRS="\${KUST_DIRS} -e \${BASE} "
+                        mkdir -p \${BASE}
+                        if [[ ! -f \${BASE}/${kustFile} ]]
+                        then
+                            (cd \${BASE} && kustomize create --autodetect)
+                        fi
+                        
+                        if [[ ! -z "\${LAST_BASE}" ]]
+                        then
+                            (cd \${BASE} && kustomize edit add resource ../\${LAST_BASE})
+                        fi
+                        LAST_BASE=\${BASE}
+                    done
+                    
+                    rm -rf ${el.cicd.EL_CICD_KUSTOMIZE_DIR} \$(ls -d */ | grep -v \${KUST_DIRS} | tr '\n' ' ')
+                    mkdir -p ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
+                    helm template --debug \
+                                  --set-string "elCicdDefs.RESOURCES={\${BASES}[0]}" \
+                                  --set-string "elCicdDefs.COMMON_LABELS={${projectInfo.id}, ${component.name}}" \
+                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/common-labels-values.yaml \
+                                  @elCicdCharts/elCicdChart  > ${el.cicd.EL_CICD_KUSTOMIZE_DIR}/${kustFile}
+                """
+            }
+        }
     }
+}
+
+def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
+    componentsToDeploy.each { component ->
+        dir(component.deploymentDir) {
+            sh """
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} .
+                
+                if [[ ! -f Chart.yaml ]]
+                then
+                    mkdir -p templates
+                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/Chart.yaml .
+                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/templates/* templates
+                fi
+            """
+        }
+    }
+}
+
+def runComponentDeploymentStages(def projectInfo, def components) {
+    sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
+
+    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
+        dir(component.deploymentDir) {
+            sh """
+                helm upgrade --install --atomic \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    . \
+                    --post-renderer ${el.cicd.COMP_KUST_SH} \
+                    --post-renderer-args ${el.cicd.KUSTOMIZE_DIR} \
+                                        ${el.cicd.EL_CICD_KUSTOMIZE_DIR} \
+                                        ${el.cicd.BASE_KUSTOMIZE_DIR} \
+                                        ${el.cicd.PRE_KUST_HELM_FILE} \
+                                        ${el.cicd.POST_KUST_HELM_FILE}
+                
+                helm get manifest ${component.name} -n ${projectInfo.deployToNamespace} 
+            """
+        }
+    }
+
+    parallel(helmStages)
+
+    waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
 def waitForAllTerminatingPodsToFinish(def projectInfo) {
