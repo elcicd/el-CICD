@@ -1,9 +1,6 @@
 /* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the refresh-onboarded-projects pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/efresh-credentials -pipeline-template.
- *
  */
 
 def call(Map args) {

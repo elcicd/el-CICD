@@ -1,13 +1,6 @@
 apiVersion: v2
 name: elCicdDeploymentChart
-description: |-
-  Library charts included: elCicdRenderer, elCicdKubernetes, elCicdCommon via the elCicdChart.
-  This chart, inconjunction with the kustomize.sh executable included in the root will deploy
-  any of the following types of projects:
-  - elCicdChart
-  - 3rd Party Helm Chart
-  - Kustomize project
-  - Any combination of the above
+description: Default chart for components that do not define their own.
 
 type: application
 

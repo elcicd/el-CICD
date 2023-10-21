@@ -1,8 +1,5 @@
-/*
+/* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Defines the bulk of the build-artifact pipeline.  Called inline from the
- * a realized el-CICD/resources/buildconfigs/build-artifact-pipeline-template.
  *
  */
 

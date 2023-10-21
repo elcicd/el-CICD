@@ -1,7 +1,6 @@
-/*
+/* 
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Utility methods for apply OKD resources
  */
 
 def cleanupFailedInstalls(def projectInfo) {
@@ -35,7 +34,7 @@ def runComponentRemovalStages(def projectInfo, def components) {
 def setupHelmValuesFile(def projectInfo, def componentsToDeploy) {
     def valueFilePattern = '*values.y*ml'
     def valuesDirs = "${valueFilePattern} ${projectInfo.deployToEnv}/${valueFilePattern}"
-    valuesDirs += projectInfo.releaseVariant ? " ${projectInfo.releaseVariant} ${projectInfo.deployToEnv}-${projectinfo.releaseVariant}/${valueFilePattern}" : ''
+    valuesDirs += projectInfo.deploymentVariant ? " ${projectInfo.deploymentVariant} ${projectInfo.deployToEnv}-${projectinfo.deploymentVariant}/${valueFilePattern}" : ''
     
     def commonHelmValues = getProjectCommonHelmValues(projectInfo)
     def tmpValuesFile = 'values.yaml.tmp'
@@ -67,7 +66,10 @@ def setupHelmValuesFile(def projectInfo, def componentsToDeploy) {
 }
 
 def getProjectCommonHelmValues(def projectInfo) {
-    return ["elCicdProfiles: {${projectInfo.deployToEnv}}",
+    def profiles = projectInfo.deploymentVariant ?
+        "${projectInfo.deployToEnv},${projectInfo.deploymentVariant},${projectInfo.deployToEnv}-${projectInfo.deploymentVariant}" :
+        "${projectInfo.deployToEnv}"
+    return ["elCicdProfiles: [${profiles}]",
             "elCicdDefaults:",
             "  imagePullSecret: ${imagePullSecret}",
             "  ingressHostDomain: ${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
@@ -80,7 +82,7 @@ def setupKustomizeOverlays(def projectInfo, def componentsToDeploy) {
     componentsToDeploy.each { component ->
         def kustFile = 'kustomization.yaml'
         
-        def bases = projectInfo.releaseVariant ? "${projectInfo.deployToEnv}-${projectinfo.releaseVariant} " : ''
+        def bases = projectInfo.deploymentVariant ? "${projectInfo.deployToEnv}-${projectinfo.deploymentVariant} " : ''
         bases += "${projectInfo.deployToEnv} ${el.cicd.BASE_KUSTOMIZE_DIR}"
         
         dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
