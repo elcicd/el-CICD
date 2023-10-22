@@ -86,7 +86,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         [projectInfo.deployToEnv]
         
     def elCicdDefs = [
-        EL_CICD_PROFILES: profiles.join(','),
+        EL_CICD_PROFILES: projectInfo.elCicdProfiles.join(','),
         PROJECT_ID: projectInfo.id,
         RELEASE_VERSION: projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED,
         BUILD_NUMBER: currentBuild.number,
