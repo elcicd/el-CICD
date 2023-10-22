@@ -1,8 +1,8 @@
 #!/bin/bash
 #!/bin/bash
 set -e
+cd "$(dirname ${0})"/${elcicd_POST_RENDERER_KUSTOMIZE_DIR}
 
-cd ${elcicd_POST_RENDERER_KUSTOMIZE_DIR}
 cat <&0 > ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR}/${elcicd_EL_CICD_PRE_KUST_HELM_FILE}
 
 PROFILES=${1}

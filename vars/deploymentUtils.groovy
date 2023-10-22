@@ -138,7 +138,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     . \
-                    --post-renderer ${el.cicd.COMP_KUST_SH} \
+                    --post-renderer ./${el.cicd.COMP_KUST_SH} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
             """
