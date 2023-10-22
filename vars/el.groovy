@@ -69,7 +69,7 @@ def node(Map args, Closure body) {
                 serviceAccount: ${el.cicd.JENKINS_SERVICE_ACCOUNT}
                 containers:
                     - name: 'jnlp'
-                        args: '${computer.jnlpmac} ${computer.name}'
+                        args: '\${computer.jnlpmac} \${computer.name}'
                         image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
                         alwaysPullImage: true
                         envFrom:
