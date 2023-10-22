@@ -68,8 +68,9 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 cat values.yaml
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-                helm template -f ${postRenderDir}/kust-chart-values.yaml \
-                    elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
+                helm template -f ${postRenderDir}/${componentConfigFile} \
+                              -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
+                              elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
                 if [[ ! -f Chart.yaml ]]
                 then
