@@ -20,6 +20,6 @@ elCicdTemplates-elcicd-kust:
       - release-version=${RELEASE_VERSION}
       - code-base=${CODE_BASE}
       - build-number="${BUILD_NUMBER}"
-      - deploy-time=${EL_CICD_DEPLOYMENT_TIME}
+      - deploy-time="${EL_CICD_DEPLOYMENT_TIME}"
       
     
