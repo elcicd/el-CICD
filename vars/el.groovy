@@ -68,6 +68,7 @@ def node(Map args, Closure body) {
             alwaysPullImage: true
             containers:
             - name: 'jnlp'
+              args: ['\${JENKINS_SECRET}', '\${JENKINS_NAME}']
               image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
               - configMapRef:
