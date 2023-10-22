@@ -38,7 +38,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     def tmpValuesFile = 'values.yaml.tmp'
 
     componentsToDeploy.each { component ->
-        def compConfigValues = getComponentConfigValues(component, commonConfigValues, imageRegistry)
+        def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
 
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
             dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}") {
@@ -113,10 +113,12 @@ def getProjectCommonHelmValues(def projectInfo) {
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
-def getComponentConfigValues(def component, def configValuesMap, imageRegistry) {
+def getComponentConfigValues(def projectInfo, def component, def imageRegistry, def configValuesMap) {
     configValuesMap = configValuesMap.clone()
-    configValuesMap.elCicdDefaults.objName = component.name    
-    configValuesMap.elCicdDefaults.image = imageRegistry
+    configValuesMap.elCicdDefaults.objName = component.name
+    
+    configValuesMap.elCicdDefaults.image =
+        "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
