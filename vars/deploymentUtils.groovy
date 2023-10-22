@@ -89,7 +89,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         RELEASE_VERSION: projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED,
         BUILD_NUMBER: currentBuild.number,
         SDLC_ENV: projectInfo.deployToEnv,
-        META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX]
+        META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX
     ]
     
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
