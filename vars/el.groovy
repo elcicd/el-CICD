@@ -14,8 +14,6 @@ def initMetaData(Map metaData) {
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
-        el.cicd.EL_CICD_TEMPLATE_CHART_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}"
-        el.cicd.EL_CICD_CHART_TEMPLATES_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}/templates"
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
         el.cicd.CONFIG_CHART_DEPLOY_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.CHART_DEPLOY_DIR}"
@@ -50,7 +48,7 @@ def node(Map args, Closure body) {
     assert args.agent
     
     def volumeDefs = [
-        emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)        
+        emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
     
     if (args.isBuild) {
@@ -60,23 +58,28 @@ def node(Map args, Closure body) {
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
+        serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
-        idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        imagePullSecrets: ["el-cicd-jenkins-pull-secret"],
         yaml: """
           spec:
-            imagePullSecrets:
-            - name: el-cicd-jenkins-pull-secret
-            serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
-            imagePullPolicy: Always
             containers:
-            - name: 'jnlp'
-              image: ${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest
+            - name: jnlp
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
             securityContext:
               fsGroup: 1001
         """,
+        containers: [
+            containerTemplate(
+                name: 'jnlp',
+                image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
+                alwaysPullImage: true,
+                args: '${computer.jnlpmac} ${computer.name}'
+            )
+        ],
         volumes: volumeDefs
     ]) {
         node(args.agent) {
