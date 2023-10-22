@@ -47,7 +47,8 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
             def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
             sh """
                 rm -f ${tmpValuesFile}
-                for VALUES_DIR in (.  ${projectInfo.elCicdProfiles.join(' ')})
+                DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
+                for VALUES_DIR in \${DIR_ARRAY[@]}
                 do
                     VALUES_FILES=\$(ls --reverse \${VALUES_DIR} 2>/dev/null)
                     for VALUES_FILE in \${VALUES_FILES}
