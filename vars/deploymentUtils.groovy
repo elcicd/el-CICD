@@ -31,13 +31,14 @@ def runComponentRemovalStages(def projectInfo, def components) {
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
-    def commonConfigValues = getProjectCommonHelmValues(projectInfo)
+def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
+    def commonConfigValues = getProjectCommonHelmValues(projectInfo)    
+    def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
 
     componentsToDeploy.each { component ->
-        def compConfigValues = getComponentConfigValues(component, commonConfigValues)
+        def compConfigValues = getComponentConfigValues(component, commonConfigValues, imageRegistry)
 
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
             dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}") {
@@ -112,9 +113,10 @@ def getProjectCommonHelmValues(def projectInfo) {
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
-def getComponentConfigValues(def component, def configValuesMap) {
+def getComponentConfigValues(def component, def configValuesMap, imageRegistry) {
     configValuesMap = configValuesMap.clone()
-    configValuesMap.elCicdDefaults.objName = component.name
+    configValuesMap.elCicdDefaults.objName = component.name    
+    configValuesMap.elCicdDefaults.image = imageRegistry
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
