@@ -68,17 +68,17 @@ def node(Map args, Closure body) {
             spec:
                 serviceAccount: ${el.cicd.JENKINS_SERVICE_ACCOUNT}
                 containers:
-                    - name: 'jnlp'
-                        args: '\${computer.jnlpmac} \${computer.name}'
-                        image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
-                        alwaysPullImage: true
-                        envFrom:
-                        configMapRef:
-                            name: ${el.cicd.EL_CICD_META_INFO_NAME}
-            imagePullSecrets:
-                - el-cicd-jenkins-pull-secret
-            securityContext:
-                fsGroup: 1001
+                  - name: 'jnlp'
+                    args: '\${computer.jnlpmac} \${computer.name}'
+                    image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
+                    alwaysPullImage: true
+                    envFrom:
+                      configMapRef:
+                        name: ${el.cicd.EL_CICD_META_INFO_NAME}
+                imagePullSecrets:
+                  - el-cicd-jenkins-pull-secret
+                securityContext:
+                  fsGroup: 1001
         """,
         volumes: volumeDefs
     ]) {
