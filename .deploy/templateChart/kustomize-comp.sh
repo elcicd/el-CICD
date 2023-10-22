@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 PROFILES=${1}
 
 cd "$(dirname ${0})"
@@ -21,8 +20,4 @@ do
     cd ..
 done
 
-kustomize build ${elcicd_POST_RENDERER_KUSTOMIZE_DIR} > ${elcicd_POST_KUST_HELM_FILE}
-
-cat ${elcicd_POST_KUST_HELM_FILE}
-
-set +e
+kustomize build ${elcicd_POST_RENDERER_KUSTOMIZE_DIR}
