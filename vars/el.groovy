@@ -78,7 +78,7 @@ def node(Map args, Closure body) {
         volumes: volumeDefs
     ]) {
         node(args.agent) {
-            container(args.agent_) {
+            container(args.agent) {
                 try {
                     initializePipeline()
 
@@ -111,7 +111,6 @@ def node(Map args, Closure body) {
                     runHookScript(el.cicd.POST, args)
                 }
             }
-        }
     }
 }
 
