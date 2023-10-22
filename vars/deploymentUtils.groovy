@@ -72,6 +72,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize-comp.sh .
                 if [[ ! -f Chart.yaml ]]
                 then
                     mkdir -p templates
@@ -119,7 +120,6 @@ def getProjectCommonHelmValues(def projectInfo) {
 def getComponentConfigValues(def component, def configValuesMap) {
     configValuesMap = configValuesMap.clone()
     configValuesMap.elCicdDefaults.objName = component.name
-    configValuesMap.elCicdDefaultt = component.name
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
