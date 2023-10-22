@@ -111,6 +111,7 @@ def node(Map args, Closure body) {
                     runHookScript(el.cicd.POST, args)
                 }
             }
+        }
     }
 }
 
