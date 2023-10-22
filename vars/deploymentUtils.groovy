@@ -72,7 +72,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize-comp.sh .
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${COMP_KUST_SH} .
                 if [[ ! -f Chart.yaml ]]
                 then
                     mkdir -p templates
