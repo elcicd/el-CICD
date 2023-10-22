@@ -60,7 +60,7 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         podRetention: onFailure(),
         idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        yamlMergeStrategy: 'merge',
+        yamlMergeStrategy: merge(),
         yaml: """
           spec:
             imagePullSecrets:
