@@ -111,8 +111,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         PROJECT_ID: projectInfo.id
     ]
 
-    elCicdProfiles = [:]
-    elCicdProfiles.putAll(projectInfo.elCicdProfiles)
+    elCicdProfiles = projectInfo.elCicdProfiles.clone()
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
