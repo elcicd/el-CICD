@@ -60,7 +60,6 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         podRetention: onFailure(),
         idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        yamlMergeStrategy: merge(),
         yaml: """
           spec:
             imagePullSecrets:
@@ -75,7 +74,7 @@ def node(Map args, Closure body) {
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
             securityContext:
               fsGroup: 1001
-        """,
+        """.stripIndent(),
         volumes: volumeDefs
     ]) {
         node(args.agent) {
