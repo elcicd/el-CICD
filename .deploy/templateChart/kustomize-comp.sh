@@ -2,12 +2,12 @@
 #!/bin/bash
 set -e
 
-cd ${EL_CICD_KUSTOMIZE_DIR}
-cat <&0 > ${EL_CICD_BASE_KUSTOMIZE_DIR}/${EL_CICD_PRE_KUST_HELM_FILE}
+cd ${elcicd_POST_RENDERER_KUSTOMIZE_DIR}
+cat <&0 > ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR}/${elcicd_EL_CICD_PRE_KUST_HELM_FILE}
 
 PROFILES=${1}
-mkdir -p ${EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
-for PROFILE in ${EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
+mkdir -p ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
+for PROFILE in ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
 do
     cd \${PROFILE}
     
@@ -19,15 +19,15 @@ do
     then
         kustomize edit add resource "../${LAST_PROFILE}"
     else
-        kustomize edit add resource ${EL_CICD_PRE_KUST_HELM_FILE}
+        kustomize edit add resource ${elcicd_EL_CICD_PRE_KUST_HELM_FILE}
     fi
 
     LAST_PROFILE=${PROFILE}
     cd ..
 done
 
-kustomize build ${EL_CICD_KUSTOMIZE_DIR} > ${EL_CICD_POST_KUST_HELM_FILE}
+kustomize build ${elcicd_POST_RENDERER_KUSTOMIZE_DIR} > ${elcicd_EL_CICD_POST_KUST_HELM_FILE}
 
-cat ${EL_CICD_POST_KUST_HELM_FILE}
+cat ${elcicd_EL_CICD_POST_KUST_HELM_FILE}
 
 set +e

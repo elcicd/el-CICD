@@ -40,7 +40,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
         def compConfigValues = getComponentConfigValues(component, commonConfigValues)
 
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-            dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_KUSTOMIZE_DIR}") {
+            dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}") {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
@@ -56,7 +56,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                     done
                 done
                 echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
-                cat ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/${componentConfigFile} >> ${tmpValuesFile}
+                cat ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/${componentConfigFile} >> ${tmpValuesFile}
 
                 rm values.yaml values.yml 2>/dev/null
                 mv ${tmpValuesFile} values.yaml
@@ -66,8 +66,8 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 cat values.yaml
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-                helm template -f ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kust-chart-values.yaml \
-                    elCicdCharts/elCicdChart  > ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
+                helm template -f ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/kust-chart-values.yaml \
+                    elCicdCharts/elCicdChart  > ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/kustomization.yaml
 
                 if [[ ! -f Chart.yaml ]]
                 then
@@ -134,7 +134,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     ${component.name} \
                     . \
                     --post-renderer ${el.cicd.COMP_KUST_SH} \
-                    --post-renderer-args ${projectInfo.elCicdProfiles}
+                    --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
             """
         }
