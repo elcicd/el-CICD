@@ -98,12 +98,13 @@ def getProjectCommonHelmValues(def projectInfo) {
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'"
     ]
 
-    elCicdDefaults = [elCicdDefaults: [
-            imagePullSecret: imagePullSecret,
-            ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
-            SDLC_ENV: projectInfo.deployToEnv,
-            TEAM_ID: projectInfo.teamInfo.id,
-            PROJECT_ID: projectInfo.id]
+    elCicdDefaults = [
+        imagePullSecret: imagePullSecret,
+        ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
+        SDLC_ENV: projectInfo.deployToEnv,
+        TEAM_ID: projectInfo.teamInfo.id,
+        PROJECT_ID: projectInfo.id
+    ]
 
     return [globals: [elCicdProfiles: projectInfo.elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
