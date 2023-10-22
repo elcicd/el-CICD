@@ -8,22 +8,22 @@ cd "$(dirname ${0})"
 mkdir -p ${elcicd_BASE_KUSTOMIZE_DIR} ${PROFILES}
 cat <&0 > ${elcicd_BASE_KUSTOMIZE_DIR}/${elcicd_PRE_KUST_HELM_FILE}
 
-for PROFILE in ${elcicd_BASE_KUSTOMIZE_DIR} ${PROFILES}
+for OVERLAY_DIR in ${elcicd_BASE_KUSTOMIZE_DIR} ${PROFILES}
 do
-    cd \${PROFILE}
+    cd ${OVERLAY_DIR}
     
     set +e
-    kustomize create --autodetect ${PROFILE} 2>/dev/null
+    kustomize create --autodetect ${OVERLAY_DIR} 2>/dev/null
     set -e
     
-    if [[ ! -z ${LAST_PROFILE} ]]
+    if [[ ! -z ${LAST_OVERLAY_DIR} ]]
     then
-        kustomize edit add resource "../${LAST_PROFILE}"
+        kustomize edit add resource "../${LAST_OVERLAY_DIR}"
     else
         kustomize edit add resource ${elcicd_PRE_KUST_HELM_FILE}
     fi
 
-    LAST_PROFILE=${PROFILE}
+    LAST_OVERLAY_DIR=${OVERLAY_DIR}
     cd ..
 done
 
