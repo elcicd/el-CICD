@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  */
@@ -31,99 +31,42 @@ def runComponentRemovalStages(def projectInfo, def components) {
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def setupHelmValuesFile(def projectInfo, def componentsToDeploy) {
-    def valueFilePattern = '*values.y*ml'
-    def valuesDirs = "${valueFilePattern} ${projectInfo.deployToEnv}/${valueFilePattern}"
-    valuesDirs += projectInfo.deploymentVariant ? " ${projectInfo.deploymentVariant} ${projectInfo.deployToEnv}-${projectinfo.deploymentVariant}/${valueFilePattern}" : ''
-    
-    def commonHelmValues = getProjectCommonHelmValues(projectInfo)
-    def tmpValuesFile = 'values.yaml.tmp'
+def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
     componentsToDeploy.each { component ->
-        def compHelmValues = commonHelmValues +
-                         ["  objName: ${component.name}",
-                          "  image: ${componentImage}",
-                          "  COMPONENT_NAME=${component.name}"]
-        dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
-            sh """                
-                rm -f ${tmpValuesFile}
-                VALUES_FILES=\$(ls --reverse ${valuesDirs} 2>/dev/null)
-                for VALUES_FILE in \${VALUES_FILES} elCicdValues.yaml
-                do
-                    echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
-                    cat \${VALUES_FILE} >> ${tmpValuesFile}
-                done
-                echo ${compHelmValues.join('\n')} >> ${tmpValuesFile}
-                
-                rm -rf \${VALUES_FILES} \$(ls -d */ | grep -v -e charts -e templates -e kustomize | tr '\n' ' ')
-                mv values.yaml.tmp values.yaml
-        
-                ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
-                
-                cat values.yaml
-            """
-        }
-    }
-}
-
-def getProjectCommonHelmValues(def projectInfo) {
-    def profiles = projectInfo.deploymentVariant ?
-        "${projectInfo.deployToEnv},${projectInfo.deploymentVariant},${projectInfo.deployToEnv}-${projectInfo.deploymentVariant}" :
-        "${projectInfo.deployToEnv}"
-    return ["elCicdProfiles: [${profiles}]",
-            "elCicdDefaults:",
-            "  imagePullSecret: ${imagePullSecret}",
-            "  ingressHostDomain: ${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
-            "  SDLC_ENV: ${projectInfo.deployToEnv}",
-            "  TEAM_ID: ${projectInfo.teamInfo.id}",
-            "  PROJECT_ID: ${projectInfo.id}"]
-}
-
-def setupKustomizeOverlays(def projectInfo, def componentsToDeploy) {
-    componentsToDeploy.each { component ->
-        def kustFile = 'kustomization.yaml'
-        
-        def bases = projectInfo.deploymentVariant ? "${projectInfo.deployToEnv}-${projectinfo.deploymentVariant} " : ''
-        bases += "${projectInfo.deployToEnv} ${el.cicd.BASE_KUSTOMIZE_DIR}"
+        def compConfigValues = getComponentConfigValues(component, commonConfigValues)
+        def componentConfigFile = 'elCicdValues.yaml'
         
         dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
-            dir(el.cicd.KUSTOMIZE_DIR) {
-                sh """
-                    mkdir -p el.cicd.KUSTOMIZE_DIR
-                    for BASE in ${bases}
-                    do
-                        KUST_DIRS="\${KUST_DIRS} -e \${BASE} "
-                        mkdir -p \${BASE}
-                        if [[ ! -f \${BASE}/${kustFile} ]]
-                        then
-                            (cd \${BASE} && kustomize create --autodetect)
-                        fi
-                        
-                        if [[ ! -z "\${LAST_BASE}" ]]
-                        then
-                            (cd \${BASE} && kustomize edit add resource ../\${LAST_BASE})
-                        fi
-                        LAST_BASE=\${BASE}
-                    done
-                    
-                    rm -rf ${el.cicd.EL_CICD_KUSTOMIZE_DIR} \$(ls -d */ | grep -v \${KUST_DIRS} | tr '\n' ' ')
-                    mkdir -p ${el.cicd.EL_CICD_KUSTOMIZE_DIR}
-                    helm template --debug \
-                                  --set-string "elCicdDefs.RESOURCES={\${BASES}[0]}" \
-                                  --set-string "elCicdDefs.COMMON_LABELS={${projectInfo.id}, ${component.name}}" \
-                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/common-labels-values.yaml \
-                                  @elCicdCharts/elCicdChart  > ${el.cicd.EL_CICD_KUSTOMIZE_DIR}/${kustFile}
-                """
+            dir("${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}") {
+                writeYaml(file: componentConfigFile, data: compConfigValues)
             }
-        }
-    }
-}
-
-def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
-    componentsToDeploy.each { component ->
-        dir(component.deploymentDir) {
+        
+            def tmpValuesFile = 'values.yaml.tmp'
             sh """
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} .
+                rm -f ${tmpValuesFile}
+                for VALUES_DIR in (.  ${compConfigValues.elCicdProfiles.join(' ')})
+                do
+                    VALUES_FILES=\$(ls --reverse \${VALUES_DIR} 2>/dev/null)
+                    for VALUES_FILE in \${VALUES_FILES}
+                    do
+                        echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
+                        cat \${VALUES_FILE} >> ${tmpValuesFile}
+                    done
+                done
+                echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
+                cat ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/${componentConfigFile} >> ${tmpValuesFile}
                 
+                rm values.yaml values.yml 2>/dev/null
+                mv ${tmpValuesFile} values.yaml
+
+                ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
+
+                cat values.yaml
+                    
+                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+                helm template -f ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kust-chart-values.yaml \
+                    elCicdCharts/elCicdChart  > ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
+
                 if [[ ! -f Chart.yaml ]]
                 then
                     mkdir -p templates
@@ -135,9 +78,50 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     }
 }
 
-def runComponentDeploymentStages(def projectInfo, def components) {
-    sh "helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}"
+def getProjectCommonHelmValues(def projectInfo) {      
+    projectInfo.elCicdProfiles = projectInfo.deploymentVariant ?
+        [projectInfo.deployToEnv, projectInfo.deploymentVariant, "${projectInfo.deployToEnv}-${projectInfo.deploymentVariant}"] :
+        [projectInfo.deployToEnv]
+        
+    def elCicdDefs = [
+        EL_CICD_PROFILES: profiles.join(','),
+        PROJECT_ID: projectInfo.id,
+        RELEASE_VERSION: projectInfo.releaseVersionTag ?: el.cicd.UNDEFINED,
+        BUILD_NUMBER: currentBuild.number,
+        SDLC_ENV: projectInfo.deployToEnv,
+        META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX]
+    ]
+    
+    def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    def elCicdDefaults = [
+        imagePullSecret=: "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}",
+        ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'"
+    ]
 
+    elCicdDefaults = [elCicdDefaults: [
+            imagePullSecret: imagePullSecret,
+            ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
+            SDLC_ENV: projectInfo.deployToEnv,
+            TEAM_ID: projectInfo.teamInfo.id,
+            PROJECT_ID: projectInfo.id]
+
+    return [globals: [elCicdProfiles: projectInfo.elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
+}
+
+def getComponentConfigValues(def component, def configValuesMap) {      
+    configValuesMap.elCicdDefaults.objName = component.name
+    configValuesMap.elCicdDefaultt = component.name
+    
+    configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
+    configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
+    configValuesMap.elCicdDefs.SCM_REPO_NAME = component.scmRepoName
+    configValuesMap.elCicdDefs.SRC_COMMIT_HASH = component.srcCommitHash ?: el.cicd.UNDEFINED
+    configValuesMap.elCicdDefs.DEPLOYMENT_BRANCH = component.deploymentBranch ?: el.cicd.UNDEFINED
+    
+    
+}
+
+def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
@@ -146,13 +130,8 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     ${component.name} \
                     . \
                     --post-renderer ${el.cicd.COMP_KUST_SH} \
-                    --post-renderer-args ${el.cicd.KUSTOMIZE_DIR} \
-                                        ${el.cicd.EL_CICD_KUSTOMIZE_DIR} \
-                                        ${el.cicd.BASE_KUSTOMIZE_DIR} \
-                                        ${el.cicd.PRE_KUST_HELM_FILE} \
-                                        ${el.cicd.POST_KUST_HELM_FILE}
-                
-                helm get manifest ${component.name} -n ${projectInfo.deployToNamespace} 
+                    --post-renderer-args ${projectInfo.elCicdProfiles}
+                helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
             """
         }
     }

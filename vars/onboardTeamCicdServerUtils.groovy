@@ -16,7 +16,7 @@ def setupTeamCicdServer(def teamInfo) {
 
     def jenkinsDefs = getJenkinsConfigValues(teamInfo)
     def jenkinsConfigFile = "jenkins-config-values.yaml"
-    def jenkinsConfigValues = writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
+    writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
     
     sh """
         ${shCmd.echo ''}

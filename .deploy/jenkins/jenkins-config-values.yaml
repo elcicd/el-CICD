@@ -195,7 +195,7 @@ elCicdTemplates:
     serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}
 
 - templateName: clusterRoleBinding
-  objName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-admin
+  objName: ${JENKINS_SERVICE_NAME}-${HELM_RELEASE_NAMESPACE}-admin
   mustHaveAnyProfile:
   - onboarding
   mustNotHaveAnyProfile:
@@ -207,10 +207,10 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
-    namespace: ${RELEASE_NAMESPACE}
+    namespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: roleBinding
-  objName: ${JENKINS_SERVICE_NAME}-${RELEASE_NAMESPACE}-nonroot-builder
+  objName: ${JENKINS_SERVICE_NAME}-${HELM_RELEASE_NAMESPACE}-nonroot-builder
   mustHaveAnyProfile:
   - cicd
   - okd
@@ -223,7 +223,7 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
-    namespace: ${RELEASE_NAMESPACE}
+    namespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: roleBinding
   objName: ${JENKINS_SERVICE_NAME}-edit
@@ -234,7 +234,7 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: ${JENKINS_SERVICE_NAME}
-    namespace: ${RELEASE_NAMESPACE}
+    namespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
@@ -268,7 +268,7 @@ elCicdTemplates:
   - cicd
   kind: ConfigMap
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
   
 - templateName: copyResource
   objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
@@ -276,7 +276,7 @@ elCicdTemplates:
   - cicd
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: copyResource
   objName: el-cicd-jenkins-pull-secret
@@ -284,7 +284,7 @@ elCicdTemplates:
   - cicd
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: copyResource
   objName: ${EL_CICD_BUILD_SECRETS_NAME}
@@ -292,7 +292,7 @@ elCicdTemplates:
   - cicd
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: copyResource
   objNames: ${PROD_ENVS}
@@ -302,7 +302,7 @@ elCicdTemplates:
   - prod
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
 
 - templateName: copyResource
   objNames: ${NONPROD_ENVS}
@@ -312,5 +312,5 @@ elCicdTemplates:
   - nonprod
   kind: Secret
   fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${RELEASE_NAMESPACE}
+  toNamespace: ${HELM_RELEASE_NAMESPACE}
 

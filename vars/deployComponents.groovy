@@ -30,11 +30,9 @@ def call(Map args) {
 
     stage("Setup component directories") {
         if (componentsToDeploy) {
-            loggingUtils.echoBanner("CONFIGURE COMPONENT(S) FOR DEPLOYMENT:", componentsToDeploy.collect { it.name }.join(', '))
+            loggingUtils.echoBanner("SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:", componentsToDeploy.collect { it.name }.join(', '))
 
             deploymentUtils.setupDeploymentDir(projectInfo, componentsToDeploy)
-            deploymentUtils.setupHelmValuesFile(projectInfo, componentsToDeploy)
-            deploymentUtils.setupKustomizeOverlays(projectInfo, componentsToDeploy)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")

@@ -139,7 +139,7 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: jenkins
-    namespace: ${RELEASE_NAMESPACE}
+    namespace: ${HELM_RELEASE_NAMESPACE}
   - kind: Group
     name: ${${NAME_SPACE}_GROUP}
 

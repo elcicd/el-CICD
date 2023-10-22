@@ -1,6 +1,0 @@
-elCicdTemplates:
-- templateName: kustomization
-  fields:
-    resources: ${RESOURCES}
-    commonLabels: ${COMMON_LABELS}
-    

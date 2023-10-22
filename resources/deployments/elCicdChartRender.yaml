@@ -1,6 +1,0 @@
-{{- if .Values.collateValues }}
-  {{- unset .Values.collateValues }}
-  {{- include "elCicdCommon.outputValues" . }}
-{{- else if .Values.elCicdTemplates }}
-  {{- include "elCicdRenderer.render" . }}
-{{- end }}

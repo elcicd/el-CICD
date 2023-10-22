@@ -14,6 +14,9 @@ def initMetaData(Map metaData) {
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
+        el.cicd.EL_CICD_CHART_DEPLOY_DIR = ${el.cicd.EL_CICD_DIR}/${el.cicd.CHART_DEPLOY_DIR}
+        el.cicd.EL_CICD_TEMPLATE_CHART_DIR = ${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}
+
         
         el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
         el.cicd.CONFIG_CHART_DEPLOY_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.CHART_DEPLOY_DIR}"
@@ -67,18 +70,18 @@ def node(Map args, Closure body) {
             serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
             alwaysPullImage: true
             resources:
-                requests:
-                  memory: ${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}  
-                  cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST} 
-                limits:
-                  memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
+              requests:
+                memory: ${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}  
+                cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST} 
+              limits:
+                memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
             containers:
             - name: 'jnlp'
               image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
-                  prefix: EL_CICD_
+                prefix: EL_CICD_
             securityContext:
               fsGroup: 1001
         """,
