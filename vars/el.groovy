@@ -67,7 +67,7 @@ def node(Map args, Closure body) {
             serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
             alwaysPullImage: true
             containers:
-            - name: ${args.agent}
+            - name: 'jnlp'
               image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
               - configMapRef:
@@ -78,38 +78,36 @@ def node(Map args, Closure body) {
         volumes: volumeDefs
     ]) {
         node(args.agent) {
-            container(args.agent) {
-                try {
-                    initializePipeline()
+            try {
+                initializePipeline()
 
-                    runHookScript(el.cicd.PRE, args)
-                    
-                    if (args.teamId) {
-                        args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
-                    }
-
-                    if (args.projectId) {
-                        args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
-                    }
-
-                    runHookScript(el.cicd.INIT, args)
-
-                    body.call(args)
-
-                    runHookScript(el.cicd.ON_SUCCESS, args)
+                runHookScript(el.cicd.PRE, args)
+                
+                if (args.teamId) {
+                    args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
                 }
-                catch (Exception | AssertionError exception) {
-                    (exception instanceof Exception) ?
-                        loggingUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
-                        loggingUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
 
-                    runHookScript(el.cicd.ON_FAIL, args, exception)
+                if (args.projectId) {
+                    args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
+                }
 
-                    throw exception
-                }
-                finally {
-                    runHookScript(el.cicd.POST, args)
-                }
+                runHookScript(el.cicd.INIT, args)
+
+                body.call(args)
+
+                runHookScript(el.cicd.ON_SUCCESS, args)
+            }
+            catch (Exception | AssertionError exception) {
+                (exception instanceof Exception) ?
+                    loggingUtils.echoBanner("!!!! JOB FAILURE: EXCEPTION THROWN !!!!", "", "EXCEPTION: ${exception}") :
+                    loggingUtils.echoBanner("!!!! JOB ASSERTION FAILED !!!!", "", "ASSERTION: ${exception}")
+
+                runHookScript(el.cicd.ON_FAIL, args, exception)
+
+                throw exception
+            }
+            finally {
+                runHookScript(el.cicd.POST, args)
             }
         }
     }
