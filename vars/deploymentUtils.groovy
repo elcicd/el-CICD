@@ -50,7 +50,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
                 for VALUES_DIR in \${DIR_ARRAY[@]}
                 do
-                    VALUES_FILES=\$(ls --reverse \${VALUES_DIR} 2>/dev/null)
+                    VALUES_FILES=\$(find ./ -maxdepth 1  -regex '^.*\.ya?ml$' | sort -r | tr '\n' ' ')
                     for VALUES_FILE in \${VALUES_FILES}
                     do
                         echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
