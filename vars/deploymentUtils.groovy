@@ -31,19 +31,19 @@ def runComponentRemovalStages(def projectInfo, def components) {
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
+def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
-    
+
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(component, commonConfigValues)
-        
+
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-            dir("${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}") {
+            dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_KUSTOMIZE_DIR}") {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
-        
+
             sh """
                 rm -f ${tmpValuesFile}
                 for VALUES_DIR in (.  ${projectInfo.elCicdProfiles.join(' ')})
@@ -57,14 +57,14 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 done
                 echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
                 cat ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/${componentConfigFile} >> ${tmpValuesFile}
-                
+
                 rm values.yaml values.yml 2>/dev/null
                 mv ${tmpValuesFile} values.yaml
 
                 ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
 
                 cat values.yaml
-                    
+
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template -f ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kust-chart-values.yaml \
                     elCicdCharts/elCicdChart  > ${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}/kustomization.yaml
@@ -80,11 +80,11 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     }
 }
 
-def getProjectCommonHelmValues(def projectInfo) {      
+def getProjectCommonHelmValues(def projectInfo) {
     projectInfo.elCicdProfiles = projectInfo.deploymentVariant ?
         [projectInfo.deployToEnv, projectInfo.deploymentVariant, "${projectInfo.deployToEnv}-${projectInfo.deploymentVariant}"] :
         [projectInfo.deployToEnv]
-        
+
     def elCicdDefs = [
         EL_CICD_PROFILES: projectInfo.elCicdProfiles.join(','),
         PROJECT_ID: projectInfo.id,
@@ -93,7 +93,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         SDLC_ENV: projectInfo.deployToEnv,
         META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX
     ]
-    
+
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
     def elCicdDefaults = [
@@ -112,17 +112,17 @@ def getProjectCommonHelmValues(def projectInfo) {
     return [globals: [elCicdProfiles: projectInfo.elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
-def getComponentConfigValues(def component, def configValuesMap) {      
+def getComponentConfigValues(def component, def configValuesMap) {
     configValuesMap.elCicdDefaults.objName = component.name
     configValuesMap.elCicdDefaultt = component.name
-    
+
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
     configValuesMap.elCicdDefs.SCM_REPO_NAME = component.scmRepoName
     configValuesMap.elCicdDefs.SRC_COMMIT_HASH = component.srcCommitHash ?: el.cicd.UNDEFINED
     configValuesMap.elCicdDefs.DEPLOYMENT_BRANCH = component.deploymentBranch ?: el.cicd.UNDEFINED
-    
-    
+
+
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {

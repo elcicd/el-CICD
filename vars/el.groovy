@@ -81,7 +81,7 @@ def node(Map args, Closure body) {
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
-                prefix: EL_CICD_
+                prefix: elcicd_
             securityContext:
               fsGroup: 1001
         """,
