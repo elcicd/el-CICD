@@ -46,7 +46,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
         
             sh """
                 rm -f ${tmpValuesFile}
-                for VALUES_DIR in (.  ${compConfigValues.elCicdProfiles.join(' ')})
+                for VALUES_DIR in (.  ${projectInfo.elCicdProfiles.join(' ')})
                 do
                     VALUES_FILES=\$(ls --reverse \${VALUES_DIR} 2>/dev/null)
                     for VALUES_FILE in \${VALUES_FILES}
