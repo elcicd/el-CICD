@@ -117,6 +117,7 @@ def getProjectCommonHelmValues(def projectInfo) {
 }
 
 def getComponentConfigValues(def component, def configValuesMap) {
+    configValuesMap = configValuesMap.clone()
     configValuesMap.elCicdDefaults.objName = component.name
     configValuesMap.elCicdDefaultt = component.name
 
@@ -126,7 +127,7 @@ def getComponentConfigValues(def component, def configValuesMap) {
     configValuesMap.elCicdDefs.SRC_COMMIT_HASH = component.srcCommitHash ?: el.cicd.UNDEFINED
     configValuesMap.elCicdDefs.DEPLOYMENT_BRANCH = component.deploymentBranch ?: el.cicd.UNDEFINED
 
-
+    return configValuesMap
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
