@@ -39,7 +39,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(component, commonConfigValues)
         
-        dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
+        dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
             dir("${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}") {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
