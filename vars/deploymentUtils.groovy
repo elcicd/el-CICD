@@ -55,12 +55,12 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                     do
                         echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
                         cat \${VALUES_FILE} >> ${tmpValuesFile}
+                        rm \${VALUES_FILE}
                     done
                 done
                 echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
                 cat ${postRenderDir}/${componentConfigFile} >> ${tmpValuesFile}
 
-                rm values.yaml values.yml 2>/dev/null
                 mv ${tmpValuesFile} values.yaml
 
                 ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
