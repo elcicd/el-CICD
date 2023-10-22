@@ -112,7 +112,7 @@ def getProjectCommonHelmValues(def projectInfo) {
     ]
 
     elCicdProfiles = [:]
-    elCicdProfiles.addAll(projectInfo.elCicdProfiles)
+    elCicdProfiles.putAll(projectInfo.elCicdProfiles)
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
