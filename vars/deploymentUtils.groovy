@@ -86,10 +86,10 @@ def setupKustomizeOverlays(def projectInfo, def componentsToDeploy) {
         bases += "${projectInfo.deployToEnv} ${el.cicd.BASE_KUSTOMIZE_DIR}"
         
         dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
-            mkdir -p el.cicd.KUSTOMIZE_DIR
             dir(el.cicd.KUSTOMIZE_DIR) {
                 sh """
-                    for BASE in \${BASES}
+                    mkdir -p el.cicd.KUSTOMIZE_DIR
+                    for BASE in ${bases}
                     do
                         KUST_DIRS="\${KUST_DIRS} -e \${BASE} "
                         mkdir -p \${BASE}

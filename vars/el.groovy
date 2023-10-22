@@ -66,15 +66,22 @@ def node(Map args, Closure body) {
             - el-cicd-jenkins-pull-secret
             serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
             alwaysPullImage: true
+            resources:
+                requests:
+                  memory: ${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}  
+                  cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST} 
+                limits:
+                  memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
             containers:
             - name: 'jnlp'
               image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
+                  prefix: EL_CICD_
             securityContext:
               fsGroup: 1001
-        """.stripIndent(),
+        """,
         volumes: volumeDefs
     ]) {
         node(args.agent) {
