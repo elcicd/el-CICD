@@ -1,11 +1,12 @@
 #!/bin/bash
 #!/bin/bash
 set -e
+PROFILES=${1}
+
 cd "$(dirname ${0})"/${elcicd_POST_RENDERER_KUSTOMIZE_DIR}
 
 cat <&0 > ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR}/${elcicd_EL_CICD_PRE_KUST_HELM_FILE}
 
-PROFILES=${1}
 mkdir -p ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
 for PROFILE in ${elcicd_EL_CICD_BASE_KUSTOMIZE_DIR} ${PROFILES}
 do

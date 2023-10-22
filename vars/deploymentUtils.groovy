@@ -72,7 +72,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} .
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} ${el.cicd.KUSTOMIZE_DIR}
             """
         }
     }
@@ -139,7 +139,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     \${CHART} \
-                    --post-renderer ./${el.cicd.COMP_KUST_SH} \
+                    --post-renderer ./${el.cicd.KUSTOMIZE_DIR}/${el.cicd.COMP_KUST_SH} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
 
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
