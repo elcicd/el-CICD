@@ -1,5 +1,6 @@
 #!/bin/bash
-#!/bin/bash
+
+set -x
 PROFILES=${1}
 
 cd "$(dirname ${0})"
@@ -7,17 +8,18 @@ cd "$(dirname ${0})"
 mkdir -p ${elcicd_BASE_KUSTOMIZE_DIR} ${PROFILES}
 cat <&0 > ${elcicd_BASE_KUSTOMIZE_DIR}/${elcicd_PRE_KUST_HELM_FILE}
 
-set +e
 for OVERLAY_DIR in ${elcicd_BASE_KUSTOMIZE_DIR} ${PROFILES}
 do
-    (cd ${OVERLAY_DIR} && \
-        kustomize create --autodetect ${OVERLAY_DIR} 2>/dev/null && \
-        ([[ ! -z ../${LAST_OVERLAY_DIR} ]] && kustomize edit add resource "../${LAST_OVERLAY_DIR}")
-    )
+    cd ${OVERLAY_DIR}
+    
+    [[ ! -f kustomization.yaml ]] && kustkustomize create --autodetect . 2>/dev/null
+    
+    [[ ! -z ${LAST_OVERLAY_DIR} ]] && kustomize edit add resource "../${LAST_OVERLAY_DIR}"
     
     LAST_OVERLAY_DIR=${OVERLAY_DIR}
+    
+    cd ..
 done
-set -e
 
 kustomize build ${elcicd_POST_RENDERER_KUSTOMIZE_DIR} > ${elcicd_POST_KUST_HELM_FILE}
 
