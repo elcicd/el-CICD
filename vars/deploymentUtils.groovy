@@ -128,7 +128,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
-                CHART=$([[ -f ./Chart.yml ]] && echo '.' || echo 'elCicdCharts/elCicdChart')
+                CHART=\$([[ -f ./Chart.yml ]] && echo '.' || echo 'elCicdCharts/elCicdChart')
                 if [[ \${CHART} == '.' ]]
                 then
                     helm dependency update .
@@ -138,7 +138,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    ${CHART} \
+                    \${CHART} \
                     --post-renderer ./${el.cicd.COMP_KUST_SH} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
 
