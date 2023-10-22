@@ -134,6 +134,8 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
+                helm dependency update .
+
                 helm upgrade --install --atomic \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
