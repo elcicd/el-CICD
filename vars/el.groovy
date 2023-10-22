@@ -60,23 +60,26 @@ def node(Map args, Closure body) {
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
-        serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}",
         podRetention: onFailure(),
         idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
-        imagePullSecrets: ["el-cicd-jenkins-pull-secret"],
         yaml: """
-          spec:
+            apiVersion: v1
+            kind: Pod
+            spec:
+                serviceAccount: ${el.cicd.JENKINS_SERVICE_ACCOUNT}
+                containers:
+                    - name: 'jnlp'
+                        args: '${computer.jnlpmac} ${computer.name}'
+                        image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
+                        alwaysPullImage: true
+                        envFrom:
+                        configMapRef:
+                            name: ${el.cicd.EL_CICD_META_INFO_NAME}
+            imagePullSecrets:
+                - el-cicd-jenkins-pull-secret
             securityContext:
-              fsGroup: 1001
+                fsGroup: 1001
         """,
-        containers: [
-            containerTemplate(
-                name: 'jnlp',
-                image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest",
-                alwaysPullImage: true,
-                args: '${computer.jnlpmac} ${computer.name}'
-            )
-        ],
         volumes: volumeDefs
     ]) {
         node(args.agent) {
