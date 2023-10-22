@@ -94,10 +94,11 @@ def getProjectCommonHelmValues(def projectInfo) {
         META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX
     ]
     
+    def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
     def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
     def elCicdDefaults = [
         imagePullSecret: "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}",
-        ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}'"
+        ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     ]
 
     elCicdDefaults = [
