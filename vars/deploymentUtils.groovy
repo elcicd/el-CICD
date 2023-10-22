@@ -73,12 +73,6 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                               elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} .
-                if [[ ! -f Chart.yaml ]]
-                then
-                    mkdir -p templates
-                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/Chart.yaml .
-                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/templates/* templates
-                fi
             """
         }
     }
@@ -134,14 +128,20 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
-                helm dependency update .
-
+                CHART=$([[ -f ./Chart.yml ]] && echo '.' || echo 'elCicdCharts/elCicdChart')
+                if [[ \${CHART} == '.' ]]
+                then
+                    helm dependency update .
+                fi
+                
                 helm upgrade --install --atomic \
+                    -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    . \
+                    ${CHART} \
                     --post-renderer ./${el.cicd.COMP_KUST_SH} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
+
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
             """
         }
