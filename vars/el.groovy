@@ -66,10 +66,6 @@ def node(Map args, Closure body) {
         imagePullSecrets: ["el-cicd-jenkins-pull-secret"],
         yaml: """
           spec:
-            containers:
-              envFrom:
-                configMapRef:
-                  name: ${el.cicd.EL_CICD_META_INFO_NAME}
             securityContext:
               fsGroup: 1001
         """,
