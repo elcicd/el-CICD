@@ -72,7 +72,7 @@ def node(Map args, Closure body) {
             - name: 'jnlp'
               image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
-                configMapRef:
+              - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
             securityContext:
               fsGroup: 1001
