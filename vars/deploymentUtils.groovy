@@ -44,6 +44,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
+            def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
             sh """
                 rm -f ${tmpValuesFile}
                 for VALUES_DIR in (.  ${projectInfo.elCicdProfiles.join(' ')})
@@ -56,7 +57,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                     done
                 done
                 echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
-                cat ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/${componentConfigFile} >> ${tmpValuesFile}
+                cat ${postRenderDir}/${componentConfigFile} >> ${tmpValuesFile}
 
                 rm values.yaml values.yml 2>/dev/null
                 mv ${tmpValuesFile} values.yaml
@@ -66,8 +67,8 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 cat values.yaml
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-                helm template -f ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/kust-chart-values.yaml \
-                    elCicdCharts/elCicdChart  > ${el.cicd.KUSTOMIZE_DIR}/${POST_RENDERER_KUSTOMIZE_DIR}/kustomization.yaml
+                helm template -f ${postRenderDir}/kust-chart-values.yaml \
+                    elCicdCharts/elCicdChart  > ${postRenderDir}/kustomization.yaml
 
                 if [[ ! -f Chart.yaml ]]
                 then
