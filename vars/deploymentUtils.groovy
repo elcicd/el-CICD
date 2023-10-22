@@ -32,16 +32,18 @@ def runComponentRemovalStages(def projectInfo, def components) {
 }
 
 def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
+    def commonConfigValues = getProjectCommonHelmValues(projectInfo)
+    def componentConfigFile = 'elCicdValues.yaml'
+    def tmpValuesFile = 'values.yaml.tmp'
+    
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(component, commonConfigValues)
-        def componentConfigFile = 'elCicdValues.yaml'
         
         dir(component.workDir/el.cicd.CHART_DEPLOY_DIR) {
             dir("${el.cicd.KUSTOMIZE_DIR}/${EL_CICD_KUSTOMIZE_DIR}") {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
         
-            def tmpValuesFile = 'values.yaml.tmp'
             sh """
                 rm -f ${tmpValuesFile}
                 for VALUES_DIR in (.  ${compConfigValues.elCicdProfiles.join(' ')})
