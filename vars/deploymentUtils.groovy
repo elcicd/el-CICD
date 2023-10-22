@@ -111,7 +111,9 @@ def getProjectCommonHelmValues(def projectInfo) {
         PROJECT_ID: projectInfo.id
     ]
 
-    return [globals: [elCicdProfiles: projectInfo.elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
+    elCicdProfiles = [:]
+    elCicdProfiles.addAll(projectInfo.elCicdProfiles)
+    return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 
 def getComponentConfigValues(def component, def configValuesMap) {
