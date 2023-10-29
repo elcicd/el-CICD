@@ -10,9 +10,9 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select sandbox, component, and branch") {
-        def BUILD_SELECTED = 'Build Selected'
-        def BUILD_ALL = 'Build All'
-        def BUILD_ALL_COMPONENTS = 'Build All Components'
+        def BUILD_SELECTED = 'Build and Deploy Selected'
+        def BUILD_ALL = 'Build and Deploy All'
+        def BUILD_ALL_COMPONENTS = 'Build and Deploy All Components'
         def BUILD_ALL_ARTIFACTS = 'Build All Artifacts'
         def buildChoices = [BUILD_SELECTED, BUILD_ALL, BUILD_ALL_COMPONENTS, BUILD_ALL_ARTIFACTS]
         List inputs = [choice(name: 'buildToNamespace', description: 'The namespace to build and deploy to', choices: projectInfo.buildNamespaces),
@@ -41,17 +41,14 @@ def call(Map args) {
         }
     }
 
-    stage('Uninstall all components, if selected') {
+    stage("Clean ${projectInfo.deployToNamespace}") {
         if (projectInfo.cleanNamespace) {
-            def components = []
-            components.addAll(projectInfo.components)
-            def componentNames = components.collect { it. name }.join(',')
-            def removalStages = deploymentUtils.runComponentRemovalStages(projectInfo, components)
-            
-            parallel(removalStages)
+            loggingUtils.echoBanner("CLEANING NAMESPACE ${projectInfo.deployToNamespace}: ALL DEPLOYED COMPONENTS WILL BE REMOVED")
+
+            deploymentUtils.runComponentRemovalStages(projectInfo, projectInfo.components) 
         }
         else {
-            echo "REINSTALL NOT SELECTED: COMPONENTS ALREADY DEPLOYED WILL BE UPGRADED"
+            echo "CLEANING NAMESPACE NOT SELECTED; SKIPPING..."
         }
     }
 
