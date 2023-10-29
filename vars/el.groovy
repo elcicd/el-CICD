@@ -62,7 +62,7 @@ def node(Map args, Closure body) {
         label: "${args.agent}",
         cloud: 'openshift',
         podRetention: onFailure(),
-        idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: """
           spec:
             imagePullSecrets:
@@ -150,7 +150,7 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            rm -rfv *
+            rm -rfv ./*
             
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
