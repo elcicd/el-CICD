@@ -20,33 +20,33 @@ elCicdDefs-htpasswd:
   VOLUME_HTPASSWD:
     name: auth-vol
     secret:
-      secretName: ${OBJ_NAME}
+      secretName: $<OBJ_NAME>
       
 elCicdDefs-nfs:
   STORAGE_CLASS_NAME: demo-image-registry-nfs
   VOLUME_MNT_NFS:
-    name: ${DEMO_IMAGE_REGISTRY}
+    name: $<DEMO_IMAGE_REGISTRY>
     mountPath: /var/lib/registry
-    subPath: ${OBJ_NAME}
+    subPath: $<OBJ_NAME>
   VOLUME_NFS:
-    name: ${DEMO_IMAGE_REGISTRY}
+    name: $<DEMO_IMAGE_REGISTRY>
     persistentVolumeClaim:
-      claimName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+      claimName: $<DEMO_IMAGE_REGISTRY>-nfs-pvc
 
 elCicdTemplates:
 - templateName: deploymentServiceIngress
-  objNames: ${OBJ_NAMES}
+  objNames: $<OBJ_NAMES>
   image: registry
-  port: ${PORT}
-  env: ${ENV}
+  port: $<PORT>
+  env: $<ENV>
   volumeMounts:
-  - ${VOLUME_MNT_HTPASSWD}
-  - ${VOLUME_MNT_NFS}
-  requestsMemory: ${MEMORY}
-  limitsMemory: ${MEMORY}
+  - $<VOLUME_MNT_HTPASSWD>
+  - $<VOLUME_MNT_NFS>
+  requestsMemory: $<MEMORY>
+  limitsMemory: $<MEMORY>
   volumes:
-  - ${VOLUME_HTPASSWD}
-  - ${VOLUME_NFS}
+  - $<VOLUME_HTPASSWD>
+  - $<VOLUME_NFS>
 
 - templateName: limitRange
   objName: demo-image-registry
@@ -56,30 +56,30 @@ elCicdTemplates:
     type: Container
   
 - templateName: secret
-  objNames: ${OBJ_NAMES}
+  objNames: $<OBJ_NAMES>
   mustHaveAnyProfile:
   - htpasswd
   stringData:
-    htpasswd: ${${OBJ_NAME}_HTPASSWD}
+    htpasswd: $<$<OBJ_NAME>_HTPASSWD>
     
 - templateName: persistentVolume
-  objName: ${DEMO_IMAGE_REGISTRY}-nfs
+  objName: $<DEMO_IMAGE_REGISTRY>-nfs
   mustHaveAnyProfile:
   - nfs
-  storageClassName: ${STORAGE_CLASS_NAME}
+  storageClassName: $<STORAGE_CLASS_NAME>
   storageCapacity: 10Gi
   accessModes:
   - ReadWriteMany
   nfs:
-    path: /mnt/${DEMO_IMAGE_REGISTRY}
-    server: ${HOST_IP}
+    path: /mnt/$<DEMO_IMAGE_REGISTRY>
+    server: $<HOST_IP>
     
 - templateName: persistentVolumeClaim
-  objName: ${DEMO_IMAGE_REGISTRY}-nfs-pvc
+  objName: $<DEMO_IMAGE_REGISTRY>-nfs-pvc
   mustHaveAnyProfile:
   - nfs
-  storageClassName: ${STORAGE_CLASS_NAME}
-  volumeName: ${DEMO_IMAGE_REGISTRY}-nfs
+  storageClassName: $<STORAGE_CLASS_NAME>
+  volumeName: $<DEMO_IMAGE_REGISTRY>-nfs
   accessMode: ReadWriteMany
   storageRequest: 10Gi
     

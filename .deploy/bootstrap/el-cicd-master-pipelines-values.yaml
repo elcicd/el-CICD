@@ -7,7 +7,7 @@ elCicdDefs:
   PIPELINE_PARAMS: |-
     parameters {
       stringParam('TEAM_ID', null, 'Team ID')
-      ${EXTRA_PIPELINE_PARAMS}
+      $<EXTRA_PIPELINE_PARAMS>
     }
   EL_CICD_API_ARGS: |-
     teamId: params.TEAM_ID
@@ -17,14 +17,14 @@ elCicdDefs-nonprod:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
   - delete-team-project
-  PIPELINE_NAME: ${OBJ_NAME}
+  PIPELINE_NAME: $<OBJ_NAME>
   PROJECT_ID_PIPELINE_PARAM: |-
     stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
   EL_CICD_API_ARGS: |-
     agent:  el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: params.TEAM_ID,
     projectId: params.PROJECT_ID,
-    ${EXTRA_EL_CICD_API_ARGS}
+    $<EXTRA_EL_CICD_API_ARGS>
   
 elCicdDefs-onboard-team-cicd-server:
   PIPELINE_DESCRIPTION: 'Onboard or update a prod team CICD server for promotions and deployments'
@@ -33,7 +33,7 @@ elCicdDefs-onboard-team-cicd-server:
 elCicdDefs-onboard-team-cicd-server-nonprod:
   PIPELINE_DESCRIPTION: 'Onboard or update a team CICD server and/or project'
   EXTRA_PIPELINE_PARAMS: |-
-    ${PROJECT_ID_PIPELINE_PARAM}
+    $<PROJECT_ID_PIPELINE_PARAM>
     booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
   EXTRA_EL_CICD_API_ARGS: |-
     rebuildCicdEnvs: params.REBUILD_CICD_ENVS
@@ -49,11 +49,11 @@ elCicdDefs-refresh-team-cicd-servers-nonprod:
 
 elCicdDefs-delete-team-project-nonprod:
   PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
-  EXTRA_PIPELINE_PARAMS: ${PROJECT_ID_PIPELINE_PARAM}
+  EXTRA_PIPELINE_PARAMS: $<PROJECT_ID_PIPELINE_PARAM>
   EL_CICD_API_METHOD: deleteTeamProject
 
 elCicdTemplates-master-pipelines-defs:
 - templateName: configMap
-  objNames: ${PIPELINE_NAMES}
-  labels: ${JENKINS_PIPELINE_LABEL}
-  data: ${TEAM_PIPELINE_CONFIG_MAP_DATA}
+  objNames: $<PIPELINE_NAMES>
+  labels: $<JENKINS_PIPELINE_LABEL>
+  data: $<TEAM_PIPELINE_CONFIG_MAP_DATA>

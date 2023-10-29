@@ -139,7 +139,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     helm dependency update .
                 fi
                 
-                helm upgrade --install --atomic \
+                helm upgrade --install --atomic --history-max=1 \
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \

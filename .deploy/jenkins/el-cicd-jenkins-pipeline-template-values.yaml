@@ -2,26 +2,26 @@ elCicdDefs:
   EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
   
   TEAM_PIPELINE_CONFIG_MAP_DATA:
-    contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${EL_CICD_TEAM_PIPELINE_TEMPLATE}
-    path: ${OBJ_NAME}.yaml
+    contentKey: $<OBJ_NAME>
+    $<OBJ_NAME>: $<EL_CICD_TEAM_PIPELINE_TEMPLATE>
+    path: $<OBJ_NAME>.yaml
   
   PROJECT_PIPELINE_CONFIG_MAP_DATA:
-    contentKey: ${OBJ_NAME}
-    ${OBJ_NAME}: ${EL_CICD_PROJECT_PIPELINE_TEMPLATE}
-    path: ${OBJ_NAME}.yaml
+    contentKey: $<OBJ_NAME>
+    $<OBJ_NAME>: $<EL_CICD_PROJECT_PIPELINE_TEMPLATE>
+    path: $<OBJ_NAME>.yaml
     
   JENKINS_PROJECT_FOLDER_DSL_SCRIPT: |-
     script: |-
-      folder('${FOLDER_NAME}') {
-          displayName('${FOLDER_NAME}')
-          description('el-CICD generated pipelines for ${FOLDER_NAME}')
+      folder('$<FOLDER_NAME>') {
+          displayName('$<FOLDER_NAME>')
+          description('el-CICD generated pipelines for $<FOLDER_NAME>')
       }
     
   JENKINS_PIPELINE_DSL_SCRIPT: |-
     script: |-
-      pipelineJob('${FOLDER_NAME}/${PIPELINE_NAME}') {
-          authenticationToken('${AUTH_TOKEN}')
+      pipelineJob('$<FOLDER_NAME>/$<PIPELINE_NAME>') {
+          authenticationToken('$<AUTH_TOKEN>')
           disabled(false)
           keepDependencies(false)
           throttleConcurrentBuilds {
@@ -29,15 +29,16 @@ elCicdDefs:
               maxTotal(1)
           }
           
-          description("${PIPELINE_DESCRIPTION}")
-          displayName('${PIPELINE_NAME}')
-          ${PIPELINE_PARAMS}
+          description("$<PIPELINE_DESCRIPTION>")
+          displayName('$<PIPELINE_NAME>')
+          $<PIPELINE_PARAMS>
 
           definition {
               cps {
                   script('''
                       node() {
-                          def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: "oc get cm $env.EL_CICD_META_INFO_NAME -o json")))
+                          def metaInfoScript = "oc get cm $EL_CICD_META_INFO_NAME -o json"
+                          def elcicdMetaData = (readJSON(text: sh(returnStdout: true, script: metaInfoScript)))
                           def elCicdData = elcicdMetaData.data
 
                           def scmMap = [$class: 'GitSCMSource',
@@ -49,11 +50,11 @@ elCicdDefs:
                       }
 
                       def args = [
-                          pipelineName: '${PIPELINE_NAME}',
-                          ${EL_CICD_API_ARGS}
+                          pipelineName: '$<PIPELINE_NAME>',
+                          $<EL_CICD_API_ARGS>
                       ]
                       el.node(args) {
-                          ${EL_CICD_API_METHOD}(args)
+                          $<EL_CICD_API_METHOD>(args)
                       }
                   ''')
                   sandbox(true)
@@ -63,9 +64,9 @@ elCicdDefs:
 
   EL_CICD_TEAM_PIPELINE_TEMPLATE: |-
     jobs:
-    - ${JENKINS_PIPELINE_DSL_SCRIPT}
+    - $<JENKINS_PIPELINE_DSL_SCRIPT>
 
   EL_CICD_PROJECT_PIPELINE_TEMPLATE: |-
     jobs:
-    - ${JENKINS_PROJECT_FOLDER_DSL_SCRIPT}
-    - ${JENKINS_PIPELINE_DSL_SCRIPT}
+    - $<JENKINS_PROJECT_FOLDER_DSL_SCRIPT>
+    - $<JENKINS_PIPELINE_DSL_SCRIPT>

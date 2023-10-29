@@ -2,24 +2,24 @@ elCicdTemplates-elcicd-kust:
 - templateName: kustomization
   fields:
     commonLabels:
-      el.cicd.teamid: ${TEAM_ID}
-      el.cicd.projectid: ${PROJECT_ID}
-      el.cicd.component: ${COMPONENT_NAME}
+      el.cicd.teamid: $<TEAM_ID>
+      el.cicd.projectid: $<PROJECT_ID>
+      el.cicd.component: $<COMPONENT_NAME>
     
     configMapGenerator:
-    - name: ${PROJECT_ID}-${COMPONENT_NAME}-${META_INFO_POSTFIX}
+    - name: $<PROJECT_ID>-$<COMPONENT_NAME>-$<META_INFO_POSTFIX>
       options:
         disableNameSuffixHash: true
       literals:
-      - projectid=${PROJECT_ID}
-      - component=${COMPONENT_NAME}
-      - profiles=${EL_CICD_PROFILES}
-      - scm-repo=${SCM_REPO_NAME}
-      - src-commit-hash=${SRC_COMMIT_HASH}
-      - deployment-branch=${DEPLOYMENT_BRANCH}
-      - release-version=${RELEASE_VERSION}
-      - code-base=${CODE_BASE}
-      - build-number="${BUILD_NUMBER}"
-      - deploy-time="${EL_CICD_DEPLOYMENT_TIME}"
+      - projectid=$<PROJECT_ID>
+      - component=$<COMPONENT_NAME>
+      - profiles=$<EL_CICD_PROFILES>
+      - scm-repo=$<SCM_REPO_NAME>
+      - src-commit-hash=$<SRC_COMMIT_HASH>
+      - deployment-branch=$<DEPLOYMENT_BRANCH>
+      - release-version=$<RELEASE_VERSION>
+      - code-base=$<CODE_BASE>
+      - build-number="$<BUILD_NUMBER>"
+      - deploy-time="$<EL_CICD_DEPLOYMENT_TIME>"
       
     

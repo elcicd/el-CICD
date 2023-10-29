@@ -294,7 +294,7 @@ __create_onboarding_automation_server() {
         --set-string elCicdDefs.JENKINS_UC=${JENKINS_UC} \
         --set-string elCicdDefs.JENKINS_UC_INSECURE=${JENKINS_UC_INSECURE} \
         --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
-        --set-file 'elCicdDefs.${CONFIG|EL_CICD_META_INFO}'=${EL_CICD_META_INFO_FILE} \
+        --set-file 'elCicdDefs.$<CONFIG|EL_CICD_META_INFO>'=${EL_CICD_META_INFO_FILE} \
         --set-file elCicdDefs.JENKINS_CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
         --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
         -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \

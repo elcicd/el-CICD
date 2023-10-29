@@ -1,77 +1,77 @@
 elCicdDefs-nonprod:
   BUILD_COMPONENT_PIPELINE_LABELS:
-    projectid: ${PROJECT_ID}
-    component: ${BASE_OBJ_NAME}
+    projectid: $<PROJECT_ID>
+    component: $<BASE_OBJ_NAME>
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   BUILD_ARTIFACT_PIPELINE_LABELS:
-    projectid: ${PROJECT_ID}
-    artifact: ${BASE_OBJ_NAME}
+    projectid: $<PROJECT_ID>
+    artifact: $<BASE_OBJ_NAME>
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   SHARED_PROJECT_PIPELINE_LABELS:
-    projectid: ${PROJECT_ID}
+    projectid: $<PROJECT_ID>
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
   COMMON_BUILD_ARGS: |-
-    agent:  '${CODE_BASE}',
-    teamId: '${TEAM_ID}',
-    projectId: '${PROJECT_ID}',
+    agent:  '$<CODE_BASE>',
+    teamId: '$<TEAM_ID>',
+    projectId: '$<PROJECT_ID>',
     isBuild: true,
     scmBranch: params.SCM_BRANCH
   SCM_BRANCH_BUILD_PARAM: |-
-    stringParam('SCM_BRANCH', '${SCM_BRANCH}', 'Git branch/tag/hash to build')
+    stringParam('SCM_BRANCH', '$<SCM_BRANCH>', 'Git branch/tag/hash to build')
   REDEPLOY_RELEASE_CANDIDATE_PARAMS: |-
     parameters {
-      stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
+      stringParam('VERSION_TAG', null, "$<VERSION_TAG_DESCRIPTION>")
     }
 
 elCicdTemplates:
 - templateName: configMap
-  objNames: ${BUILD_COMPONENT_PIPELINES}
-  objName: ${PROJECT_ID}-${}-build-component
+  objNames: $<BUILD_COMPONENT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-build-component
   mustHaveEveryProfile:
   - nonprod
-  labels: ${BUILD_COMPONENT_PIPELINE_LABELS}
+  labels: $<BUILD_COMPONENT_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: ${BASE_OBJ_NAME}-build-component
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
     PIPELINE_PARAMS: |-
       parameters {
-        ${SCM_BRANCH_BUILD_PARAM}
-        choiceParam('DEPLOY_TO_NAMESPACE', ${BUILD_NAMESPACE_CHOICES}, 'Namespace to deploy to')
-        booleanParam('REINSTALL', false, 'Uninstall ${BASE_OBJ_NAME} before deploying build?')
+        $<SCM_BRANCH_BUILD_PARAM>
+        choiceParam('DEPLOY_TO_NAMESPACE', $<BUILD_NAMESPACE_CHOICES>, 'Namespace to deploy to')
+        booleanParam('REINSTALL', false, 'Uninstall $<BASE_OBJ_NAME> before deploying build?')
       }
     EL_CICD_API_ARGS: |-
-      ${COMMON_BUILD_ARGS},
-      componentName: '${BASE_OBJ_NAME}',
+      $<COMMON_BUILD_ARGS>,
+      componentName: '$<BASE_OBJ_NAME>',
       deployToNamespace: params.DEPLOY_TO_NAMESPACE,
       recreate: params.REINSTALL,
     EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
-      ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
-  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
+      $<PROJECT_ID>-$<BASE_OBJ_NAME>-scm-repo-private-contentkey
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
-  objNames: ${BUILD_ARTIFACT_PIPELINES}
-  objName: ${PROJECT_ID}-${}-build-artifact
+  objNames: $<BUILD_ARTIFACT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-build-artifact
   mustHaveEveryProfile:
   - nonprod
-  labels: ${BUILD_ARTIFACT_PIPELINE_LABELS}
+  labels: $<BUILD_ARTIFACT_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: ${BASE_OBJ_NAME}-build-artifact
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
     PIPELINE_PARAMS: |-
       parameters {
-        ${SCM_BRANCH_BUILD_PARAM}
+        $<SCM_BRANCH_BUILD_PARAM>
         booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
       }
     EL_CICD_API_ARGS: |-
-      ${COMMON_BUILD_ARGS},
-      artifactName: '${BASE_OBJ_NAME}',
+      $<COMMON_BUILD_ARGS>,
+      artifactName: '$<BASE_OBJ_NAME>',
       isSnapshot: params.IS_SNAPSHOT
     EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
-      ${PROJECT_ID}-${BASE_OBJ_NAME}-scm-repo-private-contentkey
-  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
+      $<PROJECT_ID>-$<BASE_OBJ_NAME>-scm-repo-private-contentkey
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
   objNames:
@@ -81,18 +81,18 @@ elCicdTemplates:
   - 4-redeploy-components
   - 5-create-release-candidate
   - 6-redeploy-release-candidate
-  objName: ${PROJECT_ID}-${}
+  objName: $<PROJECT_ID>-$<>
   mustHaveEveryProfile:
   - nonprod
-  labels: ${SHARED_PROJECT_PIPELINE_LABELS}
+  labels: $<SHARED_PROJECT_PIPELINE_LABELS>
   elCicdDefs:
     EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
-    PIPELINE_NAME: ${BASE_OBJ_NAME}
+    PIPELINE_NAME: $<BASE_OBJ_NAME>
     EL_CICD_API_ARGS: |-
       agent: el.cicd.JENKINS_AGENT_DEFAULT,
-      teamId: '${TEAM_ID}',
-      projectId: '${PROJECT_ID}',
-      ${EXTRA_PIPELINE_ARGS}
+      teamId: '$<TEAM_ID>',
+      projectId: '$<PROJECT_ID>',
+      $<EXTRA_PIPELINE_ARGS>
   elCicdDefs-1-build-artifacts-and-components:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-2-promote-components:
@@ -103,14 +103,14 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
-        choiceParam('REDEPLOY_ENVIRONMENT', ${REDEPLOY_ENV_CHOICES}, 'Environment to redeploy')
+        choiceParam('REDEPLOY_ENVIRONMENT', $<REDEPLOY_ENV_CHOICES>, 'Environment to redeploy')
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-5-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: |-
       parameters {
-        stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
+        stringParam('VERSION_TAG', null, "$<VERSION_TAG_DESCRIPTION>")
         booleanParam('STRICT_SEMVER', true, 'Enable strict SemVer validation (https://semver.org/)')
       }
     EXTRA_PIPELINE_ARGS: |-
@@ -121,17 +121,17 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployReleaseCandidate
     PIPELINE_PARAMS:  |-
       parameters {
-        stringParam('VERSION_TAG', null, "${VERSION_TAG_DESCRIPTION}")
+        stringParam('VERSION_TAG', null, "$<VERSION_TAG_DESCRIPTION>")
       }
     EXTRA_PIPELINE_ARGS: "versionTag: params.VERSION_TAG"
     VERSION_TAG_DESCRIPTION: "Release candidate version tag to redeploy to the project pre-prod environment"
-  data: ${PROJECT_PIPELINE_CONFIG_MAP_DATA}
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: roleBinding
-  objName: ${PROJECT_ID}-edit
+  objName: $<PROJECT_ID>-edit
   mustHaveEveryProfile:
   - nonprod
-  namespaces: ${CICD_NAMESPACES}
+  namespaces: $<CICD_NAMESPACES>
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
@@ -139,15 +139,15 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: jenkins
-    namespace: ${HELM_RELEASE_NAMESPACE}
+    namespace: $<HELM_RELEASE_NAMESPACE>
   - kind: Group
-    name: ${${NAME_SPACE}_GROUP}
+    name: $<$<NAME_SPACE>_GROUP>
 
 - templateName: copyResource
-  objNames: ${NONPROD_ENVS}
-  objName: el-cicd-${}-pull-secret
+  objNames: $<NONPROD_ENVS>
+  objName: el-cicd-$<>-pull-secret
   mustHaveEveryProfile:
   - nonprod
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${PROJECT_ID}-${BASE_OBJ_NAME}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<PROJECT_ID>-$<BASE_OBJ_NAME>

@@ -7,28 +7,28 @@ elCicdDefs:
   
   JENKINS_CASC: jenkins-casc
   JENKINS_CASC_YAML: jenkins-casc.yaml
-  JENKINS_CASC_PATH: ${JENKINS_INSTALL_DIR}/${JENKINS_CASC}
+  JENKINS_CASC_PATH: $<JENKINS_INSTALL_DIR>/$<JENKINS_CASC>
   CASC_RELOAD_TOKEN: elcicd
   
   JENKINS_PLUGINS: jenkins-plugins
   JENKINS_PLUGINS_TXT: jenkins-plugins.txt
-  JENKINS_PLUGINS_PATH: ${JENKINS_INSTALL_DIR}/${JENKINS_PLUGINS}
+  JENKINS_PLUGINS_PATH: $<JENKINS_INSTALL_DIR>/$<JENKINS_PLUGINS>
 
 elCicdDefs-jenkinsPersistent:
   JENKINS_PERSISTENT_VOLUME_MNT:
-    mountPath: ${JENKINS_INSTALL_DIR}
-    name: ${JENKINS_SERVICE_NAME}-data
+    mountPath: $<JENKINS_INSTALL_DIR>
+    name: $<JENKINS_SERVICE_NAME>-data
   JENKINS_PERSISTENT_VOLUME:
-    name: ${JENKINS_SERVICE_NAME}-data
+    name: $<JENKINS_SERVICE_NAME>-data
     persistentVolumeClaim:
-      claimName: ${JENKINS_SERVICE_NAME}
+      claimName: $<JENKINS_SERVICE_NAME>
 
 elCicdTemplates:
 - templateName: deployment
-  objName: ${JENKINS_SERVICE_NAME}
+  objName: $<JENKINS_SERVICE_NAME>
   labels:
-    name: ${JENKINS_SERVICE_NAME}
-  image: ${JENKINS_IMAGE}
+    name: $<JENKINS_SERVICE_NAME>
+  image: $<JENKINS_IMAGE>
   command: ["/bin/bash"]
   args:
   - -c
@@ -43,15 +43,15 @@ elCicdTemplates:
         echo "Jenkins plugins file not found $JENKINS_CICD_PLUGINS_FILE";
     fi;
     
-    cp ${JENKINS_CASC_PATH}/${JENKINS_CASC_YAML} ${JENKINS_CONFIG_FILE_PATH};
-    chmod 777 ${JENKINS_CONFIG_FILE_PATH}/${JENKINS_CASC_YAML};
+    cp $<JENKINS_CASC_PATH>/$<JENKINS_CASC_YAML> $<JENKINS_CONFIG_FILE_PATH>;
+    chmod 777 $<JENKINS_CONFIG_FILE_PATH>/$<JENKINS_CASC_YAML>;
     java -Djenkins.install.runSetupWizard=false
          -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true
          $JENKINS_JAVA_OVERRIDES
          -jar /usr/share/java/jenkins.war >> /var/log/jenkins-startup.log;
   strategyType: RollingUpdate
   imagePullSecret: el-cicd-jenkins-pull-secret
-  serviceAccountName: ${JENKINS_SERVICE_NAME}
+  serviceAccountName: $<JENKINS_SERVICE_NAME>
   env:
   - name: JENKINS_JAVA_OVERRIDES
     value: -D-XX:+UseParallelGC 
@@ -63,7 +63,7 @@ elCicdTemplates:
            -D-XX:+UseCGroupMemoryLimitForHeap
            -Dsun.zip.disableMemoryMapping=true
   - name: OPENSHIFT_ENABLE_OAUTH
-    value: ${OPENSHIFT_ENABLE_OAUTH}
+    value: $<OPENSHIFT_ENABLE_OAUTH>
   - name: OPENSHIFT_ENABLE_REDIRECT_PROMPT
     value: "true"
   - name: KUBERNETES_MASTER
@@ -71,21 +71,21 @@ elCicdTemplates:
   - name: KUBERNETES_TRUST_CERTIFICATES
     value: "true"
   - name: JENKINS_SERVICE_NAME
-    value: ${JENKINS_SERVICE_NAME}
+    value: $<JENKINS_SERVICE_NAME>
   - name: JNLP_SERVICE_NAME
-    value: ${JENKINS_SERVICE_NAME}
+    value: $<JENKINS_SERVICE_NAME>
   - name: ENABLE_FATAL_ERROR_LOG_FILE
-    value: ${ENABLE_FATAL_ERROR_LOG_FILE}
+    value: $<ENABLE_FATAL_ERROR_LOG_FILE>
   - name: CASC_JENKINS_CONFIG
-    value: ${JENKINS_CONFIG_FILE_PATH}
+    value: $<JENKINS_CONFIG_FILE_PATH>
   - name: CASC_RELOAD_TOKEN
-    value: ${CASC_RELOAD_TOKEN}
+    value: $<CASC_RELOAD_TOKEN>
   - name: JENKINS_CICD_PLUGINS_FILE
-    value: ${JENKINS_PLUGINS_PATH}/${JENKINS_PLUGINS_TXT}
+    value: $<JENKINS_PLUGINS_PATH>/$<JENKINS_PLUGINS_TXT>
   - name: JENKINS_UC
-    value: ${JENKINS_UC}
+    value: $<JENKINS_UC>
   - name: JENKINS_UC_INSECURE
-    value: ${JENKINS_UC_INSECURE}
+    value: $<JENKINS_UC_INSECURE>
   ports:
     - name: httpport
       containerPort: 8080
@@ -107,33 +107,33 @@ elCicdTemplates:
     timeoutSeconds: 240
   resources:
     limits:
-      memory: ${JENKINS_MEMORY_REQUEST}
+      memory: $<JENKINS_MEMORY_REQUEST>
     requests:
-      memory: ${JENKINS_MEMORY_LIMIT}
-      cpu: ${JENKINS_CPU_REQUEST}
+      memory: $<JENKINS_MEMORY_LIMIT>
+      cpu: $<JENKINS_CPU_REQUEST>
   volumeMounts:
-  - name: ${JENKINS_PLUGINS}
-    mountPath: ${JENKINS_PLUGINS_PATH}
-  - name: ${JENKINS_CASC}
-    mountPath: ${JENKINS_CASC_PATH}
-  - ${JENKINS_PERSISTENT_VOLUME_MNT}
+  - name: $<JENKINS_PLUGINS>
+    mountPath: $<JENKINS_PLUGINS_PATH>
+  - name: $<JENKINS_CASC>
+    mountPath: $<JENKINS_CASC_PATH>
+  - $<JENKINS_PERSISTENT_VOLUME_MNT>
   volumes:
-  - name: ${JENKINS_PLUGINS}
+  - name: $<JENKINS_PLUGINS>
     configMap:
-      name: ${JENKINS_PLUGINS}
+      name: $<JENKINS_PLUGINS>
       items:
-      - key: ${JENKINS_PLUGINS_TXT}
-        path: ${JENKINS_PLUGINS_TXT}
-  - name: ${JENKINS_CASC}
+      - key: $<JENKINS_PLUGINS_TXT>
+        path: $<JENKINS_PLUGINS_TXT>
+  - name: $<JENKINS_CASC>
     configMap:
-      name: ${JENKINS_CASC}
+      name: $<JENKINS_CASC>
       items:
-      - key: ${JENKINS_CASC_YAML}
-        path: ${JENKINS_CASC_YAML}
-  - ${JENKINS_PERSISTENT_VOLUME}
+      - key: $<JENKINS_CASC_YAML>
+        path: $<JENKINS_CASC_YAML>
+  - $<JENKINS_PERSISTENT_VOLUME>
 
 - templateName: service
-  objName: ${JENKINS_SERVICE_NAME}
+  objName: $<JENKINS_SERVICE_NAME>
   ports:
   - name: https
     port: 8080
@@ -141,23 +141,23 @@ elCicdTemplates:
     port: 50000
 
 - templateName: configMap
-  objName: ${JENKINS_CASC}
+  objName: $<JENKINS_CASC>
   data:
-    ${JENKINS_CASC_YAML}: ${JENKINS_CASC_FILE}
+    $<JENKINS_CASC_YAML>: $<JENKINS_CASC_FILE>
 
 - templateName: configMap
-  objName: ${JENKINS_PLUGINS}
+  objName: $<JENKINS_PLUGINS>
   data:
-    ${JENKINS_PLUGINS_TXT}: ${JENKINS_PLUGINS_FILE}
+    $<JENKINS_PLUGINS_TXT>: $<JENKINS_PLUGINS_FILE>
 
 - templateName: limitRange
   objName: jenkins
   limits:
   - default:
-      memory: ${JENKINS_AGENT_MEMORY_LIMIT}
+      memory: $<JENKINS_AGENT_MEMORY_LIMIT>
     defaultRequest:
-      memory: ${JENKINS_AGENT_MEMORY_REQUEST}
-      cpu: ${JENKINS_AGENT_CPU_REQUEST}
+      memory: $<JENKINS_AGENT_MEMORY_REQUEST>
+      cpu: $<JENKINS_AGENT_CPU_REQUEST>
     type: Container
 
 - templateName: configMap
@@ -186,16 +186,16 @@ elCicdTemplates:
     Overall-Read: admin
 
 - templateName: ingress
-  objName: ${JENKINS_SERVICE_NAME}
-  host: ${JENKINS_URL}
+  objName: $<JENKINS_SERVICE_NAME>
+  host: $<JENKINS_URL>
 
 - templateName: serviceAccount
-  objName: ${JENKINS_SERVICE_NAME}
+  objName: $<JENKINS_SERVICE_NAME>
   annotations:
-    serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://${JENKINS_URL}
+    serviceaccounts.openshift.io/oauth-redirecturi.jenkins: https://$<JENKINS_URL>
 
 - templateName: clusterRoleBinding
-  objName: ${JENKINS_SERVICE_NAME}-${HELM_RELEASE_NAMESPACE}-admin
+  objName: $<JENKINS_SERVICE_NAME>-$<HELM_RELEASE_NAMESPACE>-admin
   mustHaveAnyProfile:
   - onboarding
   mustNotHaveAnyProfile:
@@ -206,11 +206,11 @@ elCicdTemplates:
     name: cluster-admin
   subjects:
   - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
-    namespace: ${HELM_RELEASE_NAMESPACE}
+    name: $<JENKINS_SERVICE_NAME>
+    namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: roleBinding
-  objName: ${JENKINS_SERVICE_NAME}-${HELM_RELEASE_NAMESPACE}-nonroot-builder
+  objName: $<JENKINS_SERVICE_NAME>-$<HELM_RELEASE_NAMESPACE>-nonroot-builder
   mustHaveAnyProfile:
   - cicd
   - okd
@@ -222,35 +222,35 @@ elCicdTemplates:
     name: system:openshift:scc:nonroot-builder
   subjects:
   - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
-    namespace: ${HELM_RELEASE_NAMESPACE}
+    name: $<JENKINS_SERVICE_NAME>
+    namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: roleBinding
-  objName: ${JENKINS_SERVICE_NAME}-edit
+  objName: $<JENKINS_SERVICE_NAME>-edit
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
     name: edit
   subjects:
   - kind: ServiceAccount
-    name: ${JENKINS_SERVICE_NAME}
-    namespace: ${HELM_RELEASE_NAMESPACE}
+    name: $<JENKINS_SERVICE_NAME>
+    namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: persistentVolumeClaim
   mustHaveAnyProfile:
   - jenkinsPersistent
-  objName: ${JENKINS_SERVICE_NAME}
-  storageRequest: ${VOLUME_CAPACITY}
+  objName: $<JENKINS_SERVICE_NAME>
+  storageRequest: $<VOLUME_CAPACITY>
   accessMode: ReadWriteMany
 
 - templateName: configMap
   mustHaveAnyProfile:
   - onboarding
-  objName: ${EL_CICD_META_INFO_NAME}
-  data: ${EL_CICD_META_INFO}
+  objName: $<EL_CICD_META_INFO_NAME>
+  data: $<EL_CICD_META_INFO>
 
 - templateName: roleBinding
-  objName: ${USER_GROUP}-jenkins-elcicd-user
+  objName: $<USER_GROUP>-jenkins-elcicd-user
   mustHaveAnyProfile:
   - cicd
   roleRef:
@@ -259,58 +259,58 @@ elCicdTemplates:
     name: elcicd-user
   subjects:
   - kind: Group
-    name: ${USER_GROUP}
+    name: $<USER_GROUP>
     apiGroup: rbac.authorization.k8s.io
 
 - templateName: copyResource
-  objName: ${EL_CICD_META_INFO_NAME}
+  objName: $<EL_CICD_META_INFO_NAME>
   mustHaveAnyProfile:
   - cicd
   kind: ConfigMap
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
   
 - templateName: copyResource
-  objNames: ${EL_CICD_GIT_REPOS_READ_ONLY_KEYS}
+  objNames: $<EL_CICD_GIT_REPOS_READ_ONLY_KEYS>
   mustHaveAnyProfile:
   - cicd
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
   objName: el-cicd-jenkins-pull-secret
   mustHaveAnyProfile:
   - cicd
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objName: ${EL_CICD_BUILD_SECRETS_NAME}
+  objName: $<EL_CICD_BUILD_SECRETS_NAME>
   mustHaveAnyProfile:
   - cicd
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objNames: ${PROD_ENVS}
-  objName: el-cicd-${}-pull-secret
+  objNames: $<PROD_ENVS>
+  objName: el-cicd-$<>-pull-secret
   mustHaveEveryProfile:
   - cicd
   - prod
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objNames: ${NONPROD_ENVS}
-  objName: el-cicd-${}-pull-secret
+  objNames: $<NONPROD_ENVS>
+  objName: el-cicd-$<>-pull-secret
   mustHaveEveryProfile:
   - cicd
   - nonprod
   kind: Secret
-  fromNamespace: ${EL_CICD_MASTER_NAMESPACE}
-  toNamespace: ${HELM_RELEASE_NAMESPACE}
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
 

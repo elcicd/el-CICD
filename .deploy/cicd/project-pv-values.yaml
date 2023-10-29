@@ -1,17 +1,17 @@
 elCicdTemplates:
 - templateName: persistentVolume
-  objNames: ${VOLUME_OBJ_NAMES}
-  storageClassName: ${OBJ_NAME}
-  storageCapacity: ${STORAGE_CAPACITY}
-  accessModes: ${ACCESS_MODES}
-  persistentVolumeReclaimPolicy: ${RECLAIM_POLICY}
-  volumeMode: ${VOLUME_MODE}
-  ${VOLUME_TYPE}: ${VOLUME_DEF}
+  objNames: $<VOLUME_OBJ_NAMES>
+  storageClassName: $<OBJ_NAME>
+  storageCapacity: $<STORAGE_CAPACITY>
+  accessModes: $<ACCESS_MODES>
+  persistentVolumeReclaimPolicy: $<RECLAIM_POLICY>
+  volumeMode: $<VOLUME_MODE>
+  $<VOLUME_TYPE>: $<VOLUME_DEF>
 
 - templateName: persistentVolumeClaim
-  objNames: ${VOLUME_OBJ_NAMES}
-  namespace: ${VOLUME_NAMESPACE}
-  storageClassName: ${OBJ_NAME}
-  storageRequest: ${STORAGE_CAPACITY}
+  objNames: $<VOLUME_OBJ_NAMES>
+  namespace: $<VOLUME_NAMESPACE>
+  storageClassName: $<OBJ_NAME>
+  storageRequest: $<STORAGE_CAPACITY>
   accessMode: ReadWriteMany
   
