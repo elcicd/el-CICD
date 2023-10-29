@@ -47,7 +47,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
                 VALUES_FILES = \$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
                                     '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
-                                    -exec echo -n ' -f {}' \; )
+                                    -exec echo -n ' -f {}' \\; 2>/dev/null )
                                     
                 helm template \${VALUES_FILES} singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
                 rm -f \${VALUES_FILES}
