@@ -52,6 +52,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                                 -exec echo -n ' {}' \\; 2>/dev/null )
                 set -e
 
+                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
                      singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
 
@@ -62,7 +63,6 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
 
                 cat values.yaml
 
-                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template -f ${postRenderDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | grep -vE ^[#-] > ${postRenderDir}/kustomization.yaml
