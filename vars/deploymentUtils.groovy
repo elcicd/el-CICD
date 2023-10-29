@@ -45,10 +45,13 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
             sh """
                 rm -f ${tmpValuesFile}
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
+                
+                set +e
                 VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
                                 '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
                                 -exec echo -n '{} ' \\; 2>/dev/null )
-                                    
+                set -e
+
                 helm template -f \${VALUES_FILES/ / -f } -f ${postRenderDir}/${compConfigValues} \
                      singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
                 rm -f \${VALUES_FILES}
