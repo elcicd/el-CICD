@@ -45,7 +45,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
             sh """
                 rm -f ${tmpValuesFile}
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
-                VALUES_FILES = $(find ${DIR_ARRAY[@]} -maxdepth 1 -type f \
+                VALUES_FILES = \$(find ${DIR_ARRAY[@]} -maxdepth 1 -type f \
                                     '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
                                     -exec echo -n ' -f {}' \; )
                                     
