@@ -16,17 +16,13 @@ def cleanupFailedInstalls(def projectInfo) {
     """
 }
 
-def runComponentRemovalStages(def projectInfo, def components) {
-    def helmStages = concurrentUtils.createParallelStages("Component Removals", components) { component ->
-        sh """
-            if [[ ! -z \$(helm list --short --filter ${component.name} -n ${projectInfo.deployToNamespace}) ]]
-            then
-                helm uninstall --wait ${component.name} -n ${projectInfo.deployToNamespace}
-            fi
-        """
-    }
-
-    parallel(helmStages)
+def removeComponents(def projectInfo, def components) {    
+    def componentNames = components.collect { it. name }.join(' ')
+    sh """
+        helm uninstall ${componentNames} --wait  -n ${projectInfo.deployToNamespace} 
+    """
+    
+    sleep 3
 
     waitForAllTerminatingPodsToFinish(projectInfo)
 }

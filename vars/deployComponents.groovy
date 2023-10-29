@@ -21,7 +21,7 @@ def call(Map args) {
 
     stage("Remove component(s)") {
         if (componentsToRemove) {            
-            deploymentUtils.runComponentRemovalStages(projectInfo, componentsToRemove)
+            deploymentUtils.removeComponents(projectInfo, componentsToRemove)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE: SKIPPING")
