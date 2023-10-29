@@ -52,8 +52,9 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                                 -exec echo -n ' {}' \\; 2>/dev/null )
                 set -e
 
-                helm template -f \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
+                helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
                      singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
+
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
 
