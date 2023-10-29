@@ -46,7 +46,7 @@ def call(Map args) {
             def components = []
             components.addAll(projectInfo.components)
             def componentNames = components.collect { it. name }.join(',')
-            def removalStages = deploymentUtils.createComponentRemovalStages(projectInfo, components)
+            def removalStages = deploymentUtils.runComponentRemovalStages(projectInfo, components)
             
             parallel(removalStages)
         }
