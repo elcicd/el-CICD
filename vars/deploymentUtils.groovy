@@ -37,27 +37,20 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
 
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-            dir("${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}") {
+            def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
+            dir(postRenderDir) {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
-            def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
             sh """
                 rm -f ${tmpValuesFile}
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
-                for VALUES_DIR in \${DIR_ARRAY[@]}
-                do
-                    VALUES_FILES=\$(find ./ -maxdepth 1  -regex '.*\\.ya?ml\$' | sort -r | tr '\\n' ' ')
-                    for VALUES_FILE in \${VALUES_FILES}
-                    do
-                        echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
-                        cat \${VALUES_FILE} >> ${tmpValuesFile}
-                        rm \${VALUES_FILE}
-                    done
-                done
-                echo "\n# Values File Source: \${VALUES_FILE}" >> ${tmpValuesFile}
-                cat ${postRenderDir}/${componentConfigFile} >> ${tmpValuesFile}
-
+                VALUES_FILES = $(find ${DIR_ARRAY[@]} -maxdepth 1 -type f \
+                                    '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
+                                    -exec echo -n ' -f {}' \; )
+                                    
+                helm template \${VALUES_FILES} singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
+                rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
 
                 ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
