@@ -20,7 +20,10 @@ def removeComponents(def projectInfo, def components) {
     def componentNames = components.collect { it. name }.join('|')
     sh """
         RELEASES=$(helm list --short --filter '${componentNames}' | tr '\\n' ' ')
-        helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace} 
+        if [[ ! -z \${RELEASES} ]]
+        then
+            helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace} 
+        fi
     """
     
     sleep 3
