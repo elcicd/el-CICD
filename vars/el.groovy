@@ -150,7 +150,7 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            rm -rf *
+            rm -rfv *
             
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
