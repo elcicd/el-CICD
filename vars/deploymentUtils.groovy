@@ -17,9 +17,10 @@ def cleanupFailedInstalls(def projectInfo) {
 }
 
 def removeComponents(def projectInfo, def components) {    
-    def componentNames = components.collect { it. name }.join(' ')
+    def componentNames = components.collect { it. name }.join('|')
     sh """
-        helm uninstall ${componentNames} --wait  -n ${projectInfo.deployToNamespace} 
+        RELEASES=$(helm list --short --filter '${componentNames}' | tr '\\n' ' ')
+        helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace} 
     """
     
     sleep 3
