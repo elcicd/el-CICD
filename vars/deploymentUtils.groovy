@@ -54,7 +54,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
-                     singleValuesFile elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
+                     unified-values-yaml elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
