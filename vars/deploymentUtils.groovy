@@ -30,7 +30,9 @@ def removeComponents(def projectInfo, def components) {
     
     sleep 3
 
+    echo 'howdy 1'
     waitForAllTerminatingPodsToFinish(projectInfo)
+    echo 'howdy 2'
 }
 
 def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
@@ -39,9 +41,11 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
 
+    echo 'howdy 3'
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
 
+        echo "howdy ${component.name}"
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
             def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
             dir(postRenderDir) {
