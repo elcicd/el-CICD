@@ -45,7 +45,7 @@ def call(Map args) {
         if (projectInfo.cleanNamespace) {
             loggingUtils.echoBanner("CLEANING NAMESPACE ${projectInfo.deployToNamespace}: ALL DEPLOYED COMPONENTS WILL BE REMOVED")
 
-            deploymentUtils.removeComponents(projectInfo, projectInfo.components)d 
+            deploymentUtils.removeComponents(projectInfo, projectInfo.components)
         }
         else {
             echo "CLEANING NAMESPACE NOT SELECTED; SKIPPING..."
