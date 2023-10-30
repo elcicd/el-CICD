@@ -82,7 +82,7 @@ def verifyVersionTagValidSemver(projectInfo) {
 
  def getAvailableComponents(def projectInfo) {
     def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
-    def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+    def script = "oc get cm -l el-cicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
 
     def msNameHashData = sh(returnStdout: true, script: script).split(' ')
     msNameHashMap = [:]

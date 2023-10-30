@@ -6,7 +6,7 @@
 
 def checkoutAllRepos(def projectInfo) {
     def jsonPath = '{range .itecomp[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
-    def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
+    def script = "oc get cm -l el-cicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
     def compNameDepBranch = sh(returnStdout: true, script: script).split(' ')
 
     def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"

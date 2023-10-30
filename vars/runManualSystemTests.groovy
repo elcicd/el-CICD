@@ -38,7 +38,7 @@ def call(Map args) {
 
     stage ('Select components to test') {
         def jsonPath = '{range .itecomp[?(@.data.component)]}{.data.component}{" "}'
-        def script = "oc get cm -l projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.testModuleNamespace}"
+        def script = "oc get cm -l el-cicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.testModuleNamespace}"
         def compNames = sh(returnStdout: true, script: script).split(' ')
 
         def testMicroServiceReposSet = [] as Set

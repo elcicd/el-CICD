@@ -160,7 +160,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 def waitForAllTerminatingPodsToFinish(def projectInfo) {
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
-        TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+        TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l el-cicd.io/projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
         if [[ ! -z \${TERMINATING_PODS} ]]
         then
             ${shCmd.echo '', '--> WAIT FOR PODS TO COMPLETE TERMINATION', ''}
