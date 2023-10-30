@@ -26,7 +26,7 @@ void call(Map args) {
 
     def buildSteps = [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.SCANNER, el.cicd.DEPLOYER]
     buildSteps.each { buildStep ->
-        stage("build step: run ${buildStep} for ${artifact.name}") {
+        stage("build step: ${buildStep}") {
             loggingUtils.echoBanner("RUN ${buildStep.toUpperCase()} FOR artifact: ${artifact.name}")
 
             dir(artifact.workDir) {

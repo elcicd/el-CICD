@@ -19,7 +19,7 @@ def cleanupFailedInstalls(def projectInfo) {
 def removeComponents(def projectInfo, def components) {    
     def componentNames = components.collect { it. name }.join('|')
     sh """
-        RELEASES=\$(helm list --short --filter '${componentNames}' | tr '\\n' ' ')
+        RELEASES=\$(helm list --short --filter '${componentNames}' -n ${projectInfo.deployToNamespace} | tr '\\n' ' ')
         if [[ ! -z \${RELEASES} ]]
         then
             helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace}
