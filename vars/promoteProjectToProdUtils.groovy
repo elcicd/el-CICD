@@ -71,19 +71,28 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
 
-    concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
-        sh "git checkout -B ${module.releaseCandidateScmTag}"
+    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComps) { module ->
+        sh """
+            git fetch --all --tags
+            
+            if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag} ]]
+            then
+                git checkout tags/${module.releaseCandidateScmTag}
+            else
+                git switch -c ${module.releaseCandidateScmTag}
+            fi
+        """
     }
 }
 
 def createReleaseRepo(def projectInfo) {
-    deploymentUtils.setupComponentDeploymentDirs(projectInfo, projectInfo.releaseCandidateComps)
+    deploymentUtils.setupComponentsDeploymentDir(projectInfo, projectInfo.releaseCandidateComps)
     
     projectInfo.releaseCandidateComps.each { component ->
-        compDeployWorkDir = "${projectInfo.projectModule.workDir}/${component.scmRepoName}"
+        compDeployWorkDir = "${projectInfo.projectModule.workDir}/charts/${component.scmRepoName}"
         sh"""
-            mkdir ${compDeployWorkDir}
-            cp -R ${component.deploymentDir}/* ${compDeployWorkDir}/charts/
+            mkdir -p ${compDeployWorkDir}
+            cp -R ${component.deploymentDir}/* ${compDeployWorkDir}
         """
     }
 }

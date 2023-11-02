@@ -16,7 +16,7 @@ def cleanupFailedInstalls(def projectInfo) {
     """
 }
 
-def removeComponents(def projectInfo, def components) {    
+def removeComponents(def projectInfo, def components) {
     def componentNames = components.collect { it. name }.join('|')
     sh """
         RELEASES=\$(helm list --short --filter '${componentNames}' -n ${projectInfo.deployToNamespace} | tr '\\n' ' ')
@@ -27,14 +27,14 @@ def removeComponents(def projectInfo, def components) {
             ${shCmd.echo 'NOTHING TO CLEAN FROM NAMESPACE; SKIPPING...'}
         fi
     """
-    
+
     sleep 3
 
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def setupDeploymentDir(def projectInfo, def componentsToDeploy) {    
-    def commonConfigValues = getProjectCommonHelmValues(projectInfo)    
+def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
+    def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
@@ -51,7 +51,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
             sh """
                 rm -f ${tmpValuesFile}
                 DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
-                
+
                 set +e
                 VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
                                 '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
@@ -60,7 +60,8 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
-                     unified-values-yaml elCicdCharts/elCicdMergedValuesUtil > ${tmpValuesFile}
+                    --set-string renderValuesYaml=true \
+                    render-values-yaml elCicdCharts/elCicdChart > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
@@ -72,6 +73,13 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                 helm template -f ${postRenderDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | grep -vE ^[#-] > ${postRenderDir}/kustomization.yaml
+
+                if [[ ! -z ${projectInfo.projectModule == component ? 'true' : ''} ]]
+                then
+                    helm template --set-string VERSION=${projectInfo.releaseVersion} \
+                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
+                                  elCicdCharts/elCicdChart > Chart.yaml
+                fi
 
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} ${el.cicd.KUSTOMIZE_DIR}
             """
@@ -116,7 +124,7 @@ def getProjectCommonHelmValues(def projectInfo) {
 def getComponentConfigValues(def projectInfo, def component, def imageRegistry, def configValuesMap) {
     configValuesMap = configValuesMap.clone()
     configValuesMap.elCicdDefaults.objName = component.name
-    
+
     configValuesMap.elCicdDefaults.image =
         "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
 
@@ -138,7 +146,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                 then
                     helm dependency update .
                 fi
-                
+
                 helm upgrade --install --atomic  --history-max=1 \
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
