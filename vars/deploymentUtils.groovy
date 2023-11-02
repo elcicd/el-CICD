@@ -74,7 +74,7 @@ def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | grep -vE ^[#-] > ${postRenderDir}/kustomization.yaml
 
-                if [[ ! -z ${projectInfo.projectModule == component ? 'true' : ''} ]]
+                if [[ ! -z "${projectInfo.projectModule == component ? 'true' : ''}" ]]
                 then
                     helm template --set-string VERSION=${projectInfo.releaseVersion} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
