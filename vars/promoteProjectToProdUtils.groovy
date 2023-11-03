@@ -86,7 +86,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 }
 
 def createReleaseRepo(def projectInfo) {
-    deploymentUtils.setupComponentsDeploymentDir(projectInfo, projectInfo.releaseCandidateComps)
+    deploymentUtils.setupDeploymentDirs(projectInfo, projectInfo.releaseCandidateComps)
     
     projectInfo.releaseCandidateComps.each { component ->
         compDeployWorkDir = "${projectInfo.projectModule.workDir}/charts/${component.scmRepoName}"

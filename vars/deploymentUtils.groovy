@@ -33,7 +33,7 @@ def removeComponents(def projectInfo, def components) {
     waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
-def setupDeploymentDir(def projectInfo, def componentsToDeploy) {
+def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'

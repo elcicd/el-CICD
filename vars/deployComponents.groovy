@@ -32,7 +32,7 @@ def call(Map args) {
         if (componentsToDeploy) {
             loggingUtils.echoBanner("SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:", componentsToDeploy.collect { it.name }.join(', '))
 
-            deploymentUtils.setupDeploymentDir(projectInfo, componentsToDeploy)
+            deploymentUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
