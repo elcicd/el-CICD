@@ -73,7 +73,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComps) { module ->
         sh """
-            git fetch --all --tags
+            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
             
             if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag} ]]
             then
