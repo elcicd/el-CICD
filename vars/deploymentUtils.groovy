@@ -74,12 +74,13 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | grep -vE ^[#-] > ${postRenderDir}/kustomization.yaml
 
-                if [[ ! -z "${projectInfo.projectModule == component ? 'true' : ''}" ]]
+                if [[ ! -f Chart.yaml ]]
                 then
-                    helm template --set-string VERSION=${projectInfo.releaseVersion} \
+                    helm template --set-string VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
                                   elCicdCharts/elCicdChart > Chart.yaml
                 fi
+                helm dependency update .
 
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} ${el.cicd.KUSTOMIZE_DIR}
             """
@@ -141,17 +142,11 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
-                CHART=\$([[ -f ./Chart.yml ]] && echo '.' || echo 'elCicdCharts/elCicdChart')
-                if [[ \${CHART} == '.' ]]
-                then
-                    helm dependency update .
-                fi
-
                 helm upgrade --install --atomic  --history-max=1 \
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
-                    \${CHART} \
+                    . \
                     --post-renderer ./${el.cicd.KUSTOMIZE_DIR}/${el.cicd.COMP_KUST_SH} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
 
