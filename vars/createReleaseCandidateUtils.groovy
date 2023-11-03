@@ -86,8 +86,10 @@ def verifyVersionTagValidSemver(projectInfo) {
 
     def msNameHashData = sh(returnStdout: true, script: script).split(' ')
     msNameHashMap = [:]
+    print("msNameHashData: ${msNameHashData}")
     msNameHashData.each {
         def kv = it.split(':')
+        print("kv: ${kv}")
         if (kv) {
             msNameHashData.put(kv[0], kv[1])
         }
