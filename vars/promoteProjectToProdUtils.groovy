@@ -75,7 +75,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
         sh """
             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
             
-            if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag} ]]
+            if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag}) ]]
             then
                 git checkout tags/${module.releaseCandidateScmTag}
             else
