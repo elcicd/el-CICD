@@ -86,18 +86,16 @@ def verifyVersionTagValidSemver(projectInfo) {
 
     def msNameHashData = sh(returnStdout: true, script: script).split(' ')
     msNameHashMap = [:]
-    print("msNameHashData: ${msNameHashData}")
     msNameHashData.each {
         def kv = it.split(':')
-        print("kv[0]: ${kv[0]} / kv[1]: ${kv[1]}")
         if (kv) {
-            msNameHashData.put(kv[0], kv[1])
+            msNameHashMap.put(kv[0], kv[1])
         }
     }
 
     return projectInfo.components.findAll { component ->
-        if (msNameHashData.keySet().contains(component.name)) {
-            component.srcCommitHash = msNameHashData[component.name]
+        if (msNameHashMap.keySet().contains(component.name)) {
+            component.srcCommitHash = msNameHashMap[component.name]
             return true
         }
     }
