@@ -1,5 +1,5 @@
 elCicdTemplates:
-- templateName: chart.yaml
+- templateName: chart-yaml
   version: $<VERSION>
   type: application
   dependencies:
