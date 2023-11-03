@@ -9,6 +9,7 @@ void call(Map args) {
     
     def projectInfo = args.projectInfo
     projectInfo.versionTag = args.versionTag
+    projectInfo.deployToEnv = projectInfo.prodEnv
 
     stage ('Validate release Candidate') {
         loggingUtils.echoBanner("VALIDATING ${projectInfo.id} RELEASE CANDIDATE ${projectInfo.versionTag}")
