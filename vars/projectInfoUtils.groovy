@@ -267,7 +267,11 @@ def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = n
             ]
         )
         
-        postProcessing?.call(module)
+        if (postProcessing) {
+            withCredentials([sshUserPrivateKey(credentialsId: module.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                postProcessing?.call(module)
+            }            
+        }
     }
 }
 
