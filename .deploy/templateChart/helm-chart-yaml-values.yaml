@@ -5,10 +5,10 @@ elCicdTemplates:
   dependencies:
   - name: elCicdRenderer
     version: 0.1.0
-    repository: elCicdCharts/elCicdRenderer
+    repository: $<HELM_REPOSITORY_URL>
   - name: elCicdKubernetes
     version: 0.1.0
-    repository: elCicdCharts/elCicdKubernetes
+    repository: $<HELM_REPOSITORY_URL>
   - name: elCicdCommon
     version: 0.1.0
-    repository: elCicdCharts/elCicdCommon
+    repository: $<HELM_REPOSITORY_URL>
