@@ -151,7 +151,11 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            rm -rfv ./*
+            if [[ ! -z $(ls -A) ]]
+            then
+                ${shCmd.echo('Cleaning workspace from previous build...')}
+                rm -rf ./*
+            fi
             
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'

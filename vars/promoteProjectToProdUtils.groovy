@@ -59,11 +59,8 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     }
 }
 
-def createReleaseVersion(def projectInfo) {
-    def modules = [projectInfo.projectModule]
-    modules.addAll(projectInfo.componentsToPromote)
-
-    deploymentUtils.setupDeploymentDirs(projectInfo, modules)
+def createReleaseVersionComponentSubCharts(def projectInfo) {
+    deploymentUtils.setupDeploymentDirs(projectInfo, projectInfo.componentsToPromote)
 
     dir (projectInfo.projectModule.workDir) {
         projectInfo.componentsToPromote.each { component ->
@@ -72,11 +69,26 @@ def createReleaseVersion(def projectInfo) {
                 cp -R ${component.deploymentDir}/* charts/${component.name}
             """
         }
+    }
+}
 
+def createReleaseVersionUmbrellaChart(def projectInfo) {
+    dir (projectInfo.projectModule.workDir) {
         sh """
-            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
+            cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} \
+                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
+                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
 
-            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
+            helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+            helm template  --set createPackageValuesYaml=true \
+                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml
+                           render-values-yaml elCicdCharts/elCicdChart > values.yaml
+            
+            helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
+                          --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
+                          -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
+                          ${projectInfo.id} elCicdCharts/elCicdChart > Chart.yaml                  
+            
         """
     }
 }

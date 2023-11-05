@@ -28,7 +28,9 @@ void call(Map args) {
     stage ('Create release') {
         loggingUtils.echoBanner("CREATE RELEASE REPO")
 
-        promoteProjectToProdUtils.createReleaseVersion(projectInfo)        
+        promoteProjectToProdUtils.createReleaseVersionComponentSubCharts(projectInfo)
+
+        promoteProjectToProdUtils.createReleaseVersionUmbrellaChart(projectInfo)
     }
 
     stage('Summarize and confirm promotion') {

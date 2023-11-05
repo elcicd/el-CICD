@@ -85,8 +85,6 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                   ${component.name} elCicdCharts/elCicdChart > Chart.yaml
                                   
                     ${projectInfo.releaseVersion ? '' : 'helm dependency update .'}
-                else
-                    helm dependency update .
                 fi
                 
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
