@@ -63,7 +63,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
-                    --set renderValuesYaml=true \
+                    --set createPackagedValuesYaml=true \
                     render-values-yaml elCicdCharts/elCicdChart > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}

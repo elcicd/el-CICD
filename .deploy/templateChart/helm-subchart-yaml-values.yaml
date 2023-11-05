@@ -2,3 +2,11 @@ elCicdTemplates:
 - templateName: chart-yaml
   version: $<VERSION>
   type: application
+
+  dependencies:
+  - name: elCicdRenderer
+    version: 0.1.0
+  - name: elCicdKubernetes
+    version: 0.1.0
+  - name: elCicdCommon
+    version: 0.1.0
