@@ -4,7 +4,7 @@
 
 void call(Map args) {    
     if (!args.releaseVersion) {
-        loggingUtils.errorBanner("VERSION TAG NOT ENTERED")
+        loggingUtils.errorBanner("RELEASE VERSION NOT ENTERED")
     }
     
     def projectInfo = args.projectInfo
