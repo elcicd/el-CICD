@@ -39,7 +39,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
     def releaseVersion = projectInfo.releaseVersion ?: '0.1.0'
-    def chartYamlValues = projectInfo.releaseVersion ? helm-subchart-yaml-values.yaml : helm-chart-yaml-values.yaml
+    def chartYamlValues = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
 
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
