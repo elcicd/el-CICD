@@ -80,7 +80,7 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
                   ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
 
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-            helm template  --set createPackageValuesYaml=true \
+            helm template  --set valuesYamlToStdOut=true \
                            -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
                            render-values-yaml elCicdCharts/elCicdChart > values.yaml
             
