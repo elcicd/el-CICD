@@ -73,13 +73,11 @@ def createReleaseVersion(def projectInfo) {
             """
         }
 
-        withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            sh """
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
+        sh """
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
 
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
-            """
-        }
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
+        """
     }
 }
 
@@ -125,7 +123,7 @@ def confirmPromotion(def projectInfo, def args) {
 }
 
 def pushReleaseVersion(def projectInfo) {
-    withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+    withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         sh """
             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
                                     'git add -A',
