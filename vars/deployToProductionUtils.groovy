@@ -8,7 +8,7 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
     projectInfo.hasBeenReleased = false
     projectInfo.components.each { component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            def gitCmd = "git ls-remote ${component.scmRepoUrl} '**/${projectInfo.versionTag}-*'"
+            def gitCmd = "git ls-remote ${component.scmRepoUrl} '**/${projectInfo.releaseVersion}-*'"
             def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
 
             if (branchAndTagNames) {
@@ -17,13 +17,13 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
                 branchAndTagNames = branchAndTagNames.each { name ->
                     if (name.contains('/tags/')) {
                         component.releaseCandidateScmTag = name.trim().find( /[\w.-]+$/)
-                        assert component.releaseCandidateScmTag ==~ "${projectInfo.versionTag}-[\\w]{7}"
+                        assert component.releaseCandidateScmTag ==~ "${projectInfo.releaseVersion}-[\\w]{7}"
                         echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateScmTag}"
                     }
                     else {
                         projectInfo.hasBeenReleased = true
                         component.deploymentBranch = name.trim().find( /[\w.-]+$/)
-                        assert component.deploymentBranch ==~ "${projectInfo.versionTag}-[\\w]{7}"
+                        assert component.deploymentBranch ==~ "${projectInfo.releaseVersion}-[\\w]{7}"
                         echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${component.name}]: ${component.deploymentBranch}"
                     }
                 }
@@ -38,9 +38,9 @@ def gatherAllVersionGitTagsAndBranches(def projectInfo) {
 
 def cleanupPreviousRelease(def projectInfo) {
     sh """
-        ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.versionTag}")}
+        ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersion}")}
 
-        oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l el-cicd.io/projectid=${projectInfo.id},release-version!=${projectInfo.versionTag} -n ${projectInfo.prodNamespace}
+        oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l el-cicd.io/projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersion} -n ${projectInfo.prodNamespace}
     """
 
     deploymentUtils.waitingForPodsToTerminate(projectInfo.prodNamespace)

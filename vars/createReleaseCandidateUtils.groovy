@@ -8,25 +8,25 @@ import groovy.transform.Field
 SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?))$/
 
 def verifyVersionTagValidSemver(projectInfo) {    
-    if (!projectInfo.versionTag.matches(SEMVER_REGEX)) {
+    if (!projectInfo.releaseVersion.matches(SEMVER_REGEX)) {
         loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
                                  '',
-                                 "${projectInfo.versionTag} is NOT a valid SemVer",
+                                 "${projectInfo.releaseVersion} is NOT a valid SemVer",
                                  '',
                                  'Disable strict SemVer validation or see https://semver.org/ for more information')
     }
     else {
-        echo "--> Version Tag ${projectInfo.versionTag} confirmed valid"
+        echo "--> Version Tag ${projectInfo.releaseVersion} confirmed valid"
     }
  }
 
  def verifyVersionTagDoesNotExistInScm(def projectInfo) {
     projectInfo.components.each { component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.versionTag}-[a-z0-9]\{7\}" || :/
+            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.releaseVersion}-[a-z0-9]\{7\}" || :/
             def tagExists = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
             if (tagExists) {
-                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.versionTag} exists in SCM (${}), and CANNOT be reused")
+                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseVersion} exists in SCM (${}), and CANNOT be reused")
             }
         }
     }
@@ -42,7 +42,7 @@ def verifyVersionTagValidSemver(projectInfo) {
                                                    'PRE_PROD_IMAGE_REGISTRY_USERNAME',
                                                    'PRE_PROD_IMAGE_REGISTRY_PWD',
                                                     component.id,
-                                                    projectInfo.versionTag)
+                                                    projectInfo.releaseVersion)
 
             return sh(returnStdout: true, script: verifyImageCmd)
         }
@@ -50,7 +50,7 @@ def verifyVersionTagValidSemver(projectInfo) {
 
     if (imageExists) {
         def msg = "Version tag exists in pre-prod image registry for ${projectInfo.id} in ${projectInfo.PRE_PROD_ENV}, and cannot be reused"
-        loggingUtils.errorBanner("CREATING RELEASE CANDIDATE VERSION ${projectInfo.versionTag} FAILED: ", msg)
+        loggingUtils.errorBanner("CREATING RELEASE CANDIDATE VERSION ${projectInfo.releaseVersion} FAILED: ", msg)
     }
  }
 
@@ -65,7 +65,7 @@ def verifyVersionTagValidSemver(projectInfo) {
         booleanParam(name: component.name, defaultValue: component.status, description: "status: ${component.status}")
     }
 
-    def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.versionTag}"
+    def title = "Select components currently deployed in ${projectInfo.preProdNamespace} to tag as Release Candidate ${projectInfo.releaseVersion}"
     def cicdInfo = jenkinsUtils.displayInputWithTimeout(title, args, inputs)
 
     projectInfo.releaseCandidateComponents = componentsAvailable.findAll { component ->
@@ -106,13 +106,13 @@ def verifyVersionTagValidSemver(projectInfo) {
     def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
 
     def msg = loggingUtils.createBanner(
-        "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.versionTag}",
+        "CONFIRM CREATION OF COMPONENT MANIFEST FOR RELEASE CANDIDATE VERSION ${projectInfo.releaseVersion}",
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
         '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
-        "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.versionTag} IN THE PRE-PROD IMAGE REGISTRY",
-        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-hash>] TAGGED AS ${projectInfo.versionTag}-<src-commit-hash>:",
+        "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.releaseVersion} IN THE PRE-PROD IMAGE REGISTRY",
+        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-<src-commit-hash>] TAGGED AS ${projectInfo.releaseVersion}-<src-commit-hash>:",
         '',
         promotionNames,
         '',
@@ -126,11 +126,11 @@ def verifyVersionTagValidSemver(projectInfo) {
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
-        "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.versionTag}",
+        "WARNING: A Release Candidate CAN ONLY BE CREATED ONCE with version ${projectInfo.releaseVersion}",
         '',
         'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
         '',
-        "Should Release Candidate ${projectInfo.versionTag} be created?",
+        "Should Release Candidate ${projectInfo.releaseVersion} be created?",
     )
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
@@ -138,13 +138,13 @@ def verifyVersionTagValidSemver(projectInfo) {
 
  def createReleaseCandidate(def projectInfo) {
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComponents) { component ->
-        def gitReleaseCandidateTag = "${projectInfo.versionTag}-${component.srcCommitHash}"
+        def gitReleaseCandidateTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
         def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
                                             'PRE_PROD_IMAGE_REGISTRY_USERNAME',
                                             'PRE_PROD_IMAGE_REGISTRY_PWD',
                                             component.id,
                                             projectInfo.preProdEnv,
-                                            projectInfo.versionTag)
+                                            projectInfo.releaseVersion)
         component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
 
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
@@ -159,7 +159,7 @@ def verifyVersionTagValidSemver(projectInfo) {
                 ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
 
                 ${tagImageCmd}
-                ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.versionTag}"}
+                ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.releaseVersion}"}
                 ${shCmd.echo ''}
             """
         }

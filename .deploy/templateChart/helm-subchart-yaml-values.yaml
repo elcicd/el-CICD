@@ -1,0 +1,4 @@
+elCicdTemplates:
+- templateName: chart-yaml
+  version: $<VERSION>
+  type: application

@@ -3,21 +3,21 @@
  */
 
 void call(Map args) {    
-    if (!args.versionTag) {
+    if (!args.releaseVersion) {
         loggingUtils.errorBanner("VERSION TAG NOT ENTERED")
     }
     
     def projectInfo = args.projectInfo
-    projectInfo.versionTag = args.versionTag
+    projectInfo.releaseVersion = args.releaseVersion
     projectInfo.deployToEnv = projectInfo.prodEnv
 
     stage ('Validate release Candidate') {
-        loggingUtils.echoBanner("VALIDATING ${projectInfo.id} RELEASE CANDIDATE ${projectInfo.versionTag}")
+        loggingUtils.echoBanner("VALIDATING ${projectInfo.id} RELEASE CANDIDATE ${projectInfo.releaseVersion}")
 
         promoteProjectToProdUtils.gatherReleaseCandidateRepos(projectInfo)
         
         if (!projectInfo.releaseCandidateComps) {
-            loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.versionTag} NOT FOUND IN SCM")
+            loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
         }
     }
 

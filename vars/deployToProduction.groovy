@@ -7,7 +7,7 @@ def call(Map args) {
     def deployAll = args.deployAll
 
     def projectInfo = args.projectInfo
-    projectInfo.versionTag = args.versionTag
+    projectInfo.releaseVersion = args.releaseVersion
 
     projectInfo.deployToEnv = projectInfo.prodEnv
     if (args.releaseRegion) {
@@ -29,10 +29,10 @@ def call(Map args) {
         projectInfo.componentsInRelease = projectInfo.components.findAll { it.releaseCandidateScmTag }
 
         if (!projectInfo.componentsInRelease)  {
-            loggingUtils.errorBanner("${projectInfo.versionTag}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
+            loggingUtils.errorBanner("${projectInfo.releaseVersion}: BAD VERSION TAG", "RELEASE TAG(S) MUST EXIST")
         }
         else if (projectInfo.components.find{ it.deploymentBranch && !it.releaseCandidateScmTag })  {
-            loggingUtils.errorBanner("${projectInfo.versionTag}: BAD SCM STATE FOR RELEASE",
+            loggingUtils.errorBanner("${projectInfo.releaseVersion}: BAD SCM STATE FOR RELEASE",
                                       "RELEASE BRANCH AND TAG NAME(S) MUST MATCH, OR HAVE NO RELEASE BRANCHES",
                                       "Release Tags: ${projectInfo.components.collect{ it.releaseCandidateScmTag }}",
                                       "Release Branches: ${projectInfo.components.collect{ it.deploymentBranch }}")
@@ -40,14 +40,14 @@ def call(Map args) {
     }
 
     stage('Verify images are ready for deployment') {
-        loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.versionTag}:",
+        loggingUtils.echoBanner("VERIFY PROMOTION AND/OR DEPLOYMENT CAN PROCEED FOR VERSION ${projectInfo.releaseVersion}:",
                                  projectInfo.componentsInRelease.collect { it.name }.join(', '))
 
         def allImagesExist = true
         def PROMOTION_ENV_FROM = projectInfo.hasBeenReleased ? projectInfo.PROD_ENV : projectInfo.PRE_PROD_ENV
         withCredentials([string(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(PROMOTION_ENV_FROM),
                          variable: 'IMAGE_REGISTRY_PULL_TOKEN')]) {
-            def imageTag = projectInfo.hasBeenReleased ? projectInfo.versionTag : projectInfo.versionTag
+            def imageTag = projectInfo.hasBeenReleased ? projectInfo.releaseVersion : projectInfo.releaseVersion
 
             projectInfo.components.each { component ->
                 if (component.releaseCandidateScmTag) {
@@ -92,7 +92,7 @@ def call(Map args) {
 
         def metaInfoReleaseShell =
             "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-version }' -n ${projectInfo.prodNamespace} || :"
-        def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.versionTag
+        def metaInfoReleaseChanged = sh(returnStdout: true, script: metaInfoReleaseShell) != projectInfo.releaseVersion
 
         def metaInfoRegionShell =
             "oc get cm ${projectInfo.id}-${el.cicd.META_INFO_POSTFIX} -o jsonpath='{ .data.release-region }' -n ${projectInfo.prodNamespace} || :"
@@ -115,8 +115,8 @@ def call(Map args) {
 
     stage('Confirm release to production') {
         def promotionOrDeploymentMsg = projectInfo.hasBeenReleased ?
-            "CONFIRM REDEPLOYMENT OF ${projectInfo.versionTag}" :
-            "CONFIRM PROMOTION AND DEPLOYMENT OF RELEASE CANDIDATE ${projectInfo.versionTag}"
+            "CONFIRM REDEPLOYMENT OF ${projectInfo.releaseVersion}" :
+            "CONFIRM PROMOTION AND DEPLOYMENT OF RELEASE CANDIDATE ${projectInfo.releaseVersion}"
 
         def deployAllMsg = (projectInfo.hasBeenReleased && deployAll) ?
             '-> YOU HAVE ELECTED TO REDEPLOY ALL COMPONENTS:' :
@@ -159,15 +159,15 @@ def call(Map args) {
             {
                 projectInfo.componentsInRelease.each { component ->
                     def copyImageCmd =
-                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.versionTag,
-                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.versionTag)
+                        shCmd.copyImage(projectInfo.PRE_PROD_ENV, 'PRE_PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseVersion,
+                                        projectInfo.PROD_ENV, 'PROD_IMAGE_REGISTRY_PULL_TOKEN', component.id, projectInfo.releaseVersion)
 
                     sh """
                         ${shCmd.echo ''}
                         ${copyImageCmd}
                         ${shCmd.echo '',
                                     '******',
-                                    "${component.name}: ${projectInfo.versionTag} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.versionTag} in ${projectInfo.prodEnv}",
+                                    "${component.name}: ${projectInfo.releaseVersion} in ${projectInfo.preProdEnv} PROMOTED TO ${projectInfo.releaseVersion} in ${projectInfo.prodEnv}",
                                     '******'}
                     """
                 }
@@ -207,7 +207,7 @@ def call(Map args) {
     deployComponents(projectInfo: projectInfo,
                      componentsToDeploy: projectInfo.componentsToDeploy,
                      componentsToRemove: projectInfo.components.findAll { !it.releaseCandidateScmTag },
-                     imageTag: projectInfo.versionTag)
+                     imageTag: projectInfo.releaseVersion)
 
     deployToProductionUtils.updateProjectMetaInfo(projectInfo)
 

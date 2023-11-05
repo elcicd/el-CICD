@@ -38,10 +38,13 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
+    def releaseVersion = projectInfo.releaseVersion ?: '0.1.0'
+    def chartYamlValues = projectInfo.releaseVersion ? helm-subchart-yaml-values.yaml : helm-chart-yaml-values.yaml :
 
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
 
+        def chartYaml = 
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
             def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
             dir(postRenderDir) {
@@ -76,9 +79,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 if [[ ! -f Chart.yaml ]]
                 then
-                    helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
+                    helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
-                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
+                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
                                   elCicdCharts/elCicdChart > Chart.yaml
                 fi
                 helm dependency update .
@@ -100,7 +103,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         EL_CICD_PROFILES: projectInfo.elCicdProfiles.join(','),
         TEAM_ID: projectInfo.teamInfo.id,
         PROJECT_ID: projectInfo.id,
-        RELEASE_VERSION: projectInfo.versionTag ?: el.cicd.UNDEFINED,
+        RELEASE_VERSION: projectInfo.releaseVersion ?: el.cicd.UNDEFINED,
         BUILD_NUMBER: "${currentBuild.number}",
         SDLC_ENV: projectInfo.deployToEnv,
         META_INFO_POSTFIX: el.cicd.META_INFO_POSTFIX
@@ -121,7 +124,7 @@ def getProjectCommonHelmValues(def projectInfo) {
         PROJECT_ID: projectInfo.id
     ]
 
-    elCicdProfiles = projectInfo.elCicdProfiles.clone()
+    def elCicdProfiles = projectInfo.elCicdProfiles.clone()
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
 }
 

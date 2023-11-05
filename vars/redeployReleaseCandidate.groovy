@@ -5,7 +5,7 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    projectInfoUtils.versionTag = args.versionTag
+    projectInfoUtils.releaseVersion = args.releaseVersion
 
     projectInfo.deployToEnv = projectInfo.preProdEnv
     projectInfo.deployToNamespace = projectInfo.preProdNamespace
@@ -19,7 +19,7 @@ def call(Map args) {
         projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateScmTag }
 
         if (!projectInfo.componentsToRedeploy)  {
-            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.versionTag}")
+            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.releaseVersion}")
         }
     }
 
@@ -34,7 +34,7 @@ def call(Map args) {
     }
 
     stage('Verify release candidate images exist for redeployment') {
-        loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.versionTag}:",
+        loggingUtils.echoBanner("VERIFY REDEPLOYMENT CAN PROCEED FOR RELEASE CANDIDATE ${projectInfo.releaseVersion}:",
                                 projectInfo.componentsToRedeploy.collect { it.name }.join(', '))
 
         def allImagesExist = true
@@ -63,18 +63,18 @@ def call(Map args) {
         }
 
         if (!allImagesExist) {
-            def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.versionTag}"
+            def msg = "BUILD FAILED: Missing image(s) to deploy in ${projectInfo.PRE_PROD_ENV} for release candidate ${projectInfo.releaseVersion}"
             loggingUtils.errorBanner(msg)
         }
     }
 
     stage('Confirm release candidate deployment') {
         def msg = loggingUtils.echoBanner(
-            "CONFIRM REDEPLOYMENT OF ${projectInfo.versionTag} to ${projectInfo.deployToNamespace}",
+            "CONFIRM REDEPLOYMENT OF ${projectInfo.releaseVersion} to ${projectInfo.deployToNamespace}",
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            "--> Components in verion ${projectInfo.versionTag} to be deployed:",
+            "--> Components in verion ${projectInfo.releaseVersion} to be deployed:",
             projectInfo.componentsToRedeploy.collect { it.name }.join(', '),
             '',
             '---',
@@ -86,7 +86,7 @@ def call(Map args) {
             '',
             'PLEASE CAREFULLY REVIEW THE ABOVE RELEASE MANIFEST AND PROCEED WITH CAUTION',
             '',
-            "Should Release Candidate ${projectInfo.versionTag} be redeployed in ${projectInfo.deployToNamespace}?"
+            "Should Release Candidate ${projectInfo.releaseVersion} be redeployed in ${projectInfo.deployToNamespace}?"
         )
 
         jenkinsUtils.displayInputWithTimeout(msg, args)
