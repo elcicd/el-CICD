@@ -151,7 +151,7 @@ def initializePipeline() {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
         
         sh """
-            if [[ ! -z $(ls -A) ]]
+            if [[ ! -z \$(ls -A) ]]
             then
                 ${shCmd.echo('Cleaning workspace from previous build...')}
                 rm -rf ./*
