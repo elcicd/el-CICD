@@ -86,7 +86,10 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 }
 
 def createReleaseRepo(def projectInfo) {
-    deploymentUtils.setupDeploymentDirs(projectInfo, projectInfo.releaseCandidateComps)
+    def modules = [projectInfo.projectModule]
+    modules.addAll(projectInfo.releaseCandidateComps)
+    
+    deploymentUtils.setupDeploymentDirs(projectInfo, modules)
     
     dir (projectInfo.projectModule.workDir) {
         projectInfo.releaseCandidateComps.each { component ->
@@ -97,14 +100,9 @@ def createReleaseRepo(def projectInfo) {
         }
         
         sh """
-            helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
-                          --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
-                          -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
-                          ${projectInfo.id} elCicdCharts/elCicdChart > Chart.yaml
-                          
-            helm dependency update .
+            cp ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}/project-values.yaml ./values.yaml
             
-            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
+            cp ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}/kustomize.sh .
         """
     }
 }
