@@ -63,7 +63,7 @@ def node(Map args, Closure body) {
         label: "${args.agent}",
         cloud: 'openshift',
         podRetention: onFailure(),
-        idleMinutes: 30, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: 90, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         yaml: """
           spec:
             imagePullSecrets:

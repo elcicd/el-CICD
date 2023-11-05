@@ -1,9 +1,20 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
+ 
+def verifyProjectReleaseVersion(def projectIngo) {
+    withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+        versionTagScript = /git ls-remote ${projectInfo.projectModule.scmRepoUrl} '${projectInfo.releaseVersion}'/
+        scmReleaseVersionBranch = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
+        
+        if (scmReleaseVersionBranch) {
+            loggingUtils.errorBanner("RELEASE VERSION ${projectInfo.releaseVersion} HAS ALREADY BEEN PROMOTED")
+        }
+    }    
+}
 
 def gatherReleaseCandidateRepos(def projectInfo) {
-    projectInfo.releaseCandidateComps = projectInfo.components.findAll{ component ->
+    projectInfo.componentsToPromote = projectInfo.components.findAll{ component ->
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
             versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.releaseVersion}-*'/
             scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
@@ -18,8 +29,56 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             else {
                 echo "-> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
             }
+        
+            if (!projectInfo.componentsToPromote) {
+                loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
+            }
 
             return component.releaseCandidateScmTag
+        }
+    }
+}
+
+def checkoutReleaseCandidateRepos(def projectInfo) {
+    projectInfo.projectModule.releaseCandidateScmTag = projectInfo.releaseVersion
+
+    def modules = [projectInfo.projectModule]
+    modules.addAll(projectInfo.componentsToPromote)
+
+    concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
+        sh """
+            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
+            
+            if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag}) ]]
+            then
+                git checkout tags/${module.releaseCandidateScmTag}
+            else
+                git switch -c ${module.releaseCandidateScmTag}
+            fi
+        """
+    }
+}
+
+def createReleaseVersion(def projectInfo) {
+    def modules = [projectInfo.projectModule]
+    modules.addAll(projectInfo.componentsToPromote)
+    
+    deploymentUtils.setupDeploymentDirs(projectInfo, modules)
+    
+    dir (projectInfo.projectModule.workDir) {
+        projectInfo.componentsToPromote.each { component ->
+            sh"""
+                mkdir -p charts/${component.scmRepoName}
+                cp -R ${component.deploymentDir}/* charts/${component.name}
+            """
+        }
+        
+        withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            sh """
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
+                
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
+            """
         }
     }
 }
@@ -36,7 +95,7 @@ def confirmPromotion(def projectInfo, def args) {
         '   - COMPONENTS NOT IN THIS RELEASE WILL BE REMOVED FROM ${projectInfo.prodEnv}',
         '',
         '-> COMPONENTS IN RELEASE:',
-        projectInfo.releaseCandidateComps.collect { it.name },
+        projectInfo.componentsToPromote.collect { it.name },
     ]
 
     def compsNotInRelease = projectInfo.components.findAll{ !it.releaseCandidateScmTag }.collect { it.name }
@@ -65,44 +124,22 @@ def confirmPromotion(def projectInfo, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
-def checkoutReleaseCandidateRepos(def projectInfo) {
-    projectInfo.projectModule.releaseCandidateScmTag = projectInfo.releaseVersion
-
-    def modules = [projectInfo.projectModule]
-    modules.addAll(projectInfo.releaseCandidateComps)
-
-    concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
+def pushReleaseVersion(def projectInfo) {
+    withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         sh """
-            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
-            
-            if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag}) ]]
-            then
-                git checkout tags/${module.releaseCandidateScmTag}
-            else
-                git switch -c ${module.releaseCandidateScmTag}
-            fi
+            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
+                                    'git add -A',
+                                    "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}",
+                                    "git push -u origin")}
         """
     }
 }
 
-def createReleaseRepo(def projectInfo) {
-    def modules = [projectInfo.projectModule]
-    modules.addAll(projectInfo.releaseCandidateComps)
-    
-    deploymentUtils.setupDeploymentDirs(projectInfo, modules)
-    
-    dir (projectInfo.projectModule.workDir) {
-        projectInfo.releaseCandidateComps.each { component ->
-            sh"""
-                mkdir -p charts/${component.scmRepoName}
-                cp -R ${component.deploymentDir}/* charts/${component.scmRepoName}
-            """
-        }
-        
-        sh """
-            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
-            
-            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
-        """
-    }
+dev promoteReleaseCandidateImages(def projectInfo) {
+    projectInfo.deployFromEnv = projectInfo.preProdEnv
+    projectInfo.ENV_FROM = projectInfo.deployFromEnv.toUpperCase()
+    projectInfo.deployToEnv = projectInfo.prodEnv
+    projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
+
+    promoteComponentsUtils.runPromoteImagesStages(projectInfo)
 }

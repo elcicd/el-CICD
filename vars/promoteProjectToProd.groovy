@@ -13,18 +13,12 @@ void call(Map args) {
 
     stage ('Validate release Candidate') {
         loggingUtils.echoBanner("VALIDATING ${projectInfo.id} RELEASE CANDIDATE ${projectInfo.releaseVersion}")
+        
+        promoteProjectToProdUtils.verifyProjectReleaseVersion(projectInfo)
 
         promoteProjectToProdUtils.gatherReleaseCandidateRepos(projectInfo)
         
-        if (!projectInfo.releaseCandidateComps) {
-            loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
-        }
     }
-
-    stage('Summarize and confirm promotion') {
-        promoteProjectToProdUtils.confirmPromotion(projectInfo, args)
-    }
-
     stage ('Checkout release component repos') {
         loggingUtils.echoBanner("CLONE PROJECT AND RELEASE CANDIDATE COMPONENT REPOS")
 
@@ -34,20 +28,18 @@ void call(Map args) {
     stage ('Create release') {
         loggingUtils.echoBanner("CREATE RELEASE REPO")
 
-        promoteProjectToProdUtils.createReleaseRepo(projectInfo)        
+        promoteProjectToProdUtils.createReleaseVersion(projectInfo)        
     }
 
-    stage ('Commit and push release') {
-        loggingUtils.echoBanner("COMMIT AND PUSH RELEASE REPO")
-
-        promoteProjectToProdUtils.commitRelease(projectInfo)
+    stage('Summarize and confirm promotion') {
+        promoteProjectToProdUtils.confirmPromotion(projectInfo, args)
     }
 
+    stage ('Promote release version') {
+        loggingUtils.echoBanner("PROMOTE RELEASE CANDIDATE TO PROD")
 
-    stage ('Promote release candidate images to prod') {
-        loggingUtils.echoBanner("PROMOTE RELEASE CANDIDATE IMAGES TO PROD")
-
-        promoteProjectToProdUtils.promoteReleaseCandidateImages(projectInfo)
+        promoteProjectToProdUtils.pushReleaseVersion(projectInfo)
+        
+        promoteProjectToProdUtils.runPromoteImagesStages(projectInfo)
     }
-
 }
