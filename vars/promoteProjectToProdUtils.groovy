@@ -1,16 +1,16 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
- 
+
 def verifyProjectReleaseVersion(def projectInfo) {
     withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         versionTagScript = /git ls-remote ${projectInfo.projectModule.scmRepoUrl} '${projectInfo.releaseVersion}'/
         scmReleaseVersionBranch = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
-        
+
         if (scmReleaseVersionBranch) {
             loggingUtils.errorBanner("RELEASE VERSION ${projectInfo.releaseVersion} HAS ALREADY BEEN PROMOTED")
         }
-    }    
+    }
 }
 
 def gatherReleaseCandidateRepos(def projectInfo) {
@@ -29,13 +29,13 @@ def gatherReleaseCandidateRepos(def projectInfo) {
             else {
                 echo "-> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
             }
-        
-            if (!projectInfo.componentsToPromote) {
-                loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
-            }
 
             return component.releaseCandidateScmTag
         }
+    }
+
+    if (!projectInfo.componentsToPromote) {
+        loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
     }
 }
 
@@ -48,7 +48,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh """
             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
-            
+
             if [[ ! -z \$(git tag -l ${module.releaseCandidateScmTag}) ]]
             then
                 git checkout tags/${module.releaseCandidateScmTag}
@@ -62,9 +62,9 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 def createReleaseVersion(def projectInfo) {
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.componentsToPromote)
-    
+
     deploymentUtils.setupDeploymentDirs(projectInfo, modules)
-    
+
     dir (projectInfo.projectModule.workDir) {
         projectInfo.componentsToPromote.each { component ->
             sh"""
@@ -72,11 +72,11 @@ def createReleaseVersion(def projectInfo) {
                 cp -R ${component.deploymentDir}/* charts/${component.name}
             """
         }
-        
+
         withCredentials([sshUserPrivateKey(credentialsId: component.repoDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
             sh """
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
-                
+
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
             """
         }
