@@ -100,9 +100,11 @@ def createReleaseRepo(def projectInfo) {
             helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
                           --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
-                          elCicdCharts/elCicdChart > Chart.yaml
+                          ${projectInfo.id} elCicdCharts/elCicdChart > Chart.yaml
                           
             helm dependency update .
+            
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
         """
     }
 }
