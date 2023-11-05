@@ -71,7 +71,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
     def modules = [projectInfo.projectModule]
     modules.addAll(projectInfo.releaseCandidateComps)
 
-    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComps) { module ->
+    concurrentUtils.runCloneGitReposStages(projectInfo, modules) { module ->
         sh """
             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', 'git fetch --all --tags')}
             

@@ -81,10 +81,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 then
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
-                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
+                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-subchart-yaml-values.yaml \
                                   elCicdCharts/elCicdChart > Chart.yaml
                 fi
-                helm dependency update .
                 
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} .
                 
