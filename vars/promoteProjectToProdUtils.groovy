@@ -88,7 +88,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 def createReleaseRepo(def projectInfo) {
     deploymentUtils.setupDeploymentDirs(projectInfo, projectInfo.releaseCandidateComps)
     
-    dir (${projectInfo.projectModule.workDir}) {
+    dir (projectInfo.projectModule.workDir) {
         projectInfo.releaseCandidateComps.each { component ->
             sh"""
                 mkdir -p charts/${component.scmRepoName}

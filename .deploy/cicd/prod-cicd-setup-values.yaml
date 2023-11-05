@@ -8,7 +8,7 @@ elCicdDefs-prod:
     $<EXTRA_PIPELINE_ARGS>
   PROD_PIPELINE_PARAMS: |-
     stringParam('PROJECT_ID', null, "Name of project")
-    stringParam('RELEASE_VERSION', null, "Version")
+    stringParam('RELEASE_VERSION', null, "Release Version")
     
 elCicdDefs-promote-project-to-prod:
   PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
