@@ -82,7 +82,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                   elCicdCharts/elCicdChart > Chart.yaml
                 fi
                 helm dependency update .
-
+                
+                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} .
+                
                 cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} ${el.cicd.KUSTOMIZE_DIR}
             """
         }
