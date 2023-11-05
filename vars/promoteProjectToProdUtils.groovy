@@ -100,9 +100,9 @@ def createReleaseRepo(def projectInfo) {
         }
         
         sh """
-            cp ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}/project-values.yaml ./values.yaml
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml ./values.yaml
             
-            cp ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}/kustomize.sh .
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
         """
     }
 }
