@@ -101,11 +101,6 @@ def createReleaseRepo(def projectInfo) {
                           --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
                           elCicdCharts/elCicdChart > Chart.yaml
-                          
-            helm template --set-string global.elCicdProfiles=${projectInfo.elCicdProfiles} \
-                          --set renderValuesYaml=true \
-                          elCicdCharts/elCicdChart > values.yaml
-        
         """
     }
 }
