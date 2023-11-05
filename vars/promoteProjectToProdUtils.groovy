@@ -81,7 +81,7 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
 
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
             helm template  --set createPackageValuesYaml=true \
-                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml
+                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
                            render-values-yaml elCicdCharts/elCicdChart > values.yaml
             
             helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
