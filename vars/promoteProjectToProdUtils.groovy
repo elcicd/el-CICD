@@ -68,7 +68,7 @@ def createReleaseVersion(def projectInfo) {
     dir (projectInfo.projectModule.workDir) {
         projectInfo.componentsToPromote.each { component ->
             sh"""
-                mkdir -p charts/${component.scmRepoName}
+                mkdir -p charts/${component.name}
                 cp -R ${component.deploymentDir}/* charts/${component.name}
             """
         }
