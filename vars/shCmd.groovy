@@ -43,7 +43,11 @@ def tagImage(String env, String username, String pwd, String image, String fromT
 }
 
 def sshAgentBash(def sshKeyId, def ... commands) {
-    return "ssh-agent bash -c 'ssh-add \${${sshKeyId}} ; ${commands.join('; ')}'"
+    return """
+        eval \$(ssh-agent)
+        ssh-add \${${sshKeyId}}
+        ${commands.join("\n")}'
+    """
 }
 
 def echo(Object... msgs) {
