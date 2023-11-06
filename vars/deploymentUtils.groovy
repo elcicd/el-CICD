@@ -64,7 +64,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
                      --set createPackageValuesYaml=true \
-                     render-values-yaml elCicdCharts/elCicdChart | grep -vG '^(?:#|---)' > ${tmpValuesFile}
+                     render-values-yaml elCicdCharts/elCicdChart | sed -E '/^#|^---/d > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
@@ -75,14 +75,14 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm template -f ${postRenderDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              elCicdCharts/elCicdChart | grep -vG '^(?:#|---)' > ${postRenderDir}/kustomization.yaml
+                              elCicdCharts/elCicdChart | sed -E '/^#|^---/d > ${postRenderDir}/kustomization.yaml
 
                 if [[ ! -f Chart.yaml ]]
                 then
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
-                                  ${component.name} elCicdCharts/elCicdChart | grep -vG '^(?:#|---)' > Chart.yaml
+                                  ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d > Chart.yaml
                                   
                     ${projectInfo.releaseVersion ? '' : 'helm dependency update .'}
                 fi
