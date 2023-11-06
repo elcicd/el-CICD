@@ -172,6 +172,7 @@ def initializePipeline() {
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
+            git config --global user.email "${el.cicd.EL_CICD_ORGANIZATION}@donotreply.com"
         """
 
         dir (el.cicd.EL_CICD_DIR) {
