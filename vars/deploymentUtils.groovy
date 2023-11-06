@@ -64,7 +64,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
                     --set createPackageValuesYaml=true \
-                    render-values-yaml elCicdCharts/elCicdChart > ${tmpValuesFile}
+                    render-values-yaml elCicdCharts/elCicdChart | grep -vE ^[#-] > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
@@ -82,7 +82,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
-                                  ${component.name} elCicdCharts/elCicdChart > Chart.yaml
+                                  ${component.name} elCicdCharts/elCicdChart | grep -vE ^[#-] > Chart.yaml
                                   
                     ${projectInfo.releaseVersion ? '' : 'helm dependency update .'}
                 fi
