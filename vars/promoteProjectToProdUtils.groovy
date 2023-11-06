@@ -160,12 +160,12 @@ def promoteReleaseCandidateImages(def projectInfo) {
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.preProdEnv} TO ${projectInfo.prodEnv}")
                                     
             def copyImage =
-                shCmd.copyImage(projectInfo.ENV_FROM,
+                shCmd.copyImage(projectInfo.PRE_PROD_ENV,
                                 'FROM_IMAGE_REGISTRY_USERNAME',
                                 'FROM_IMAGE_REGISTRY_PWD',
                                 component.id,
                                 component.releaseVersionTag,
-                                projectInfo.ENV_TO,
+                                projectInfo.PROD_ENV,
                                 'TO_IMAGE_REGISTRY_USERNAME',
                                 'TO_IMAGE_REGISTRY_PWD',
                                 component.id,
