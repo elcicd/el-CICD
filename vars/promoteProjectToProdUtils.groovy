@@ -7,6 +7,9 @@ def verifyProjectReleaseVersion(def projectInfo) {
         versionTagScript = /git ls-remote ${projectInfo.projectModule.scmRepoUrl} '${projectInfo.releaseVersion}'/
         scmReleaseVersionBranch = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
 
+        echo '=========='
+        echo "scmReleaseVersionBranch: ${scmReleaseVersionBranch}"
+        echo '=========='
         if (scmReleaseVersionBranch) {
             loggingUtils.errorBanner("RELEASE VERSION ${projectInfo.releaseVersion} HAS ALREADY BEEN PROMOTED")
         }
