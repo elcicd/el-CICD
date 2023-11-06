@@ -171,7 +171,7 @@ def promoteReleaseCandidateImages(def projectInfo) {
                                 component.id,
                                 component.releaseVersionTag)
                                 
-            def msg = "--> ${component.id} image promoted and tagged as ${promoteTag}"
+            def msg = "--> ${component.id} image promoted and tagged as ${component.releaseVersionTag}"
 
             sh  """
                 ${copyImage}

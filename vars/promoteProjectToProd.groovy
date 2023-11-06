@@ -37,9 +37,7 @@ void call(Map args) {
         promoteProjectToProdUtils.confirmPromotion(projectInfo, args)
     }
 
-    stage ('Promote release version') {
-        loggingUtils.echoBanner("PROMOTE RELEASE CANDIDATE TO PROD")
-        
+    stage ('Promote release version') {        
         promoteProjectToProdUtils.promoteReleaseCandidateImages(projectInfo)
 
         promoteProjectToProdUtils.pushReleaseVersion(projectInfo)
