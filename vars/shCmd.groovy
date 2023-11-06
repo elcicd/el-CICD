@@ -46,7 +46,7 @@ def sshAgentBash(def sshKeyId, def ... commands) {
     return """
         eval \$(ssh-agent)
         ssh-add \${${sshKeyId}}
-        ${commands.join("\n")}'
+        ${commands.join('; ')}'
     """
 }
 
