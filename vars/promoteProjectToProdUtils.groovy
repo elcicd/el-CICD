@@ -135,12 +135,14 @@ def confirmPromotion(def projectInfo, def args) {
 
 def pushReleaseVersion(def projectInfo) {
     withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-        sh """
-            ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                 'git add -A',
-                                 "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
-                                 "git push -u origin")}
-        """
+        dir(projectInfo.projectModule.workDir) {
+            sh """
+                ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
+                                    'git add -A',
+                                    "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
+                                    "git push -u origin")}
+            """
+        }
     }
 }
 
