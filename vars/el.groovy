@@ -171,7 +171,7 @@ def initializePipeline() {
             oc whoami
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
-            git config user.name ${el.cicd.EL_CICD_ORGANIZATION}
+            git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
         """
 
         dir (el.cicd.EL_CICD_DIR) {
