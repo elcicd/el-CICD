@@ -80,7 +80,7 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
                   ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kustomize.sh .
 
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-            helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamId.cicdMasterNamespace} \
+            helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamInfo.cicdMasterNamespace} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
                           render-values-yaml elCicdCharts/elCicdChart | grep -vE ^[#-] > values.yaml
             
