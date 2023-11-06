@@ -43,7 +43,10 @@ def tagImage(String env, String username, String pwd, String image, String fromT
 }
 
 def sshAgentBash(def sshKeyId, def ... commands) {
-    return "ssh-agent bash -c 'ssh-add -q \${${sshKeyId}} ; ${commands.join('; ')}'"
+    return "ssh-agent bash -c ' \
+        ssh-add -q \${${sshKeyId}} ;
+        git config user.name ${el.cicd.EL_CICD_ORGANIZATION} ;
+        ${commands.join('; ')}'" \
 }
 
 def echo(Object... msgs) {
