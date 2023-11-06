@@ -138,7 +138,7 @@ def pushReleaseVersion(def projectInfo) {
         sh """
             ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
                                  'git add -A',
-                                 "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}",
+                                 "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
                                  "git push -u origin")}
         """
     }
