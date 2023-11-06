@@ -42,6 +42,6 @@ void call(Map args) {
 
         promoteProjectToProdUtils.pushReleaseVersion(projectInfo)
         
-        promoteProjectToProdUtils.runPromoteImagesStages(projectInfo)
+        promoteProjectToProdUtils.promoteReleaseCandidateImages(projectInfo)
     }
 }
