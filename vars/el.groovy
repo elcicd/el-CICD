@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
@@ -10,7 +10,7 @@ static def cicd = [:]
 def initMetaData(Map metaData) {
     stage('Init Metadata') {
         loggingUtils.echoBanner("INITIALIZING METADATA...")
-        
+
         el.cicd.putAll(metaData)
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
@@ -18,7 +18,7 @@ def initMetaData(Map metaData) {
         el.cicd.EL_CICD_TEMPLATE_CHART_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}"
         el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR = "${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/templates"
 
-        
+
         el.cicd.CONFIG_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_CONFIG_REPO}"
         el.cicd.CONFIG_CHART_DEPLOY_DIR = "${el.cicd.CONFIG_DIR}/${el.cicd.CHART_DEPLOY_DIR}"
         el.cicd.CONFIG_JENKINS_DIR = "${el.cicd.CONFIG_DIR}/jenkins"
@@ -43,22 +43,22 @@ def initMetaData(Map metaData) {
         el.cicd.nonProdEnvs.add(el.cicd.preProdEnv)
 
         el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
-        
+
         el.cicd.RELEASE_CANDIDATE_TAG_REGEX = /\w+(?:-\w+|\.\w+)*/
     }
 }
 
 def node(Map args, Closure body) {
     assert args.agent
-    
+
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
-    
+
     if (args.isBuild) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
-    
+
     podTemplate([
         label: "${args.agent}",
         cloud: 'openshift',
@@ -72,8 +72,8 @@ def node(Map args, Closure body) {
             alwaysPullImage: true
             resources:
               requests:
-                memory: ${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}  
-                cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST} 
+                memory: ${el.cicd.JENKINS_AGENT_MEMORY_REQUEST}
+                cpu: ${el.cicd.JENKINS_AGENT_CPU_REQUEST}
               limits:
                 memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
             containers:
@@ -93,7 +93,7 @@ def node(Map args, Closure body) {
                 initializePipeline()
 
                 runHookScript(el.cicd.PRE, args)
-                
+
                 if (args.teamId) {
                     args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
                 }
@@ -149,14 +149,14 @@ def runHookScript(def prefix, def args, def exception) {
 def initializePipeline() {
     stage('Initializing pipeline') {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
-        
+
         sh """
             if [[ ! -z \$(ls -A) ]]
             then
                 ${shCmd.echo('Cleaning workspace from previous build...')}
                 rm -rf ./*
             fi
-            
+
             mkdir -p '${el.cicd.TEMP_DIR}'
             mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
@@ -170,6 +170,8 @@ def initializePipeline() {
             ${shCmd.echo 'Jenkins Service Account'}
             oc whoami
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
+
+            git config user.name ${el.cicd.EL_CICD_ORGANIZATION}
         """
 
         dir (el.cicd.EL_CICD_DIR) {
