@@ -63,8 +63,8 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
-                    --set createPackageValuesYaml=true \
-                    render-values-yaml elCicdCharts/elCicdChart | grep -vG '^(?:#|---)' > ${tmpValuesFile}
+                     --set createPackageValuesYaml=true \
+                     render-values-yaml elCicdCharts/elCicdChart | grep -vG '^(?:#|---)' > ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
@@ -134,7 +134,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
     configValuesMap.elCicdDefaults.objName = component.name
 
     configValuesMap.elCicdDefaults.image =
-        "${imageRegistry}/${projectInfo.id}-${component.name}:${projectInfo.deployToEnv}"
+        "${imageRegistry}/${projectInfo.id}-${component.name}:${component.releaseVersionTag ?: projectInfo.deployToEnv}"
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase

@@ -24,7 +24,8 @@ def gatherReleaseCandidateRepos(def projectInfo) {
                 echo "-> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
                 component.releaseCandidateScmTag = scmRepoTag
                 assert component.releaseCandidateScmTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
-
+                component.srcCommitHash = component.releaseCandidateScmTag.split('-')[1]
+                component.releaseVersionTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
             }
             else {
                 echo "-> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
@@ -147,10 +148,39 @@ def pushReleaseVersion(def projectInfo) {
 }
 
 def promoteReleaseCandidateImages(def projectInfo) {
-    projectInfo.deployFromEnv = projectInfo.preProdEnv
-    projectInfo.ENV_FROM = projectInfo.deployFromEnv.toUpperCase()
-    projectInfo.deployToEnv = projectInfo.prodEnv
-    projectInfo.ENV_TO = projectInfo.deployToEnv.toUpperCase()
+    withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
+                                      usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
+                     usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.prodEnv),
+                                      usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
+                                      passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+    {
+        def stageTitle = "Promoting to Prod"
+        def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+            loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.preProdEnv} TO ${projectInfo.prodEnv}")
+                                    
+            def copyImage =
+                shCmd.copyImage(projectInfo.ENV_FROM,
+                                'FROM_IMAGE_REGISTRY_USERNAME',
+                                'FROM_IMAGE_REGISTRY_PWD',
+                                component.id,
+                                component.releaseVersionTag,
+                                projectInfo.ENV_TO,
+                                'TO_IMAGE_REGISTRY_USERNAME',
+                                'TO_IMAGE_REGISTRY_PWD',
+                                component.id,
+                                component.releaseVersionTag)
+                                
+            def msg = "--> ${component.id} image promoted and tagged as ${promoteTag}"
 
-    promoteComponentsUtils.runPromoteImagesStages(projectInfo)
+            sh  """
+                ${copyImage}
+
+                ${shCmd.echo ''}
+                ${shCmd.echo msg}
+            """
+        }
+
+        parallel(copyImageStages)
+    }
 }

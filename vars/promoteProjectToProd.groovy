@@ -39,9 +39,9 @@ void call(Map args) {
 
     stage ('Promote release version') {
         loggingUtils.echoBanner("PROMOTE RELEASE CANDIDATE TO PROD")
-
-        promoteProjectToProdUtils.pushReleaseVersion(projectInfo)
         
         promoteProjectToProdUtils.promoteReleaseCandidateImages(projectInfo)
+
+        promoteProjectToProdUtils.pushReleaseVersion(projectInfo)
     }
 }
