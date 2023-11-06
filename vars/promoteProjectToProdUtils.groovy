@@ -146,7 +146,7 @@ def pushReleaseVersion(def projectInfo) {
     }
 }
 
-dev promoteReleaseCandidateImages(def projectInfo) {
+def promoteReleaseCandidateImages(def projectInfo) {
     projectInfo.deployFromEnv = projectInfo.preProdEnv
     projectInfo.ENV_FROM = projectInfo.deployFromEnv.toUpperCase()
     projectInfo.deployToEnv = projectInfo.prodEnv
