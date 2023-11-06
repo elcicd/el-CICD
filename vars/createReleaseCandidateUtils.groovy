@@ -140,20 +140,20 @@ def verifyVersionTagValidSemver(projectInfo) {
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComponents) { component ->
         def gitReleaseCandidateTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
         def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
-                                            'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                            'PRE_PROD_IMAGE_REGISTRY_PWD',
-                                            component.id,
-                                            projectInfo.preProdEnv,
-                                            projectInfo.releaseVersion)
+                                         'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                         'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                         component.id,
+                                         projectInfo.preProdEnv,
+                                         projectInfo.releaseVersion)
         component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
 
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                                            usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                            passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                                             usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
+                                             passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
             sh """
                 git checkout ${component.deploymentBranch}
-                CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+                CUR_BRANCH=\$(git rev-parse --abbrev-ref HEAD)
                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                 ${shCmd.echo ''}
                 ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}

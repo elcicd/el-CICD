@@ -138,9 +138,9 @@ def pushReleaseVersion(def projectInfo) {
         dir(projectInfo.projectModule.workDir) {
             sh """
                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                    'git add -A',
-                                    "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
-                                    "git push origin ${projectInfo.releaseVersion}:${projectInfo.releaseVersion}")}
+                                     'git add -A',
+                                     "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
+                                     "git push origin ${projectInfo.releaseVersion}:${projectInfo.releaseVersion}")}
             """
         }
     }

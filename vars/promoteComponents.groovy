@@ -10,26 +10,26 @@ def call(Map args) {
     stage ('Select components to promote and remove') {
         loggingUtils.echoBanner("SELECT ENVIRONMENT TO PROMOTE TO AND COMPONENTS TO DEPLOY OR REMOVE")
 
-        promotionUtils.getUserPromotionRemovalSelections(projectInfo, args)
+        promoteComponentsUtils.getUserPromotionRemovalSelections(projectInfo, args)
     }
     
     stage('Verify image(s) exist in registry') {
-        promotionUtils.runVerifyImagesExistStages(projectInfo)
+        promoteComponentsUtils.runVerifyImagesExistStages(projectInfo)
     }
 
     stage('Verify image(s) are deployed in previous environment') {
         loggingUtils.echoBanner("VERIFY IMAGE(S) TO PROMOTE ARE DEPLOYED IN ${projectInfo.deployFromEnv}",
                                 projectInfo.componentsToPromote.collect { it.name }.join(', '))
 
-        promotionUtils.verifyDeploymentsInPreviousEnv(projectInfo)
+        promoteComponentsUtils.verifyDeploymentsInPreviousEnv(projectInfo)
     }
 
     stage('Create and/or checkout deployment branches') {
-        promotionUtils.createAndCheckoutDeploymentBranches(projectInfo)
+        promoteComponentsUtils.createAndCheckoutDeploymentBranches(projectInfo)
     }
     
     stage('Promote images in registry') {
-        promotionUtils.runPromoteImagesStages(projectInfo)
+        promoteComponentsUtils.runPromoteImagesStages(projectInfo)
     }
 
     deployComponents(projectInfo: projectInfo,
