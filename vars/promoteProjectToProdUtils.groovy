@@ -83,12 +83,12 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
             helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamInfo.cicdMasterNamespace} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
-                          render-values-yaml elCicdCharts/elCicdChart | sed -E '/^#|^---/d > values.yaml
+                          render-values-yaml elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > values.yaml
 
             helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
                           --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
-                          ${projectInfo.id} elCicdCharts/elCicdChart | sed -E '/^#|^---/d > Chart.yaml
+                          ${projectInfo.id} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
         """
     }
 }
