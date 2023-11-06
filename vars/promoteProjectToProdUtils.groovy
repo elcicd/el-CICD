@@ -138,9 +138,9 @@ def pushReleaseVersion(def projectInfo) {
     withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         dir(projectInfo.projectModule.workDir) {
             sh """
+                git add -A
+                git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'
                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                     'git add -A',
-                                     "git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'",
                                      "git push origin ${projectInfo.releaseVersion}:${projectInfo.releaseVersion}")}
             """
         }
