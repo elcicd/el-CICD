@@ -140,7 +140,8 @@ def pushReleaseVersion(def projectInfo) {
             sh """
                 git add -A
                 git commit -am 'creating ${projectInfo.id} release version ${projectInfo.releaseVersion}'
-                git push origin ${projectInfo.releaseVersion}:${projectInfo.releaseVersion}
+                ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
+                                     "git push origin ${projectInfo.releaseVersion}:${projectInfo.releaseVersion}")}
             """
         }
     }
