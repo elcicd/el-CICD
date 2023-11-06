@@ -134,6 +134,7 @@ def confirmPromotion(def projectInfo, def args) {
 }
 
 def pushReleaseVersion(def projectInfo) {
+    echo "projectInfo.projectModule.scmDeployKeyJenkinsId: ${projectInfo.projectModule.scmDeployKeyJenkinsId}"
     withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         dir(projectInfo.projectModule.workDir) {
             sh """
