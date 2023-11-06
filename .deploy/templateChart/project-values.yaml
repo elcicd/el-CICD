@@ -1,6 +1,9 @@
 elCicdTemplates:
-- templateName: copyResource
-  objName: el-cicd-\$<PROD_ENV>-pull-secret
-  kind: Secret
-  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
-  toNamespace: \$<HELM_RELEASE_NAMESPACE>
+- templateName: values-yaml
+  valuesYaml:
+    elCicdTemplates:
+    - templateName: copyResource
+      objName: el-cicd-\$<PROD_ENV>-pull-secret
+      kind: Secret
+      fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+      toNamespace: \$<HELM_RELEASE_NAMESPACE>
