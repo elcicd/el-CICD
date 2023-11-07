@@ -7,7 +7,7 @@
 def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         def forEachRefScript =
-            "git for-each-ref --count=10 --format='%(refname:short)' --sort='-refname' 'refs/remotes/origin/*'"
+            "git for-each-ref --count=10 --format='%(refname:lstrip=3)' --sort='-refname' 'refs/remotes/origin/*'"
         
 
         def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}").split(/\s+/)
