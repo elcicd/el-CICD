@@ -10,11 +10,9 @@ def selectReleaseVersion(def projectInfo, def args) {
             "git for-each-ref --count=10 --format='%(refname:short)' --sort='-refname' 'refs/remotes/origin/*'"
         
 
-        def releaseVersions =
-            sh(returnStdout: true, script: "${forEachRefScript} | grep -G '${projectInfoUtils.SEMVER_REGEX}'").
-                collect {
-                    it ==~ projectInfo.SEMVER_REGEX
-                }
+        def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}"). collect {
+            it ==~ projectInfo.SEMVER_REGEX
+        }
         
         echo "releaseVersions: ${releaseVersions}"
         releaseVersions = (releaseVersions.size() > 5) ? releaseVersions.subList(0, 5) : releaseVersions
