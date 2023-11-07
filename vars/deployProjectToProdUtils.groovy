@@ -12,7 +12,7 @@ def selectReleaseVersion(def projectInfo, def args) {
 
         def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}").split(/\s+/)
         
-        releaseVersions = releaseVersions.grep(projectInfoUtils.SEMVER_REGEX).take(5)    
+        releaseVersions = releaseVersions.findAll { it ==~ projectInfoUtils.SEMVER_REGEX }.take(5)    
     
         def inputs = [choice(name: 'releaseVersion', description: "Release version of ${projectInfo.id} to deploy", choices: releaseVersions),
                       string(name: 'variant', description: 'Variant of release version [optional]', trim: true),
