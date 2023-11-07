@@ -260,11 +260,16 @@ def validateProjectPvs(def projectInfo) {
 }
 
 def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = null) {
-    def userRemoteConfig = [url: module.scmRepoUrl, credentialsId: module.scmDeployKeyJenkinsId]
+    gitReference = gitReference ?: 'origin/*'
     dir (module.workDir) {
         checkout scmGit(
-            branches: gitReference ? [[ name: gitReference ]] : null,
-            userRemoteConfigs: [userRemoteConfig]
+            branches: [[ name: gitReference ]],
+            userRemoteConfigs: [
+                [ 
+                    url: module.scmRepoUrl,
+                    credentialsId: module.scmDeployKeyJenkinsId
+                ]
+            ]
         )
         
         if (postProcessing) {
