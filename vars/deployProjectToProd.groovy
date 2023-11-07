@@ -13,22 +13,13 @@ def call(Map args) {
     stage('Checkout project repo') {
         loggingUtils.echoBanner('CHECKOUT PROJECT REPO')
         
-        projectInfoUtils.cloneGitRepo(projectInfo.projectModule.scmRepoName)
+        projectInfoUtils.cloneGitRepo(projectInfo.projectModule, projectInfo.projectModule.scmRepoName)
     }
     
     stage('Choose release version') {
-        dir(projectInfo.projectModule.workDir) {
-            def releaseVersions = sh(returnStdout: true, "git branch --list").split(/\s+/).collect {
-                it ==~ projectInfo.SEMVER_REGEX
-            }.sort().takeRight(5).reverse()
+        loggingUtils.echoBanner('SELECT RELEASE VERSION TO DEPLOY')
         
-        
-            def inputs = [choice(name: 'releaseVersion', description: "Release version of ${projectInfo.id} to deploy", choices: releaseVersions),
-                          string(name: 'variant', description: 'Variant of release version [optional]', trim: true),
-                          booleanParam(name: 'cleanNamespace', description: 'Uninstall the currently deployed version of the project first')]
-                          
-            jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy", args, inputs)
-        }
+        deployProjectToProdUtils.selectReleaseVersion(projectInfo, args)
     }
 
     stage('Confirm production deployment') {

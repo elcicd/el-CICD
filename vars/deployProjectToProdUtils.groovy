@@ -4,35 +4,18 @@
  * Utility methods for apply deploying to production
  */
 
-def gatherAllVersionGitTagsAndBranches(def projectInfo) {
-    projectInfo.hasBeenReleased = false
-    projectInfo.components.each { component ->
-        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            def gitCmd = "git ls-remote ${component.scmRepoUrl} '**/${projectInfo.releaseVersion}-*'"
-            def branchAndTagNames = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', gitCmd))
-
-            if (branchAndTagNames) {
-                branchAndTagNames = branchAndTagNames.split('\n')
-                assert branchAndTagNames.size() < 3
-                branchAndTagNames = branchAndTagNames.each { name ->
-                    if (name.contains('/tags/')) {
-                        component.releaseCandidateScmTag = name.trim().find( /[\w.-]+$/)
-                        assert component.releaseCandidateScmTag ==~ "${projectInfo.releaseVersion}-[\\w]{7}"
-                        echo "--> FOUND RELEASE CANDIDATE TAG [${component.name}]: ${component.releaseCandidateScmTag}"
-                    }
-                    else {
-                        projectInfo.hasBeenReleased = true
-                        component.deploymentBranch = name.trim().find( /[\w.-]+$/)
-                        assert component.deploymentBranch ==~ "${projectInfo.releaseVersion}-[\\w]{7}"
-                        echo "--> FOUND RELEASE VERSION DEPLOYMENT BRANCH [${component.name}]: ${component.deploymentBranch}"
-                    }
-                }
-                component.srcCommitHash = branchAndTagNames[0].find(/[\w]{7}+$/)
-            }
-            else {
-                echo "--> NO RELEASE CANDIDATE OR VERSION INFORMATION FOUND FOR: ${component.name}"
-            }
-        }
+def selectReleaseVersion(def projectInfo, def args) {
+    dir(projectInfo.projectModule.workDir) {
+        def releaseVersions = sh(returnStdout: true, "git branch --list").split(/\s+/).collect {
+            it ==~ projectInfo.SEMVER_REGEX
+        }.sort().takeRight(5).reverse()
+    
+    
+        def inputs = [choice(name: 'releaseVersion', description: "Release version of ${projectInfo.id} to deploy", choices: releaseVersions),
+                      string(name: 'variant', description: 'Variant of release version [optional]', trim: true),
+                      booleanParam(name: 'cleanNamespace', description: 'Uninstall the currently deployed version of the project first')]
+                        
+        jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy", args, inputs)
     }
 }
 
