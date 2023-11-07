@@ -6,9 +6,14 @@
 
 def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
-        def releaseVersions = sh(returnStdout: true, script: "git branch --list").split(/\s+/).collect {
-            it ==~ projectInfo.SEMVER_REGEX
-        }.sort().takeRight(5).reverse()
+        def forEachrefScript =
+            "git for-each-ref --count=5 --format='%(refname:short)' --sort='-refname' 'refs/remotes/origin/*'"
+        
+
+        def releaseVersions =
+            sh(returnStdout: true, script: "${forEachrefScript} | grep -E ${projectInfoUtils.SEMVER_REGEX}").split(/\s+/).
+                sort().
+                reverse()
     
     
         def inputs = [choice(name: 'releaseVersion', description: "Release version of ${projectInfo.id} to deploy", choices: releaseVersions),
