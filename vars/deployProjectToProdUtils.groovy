@@ -10,7 +10,7 @@ def selectReleaseVersion(def projectInfo, def args) {
             "git for-each-ref --count=10 --format='%(refname:short)' --sort='-refname' 'refs/remotes/origin/*'"
         
 
-        def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}"). collect {
+        def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}").find {
             it ==~ projectInfo.SEMVER_REGEX
         }
         
