@@ -14,7 +14,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         
         echo "releaseVersions: ${releaseVersions}"
         releaseVersions = releaseVersions.find {
-            it ==~ projectInfo.SEMVER_REGEX
+            it ==~ projectInfoUtils.SEMVER_REGEX
         }
         
         echo "releaseVersions: ${releaseVersions}"
