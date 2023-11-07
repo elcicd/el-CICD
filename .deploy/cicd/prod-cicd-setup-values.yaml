@@ -4,18 +4,19 @@ elCicdDefs-prod:
     agent: el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: '$<USER_GROUP>',
     projectId: params.PROJECT_ID,
-    releaseVersion: params.RELEASE_VERSION,
     $<EXTRA_PIPELINE_ARGS>
   PROD_PIPELINE_PARAMS: |-
     stringParam('PROJECT_ID', null, "Name of project")
-    stringParam('RELEASE_VERSION', null, "Release Version")
     
 elCicdDefs-promote-project-to-prod:
   PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
   EL_CICD_API_METHOD: promoteProjectToProd
+  EXTRA_PIPELINE_ARGS: |-
+    releaseVersion: params.RELEASE_VERSION
   PIPELINE_PARAMS: |-
     parameters {
       $<PROD_PIPELINE_PARAMS>
+      stringParam('RELEASE_VERSION', "Must be a valid Semver(https://semver.org/), "Release Version")
     }
                 
 elCicdDefs-deploy-project-to-prod:
