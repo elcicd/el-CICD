@@ -260,7 +260,7 @@ def validateProjectPvs(def projectInfo) {
 }
 
 def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = null) {
-    gitReference = gitReference ?: 'origin/(master|main)'
+    gitReference = gitReference ?: ':origin/(master|main)'
     dir (module.workDir) {
         checkout scmGit(
             branches: [[ name: gitReference ]],
