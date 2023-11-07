@@ -15,7 +15,7 @@ elCicdDefs-promote-project-to-prod:
     releaseVersion: params.RELEASE_VERSION
   PIPELINE_PARAMS: |-
     parameters {
-      $<PROD_PIPELINE_PARAMS>
+      $<PROD_PIPELINE_PARAMS>,
       stringParam('RELEASE_VERSION', "Must be a valid Semver(https://semver.org/), "Release Version")
     }
                 
@@ -26,7 +26,7 @@ elCicdDefs-deploy-project-to-prod:
     variant: params.VARIANT
   PIPELINE_PARAMS: |-
     parameters {
-      $<PROD_PIPELINE_PARAMS>
+      $<PROD_PIPELINE_PARAMS>,
       stringParam('VARIANT', null, "Variant of version to deploy; e.g. 'east', 'west', 'french', 'english', or 'pre'")
     }
 
