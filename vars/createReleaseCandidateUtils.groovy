@@ -1,14 +1,9 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
- 
-import groovy.transform.Field
-
-@Field
-SEMVER_REGEX = /^((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?))$/
 
 def verifyVersionTagValidSemver(projectInfo) {    
-    if (!projectInfo.releaseVersion.matches(SEMVER_REGEX)) {
+    if (!projectInfo.releaseVersion.matches(projectInfoUtils.SEMVER_REGEX)) {
         loggingUtils.errorBanner('STRICT SEMVER VALIDATION IS ENABLED',
                                  '',
                                  "${projectInfo.releaseVersion} is NOT a valid SemVer",

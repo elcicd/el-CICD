@@ -4,6 +4,11 @@
  * General pipeline utilities
  */
  
+import groovy.transform.Field
+
+@Field
+SEMVER_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+ 
 def gatherTeamInfo(def teamId) {
     assert teamId : "teamId (${teamId}) cannot be empty"
     
