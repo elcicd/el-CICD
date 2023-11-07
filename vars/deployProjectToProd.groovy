@@ -13,7 +13,7 @@ def call(Map args) {
     stage('Checkout project repo') {
         loggingUtils.echoBanner('CHECKOUT PROJECT REPO')
         
-        projectInfoUtils.cloneGitRepo(projectInfo.projectModule, projectInfo.projectModule.scmRepoName)
+        projectInfoUtils.cloneGitRepo(projectInfo.projectModule)
     }
     
     stage('Choose release version') {
