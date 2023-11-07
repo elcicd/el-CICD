@@ -11,7 +11,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         
 
         def releaseVersions =
-            sh(returnStdout: true, script: "${forEachrefScript} | grep -E ${projectInfoUtils.SEMVER_REGEX}").
+            sh(returnStdout: true, script: "${forEachrefScript}").
                 split(/\s+/).
                 sort()
     
@@ -22,14 +22,4 @@ def selectReleaseVersion(def projectInfo, def args) {
                         
         jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy", args, inputs)
     }
-}
-
-def cleanupPreviousRelease(def projectInfo) {
-    sh """
-        ${loggingUtils.shellEchoBanner("REMOVING ALL RESOURCES FOR ${projectInfo.id} THAT ARE NOT PART OF ${projectInfo.releaseVersion}")}
-
-        oc delete ${el.cicd.OKD_CLEANUP_RESOURCE_LIST} -l el-cicd.io/projectid=${projectInfo.id},release-version!=${projectInfo.releaseVersion} -n ${projectInfo.prodNamespace}
-    """
-
-    deploymentUtils.waitingForPodsToTerminate(projectInfo.prodNamespace)
 }
