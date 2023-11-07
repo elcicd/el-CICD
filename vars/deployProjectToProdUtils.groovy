@@ -6,7 +6,7 @@
 
 def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
-        def releaseVersions = sh(returnStdout: true, "git branch --list").split(/\s+/).collect {
+        def releaseVersions = sh(returnStdout: true, script: "git branch --list").split(/\s+/).collect {
             it ==~ projectInfo.SEMVER_REGEX
         }.sort().takeRight(5).reverse()
     
