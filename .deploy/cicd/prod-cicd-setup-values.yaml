@@ -5,8 +5,7 @@ elCicdDefs-prod:
     teamId: '$<USER_GROUP>',
     projectId: params.PROJECT_ID,
     $<EXTRA_PIPELINE_ARGS>
-  PROD_PIPELINE_PARAMS: |-
-    stringParam('PROJECT_ID', null, "Name of project")
+  PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, "Name of project")
     
 elCicdDefs-promote-project-to-prod:
   PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
@@ -15,8 +14,8 @@ elCicdDefs-promote-project-to-prod:
     releaseVersion: params.RELEASE_VERSION
   PIPELINE_PARAMS: |-
     parameters {
-      $<PROD_PIPELINE_PARAMS>,
-      stringParam('RELEASE_VERSION', "Must be a valid Semver(https://semver.org/), "Release Version")
+      $<PROJECT_ID_PIPELINE_PARAM>
+      stringParam('RELEASE_VERSION', "Must be a valid Semver(https://semver.org/)", "Release Version")
     }
                 
 elCicdDefs-deploy-project-to-prod:
@@ -26,7 +25,7 @@ elCicdDefs-deploy-project-to-prod:
     variant: params.VARIANT
   PIPELINE_PARAMS: |-
     parameters {
-      $<PROD_PIPELINE_PARAMS>,
+      $<PROJECT_ID_PIPELINE_PARAM>
       stringParam('VARIANT', null, "Variant of version to deploy; e.g. 'east', 'west', 'french', 'english', or 'pre'")
     }
 
