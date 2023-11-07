@@ -11,7 +11,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         
 
         def releaseVersions =
-            sh(returnStdout: true, script: "${forEachrefScript}").
+            sh(returnStdout: true, script: "${forEachrefScript} | grep -E '${projectInfoUtils.SEMVER_REGEX}'").
                 split(/\s+/).
                 sort()
     
