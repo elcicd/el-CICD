@@ -97,7 +97,7 @@ def verifyVersionTagValidSemver(projectInfo) {
  }
 
  def confirmReleaseCandidateManifest(def projectInfo, def args) {
-    def compsToDeploy = projectInfo.releaseCandidateComponents.collect { "${it.name}" }
+    def promotionNames = projectInfo.releaseCandidateComponents.collect { "${it.name}" }
     def removalNames = projectInfo.components.findAll{ !it.promote }.collect { "${it.name}" }
 
     def sch = '<src-commit-hash>'

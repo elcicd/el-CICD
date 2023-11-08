@@ -32,10 +32,9 @@ def selectReleaseVersion(def projectInfo, def args) {
         def namespaceSuffix = projectInfo.releaseProfile ? "-${projectInfo.releaseProfile}" : ''
         projectInfo.deployToNamespace = "${projectInfo.prodNamespace}${namespaceSuffix}"
 
-        def compNamesToDeploy = sh(returnStdout: true, script: 'ls -d charts/* | xargs -n 1 basename').split('\n')
+        def compNamesToDeploy = sh(returnStdout: true, script: 'ls -d charts/* | xargs -n 1 basename')
         def compNamesToRemove = projectInfo.components.collect { it.name }.removeAll { compNamesToDeploy }
 
-        def sch = '<src-commit-hash>'
         def profileMsg = projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : ''
         def msg = loggingUtils.createBanner(
             "CONFIRM DEPLOYMENT OF ${projectInfo.id} ${projectInfo.releaseVersion}${profileMsg} TO ${projectInfo.deployToNamespace}",
