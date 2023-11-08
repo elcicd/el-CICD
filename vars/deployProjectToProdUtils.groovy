@@ -86,7 +86,7 @@ def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         sh """
             helm upgrade --install --atomic --cleanup-on-fail max-history=2 \
-                    --post-renderer ./gkustomize-project.sh \
+                    --post-renderer ./kustomize-project.sh \
                     --post-renderer-args ${postRendererArgs} \
                     -n
                     ${projectInfo.id} .
