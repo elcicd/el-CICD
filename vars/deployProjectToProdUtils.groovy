@@ -21,9 +21,9 @@ def selectReleaseVersion(def projectInfo, def args) {
 
         jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy to ${projectInfo.PROD_ENV}", args, inputs)
 
-        projectInfo.releaseVersion = input.releaseVersion
-        projectInfo.releaseProfile = input.releaseProfile
-        projectInfo.deploymentStrategy = input.deploymentStrategy
+        projectInfo.releaseVersion = inputs.releaseVersion
+        projectInfo.releaseProfile = inputs.releaseProfile
+        projectInfo.deploymentStrategy = inputs.deploymentStrategy
     }
 }
 
