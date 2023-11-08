@@ -27,14 +27,19 @@ def call(Map args) {
     }
 
     def releaseVersionMsg = projectInfo.releaseVersion + (projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : '')
+    stage('Uninstall project in prod') {
+        deployProjectToProdUtils.uninstallProjectInProd(projectInfo)
+    }
+
+    def releaseVersionMsg = projectInfo.releaseVersion + (projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : '')
     stage('Deploy project') {
         loggingUtils.echoBanner("DEPLOY ${projectInfo.id} ${releaseVersionMsg} TO ${projectInfo.deployToNamespace}")
 
-        deployProjectToProdUtils.deployToProduction(projectInfo)
+        deployProjectToProdUtils.deployProjectToProduction(projectInfo)
     }
 
-    stage('Deployment summary') {
-        loggingUtils.echoBanner("${projectInfo.id} ${releaseVersionMsg} DEPLOYMENT SUMMARY IN ${projectInfo.deployToNamespace}")
+    stage('Summary') {
+        loggingUtils.echoBanner("DEPLOYMENT SUMMARY FOR ${projectInfo.id} ${releaseVersionMsg} IN ${projectInfo.deployToNamespace}")
         sh "helm get manifest ${projectInfo.id} -n ${projectInfo.deployToNamespace}"
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Utility methods for apply deploying to production
@@ -8,19 +8,19 @@ def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         def forEachRefScript =
             "git for-each-ref --format='%(refname:lstrip=3)' --sort='-refname' 'refs/remotes/origin/*'"
-        
+
 
         def releaseVersions = sh(returnStdout: true, script: "${forEachRefScript}").split(/\s+/)
-        
-        releaseVersions = releaseVersions.findAll { it ==~ projectInfoUtils.SEMVER_REGEX }.take(5)    
-    
+
+        releaseVersions = releaseVersions.findAll { it ==~ projectInfoUtils.SEMVER_REGEX }.take(5)
+
         def deploymentStrategy = [el.cicd.ROLLING, el.cicd.RECREATE]
         def inputs = [choice(name: 'releaseVersion', description: "Release version of ${projectInfo.id} to deploy", choices: releaseVersions),
                       string(name: 'releaseProfile', description: 'Profile of release version; e.g. "east", "west", "fr", "en" [optional]', trim: true),
                       choice(name: 'deploymentStrategy', description: "Deployment Strategy", choices: deploymentStrategy)]
-                        
+
         jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy to ${projectInfo.PROD_ENV}", args, inputs)
-        
+
         projectInfo.releaseVersion = input.releaseVersion
         projectInfo.releaseProfile = input.releaseProfile
         projectInfo.deploymentStrategy = input.deploymentStrategy
@@ -31,7 +31,7 @@ def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         def namespaceSuffix = projectInfo.releaseProfile ? "-${projectInfo.releaseProfile}" : ''
         projectInfo.deployToNamespace = "${projectInfo.prodNamespace}${namespaceSuffix}"
-        
+
         def compNamesToDeploy = sh(returnStdout: true, script: 'ls -d charts/* | xargs -n 1 basename').split('\n')
         def compNamesToRemove = projectInfo.components.collect { it.name }.removeAll { compNamesToDeploy }
 
@@ -60,15 +60,32 @@ def selectReleaseVersion(def projectInfo, def args) {
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
  }
- 
- def deployToProduction(def projectInfo) {    
+
+ def uninstallProjectInProd(def projectInfo) {
+    if (projectInfo.deploymentStrategy == el.cicd.RECREATE) {
+        def chartInstalledScript = "helm list -q -n ${projectInfo.deployToNamespace} | grep -E '^${projectInfo.id}\$' || :"
+        def chartInstalled = sh(returnStdout: true, script: chartInstalledScript)
+        if (chartInstalled) {
+            loggingUtils.echoBanner("RECREATE ${projectInfo.id} in ${projectInfo.deployToNamespace}")
+            sh "helm uninstall ${projectInfo.id} -n ${projectInfo.deployToNamespace}"
+        }
+        else {
+            echo "--> Nothing to recreate in ${projectInfo.deployToNamespace}; Skipping..."
+        }
+    }
+    else {
+            echo "--> Rolling eployment strategy selected; Skipping..."
+    }
+ }
+
+ def deployProjectToProduction(def projectInfo) {
     def postRendererArgs = projectInfo.releaseProfile ? "${projectInfo.prodEnv},${projectInfo.releaseProfile}" : projectInfo.prodEnv
     dir(projectInfo.projectModule.workDir) {
         sh """
             helm upgrade --install --atomic --cleanup-on-fail max-history=2 \
                     --post-renderer kustomize-project.sh \
                     --post-renderer-args ${postRendererArgs} \
-                    -n 
+                    -n
                     ${projectInfo.id} .
         """
     }
