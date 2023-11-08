@@ -32,7 +32,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         def namespaceSuffix = projectInfo.releaseProfile ? "-${projectInfo.releaseProfile}" : ''
         projectInfo.deployToNamespace = "${projectInfo.prodNamespace}${namespaceSuffix}"
 
-        def compNamesToDeploy = sh(returnStdout: true, script: 'ls -d charts/* | xargs -n 1 basename')
+        def compNamesToDeploy = sh(returnStdout: true, script: "ls -d charts/* | xargs -n 1 basename | tr '\n' ' '")
         def compNamesToRemove = projectInfo.components.collect { it.name }.removeAll { compNamesToDeploy }
 
         def profileMsg = projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : ''
