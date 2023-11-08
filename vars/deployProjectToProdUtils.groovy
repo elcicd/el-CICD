@@ -19,11 +19,11 @@ def selectReleaseVersion(def projectInfo, def args) {
                       string(name: 'releaseProfile', description: 'Profile of release version; e.g. "east", "west", "fr", "en" [optional]', trim: true),
                       choice(name: 'deploymentStrategy', description: "Deployment Strategy", choices: deploymentStrategy)]
 
-        jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy to ${projectInfo.PROD_ENV}", args, inputs)
+        def deploymentInfo = jenkinsUtils.displayInputWithTimeout("Select release version of ${projectInfo.id} to deploy to ${projectInfo.PROD_ENV}", args, inputs)
 
-        projectInfo.releaseVersion = inputs.releaseVersion
-        projectInfo.releaseProfile = inputs.releaseProfile
-        projectInfo.deploymentStrategy = inputs.deploymentStrategy
+        projectInfo.releaseVersion = deploymentInfo.releaseVersion
+        projectInfo.releaseProfile = deploymentInfo.releaseProfile
+        projectInfo.deploymentStrategy = deploymentInfo.deploymentStrategy
     }
 }
 
