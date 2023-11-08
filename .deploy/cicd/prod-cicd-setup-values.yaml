@@ -22,7 +22,7 @@ elCicdDefs-deploy-project-to-prod:
   PIPELINE_DESCRIPTION: 'Deploy to production environment'
   EL_CICD_API_METHOD: deployProjectToProd
   EXTRA_PIPELINE_ARGS: |-
-    variant: params.VARIANT
+    profile: params.PROFILE
   PIPELINE_PARAMS: |-
     parameters {
       $<PROJECT_ID_PIPELINE_PARAM>

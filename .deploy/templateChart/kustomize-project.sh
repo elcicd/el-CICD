@@ -2,7 +2,7 @@
 set -e
 
 PROFILE=${1}
-VARIANT=${2}
+PROFILE=${2}
 
 cd "$(dirname "$0")"
 
