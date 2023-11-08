@@ -108,7 +108,7 @@ def verifyVersionTagValidSemver(projectInfo) {
         '',
         '-> SELECTED COMPONENTS IN THIS VERSION WILL HAVE THEIR',
         "   - ${projectInfo.preProdEnv} IMAGES TAGGED AS ${projectInfo.releaseVersion} IN THE PRE-PROD IMAGE REGISTRY",
-        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-${sch}] TAGGED AS ${projectInfo.releaseVersion}-${sch}:",
+        "   - DEPLOYMENT BRANCHES [deployment-${projectInfo.preProdEnv}-${sch}] TAGGED AS ${projectInfo.releaseVersion}-<src-commit-hash>:",
         '',
         promotionNames,
         '',

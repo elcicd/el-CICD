@@ -33,7 +33,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         projectInfo.deployToNamespace = "${projectInfo.prodNamespace}${namespaceSuffix}"
 
         def compNamesToDeploy = sh(returnStdout: true, script: "ls -d charts/* | xargs -n 1 basename | tr '\n' ' '")
-        def compNamesToRemove = projectInfo.components.collect { it.name }.removeAll { compNamesToDeploy }
+        def compNamesToRemove = projectInfo.components.findAll { !compNamesToDeploy.contains(" ${it.name} ") }.collect{ it.name }.join(' ')
 
         def profileMsg = projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : ''
         def msg = loggingUtils.createBanner(
@@ -55,6 +55,10 @@ def selectReleaseVersion(def projectInfo, def args) {
             '',
             "Should ${projectInfo.id} ${projectInfo.releaseVersion}${profileMsg} be deployed to production?",
         )
+    
+        echo "--> msg:}"
+        echo "${msg}"
+
 
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
