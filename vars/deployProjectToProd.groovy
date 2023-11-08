@@ -31,7 +31,6 @@ def call(Map args) {
         deployProjectToProdUtils.uninstallProjectInProd(projectInfo)
     }
 
-    def releaseVersionMsg = projectInfo.releaseVersion + (projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : '')
     stage('Deploy project') {
         loggingUtils.echoBanner("DEPLOY ${projectInfo.id} ${releaseVersionMsg} TO ${projectInfo.deployToNamespace}")
 
