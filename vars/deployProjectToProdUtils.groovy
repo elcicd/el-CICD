@@ -56,10 +56,6 @@ def selectReleaseVersion(def projectInfo, def args) {
             "Should ${projectInfo.id} ${projectInfo.releaseVersion}${profileMsg} be deployed to production?",
         )
     
-        echo "--> msg:}"
-        echo "${msg}"
-
-
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
  }
@@ -88,7 +84,7 @@ def selectReleaseVersion(def projectInfo, def args) {
             helm upgrade --install --atomic --cleanup-on-fail max-history=2 \
                     --post-renderer ./kustomize-project.sh \
                     --post-renderer-args ${postRendererArgs} \
-                    -n
+                    -n ${projectInfo.deployToNamespace} \
                     ${projectInfo.id} .
         """
     }
