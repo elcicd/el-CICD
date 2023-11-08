@@ -23,7 +23,7 @@ def call(Map args) {
     }
 
     stage('Confirm production manifest') {
-        deployProjectToProdUtils.confirmProductionManifest(projectInfo)
+        deployProjectToProdUtils.confirmProductionManifest(projectInfo, args)
     }
 
     def releaseVersionMsg = projectInfo.releaseVersion + (projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : '')
