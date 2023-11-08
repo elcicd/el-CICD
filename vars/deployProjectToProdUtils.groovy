@@ -42,7 +42,7 @@ def selectReleaseVersion(def projectInfo, def args) {
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            '-> SELECTED COMPONENTS IN THIS VERSION WILL BE DEPLOYED:'
+            '-> SELECTED COMPONENTS IN THIS VERSION WILL BE DEPLOYED:',
             compNamesToDeploy,
             '',
             '---',
