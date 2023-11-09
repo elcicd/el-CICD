@@ -275,7 +275,7 @@ def getCicdConfigValues(def projectInfo) {
     }
     
     if (el.cicd.EL_CICD_MASTER_PROD) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces)
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
     }
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
