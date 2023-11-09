@@ -266,9 +266,16 @@ def getCicdConfigValues(def projectInfo) {
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
 
     cicdConfigValues.elCicdNamespaces = []
-    cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
-    if (projectInfo.sandboxNamespaces) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+    
+    if (el.cicd.EL_CICD_MASTER_NONPROD) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+        if (projectInfo.sandboxNamespaces) {
+            cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+        }
+    }
+    
+    if (el.cicd.EL_CICD_MASTER_PROD) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces))
     }
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
