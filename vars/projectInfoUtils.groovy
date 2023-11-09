@@ -170,19 +170,18 @@ def initProjectEnvNamespaceData(def projectInfo) {
 
     projectInfo.devNamespace = "${projectInfo.id}-${projectInfo.devEnv}"
     projectInfo.preProdNamespace = "${projectInfo.id}-${projectInfo.preProdEnv}"
-    
-    projectInfo.releaseProfiles = projectInfo.releaseProfiles ?: []
-    projectInfo.prodNamespaces = []
-    projectInfo.releaseProfiles.each { profile ->
-        projectInfo.prodNamespaces = "${projectInfo.id}-${projectInfo.prodEnv}-${profile}"
-    }
-    projectInfo.prodNamespaces = projectInfo.prodNamespaces ?: "${projectInfo.id}-${projectInfo.prodEnv}"
 
     projectInfo.hotfixNamespace = "${projectInfo.id}-${projectInfo.hotfixEnv}"
 
     projectInfo.nonProdNamespaces = [(projectInfo.devEnv): projectInfo.devNamespace]
     if (projectInfo.allowsHotfixes) {
         projectInfo.nonProdNamespaces[projectInfo.hotfixEnv] = projectInfo.hotfixNamespace
+    }
+    
+    projectInfo.releaseProfiles = projectInfo.releaseProfiles ?: []
+    projectInfo.prodNamespaces = [projectId.prodEnv: "${projectInfo.id}-${projectInfo.prodEnv}"]
+    projectInfo.releaseProfiles.each { profile ->
+        projectInfo.prodNamespaces["${projectId.prodEnv}-${profile}" : "${projectInfo.id}-${projectInfo.prodEnv}-${profile}"]
     }
 
     projectInfo.testEnvs.each { env ->
