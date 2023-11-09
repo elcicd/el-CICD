@@ -179,7 +179,7 @@ def initProjectEnvNamespaceData(def projectInfo) {
     }
     
     projectInfo.releaseProfiles = projectInfo.releaseProfiles ?: []
-    projectInfo.prodNamespaces = [projectId.prodEnv: "${projectInfo.id}-${projectInfo.prodEnv}"]
+    projectInfo.prodNamespaces = [(projectId.prodEnv): "${projectInfo.id}-${projectInfo.prodEnv}"]
     projectInfo.releaseProfiles.each { profile ->
         projectInfo.prodNamespaces["${projectId.prodEnv}-${profile}" : "${projectInfo.id}-${projectInfo.prodEnv}-${profile}"]
     }
