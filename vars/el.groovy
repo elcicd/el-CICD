@@ -96,9 +96,7 @@ def node(Map args, Closure body) {
 
                 if (args.teamId) {
                     args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
-                }
-
-                if (args.projectId) {
+                    
                     args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
                 }
 

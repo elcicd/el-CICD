@@ -16,6 +16,7 @@ def gatherTeamInfo(def teamId) {
 }
 
 def gatherProjectInfoStage(def teamInfo, def projectId) {
+    assert project
     def projectInfo
     stage('Gather project information') {
         loggingUtils.echoBanner("GATHER INFORMATION FOR PROJECT ${projectId} IN TEAM ${teamInfo.id}")
