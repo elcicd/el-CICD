@@ -81,7 +81,7 @@ def selectReleaseVersion(def projectInfo, def args) {
     def postRendererArgs = projectInfo.releaseProfile ? "${projectInfo.prodEnv},${projectInfo.releaseProfile}" : projectInfo.prodEnv
     dir(projectInfo.projectModule.workDir) {
         sh """
-            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
+            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 --create-namespace \
                     --post-renderer ./kustomize-project.sh \
                     --post-renderer-args ${postRendererArgs} \
                     -n ${projectInfo.deployToNamespace} \

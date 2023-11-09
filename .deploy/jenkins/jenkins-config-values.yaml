@@ -226,6 +226,22 @@ elCicdTemplates:
     namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: roleBinding
+  objName: $<JENKINS_SERVICE_NAME>-$<HELM_RELEASE_NAMESPACE>-prod-deployer
+  mustHaveAnyProfile:
+  - cicd
+  - okd
+  mustNotHaveAnyProfile:
+  - onboarding
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: self-provisioner
+  subjects:
+  - kind: ServiceAccount
+    name: $<JENKINS_SERVICE_NAME>
+    namespace: $<HELM_RELEASE_NAMESPACE>
+
+- templateName: roleBinding
   objName: $<JENKINS_SERVICE_NAME>-edit
   roleRef:
     apiGroup: rbac.authorization.k8s.io
