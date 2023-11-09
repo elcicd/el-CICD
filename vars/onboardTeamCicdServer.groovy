@@ -15,7 +15,7 @@ def call(Map args) {
     }
 
     stage('Uninstall current project CICD resources (optional)') {
-        if (args.rebuildCicdEnvs) {
+        if (args.recreateCicdEnvs) {
             loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
 
             sh """

@@ -2,13 +2,20 @@ elCicdDefs:
   PIPELINE_NAMES:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
+  PIPELINE_NAME: $<OBJ_NAME>
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
-  PIPELINE_PARAMS: |-
-    parameters {
-      stringParam('TEAM_ID', null, 'Team ID')
-      $<EXTRA_PIPELINE_PARAMS>
-    }
+  TEAM_ID_PIPELINE_PARAM: stringParam('TEAM_ID', null, 'Team ID')
+  PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, 'Comma delimited list of Project ID; leave blank if create a team Prod deployment server')
+  RECREATE_CICD_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
+  PROJECT_ID_PIPELINE_ARG: |-
+    agent:  el.cicd.JENKINS_AGENT_DEFAULT
+  AGENT_PIPELINE_ARG: |-
+    agent:  el.cicd.JENKINS_AGENT_DEFAULT
+  TEAM_ID_PIPELINE_ARG: |-
+    teamId: params.TEAM_ID
+  RECREATE_CICD_ENVS_PIPELINE_ARG: |-
+    recreateCicdEnvs: params.RECREATE_CICD_ENVS
   EL_CICD_API_ARGS: |-
     teamId: params.TEAM_ID
     
@@ -17,42 +24,42 @@ elCicdDefs-nonprod:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
   - delete-team-project
-  PIPELINE_NAME: $<OBJ_NAME>
-  PROJECT_ID_PIPELINE_PARAM: |-
-    stringParam('PROJECT_ID', null, 'Comma delimited list of Project IDs; leave blank if create a team Prod deployment server')
-  EL_CICD_API_ARGS: |-
-    agent:  el.cicd.JENKINS_AGENT_DEFAULT,
-    teamId: params.TEAM_ID,
-    projectId: params.PROJECT_ID,
-    $<EXTRA_EL_CICD_API_ARGS>
   
 elCicdDefs-onboard-team-cicd-server:
-  PIPELINE_DESCRIPTION: 'Onboard or update a prod team CICD server for promotions and deployments'
+  PIPELINE_DESCRIPTION: 'Onboard or update a team CICD servers'
   EL_CICD_API_METHOD: onboardTeamCicdServer
+  PIPELINE_PARAMS: |-
+    parameters {
+      $<TEAM_ID_PIPELINE_PARAM>
+      $<PROJECT_ID_PIPELINE_PARAM>
+      $<RECREATE_CICD_ENVS_PIPELINE_PARAM>
+    }
+  EL_CICD_API_ARGS: |-
+    $<AGENT_PIPELINE_ARG>,
+    $<TEAM_ID_PIPELINE_ARG>,
+    $<PROJECT_ID_PIPELINE_ARG>,
+    $<RECREATE_CICD_ENVS_PIPELINE_ARG>
 
-elCicdDefs-onboard-team-cicd-server-nonprod:
-  PIPELINE_DESCRIPTION: 'Onboard or update a team CICD server and/or project'
-  EXTRA_PIPELINE_PARAMS: |-
-    $<PROJECT_ID_PIPELINE_PARAM>
-    booleanParam('REBUILD_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
-  EXTRA_EL_CICD_API_ARGS: |-
-    rebuildCicdEnvs: params.REBUILD_CICD_ENVS
+elCicdDefs-delete-team-project:
+  PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
+  EL_CICD_API_METHOD: deleteTeamProject
+  PIPELINE_PARAMS: |-
+    parameters {
+      $<TEAM_ID_PIPELINE_PARAM>
+      $<PROJECT_ID_PIPELINE_PARAM>
+    }
+  EL_CICD_API_ARGS: |-
+    $<AGENT_PIPELINE_ARG>,
+    $<TEAM_ID_PIPELINE_ARG>,
+    $<PROJECT_ID_PIPELINE_ARG>
 
 elCicdDefs-refresh-team-cicd-servers:
-  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server"
-  PIPELINE_PARAMS:
-  EL_CICD_API_ARGS:
+  PIPELINE_DESCRIPTION: "Refresh configuration and credentials for each team's CICD server"
+  EL_CICD_API_ARGS: |-
+    $<AGENT_PIPELINE_ARG>,
   EL_CICD_API_METHOD: refreshTeamCicdServers
-  
-elCicdDefs-refresh-team-cicd-servers-nonprod:
-  PIPELINE_DESCRIPTION: "Refresh all configuration and credentials for each team's CICD server and/or projects"
 
-elCicdDefs-delete-team-project-nonprod:
-  PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
-  EXTRA_PIPELINE_PARAMS: $<PROJECT_ID_PIPELINE_PARAM>
-  EL_CICD_API_METHOD: deleteTeamProject
-
-elCicdTemplates-master-pipelines-defs:
+elCicdTemplates-el-cicd-master-pipelines-defs:
 - templateName: configMap
   objNames: $<PIPELINE_NAMES>
   labels: $<JENKINS_PIPELINE_LABEL>
