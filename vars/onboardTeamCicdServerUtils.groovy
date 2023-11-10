@@ -30,7 +30,7 @@ def setupTeamCicdServer(def teamInfo) {
             -f ${jenkinsConfigFile} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-pipeline-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
@@ -58,8 +58,6 @@ def getJenkinsConfigValues(def teamInfo) {
     
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
-        
-        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
     }
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
@@ -154,7 +152,7 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/non-prod-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
@@ -262,6 +260,8 @@ def getElCicdChartConfigValues(def projectInfo) {
         getElCicdProdEnvsResourceQuotasValues(projectInfo, elCiddDefs, rqProfiles)
         
         getElCicdRbacProdGroupsValues(projectInfo, elCiddDefs)
+        
+        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
     }    
     cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
 

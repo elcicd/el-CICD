@@ -40,12 +40,3 @@ elCicdTemplates-prod:
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'
   data: $<TEAM_PIPELINE_CONFIG_MAP_DATA>
-
-- templateName: copyResource
-  objName: el-cicd-$<PROD_ENV>-pull-secret
-  namespaces: $<PROD_NAMESPACES>
-  mustHaveEveryProfile:
-  - prod
-  kind: Secret
-  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
-  toNamespace: $<NAME_SPACE>
