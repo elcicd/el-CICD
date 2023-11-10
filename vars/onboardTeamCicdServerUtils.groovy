@@ -289,6 +289,10 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     }
+    
+    if (el.cicd.EL_CICD_MASTER_PROD) {
+        elCicdDefs.PROD_ENV = projectInfo.prodEnv
+    }
 
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
