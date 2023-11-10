@@ -82,7 +82,7 @@ def selectReleaseVersion(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         sh """
             helm dependency update .
-            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 --create-namespace \
+            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
                     --set-string elCicdProfiles="{${postRendererArgs}}" \
                     --set-string elCicdDefs.PROD_ENV=${projectInfo.prodEnv} \
                     --post-renderer ./kustomize-project.sh \
