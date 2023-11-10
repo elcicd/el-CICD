@@ -30,7 +30,7 @@ def selectReleaseVersion(def projectInfo, def args) {
  def confirmProductionManifest(def projectInfo, def args) {
     dir(projectInfo.projectModule.workDir) {
         def namespaceKey = projectInfo.releaseProfile ?: projectInfo.prodEnv
-        projectInfo.deployToNamespace = projectInfo.prodNamespace[namespaceKey]
+        projectInfo.deployToNamespace = projectInfo.prodNamespaces[namespaceKey]
 
         def compNamesToDeploy = sh(returnStdout: true, script: "ls -d charts/* | xargs -n 1 basename | tr '\n' ' '")
         def compNamesToRemove = projectInfo.components.findAll { !compNamesToDeploy.contains(" ${it.name} ") }.collect{ it.name }.join(' ')
