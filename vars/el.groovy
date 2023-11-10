@@ -12,6 +12,9 @@ def initMetaData(Map metaData) {
         loggingUtils.echoBanner("INITIALIZING METADATA...")
 
         el.cicd.putAll(metaData)
+        
+        el.cicd.EL_CICD_MASTER_NONPROD = EL_CICD_MASTER_NONPROD ?: false
+        el.cicd.EL_CICD_MASTER_PROD = EL_CICD_MASTER_PROD ?: false
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
         el.cicd.EL_CICD_CHART_DEPLOY_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.CHART_DEPLOY_DIR}"
