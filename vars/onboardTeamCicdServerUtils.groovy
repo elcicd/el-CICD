@@ -246,10 +246,6 @@ def getElCicdChartConfigValues(def projectInfo) {
     
     getElCicdCodeBaseChartValues(projectInfo, elCicdDefs)
 
-    if (el.cicd.EL
-
-    elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
-
     def rqProfiles = [:]
     def cicdEnvs = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
