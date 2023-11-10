@@ -353,7 +353,7 @@ def getElCicdNonProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, de
 def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, def rqProfiles) {
     cicdEnvs = [projectInfo.prodEnv]
     projectInfo.releaseProfiles.each { profile ->
-        cicdEnvs.add("${projectInfo.prodEnv}-${profile}"
+        cicdEnvs.add("${projectInfo.prodEnv}-${profile}")
     }
 
     cicdEnvs.each { env ->
