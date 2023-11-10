@@ -58,6 +58,8 @@ def getJenkinsConfigValues(def teamInfo) {
     
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
+        
+        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
     }
     
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
@@ -260,8 +262,6 @@ def getElCicdChartConfigValues(def projectInfo) {
         getElCicdProdEnvsResourceQuotasValues(projectInfo, elCiddDefs, rqProfiles)
         
         getElCicdRbacProdGroupsValues(projectInfo, elCiddDefs)
-        
-        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
     }    
     cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
 
