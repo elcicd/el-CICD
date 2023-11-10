@@ -249,17 +249,17 @@ def getElCicdChartConfigValues(def projectInfo) {
     def rqProfiles = [:]
     def cicdEnvs = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCiddDefs, rqProfiles)
+        getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
 
-        getElCicdRbacNonProdGroupsValues(projectInfo, elCiddDefs)
+        getElCicdRbacNonProdGroupsValues(projectInfo, elCicdDefs)
         
         elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
     }
     
     if (el.cicd.EL_CICD_MASTER_PROD) {
-        getElCicdProdEnvsResourceQuotasValues(projectInfo, elCiddDefs, rqProfiles)
+        getElCicdProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
         
-        getElCicdRbacProdGroupsValues(projectInfo, elCiddDefs)
+        getElCicdRbacProdGroupsValues(projectInfo, elCicdDefs)
         
         elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
     }    
@@ -333,7 +333,7 @@ def getElCicdCodeBaseChartValues(def projectInfo, def elCicdDefs) {
     }
 }
 
-def getElCicdNonProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, def rqProfiles) {
+def getElCicdNonProdEnvsResourceQuotasValues(def projectInfo, def elCicdDefs, def rqProfiles) {
     cicdEnvs = []
     cicdEnvs += projectInfo.nonProdEnvs
     cicdEnvs += projectInfo.sandboxEnvs
@@ -350,7 +350,7 @@ def getElCicdNonProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, de
     }
 }
 
-def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, def rqProfiles) {
+def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCicdDefs, def rqProfiles) {
     cicdEnvs = [projectInfo.prodEnv]
     projectInfo.releaseProfiles.each { profile ->
         cicdEnvs.add("${projectInfo.prodEnv}-${profile}")
@@ -367,7 +367,7 @@ def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCiddDefs, def r
     }
 }
 
-def getElCicdRbacNonProdGroupsValues(def projectInfo, def elCiddDefs) {
+def getElCicdRbacNonProdGroupsValues(def projectInfo, def elCicdDefs) {
     cicdEnvs = []
     
     cicdEnvs += projectInfo.nonProdEnvs
@@ -380,7 +380,7 @@ def getElCicdRbacNonProdGroupsValues(def projectInfo, def elCiddDefs) {
     }
 }
     
-def getElCicdRbacProdGroupsValues(def projectInfo, def elCiddDefs) {
+def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
     def group = projectInfo.rbacGroups[projectInfo.prodEnv] ?: projectInfo.defaultRbacGroup
     projectInfo.prodNamespaces.values().each { namespace ->
         elCicdDefs["${namespace}_GROUP"] = group
