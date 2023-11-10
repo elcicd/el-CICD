@@ -248,12 +248,14 @@ def getElCicdChartConfigValues(def projectInfo) {
 
     def rqProfiles = [:]
     def cicdEnvs = []
+    elCicdDefs.CICD_NAMESPACES = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
 
         getElCicdRbacNonProdGroupsValues(projectInfo, elCicdDefs)
         
-        elCicdDefs.CICD_NAMESPACES = projectInfo.nonProdNamespaces.values() + projectInfo.sandboxNamespaces.values()
+        elCicdDefs.CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
+        elCicdDefs.CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
     }
     
     if (el.cicd.EL_CICD_MASTER_PROD) {
@@ -262,6 +264,7 @@ def getElCicdChartConfigValues(def projectInfo) {
         getElCicdRbacProdGroupsValues(projectInfo, elCicdDefs)
         
         elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
+        elCicdDefs.CICD_NAMESPACES += projectInfo.prodNamespaces.values()
     }    
     cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
 

@@ -129,8 +129,6 @@ elCicdTemplates:
 
 - templateName: roleBinding
   objName: $<PROJECT_ID>-edit
-  mustHaveEveryProfile:
-  - nonprod
   namespaces: $<CICD_NAMESPACES>
   roleRef:
     apiGroup: rbac.authorization.k8s.io
