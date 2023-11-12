@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-PROFILES=($(echo ${1} | tr ',' ' '))
+PROFILES=$(echo ${1} | tr ',' ' ')
 CHART_DIR=$(dirname "$0")
 
 cd "${CHART_DIR}"
@@ -43,8 +43,8 @@ __kustomize_project() {
     KUST_COUNTER=0
     for KUST_DIR in ${KUSTOMIZE_DIRS}
     do
-        COMP_FINAL_DEPLOY_YAML=${CHART_DIR}/${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL}
         let KUST_COUNTER=KUST_COUNTER+1
+        COMP_FINAL_DEPLOY_YAML=${CHART_DIR}/${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL}
         echo "# PROFILES -> ${PROFILES}" > ${COMP_FINAL_DEPLOY_YAML}
         (cd ${KUST_DIR}/${EL_CICD_KUSTOMIZE} && kustomize build . >> ${COMP_FINAL_DEPLOY_YAML}) &
     done
@@ -67,7 +67,6 @@ __createBaseDir() {
     
     COMP_DIR=$(echo ${KUST_DIR} | sed -E -e 's/[.]|kustomize|//g')
     HELM_OUT_PATTERN="# Source: [\w-]+${COMP_DIR}templates"
-    set -x
     HELM_OUT_FILES=$(grep -l -P "${HELM_OUT_PATTERN}"  ${HELM_OUT_FILES_PREFIX}*.yaml | tr '\n' ' ')
     if [[ -z ${HELM_OUT_FILES} ]]
     then
@@ -98,7 +97,7 @@ __createProfilesDirs() {
     KUST_DIR=${1}
 
     local LAST_DIR=${BASE}
-    for PROFILE in ${PROFILES[@]} ${EL_CICD_KUSTOMIZE}
+    for PROFILE in ${PROFILES} ${EL_CICD_KUSTOMIZE}
     do
         CURR_DIR=${KUST_DIR}/${PROFILE}
         mkdir -p ${KUST_DIR}/${PROFILE}
