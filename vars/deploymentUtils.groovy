@@ -89,7 +89,10 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     cat Chart.yaml
                     
                     ${shCmd.echo('')}
-                    unset UPDATE_DEPENDENCIES
+                    if [[ '${projectInfo.deployToEnv}' == '${projectInfo.prodEnv}' ]]
+                    then
+                        unset UPDATE_DEPENDENCIES
+                    fi
                 fi
 
                 if [[ ! -z "\${UPDATE_DEPENDENCIES}" ]]
