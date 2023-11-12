@@ -87,7 +87,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart:")}
 
                     cat Chart.yaml
-                    
+
                     ${shCmd.echo('')}
                     if [[ '${projectInfo.deployToEnv}' == '${projectInfo.prodEnv}' ]]
                     then
@@ -103,20 +103,20 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 fi
 
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
-                
+
                 if [[ '${projectInfo.deployToEnv}' != '${projectInfo.prodEnv}' ]]
                 then
                     ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}; use post-renderer:")}
-                    
+
                     cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
                     chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
-                    
+
                     ${shCmd.echo('')}
                 else
                     ${shCmd.echo('',
                                  "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:",
-                                 "    NO POST-RENDERER REQUIRED',
-                                 '' 
+                                 '    NO POST-RENDERER REQUIRED',
+                                 ''
                     )}
                 fi
             """
