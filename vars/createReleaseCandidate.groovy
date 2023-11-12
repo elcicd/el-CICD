@@ -9,14 +9,9 @@ def call(Map args) {
     projectInfo.releaseVersion = args.releaseVersion
 
     stage('Check version tag is valid SemVer') {
-        if (args.strictSemver) {
-            loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.releaseVersion} IS VALID SEMVER WIHOUT BUILD INFO")
-            
-            createReleaseCandidateUtils.verifyVersionTagValidSemver(projectInfo)
-        }
-        else {
-            loggingUtils.echoBanner("SEMVER VALIDATION DISABLED; SKIPPING...}")
-        }
+        loggingUtils.echoBanner("CHECK VERSION TAG ${projectInfo.releaseVersion} IS VALID SEMVER WIHOUT BUILD INFO")
+        
+        createReleaseCandidateUtils.verifyVersionTagValidSemver(projectInfo)
     }
         
     stage('Validate version tag unused') {
