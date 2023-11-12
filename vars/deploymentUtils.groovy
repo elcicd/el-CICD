@@ -76,7 +76,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
-                UPDATE_DEPENDENCIES=true
+                UPDATE_DEPENDENCIES='update-dependencies'
                 if [[ ! -f Chart.yaml ]]
                 then
                     helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
@@ -97,19 +97,27 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 if [[ ! -z "\${UPDATE_DEPENDENCIES}" ]]
                 then
+                    ${shCmd.echo('', "--> ${component.name} is using a custom Helm chart and/or is being prepared for a non-prod deployment:")}
                     helm dependency update
+                    ${shCmd.echo('')}
                 fi
 
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
                 
                 if [[ '${projectInfo.deployToEnv}' != '${projectInfo.prodEnv}' ]]
                 then
-                    ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}:")}
+                    ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}; use post-renderer:")}
                     
                     cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
                     chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
                     
                     ${shCmd.echo('')}
+                else
+                    ${shCmd.echo('',
+                                 "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:"
+                                 "    NO POST-RENDERER REQUIRED',
+                                 '' 
+                    )}
                 fi
             """
         }
