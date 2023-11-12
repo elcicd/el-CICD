@@ -107,11 +107,10 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}:")}
                     
                     cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
+                    chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
                     
                     ${shCmd.echo('')}
                 fi
-
-                chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
             """
         }
     }
