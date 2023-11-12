@@ -114,7 +114,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     ${shCmd.echo('')}
                 else
                     ${shCmd.echo('',
-                                 "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:"
+                                 "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:",
                                  "    NO POST-RENDERER REQUIRED',
                                  '' 
                     )}
