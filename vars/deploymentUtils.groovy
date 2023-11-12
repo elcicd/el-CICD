@@ -84,7 +84,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
                                   ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
 
-                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart:"}
+                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart:")}
 
                     cat Chart.yaml
                     
