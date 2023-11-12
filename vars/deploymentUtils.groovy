@@ -84,9 +84,11 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
                                   ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
 
-                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart", '')}
+                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart:"}
 
                     cat Chart.yaml
+                    
+                    ${shCmd.echo('')}
                     unset UPDATE_DEPENDENCIES
                 fi
 
@@ -95,9 +97,16 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     helm dependency update
                 fi
 
-                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} \
-                      ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
-                      ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
+                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
+                
+                if [[ '${projectInfo.deployToEnv}' -ne '${projectInfo.prodEnv}' ]]
+                then
+                    ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}:")}
+                    
+                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
+                    
+                    ${shCmd.echo('')}
+                fi
 
                 chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
             """

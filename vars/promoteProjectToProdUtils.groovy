@@ -78,7 +78,7 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
         sh """
             cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} \
                   ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
-                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.PROJECT_KUST_SH} .
+                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
 
             helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
             helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamInfo.cicdMasterNamespace} \
