@@ -99,7 +99,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
                 
-                if [[ '${projectInfo.deployToEnv}' -ne '${projectInfo.prodEnv}' ]]
+                if [[ '${projectInfo.deployToEnv}' != '${projectInfo.prodEnv}' ]]
                 then
                     ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}:")}
                     
