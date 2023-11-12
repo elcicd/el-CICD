@@ -89,7 +89,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     cat  Chart.yaml
                 fi
 
-                if [[ ! -z '${projectInfo.releaseVersion' ]]
+                if [[ ! -z '${projectInfo.releaseVersion}' ]]
                 then
                     ${shCmd.echo("-> Packaging ${component.name} as subchart: updating dependencies")}
 
