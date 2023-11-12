@@ -91,6 +91,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 fi
 
                 if [[ ! -z "\${UPDATE_DEPENDENCIES}" ]]
+                then
                     helm dependency update
                 fi
 
