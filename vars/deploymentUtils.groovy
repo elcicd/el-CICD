@@ -166,7 +166,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     ${component.name} \
                     . \
                     --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
-                    --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
+                    --post-renderer-args '${projectInfo.elCicdProfiles.join(',')}'
 
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
             """
