@@ -15,7 +15,7 @@ elCicdDefs-promote-project-to-prod:
   PIPELINE_PARAMS: |-
     parameters {
       $<PROJECT_ID_PIPELINE_PARAM>
-      stringParam('RELEASE_VERSION', "Must be a valid Semver(https://semver.org/)", "Release Version")
+      stringParam('RELEASE_VERSION', "0.1.0", "Release Version, must be a valid Semver (https://semver.org/)")
     }
                 
 elCicdDefs-deploy-project-to-prod:

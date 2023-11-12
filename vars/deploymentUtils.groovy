@@ -38,8 +38,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
-    def releaseVersion = projectInfo.releaseVersion ?: '0.1.0'
-    def chartYamlValues = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
+    def defaultChartValuesYaml = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
 
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
@@ -77,22 +76,21 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
+                UPDATE_DEPENDENCIES=true
                 if [[ ! -f Chart.yaml ]]
                 then
-                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml", '')}
-
-                    helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
+                    helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
-                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
+                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
                                   ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
 
-                    cat  Chart.yaml
+                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart", '')}
+
+                    cat Chart.yaml
+                    unset UPDATE_DEPENDENCIES
                 fi
 
-                if [[ -z '${projectInfo.releaseVersion ?: ''}' ]]
-                then
-                    ${shCmd.echo('', "-> Packaging ${component.name} as chart: updating dependencies", '')}
-
+                if [[ ! -z "\${UPDATE_DEPENDENCIES}" ]]
                     helm dependency update
                 fi
 
