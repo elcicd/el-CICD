@@ -44,10 +44,10 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     componentsToDeploy.each { component ->
         def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
 
-        def chartYaml = 
+        def chartYaml =
         dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
-            def postRenderDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.POST_RENDERER_KUSTOMIZE_DIR}"
-            dir(postRenderDir) {
+            def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
+            dir(elCicdOverlayDir) {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
@@ -58,38 +58,47 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 set +e
                 VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
                                 '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
-                                -exec echo -n ' {}' \\; 2>/dev/null )
+                                -exec echo -n ' {}' \\; 2>/dev/null)
                 set -e
 
                 helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-                helm template \${VALUES_FILES/ / -f } -f ${postRenderDir}/${componentConfigFile} \
-                     --set createPackageValuesYaml=true \
+                helm template \${VALUES_FILES/ / -f } -f ${elCicdOverlayDir}/${componentConfigFile} \
+                     --set outputMergedValuesYaml=true \
                      render-values-yaml elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+
+                ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
+
+                cat  ${tmpValuesFile}
 
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
 
-                ${loggingUtils.shellEchoBanner("Final ${component.name} Helm values.yaml")}
-
-                cat values.yaml
-
-                helm template -f ${postRenderDir}/${componentConfigFile} \
+                helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${postRenderDir}/kustomization.yaml
+                              elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
                 if [[ ! -f Chart.yaml ]]
                 then
+                    ${shCmd.echo("--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml"))}
+
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${chartYamlValues} \
                                   ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
-                                  
-                    ${projectInfo.releaseVersion ? '' : 'helm dependency update .'}
+
+                    cat  Chart.yaml
                 fi
-                
+
+                if [[ ! -z '${projectInfo.releaseVersion' ]]
+                then
+                    ${shCmd.echo("-> Packaging ${component.name} as subchart: updating dependencies"))}
+
+                    helm dependency update
+                fi
+
                 cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
 
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.COMP_KUST_SH} ${el.cicd.KUSTOMIZE_DIR}
+                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} ${el.cicd.KUSTOMIZE_DIR}
             """
         }
     }
@@ -154,7 +163,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     . \
-                    --post-renderer ./${el.cicd.KUSTOMIZE_DIR}/${el.cicd.COMP_KUST_SH} \
+                    --post-renderer ./${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
 
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
