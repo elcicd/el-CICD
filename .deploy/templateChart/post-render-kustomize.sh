@@ -109,6 +109,7 @@ __createProfilesDirs() {
         (cd ${CURR_DIR} && \
          kustomize edit remove resource ../${LAST_DIR} && \
          kustomize edit add resource ../${LAST_DIR})
+        LAST_DIR=${PROFILE}
     done
 }
 
