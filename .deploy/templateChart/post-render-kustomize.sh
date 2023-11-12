@@ -43,8 +43,10 @@ __kustomize_project() {
     KUST_COUNTER=0
     for KUST_DIR in ${KUSTOMIZE_DIRS}
     do
+        COMP_FINAL_DEPLOY_YAML=${CHART_DIR}/${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL}
         let KUST_COUNTER=KUST_COUNTER+1
-        (cd ${KUST_DIR}/${EL_CICD_KUSTOMIZE} && kustomize build . > ${CHART_DIR}/${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL})
+        echo "# PROFILES -> ${PROFILES}" > ${COMP_FINAL_DEPLOY_YAML}
+        (cd ${KUST_DIR}/${EL_CICD_KUSTOMIZE} && kustomize build . >> ${COMP_FINAL_DEPLOY_YAML}) &
     done
     wait
     
@@ -74,6 +76,7 @@ __createBaseDir() {
     fi
     
     cat ${HELM_OUT_FILES} > ${BASE_DIR}/${HELM_OUT_FILES_COLLECTED}
+    rm -f ${HELM_OUT_FILES}
 }
 
 __createBaseKustomize() {
@@ -99,7 +102,6 @@ __createProfilesDirs() {
     do
         CURR_DIR=${KUST_DIR}/${PROFILE}
         mkdir -p ${KUST_DIR}/${PROFILE}
-        FOO="$(ls ${CURR_DIR})"
         if [[ ! -f ${CURR_DIR}/kustomization.yaml && ! -f ${CURR_DIR}/kustomization.yml ]]
         then
             (cd ${CURR_DIR} && kustomize create --autodetect)
