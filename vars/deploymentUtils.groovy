@@ -79,7 +79,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 if [[ ! -f Chart.yaml ]]
                 then
-                    ${shCmd.echo("--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml"))}
+                    ${shCmd.echo("--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml")}
 
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
@@ -91,7 +91,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 if [[ ! -z '${projectInfo.releaseVersion' ]]
                 then
-                    ${shCmd.echo("-> Packaging ${component.name} as subchart: updating dependencies"))}
+                    ${shCmd.echo("-> Packaging ${component.name} as subchart: updating dependencies")}
 
                     helm dependency update
                 fi
