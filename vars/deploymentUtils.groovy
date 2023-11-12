@@ -79,7 +79,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 if [[ ! -f Chart.yaml ]]
                 then
-                    ${shCmd.echo("--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml")}
+                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default elCicdChart Chart.yaml", '')}
 
                     helm template --set-string elCicdDefs.VERSION=${releaseVersion} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
@@ -89,16 +89,18 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     cat  Chart.yaml
                 fi
 
-                if [[ ! -z '${projectInfo.releaseVersion}' ]]
+                if [[ -z '${projectInfo.releaseVersion ?: ''}' ]]
                 then
-                    ${shCmd.echo("-> Packaging ${component.name} as subchart: updating dependencies")}
+                    ${shCmd.echo('', "-> Packaging ${component.name} as chart: updating dependencies", '')}
 
                     helm dependency update
                 fi
 
-                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
+                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} \
+                      ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
+                      ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
 
-                cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} ${el.cicd.KUSTOMIZE_DIR}
+                chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
             """
         }
     }
@@ -163,7 +165,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     . \
-                    --post-renderer ./${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
+                    --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
                     --post-renderer-args '${projectInfo.elCicdProfiles.join(' ')}'
 
                 helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
