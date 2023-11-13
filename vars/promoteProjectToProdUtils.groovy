@@ -24,7 +24,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
                 echo "-> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
                 component.releaseCandidateScmTag = scmRepoTag
                 assert component.releaseCandidateScmTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
-                component.srcCommitHash = component.releaseCandidateScmTag.split('-')[1]
+                component.srcCommitHash = component.releaseCandidateScmTag.split('-').last()
                 component.releaseVersionTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
             }
             else {
