@@ -167,12 +167,12 @@ def promoteReleaseCandidateImages(def projectInfo) {
                                 'FROM_IMAGE_REGISTRY_USERNAME',
                                 'FROM_IMAGE_REGISTRY_PWD',
                                 component.id,
-                                component.releaseVersion,
+                                projectInfo.releaseVersion,
                                 projectInfo.PROD_ENV,
                                 'TO_IMAGE_REGISTRY_USERNAME',
                                 'TO_IMAGE_REGISTRY_PWD',
                                 component.id,
-                                component.releaseVersion)
+                                projectInfo.releaseVersion)
                                 
             def msg = "--> ${component.id} image promoted and tagged as ${component.releaseVersion}"
 
