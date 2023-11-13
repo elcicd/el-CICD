@@ -33,7 +33,7 @@ def selectReleaseVersion(def projectInfo, def args) {
         projectInfo.deployToNamespace = projectInfo.prodNamespaces[namespaceKey]
 
         def compNamesToDeploy = sh(returnStdout: true, script: "ls -d charts/* | xargs -n 1 basename | tr '\n' ' '")
-        def compNamesToRemove = projectInfo.components.findAll { !compNamesToDeploy.contains(" ${it.name} ") }.collect{ it.name }.join(' ')
+        def compNamesToRemove = projectInfo.components.findAll { !compNamesToDeploy.contains(/(^| )${it.name}( | $)/) }.collect{ it.name }.join(' ')
 
         def profileMsg = projectInfo.releaseProfile ? "(${projectInfo.releaseProfile})" : ''
         def msg = loggingUtils.createBanner(
