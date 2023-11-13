@@ -26,7 +26,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
                 
                 echo "--> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
                 component.releaseCandidateScmTag = scmRepoTag
-                component.srcCommitHash = component.releaseCandidateScmTag.split('-')[1]
+                component.srcCommitHash = component.releaseCandidateScmTag.split('-').last()
             }
             else {
                 echo "--> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
