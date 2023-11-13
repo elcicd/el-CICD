@@ -21,7 +21,12 @@ def gatherReleaseCandidateRepos(def projectInfo) {
 
             if (scmRepoTag) {
                 scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
+                def msg = "Release candidate tags in Git must be of the form <RELEASE VERSION>-<SRC-COMMIT_HASH: ${scmRepoTag}"
+                assert scmRepoTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
+                
                 echo "--> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
+                component.releaseCandidateScmTag = scmRepoTag
+                component.srcCommitHash = component.releaseCandidateScmTag.split('-')[1]
             }
             else {
                 echo "--> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
