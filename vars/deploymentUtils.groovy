@@ -163,7 +163,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
     configValuesMap.elCicdDefaults.objName = component.name
 
     configValuesMap.elCicdDefaults.image =
-        "${imageRegistry}/${projectInfo.id}-${component.name}:${component.releaseVersionTag ?: projectInfo.deployToEnv}"
+        "${imageRegistry}/${projectInfo.id}-${component.name}:${component.releaseVersion ?: projectInfo.deployToEnv}"
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase

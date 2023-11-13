@@ -21,14 +21,10 @@ def gatherReleaseCandidateRepos(def projectInfo) {
 
             if (scmRepoTag) {
                 scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
-                echo "-> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
-                component.releaseCandidateScmTag = scmRepoTag
-                assert component.releaseCandidateScmTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
-                component.srcCommitHash = component.releaseCandidateScmTag.split('-').last()
-                component.releaseVersionTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
+                echo "--> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
             }
             else {
-                echo "-> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
+                echo "--> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
             }
 
             return component.releaseCandidateScmTag
@@ -54,7 +50,9 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
             then
                 git checkout tags/${module.releaseCandidateScmTag}
             else
+                ${shCmd.echo('', "--> Creating release branch ${module.releaseCandidateScmTag} in project repo ${projectInfo.projectModule.repoName}")}
                 git switch -c ${module.releaseCandidateScmTag}
+                 ${shCmd.echo('')}
             fi
         """
     }
@@ -164,14 +162,14 @@ def promoteReleaseCandidateImages(def projectInfo) {
                                 'FROM_IMAGE_REGISTRY_USERNAME',
                                 'FROM_IMAGE_REGISTRY_PWD',
                                 component.id,
-                                component.releaseVersionTag,
+                                component.releaseVersion,
                                 projectInfo.PROD_ENV,
                                 'TO_IMAGE_REGISTRY_USERNAME',
                                 'TO_IMAGE_REGISTRY_PWD',
                                 component.id,
-                                component.releaseVersionTag)
+                                component.releaseVersion)
                                 
-            def msg = "--> ${component.id} image promoted and tagged as ${component.releaseVersionTag}"
+            def msg = "--> ${component.id} image promoted and tagged as ${component.releaseVersion}"
 
             sh  """
                 ${copyImage}
