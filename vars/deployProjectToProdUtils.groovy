@@ -47,7 +47,7 @@ def selectReleaseVersion(def projectInfo, def args) {
             '---',
             '',
             '-> COMPONENTS TO BE REMOVED AND/OR IGNORED IN THIS VERSION:',
-            compNamesToRemove,
+            compNamesToRemove ?: 'NO COMPONENTS TO REMOVE',
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
