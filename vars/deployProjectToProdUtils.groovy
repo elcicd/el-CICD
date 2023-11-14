@@ -81,7 +81,7 @@ def selectReleaseVersion(def projectInfo, def args) {
     def postRendererArgs = projectInfo.releaseProfile ? "${projectInfo.prodEnv},${projectInfo.releaseProfile}" : projectInfo.prodEnv
     dir(projectInfo.projectModule.workDir) {
         sh """
-            helm dependency update .
+            helm dependency update
             helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
                     --set-string elCicdProfiles="{${postRendererArgs}}" \
                     --set-string elCicdDefs.PROD_ENV=${projectInfo.prodEnv} \
