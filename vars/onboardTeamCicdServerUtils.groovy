@@ -185,11 +185,10 @@ def configureDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
-        unstash 'el-cicd-scripts'
         sh """
             ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
 
-            source ./github-utilities.sh
+            source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
             _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                         ${projectInfo.scmOrganization} \
