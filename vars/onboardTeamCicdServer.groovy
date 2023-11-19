@@ -8,7 +8,7 @@ def call(Map args) {
     def teamInfo = args.teamInfo
     def projectInfo = args.projectInfo
     
-    stash includes: "${elcicd.EL_CICD_SCRIPTS_DIR}/*.sh", name: 'el-cicd-scripts'
+    stash(includes: "${el.cicd.EL_CICD_SCRIPTS_DIR}/*.sh", name: 'el-cicd-scripts')
 
     stage("Install/upgrade CICD Jenkins") {
         onboardTeamCicdServerUtils.setupTeamCicdServer(teamInfo)
