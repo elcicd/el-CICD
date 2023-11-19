@@ -6,7 +6,7 @@
 def cleanupFailedInstalls(def projectInfo) {
     sh """
         COMPONENT_NAMES=\$(helm list --uninstalling --failed  -q  -n ${projectInfo.deployToNamespace})
-        if [[ ! -z \${COMPONENT_NAMES} ]]
+        if [[ "\${COMPONENT_NAMES}" ]]
         then
             for COMPONENT_NAME in \${COMPONENT_NAMES}
             do
@@ -20,7 +20,7 @@ def removeComponents(def projectInfo, def components) {
     def componentNames = components.collect { it. name }.join('|')
     sh """
         RELEASES=\$(helm list --short --filter '${componentNames}' -n ${projectInfo.deployToNamespace} | tr '\\n' ' ')
-        if [[ ! -z \${RELEASES} ]]
+        if [[ "\${RELEASES}" ]]
         then
             helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace}
         else
@@ -95,7 +95,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     fi
                 fi
 
-                if [[ ! -z "\${UPDATE_DEPENDENCIES}" ]]
+                if [[ "\${UPDATE_DEPENDENCIES}" ]]
                 then
                     ${shCmd.echo('', "--> ${component.name} is using a custom Helm chart and/or is being prepared for a non-prod deployment:")}
                     helm dependency update
@@ -200,7 +200,7 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
         TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l el-cicd.io/projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
-        if [[ ! -z \${TERMINATING_PODS} ]]
+        if [[ "\${TERMINATING_PODS}" ]]
         then
             ${shCmd.echo '', '--> WAIT FOR PODS TO COMPLETE TERMINATION', ''}
 

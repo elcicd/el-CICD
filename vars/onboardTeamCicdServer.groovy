@@ -5,8 +5,6 @@
  */
 
 def call(Map args) {
-    onboardTeamCicdServerUtils.init()
-
     def teamInfo = args.teamInfo
     def projectInfo = args.projectInfo
 
@@ -20,7 +18,7 @@ def call(Map args) {
 
             sh """
                 HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} | grep -E '^${projectInfo.id}\$')
-                if [[ ! -z \${HELM_CHART} ]]
+                if [[ "\${HELM_CHART}" ]]
                 then
                     helm uninstall --wait ${projectInfo.id} -n ${projectInfo.teamInfo.cicdMasterNamespace}
                 else

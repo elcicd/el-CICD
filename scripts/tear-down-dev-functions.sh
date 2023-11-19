@@ -127,7 +127,7 @@ _remove_existing_crc() {
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
     set +e
-    if [[ ! -z ${CRC_EXEC} ]]
+    if [[ "${CRC_EXEC}" ]]
     then
         echo
         echo 'Stopping the OpenShift Local cluster'

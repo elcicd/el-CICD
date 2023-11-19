@@ -35,7 +35,7 @@ _verify_pull_secret_files_exist() {
         fi
     done
 
-    if [[ ! -z ${PULL_SECRET_FILES} ]]
+    if [[ "${PULL_SECRET_FILES}" ]]
     then
         echo
         echo "ERROR:"
@@ -72,7 +72,7 @@ _check_upgrade_install_sealed_secrets() {
 _collect_sealed_secret_info() {
     echo
     HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
-    if [[ ! -z ${HAS_SEALED_SECRETS} ]]
+    if [[ "${HAS_SEALED_SECRETS}" ]]
     then
         echo "CURRENTLY INSTALLED SEALED SECRETS VERSION INFO:"
         helm list --filter 'sealed-secrets' --time-format "2006-01-02" -n kube-system
@@ -129,47 +129,6 @@ _install_sealed_secrets() {
     sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
 
     set +e
-}
-
-_push_deploy_key_to_github() {
-    local GIT_REPO_NAME=${1}
-    local DEPLOY_KEY_TITLE=${2}
-    local DEPLOY_KEY_FILE="${3}.pub"
-
-    # READ_ONLY *MUST* be ${_FALSE} to push a read/write key
-    local READ_ONLY=${4}
-    if [[ ${READ_ONLY} != ${_FALSE} ]]
-    then
-        READ_ONLY=true
-    fi
-
-    local GITHUB_BEARER_TOKEN="Authorization: Bearer $(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})"
-    local EL_CICD_GITHUB_KEYS_URL="https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_NAME}/keys"
-
-    # DELETE old key, if any
-    local KEY_ID=$(curl -ksSL -X GET -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" ${EL_CICD_GITHUB_KEYS_URL} | \
-        jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
-    if [[ ! -z ${KEY_ID} ]]
-    then
-        echo "Deleting old GitHub key ${DEPLOY_KEY_TITLE} with ID: ${KEY_ID}"
-        curl -fksSL -X DELETE -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | \
-            jq 'del(.key)'
-    else
-        echo "Adding key  ${DEPLOY_KEY_TITLE} to GitHub for first time"
-    fi
-
-    local TEMPLATE_FILE='githubDeployKey-template.json'
-    local GITHUB_CREDS_FILE="${SECRET_FILE_TEMP_DIR}/${TEMPLATE_FILE}"
-    cp ${EL_CICD_TEMPLATES_DIR}/${TEMPLATE_FILE} ${GITHUB_CREDS_FILE}
-    sed -i -e "s/%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}/g" ${GITHUB_CREDS_FILE}
-    GITHUB_CREDS=$(<${GITHUB_CREDS_FILE})
-    echo "${GITHUB_CREDS//%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}" > ${GITHUB_CREDS_FILE}
-
-    local RESULT=$(curl -fksSL -X POST -H "${GITHUB_BEARER_TOKEN}" -H "${GITHUB_REST_API_HDR}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL} | \
-        jq 'del(.key)')
-    printf "New GitHub key created:\n${RESULT}\n"
-
-    rm -f ${GITHUB_CREDS_FILE}
 }
 
 _create_jenkins_secrets() {
@@ -244,7 +203,7 @@ _podman_login() {
     JENKINS_USERNAME_PWD_FILE="${SECRET_FILE_DIR}/$(__get_pull_secret_id jenkins)"
     local JENKINS_USERNAME=$(jq -r .username ${JENKINS_USERNAME_PWD_FILE})
     local JENKINS_PASSWORD=$(jq -r .password ${JENKINS_USERNAME_PWD_FILE})
-    if [[ ! -z ${JENKINS_USERNAME} || ! -z ${JENKINS_PASSWORD} ]]
+    if [[ ! -z ${JENKINS_USERNAME} || "${JENKINS_PASSWORD}" ]]
     then
         set -e
         podman login --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} -u ${JENKINS_USERNAME} -p ${JENKINS_PASSWORD} ${JENKINS_IMAGE_REGISTRY}

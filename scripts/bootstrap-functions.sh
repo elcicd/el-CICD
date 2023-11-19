@@ -38,8 +38,9 @@ _bootstrap_el_cicd() {
     __bootstrap_el_cicd_onboarding_server
 
     echo
-    echo 'ADDING EL-CICD CREDENTIALS TO GIT PROVIDER, IMAGE REPOSITORIES, AND JENKINS_MASTER'
-    _refresh_credentials
+    echo 'ADDING EL-CICD CREDENTIALS TO SCM PROVIDER'
+    echo
+    _refresh_el_cicd_scm_credentials
 
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
     then
@@ -135,7 +136,7 @@ _cluster_info() {
 
     echo
     echo "You ${_BOLD}MUST${_REGULAR} be currently logged into a cluster as a cluster admin."
-    if [[ ! -z ${OKD_VERSION} ]]
+    if [[ "${OKD_VERSION}" ]]
     then
         echo "Logged in as: ${_BOLD}$(oc whoami)${_REGULAR}"
     fi
@@ -164,7 +165,7 @@ _create_and_source_meta_info_file() {
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
 
-    if [[ ! -z ${EL_CICD_USE_LAB_CONFIG} ]]
+    if [[ "${EL_CICD_USE_LAB_CONFIG}" ]]
     then
         LAB_CONFIG_FILE_LIST="${EL_CICD_CONFIG_LAB_CONF} ${EL_CICD_LAB_CONF}"
     fi
@@ -218,7 +219,7 @@ __create_meta_info_file() {
 
 _create_rbac_helpers() {
     local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
-    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || ! -z ${HAS_SEALED_SECRETS} ]]
+    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || "${HAS_SEALED_SECRETS}" ]]
     then
         local SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
     fi
@@ -312,7 +313,7 @@ __create_onboarding_automation_server() {
 
     local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')
-    if [[ ! -z ${TERMINATING_PODS} ]]
+    if [[ "${TERMINATING_PODS}" ]]
     then
         echo
         echo 'Wait for old Jenkins pod to terminate...'
@@ -364,7 +365,7 @@ _delete_namespace() {
     local SLEEP_SEC=$2
 
     local DEL_NAMESPACE=$(oc projects -q | grep ${NAMESPACE} | tr -d '[:space:]')
-    if [[ ! -z "${DEL_NAMESPACE}" ]]
+    if [[ "${DEL_NAMESPACE}" ]]
     then
         echo
         oc delete project ${NAMESPACE}
@@ -376,7 +377,7 @@ _delete_namespace() {
         done
 
         echo
-        if [[ ! -z ${SLEEP_SEC} ]]
+        if [[ "${SLEEP_SEC}" ]]
         then
             echo "Namespace ${NAMESPACE} deleted.  Sleep ${SLEEP_SEC} second(s) to confirm."
             sleep ${SLEEP_SEC}

@@ -4,24 +4,17 @@
  * Utility methods for onboading applications into the el-CICD framework
  */
 
-def init() {
-    loggingUtils.echoBanner("COPYING ONBOARDING RESOURCES TO JENKINS AGENT")
-
-    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubDeployKey-template.json", text: libraryResource('templates/githubDeployKey-template.json')
-    writeFile file:"${el.cicd.TEMPLATES_DIR}/githubWebhook-template.json", text: libraryResource('templates/githubWebhook-template.json')
-}
-
 def setupTeamCicdServer(def teamInfo) {
     loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.id}")
 
     def jenkinsDefs = getJenkinsConfigValues(teamInfo)
     def jenkinsConfigFile = "jenkins-config-values.yaml"
     writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
-    
+
     sh """
         ${shCmd.echo ''}
         helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-        
+
         ${shCmd.echo ''}
         cat ${jenkinsConfigFile}
 
@@ -47,24 +40,24 @@ def setupTeamCicdServer(def teamInfo) {
 def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= jenkinsConfigValues.elCicdDefs
-    
+
     createElCicdProfiles(jenkinsConfigValues, elCicdDefs)
     jenkinsConfigValues.elCicdProfiles += ['user-group']
-    
+
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(el.cicd.nonProdEnvs)
     }
-    
+
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
     }
-    
+
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
         el.cicd.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID,
         el.cicd.EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID
     ]
-    
+
     elCicdDefs.USER_GROUP = teamInfo.id
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
@@ -82,7 +75,7 @@ def getJenkinsConfigValues(def teamInfo) {
     elCicdDefs.JENKINS_AGENT_MEMORY_LIMIT = el.cicd.JENKINS_AGENT_MEMORY_LIMIT
     elCicdDefs.VOLUME_CAPACITY = el.cicd.JENKINS_CICD_VOLUME_CAPACITY
     elCicdDefs.JENKINS_CONFIG_FILE_PATH = el.cicd.JENKINS_CONFIG_FILE_PATH
-    
+
     return jenkinsConfigValues
 }
 
@@ -90,7 +83,7 @@ def resetProjectPvResources(def projectInfo) {
     def chartName = getProjectPvChartName(projectInfo)
     sh """
         PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
-        if [[ ! -z \${PVS_INSTALLED} ]]
+        if [[ "\${PVS_INSTALLED}" ]]
         then
             helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
         fi
@@ -133,7 +126,7 @@ def setupProjectCicdResources(def projectInfo) {
     def projectDefs = getElCicdChartConfigValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
-    
+
     def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
     def cicdSshConfigFile = "module-ssh-values.yaml"
     writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
@@ -191,21 +184,35 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 def configureDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
-    def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
-        githubUtils.deleteProjectDeployKeys(module)
-    }
-    parallel(buildStages)
+    def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
+        sh """
+            ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
 
-    buildStages =  concurrentUtils.createParallelStages('Add SCM deploy keys', projectInfo.modules) { module ->
-        githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
+            source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
+
+            _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
+                                        ${projectInfo.scmOrganization} \
+                                        ${module.scmRepoName} \
+                                        \${GITHUB_ACCESS_TOKEN} \
+                                        ${projectInfo.repoDeployKeyId}
+
+            _add_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
+                                     ${EL_CICD_ORGANIZATION} \
+                                     ${EL_CICD_REPO} \
+                                     \${GITHUB_ACCESS_TOKEN} \
+                                     ${projectInfo.repoDeployKeyId} \
+                                     ${module.scmDeployKeyJenkinsId}.pub \
+                                     false
+        """
     }
+
     parallel(buildStages)
 }
 
 def getPvCicdConfigValues(def projectInfo) {
     cicdConfigValues = [:]
     elCicdDefs = [:]
-    
+
     elCicdDefs.VOLUME_OBJ_NAMES = []
     projectInfo.staticPvs.each { pv ->
         pv.envs.each { env ->
@@ -231,7 +238,7 @@ def getPvCicdConfigValues(def projectInfo) {
             }
         }
     }
-    
+
     cicdConfigValues.elCicdDefs = elCicdDefs
     return cicdConfigValues
 }
@@ -239,11 +246,11 @@ def getPvCicdConfigValues(def projectInfo) {
 def getElCicdChartConfigValues(def projectInfo) {
     cicdConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= cicdConfigValues.elCicdDefs
-    
+
     createElCicdProfiles(cicdConfigValues, elCicdDefs)
-    
+
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
-    
+
     getElCicdCodeBaseChartValues(projectInfo, elCicdDefs)
 
     def rqProfiles = [:]
@@ -253,19 +260,19 @@ def getElCicdChartConfigValues(def projectInfo) {
         getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
 
         getElCicdRbacNonProdGroupsValues(projectInfo, elCicdDefs)
-        
+
         elCicdDefs.CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
         elCicdDefs.CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
     }
-    
+
     if (el.cicd.EL_CICD_MASTER_PROD) {
         getElCicdProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
-        
+
         getElCicdRbacProdGroupsValues(projectInfo, elCicdDefs)
-        
+
         elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
         elCicdDefs.CICD_NAMESPACES += projectInfo.prodNamespaces.values()
-    }    
+    }
     cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
 
     return cicdConfigValues
@@ -273,26 +280,26 @@ def getElCicdChartConfigValues(def projectInfo) {
 
 def getElCicdNamespaceChartValues(def projectInfo, def cicdConfigValues) {
     cicdConfigValues.elCicdNamespaces = []
-    
+
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
         if (projectInfo.sandboxNamespaces) {
             cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
         }
     }
-    
+
     if (el.cicd.EL_CICD_MASTER_PROD) {
         cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
     }
 }
 
 
-def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {    
+def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
     }
-    
+
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENV = projectInfo.prodEnv
     }
@@ -314,17 +321,17 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect { "\"${it}\"" }
     elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
-    
+
     getElCicdNamespaceChartValues(projectInfo, cicdConfigValues)
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
-    
+
     elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
-        if (!module.scmDeployKeyJenkinsId) { 
+        if (!module.scmDeployKeyJenkinsId) {
             projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
         }
-        return module.scmDeployKeyJenkinsId 
+        return module.scmDeployKeyJenkinsId
     }
 }
 
@@ -368,7 +375,7 @@ def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCicdDefs, def r
         rqNames = rqNames ?: projectInfo.resourceQuotas[el.cicd.DEFAULT]
         rqNames?.each { rqName ->
             elCicdDefs["${rqName}_NAMESPACES"] = elCicdDefs["${rqName}_NAMESPACES"] ?: []
-            elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.prodNamespaces[env] 
+            elCicdDefs["${rqName}_NAMESPACES"] += projectInfo.prodNamespaces[env]
             rqProfiles[rqName] = 'placeHolder'
         }
     }
@@ -376,17 +383,17 @@ def getElCicdProdEnvsResourceQuotasValues(def projectInfo, def elCicdDefs, def r
 
 def getElCicdRbacNonProdGroupsValues(def projectInfo, def elCicdDefs) {
     cicdEnvs = []
-    
+
     cicdEnvs += projectInfo.nonProdEnvs
     cicdEnvs += projectInfo.sandboxEnvs
-    
+
     cicdEnvs.each { env ->
         def group = projectInfo.rbacGroups[env] ?: projectInfo.defaultRbacGroup
         def namespace = projectInfo.nonProdNamespaces[env] ?: projectInfo.sandboxNamespaces[env]
         elCicdDefs["${namespace}_GROUP"] = group
     }
 }
-    
+
 def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
     def group = projectInfo.rbacGroups[projectInfo.prodEnv] ?: projectInfo.defaultRbacGroup
     projectInfo.prodNamespaces.values().each { namespace ->
@@ -396,33 +403,33 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
 
 def createCompSshKeyValues(def projectInfo) {
     cicdConfigValues = [:]
-    
+
     projectInfo.modules.each { module ->
         dir(module.workDir) {
             echo "Creating deploy key for ${module.scmRepoName}"
 
             sh "ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
-            
-            def sshKey = readFile(file: module.scmDeployKeyJenkinsId)            
-            
+
+            def sshKey = readFile(file: module.scmDeployKeyJenkinsId)
+
             cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY': sshKey ]
         }
     }
-    
+
     return cicdConfigValues
 }
 
-def createElCicdProfiles(def configValues, def elCicdDefs) {    
+def createElCicdProfiles(def configValues, def elCicdDefs) {
     configValues.elCicdProfiles = ['cicd']
-    
+
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         configValues.elCicdProfiles += 'nonprod'
     }
-    
+
     if (el.cicd.EL_CICD_MASTER_PROD) {
         configValues.elCicdProfiles += 'prod'
     }
-    
+
     if (el.cicd.OKD_VERSION) {
         configValues.elCicdProfiles += 'okd'
     }

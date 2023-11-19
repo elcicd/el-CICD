@@ -27,7 +27,7 @@ __init_jenkins_build() {
 
     cp -vRT ${EL_CICD_CONFIG_JENKINS_DIR} ${TARGET_JENKINS_BUILD_DIR}
 
-    if [[ ! -z ${JENKINS_AGENTS_BUILD_DIRS} ]]
+    if [[ "${JENKINS_AGENTS_BUILD_DIRS}" ]]
     then
         echo
         for BUILD_DIR in $(echo ${JENKINS_AGENTS_BUILD_DIRS} | tr ':' ' ')

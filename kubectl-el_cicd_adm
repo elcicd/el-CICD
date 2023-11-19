@@ -62,7 +62,7 @@ __main() {
             '--refresh-creds')
                 ELCICD_ADM_MSG="REFRESH CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_credentials')
+                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_el_cicd_scm_credentials')
                 shift 1
             ;;
 
@@ -155,8 +155,6 @@ __load_basic_vars_and_scripts() {
     EL_CICD_CONFIG_DIR=${EL_CICD_HOME}/el-CICD-config
 
     EL_CICD_SCRIPTS_RESOURCES_DIR=${EL_CICD_SCRIPTS_DIR}/resources
-
-    EL_CICD_TEMPLATES_DIR=${EL_CICD_DIR}/resources/templates
 
     EL_CICD_CONFIG_BOOTSTRAP_DIR=${EL_CICD_CONFIG_DIR}/bootstrap
     EL_CICD_CONFIG_JENKINS_DIR=${EL_CICD_CONFIG_DIR}/jenkins

@@ -18,7 +18,7 @@ def deleteProjectDeployKeys(def module) {
         sh """
             ${shCmd.echo ''}
             KEY_IDS=\$(${curlUtils.getCmd(curlUtils.GET, 'GITHUB_ACCESS_TOKEN', false, false)} ${curlUtils.FAIL_SILENT} ${url} | ${jqIdFilter})
-            if [[ ! -z \${KEY_IDS} ]]
+            if [[ "\${KEY_IDS}" ]]
             then
                 ${shCmd.echo  '', "REMOVING OLD DEPLOY KEY(S) FROM ${module.scmRepoName}: \${KEY_IDS}", ''}
                 for KEY_ID in \${KEY_IDS}

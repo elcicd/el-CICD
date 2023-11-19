@@ -21,7 +21,7 @@ _bootstrap_lab_environment() {
     fi
     
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-    if [[ ! -z ${CRC_EXEC} ]]
+    if [[ "${CRC_EXEC}" ]]
     then
         if [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
         then

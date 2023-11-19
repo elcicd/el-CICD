@@ -17,6 +17,7 @@ def initMetaData(Map metaData) {
         el.cicd.EL_CICD_MASTER_PROD = el.cicd.EL_CICD_MASTER_PROD?.toBoolean() ?: false
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
+        el.cicd.EL_CICD_SCRIPTS_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}/scripts"
         el.cicd.EL_CICD_CHART_DEPLOY_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.CHART_DEPLOY_DIR}"
         el.cicd.EL_CICD_TEMPLATE_CHART_DIR = "${el.cicd.EL_CICD_DIR}/${el.cicd.TEMPLATE_CHART_DIR}"
         el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR = "${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/templates"
@@ -31,7 +32,6 @@ def initMetaData(Map metaData) {
         el.cicd.PROJECT_DEFS_DIR = "${el.cicd.CONFIG_DIR}/project-defs"
 
         el.cicd.TEMP_DIR = "/tmp/${BUILD_TAG}"
-        el.cicd.TEMPLATES_DIR = "${el.cicd.TEMP_DIR}/templates"
 
         el.cicd.TEST_ENVS = el.cicd.TEST_ENVS ? el.cicd.TEST_ENVS.split(':') : []
 
@@ -161,7 +161,6 @@ def initializePipeline() {
             fi
 
             mkdir -p '${el.cicd.TEMP_DIR}'
-            mkdir -p '${el.cicd.TEMPLATES_DIR}'
 
             ${shCmd.echo("\n${loggingUtils.BANNER_SEPARATOR}\n")}
             ${shCmd.echo 'OCP Runtime'}
