@@ -195,13 +195,13 @@ def configureDeployKeys(def projectInfo) {
                                             ${projectInfo.scmOrganization} \
                                             ${module.scmRepoName} \
                                             \${GITHUB_ACCESS_TOKEN} \
-                                            ${projectInfo.repoDeployKeyId}
+                                            '${projectInfo.repoDeployKeyId}'
 
                 _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                         ${projectInfo.scmOrganization} \
                                         ${module.scmRepoName} \
                                         \${GITHUB_ACCESS_TOKEN} \
-                                        ${projectInfo.repoDeployKeyId} \
+                                        '${projectInfo.repoDeployKeyId}' \
                                         ${module.scmDeployKeyJenkinsId}.pub \
                                         false
             """

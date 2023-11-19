@@ -28,11 +28,11 @@ CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 EL_CICD_TMP_PREFIX='tmp/tmp.elcicd'
 
 _delete_scm_repo_deploy_key() {
-    local GITHUB_API_HOST=${1@Q}
-    local GITHUB_ORG=${2@Q}
-    local REPO_NAME=${3@Q}
-    local GITHUB_ACCESS_TOKEN=${4@Q}
-    local DEPLOY_KEY_TITLE=${5@Q}
+    local GITHUB_API_HOST=${1}
+    local GITHUB_ORG=${2}
+    local REPO_NAME=${3}
+    local GITHUB_ACCESS_TOKEN=${4}
+    local DEPLOY_KEY_TITLE=${5}
 
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
@@ -46,15 +46,15 @@ _delete_scm_repo_deploy_key() {
 }
 
 _add_scm_repo_deploy_key() {
-    local GITHUB_API_HOST=${1@Q}
-    local GITHUB_ORG=${2@Q}
-    local REPO_NAME=${3@Q}
-    local GITHUB_ACCESS_TOKEN=${4@Q}
-    local DEPLOY_KEY_TITLE=${5@Q}
-    local DEPLOY_KEY_FILE="${6@Q}.pub"
+    local GITHUB_API_HOST=${1}
+    local GITHUB_ORG=${2}
+    local REPO_NAME=${3}
+    local GITHUB_ACCESS_TOKEN=${4}
+    local DEPLOY_KEY_TITLE=${5}
+    local DEPLOY_KEY_FILE="${6}.pub"
 
     # READ_ONLY *MUST* be 'false' (case insensitive) to push a read/write key
-    local READ_ONLY=${7@Q}
+    local READ_ONLY=${7}
     if [[ ${READ_ONLY,,} != 'false' ]]
     then
         READ_ONLY=true
@@ -91,15 +91,15 @@ _add_scm_repo_deploy_key() {
 }
 
 _delete_webhook() {
-    local GITHUB_HOST=${1@Q}
-    local GITHUB_ORG=${2@Q}
-    local REPO_NAME=${3@Q}
-    local JENKINS_HOST=${4@Q}
-    local PROJECT_ID=${5@Q}
-    local MODULE_ID=${6@Q}
-    local BUILD_TYPE=${7@Q}
-    local WEB_TRIGGER_AUTH_TOKEN=${8@Q}
-    local GITHUB_ACCESS_TOKEN=${9@Q}
+    local GITHUB_HOST=${1}
+    local GITHUB_ORG=${2}
+    local REPO_NAME=${3}
+    local JENKINS_HOST=${4}
+    local PROJECT_ID=${5}
+    local MODULE_ID=${6}
+    local BUILD_TYPE=${7}
+    local WEB_TRIGGER_AUTH_TOKEN=${8}
+    local GITHUB_ACCESS_TOKEN=${9}
 
     local GITHUB_HEADERS="-H 'Authorization: Bearer ${GITHUB_ACCESS_TOKEN}' -H '${GITHUB_REST_API_HEADER}'"
 
@@ -117,15 +117,15 @@ _delete_webhook() {
 }
 
 _add_webhook() {
-    local GITHUB_HOST=${1@Q}
-    local GITHUB_ORG=${2@Q}
-    local REPO_NAME=${3@Q}
-    local JENKINS_HOST=${4@Q}
-    local PROJECT_ID=${5@Q}
-    local MODULE_ID=${6@Q}
-    local BUILD_TYPE=${7@Q}
-    local WEB_TRIGGER_AUTH_TOKEN=${8@Q}
-    local GITHUB_ACCESS_TOKEN=${9@Q}
+    local GITHUB_HOST=${1}
+    local GITHUB_ORG=${2}
+    local REPO_NAME=${3}
+    local JENKINS_HOST=${4}
+    local PROJECT_ID=${5}
+    local MODULE_ID=${6}
+    local BUILD_TYPE=${7}
+    local WEB_TRIGGER_AUTH_TOKEN=${8}
+    local GITHUB_ACCESS_TOKEN=${9}
 
     local GITHUB_HEADERS="-H 'Authorization: Bearer ${GITHUB_ACCESS_TOKEN}' -H '${GITHUB_REST_API_HEADER}'"
 
