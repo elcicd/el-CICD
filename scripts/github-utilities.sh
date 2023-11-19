@@ -64,7 +64,7 @@ _add_scm_repo_deploy_key() {
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
-    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 13)"
+    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -base64 12)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
     CURRENT_DEPLOY_KEY_JSON=${GITHUB_DEPLOY_KEY_JSON/\%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}}
@@ -130,7 +130,7 @@ _add_webhook() {
 
     local GITHUB_HEADERS="-H 'Authorization: Bearer ${GITHUB_ACCESS_TOKEN}' -H '${GITHUB_REST_API_HEADER}'"
 
-    local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo)"
+    local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -base64 12)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
