@@ -202,7 +202,7 @@ def configureDeployKeys(def projectInfo) {
                                         ${module.scmRepoName} \
                                         \${GITHUB_ACCESS_TOKEN} \
                                         '${projectInfo.repoDeployKeyId}' \
-                                        ${module.scmDeployKeyJenkinsId}.pub \
+                                        ${module.scmDeployKeyJenkinsId} \
                                         false
             """
         }
