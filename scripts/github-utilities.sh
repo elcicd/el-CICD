@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-export GITHUB_REST_API_HEADER='Accept: application/vnd.github.v3+json'
+GITHUB_REST_API_HEADER='Accept: application/vnd.github.v3+json'
 
 GITHUB_DEPLOY_KEY_JSON='
 {
