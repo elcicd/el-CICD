@@ -46,7 +46,6 @@ _delete_scm_repo_deploy_key() {
 }
 
 _add_scm_repo_deploy_key() {
-    set +x
     local GITHUB_API_HOST=${1}
     local GITHUB_ORG=${2}
     local REPO_NAME=${3}
