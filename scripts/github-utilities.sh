@@ -28,11 +28,11 @@ CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 EL_CICD_TMP_PREFIX='tmp/tmp.elcicd'
 
 _delete_scm_repo_deploy_key() {
-    local GITHUB_API_HOST=${1}
-    local GITHUB_ORG=${2}
-    local REPO_NAME=${3}
-    local GITHUB_ACCESS_TOKEN=${4}
-    local DEPLOY_KEY_TITLE=${5}
+    local GITHUB_API_HOST="${1}"
+    local GITHUB_ORG="${2}"
+    local REPO_NAME="${3}"
+    local GITHUB_ACCESS_TOKEN="${4}"
+    local DEPLOY_KEY_TITLE="${5}"
 
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
@@ -46,11 +46,11 @@ _delete_scm_repo_deploy_key() {
 }
 
 _add_scm_repo_deploy_key() {
-    local GITHUB_API_HOST=${1}
-    local GITHUB_ORG=${2}
-    local REPO_NAME=${3}
-    local GITHUB_ACCESS_TOKEN=${4}
-    local DEPLOY_KEY_TITLE=${5}
+    local GITHUB_API_HOST="${1}"
+    local GITHUB_ORG="${2}"
+    local REPO_NAME="${3}"
+    local GITHUB_ACCESS_TOKEN="${4}"
+    local DEPLOY_KEY_TITLE="${5}"
     local DEPLOY_KEY_FILE="${6}.pub"
 
     # READ_ONLY *MUST* be 'false' (case insensitive) to push a read/write key
