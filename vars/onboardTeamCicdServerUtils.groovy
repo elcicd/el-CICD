@@ -185,7 +185,7 @@ def configureDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
-        withCredentials([sshUserPrivateKey(credentialsId: module.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+        withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             sh """
                 ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
 
