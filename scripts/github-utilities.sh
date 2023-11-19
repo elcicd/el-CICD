@@ -66,10 +66,19 @@ _add_scm_repo_deploy_key() {
     local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
+    if [[ "$(echo $- | grep x)" ]]
+    then
+        local RESET_X=TRUE
+        set +x
+    fi
     CURRENT_DEPLOY_KEY_JSON=${GITHUB_DEPLOY_KEY_JSON/\%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}}
     CURRENT_DEPLOY_KEY_JSON=${CURRENT_DEPLOY_KEY_JSON/\%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}
     CURRENT_DEPLOY_KEY_JSON=${CURRENT_DEPLOY_KEY_JSON/\%READ_ONLY%/${READ_ONLY}}
     echo "${CURRENT_DEPLOY_KEY_JSON}" > ${GITHUB_CREDS_FILE}
+    if [[ "${RESET_X}" ]]
+    then
+        set -x
+    fi
 
     local RESULT=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL})
 
