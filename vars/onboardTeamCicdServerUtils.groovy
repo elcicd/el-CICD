@@ -196,9 +196,9 @@ def configureDeployKeys(def projectInfo) {
                                         \${GITHUB_ACCESS_TOKEN} \
                                         ${projectInfo.repoDeployKeyId}
 
-            _add_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
-                                     ${EL_CICD_ORGANIZATION} \
-                                     ${EL_CICD_REPO} \
+            _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
+                                     ${projectInfo.scmOrganization} \
+                                     ${module.scmRepoName} \
                                      \${GITHUB_ACCESS_TOKEN} \
                                      ${projectInfo.repoDeployKeyId} \
                                      ${module.scmDeployKeyJenkinsId}.pub \
