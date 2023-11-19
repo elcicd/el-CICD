@@ -25,7 +25,7 @@ GITHUB_WEBHOOK_JSON='
 
 CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 
-EL_CICD_TMP_PREFIX='tmp.elcicd'
+EL_CICD_TMP_PREFIX='tmp/tmp.elcicd'
 
 _delete_scm_repo_deploy_key() {
     local GITHUB_API_HOST=${1}

@@ -185,25 +185,27 @@ def configureDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
-        sh """
-            ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
+        withCredentials([sshUserPrivateKey(credentialsId: module.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            sh """
+                ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
 
-            source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
+                source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-            _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
+                _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
+                                            ${projectInfo.scmOrganization} \
+                                            ${module.scmRepoName} \
+                                            \${GITHUB_ACCESS_TOKEN} \
+                                            ${projectInfo.repoDeployKeyId}
+
+                _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                         ${projectInfo.scmOrganization} \
                                         ${module.scmRepoName} \
                                         \${GITHUB_ACCESS_TOKEN} \
-                                        ${projectInfo.repoDeployKeyId}
-
-            _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
-                                     ${projectInfo.scmOrganization} \
-                                     ${module.scmRepoName} \
-                                     \${GITHUB_ACCESS_TOKEN} \
-                                     ${projectInfo.repoDeployKeyId} \
-                                     ${module.scmDeployKeyJenkinsId}.pub \
-                                     false
-        """
+                                        ${projectInfo.repoDeployKeyId} \
+                                        ${module.scmDeployKeyJenkinsId}.pub \
+                                        false
+            """
+        }
     }
 
     parallel(buildStages)
