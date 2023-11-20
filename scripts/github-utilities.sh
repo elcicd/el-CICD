@@ -1,8 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-GITHUB_REST_API_HEADER='Accept: application/vnd.github.v3+json'
-
 GITHUB_DEPLOY_KEY_JSON='
 {
     "title": "%DEPLOY_KEY_TITLE%",
@@ -25,7 +23,10 @@ GITHUB_WEBHOOK_JSON='
 
 CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 
+GITHUB_STATIC_HEADERS=(-H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+
 EL_CICD_TMP_PREFIX='/tmp/tmp.elcicd'
+
 
 _delete_scm_repo_deploy_key() {
     local GITHUB_API_HOST=${1}
@@ -34,14 +35,14 @@ _delete_scm_repo_deploy_key() {
     local GITHUB_ACCESS_TOKEN=${4}
     local DEPLOY_KEY_TITLE=${5}
 
-    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" ${GITHUB_STATIC_HEADERS[@]})
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
     local KEY_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
 
     for KEY_ID in ${KEY_IDS}
     do
-        ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}"  ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
+        ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
         echo "DELETED DEPLOY KEY FROM ${GITHUB_ORG}/${REPO_NAME}: ${KEY_ID}"
     done
 }
@@ -61,7 +62,7 @@ _add_scm_repo_deploy_key() {
         READ_ONLY=true
     fi
 
-    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" ${GITHUB_STATIC_HEADERS[@]})
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
     local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
@@ -103,7 +104,7 @@ _delete_webhook() {
     local WEB_TRIGGER_AUTH_TOKEN=${8}
     local GITHUB_ACCESS_TOKEN=${9}
 
-    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" ${GITHUB_STATIC_HEADERS[@]})
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
 
@@ -130,7 +131,7 @@ _add_webhook() {
     local WEB_TRIGGER_AUTH_TOKEN=${8}
     local GITHUB_ACCESS_TOKEN=${9}
 
-    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" ${GITHUB_STATIC_HEADERS[@]})
 
     local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
