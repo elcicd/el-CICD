@@ -188,7 +188,10 @@ def configureScmDeployKeys(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
-                    ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
+                    set +x
+                    echo
+                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}"
+                    echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
@@ -220,7 +223,10 @@ def configureScmWebhooks(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
-                        ${shCmd.echo  '', "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}", ''}
+                        # set +x
+                        echo
+                        echo "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}"
+                        echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
