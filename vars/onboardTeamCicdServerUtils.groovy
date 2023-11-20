@@ -228,7 +228,7 @@ def configureScmWebhooks(def projectInfo) {
                         set +x
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                        echo 'Removing old webhook...
+                        echo 'Removing old webhook...'
                         _delete_webhook ${projectInfo.scmRestApiHost} \
                                         ${projectInfo.scmOrganization} \
                                         ${module.scmRepoName} \
@@ -237,10 +237,10 @@ def configureScmWebhooks(def projectInfo) {
                                         ${module.name} \
                                         ${module.id} \
                                         ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                        ${module.scmDeployKeyJenkinsId} \
+                                        '${module.scmDeployKeyJenkinsId}' \
                                         \${GITHUB_ACCESS_TOKEN}
 
-                        echo 'Adding new webhook...
+                        echo 'Adding new webhook...'
                         _add_webhook ${projectInfo.scmRestApiHost} \
                                     ${projectInfo.scmOrganization} \
                                     ${module.scmRepoName} \
