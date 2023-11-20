@@ -155,7 +155,7 @@ _add_webhook() {
 
     echo
     echo "NEW GITHUB WEBHOOK CREATED; ID:"
-    echo ${WEBHOOK} | jq .
+    echo ${WEBHOOK} | jq '{"id":.id,"events": .events, "url": .config.url}'
     echo
 
     rm -f ${WEBHOOK_FILE}

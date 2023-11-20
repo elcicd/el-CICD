@@ -50,5 +50,5 @@ def call(Map args) {
     onboardTeamCicdServerUtils.configureScmWebhooks(projectInfo)
 
     loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",
-                            "CICD Server URL: ${projectInfo.jenkinsUrls.HOST}")
+                            "CICD Server URL: ${projectInfo.jenkinsHostUrl}")
 }

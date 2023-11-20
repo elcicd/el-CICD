@@ -202,12 +202,12 @@ def configureScmDeployKeys(def projectInfo) {
                                                 '${projectInfo.repoDeployKeyId}'
 
                     _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
-                                            ${projectInfo.scmOrganization} \
-                                            ${module.scmRepoName} \
-                                            \${GITHUB_ACCESS_TOKEN} \
-                                            '${projectInfo.repoDeployKeyId}' \
-                                            ${module.scmDeployKeyJenkinsId} \
-                                            false
+                                             ${projectInfo.scmOrganization} \
+                                             ${module.scmRepoName} \
+                                             \${GITHUB_ACCESS_TOKEN} \
+                                             '${projectInfo.repoDeployKeyId}' \
+                                             ${module.scmDeployKeyJenkinsId} \
+                                             false
                     set -x
                 """
             }
@@ -223,6 +223,7 @@ def configureScmWebhooks(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
+                        set +x
                         echo
                         echo "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}"
                         echo
