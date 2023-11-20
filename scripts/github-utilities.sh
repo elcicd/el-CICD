@@ -107,7 +107,7 @@ _delete_webhook() {
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
 
-    local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
+    local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks"
 
     local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL}\"}) | .id")
 
@@ -140,9 +140,9 @@ _add_webhook() {
 
     echo ${CURRENT_DEPLOY_KEY_JSON} > ${WEBHOOK_FILE}
 
-    local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
+    local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks"
 
-    local WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${WEBHOOK_FILE} ${HOOKS_URL})
+    local WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${WEBHOOK_FILE} ${HOOKS_URL} )
 
     echo
     echo "NEW GITHUB WEBHOOK CREATED; ID:"
