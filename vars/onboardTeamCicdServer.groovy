@@ -47,7 +47,7 @@ def call(Map args) {
     onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
 
     loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH SCM REPO")
-    githubUtils.configureScmWebhooks([projectInfo)
+    githubUtils.configureScmWebhooks(projectInfo)
 
     loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",
                             "CICD Server URL: ${projectInfo.jenkinsUrls.HOST}")
