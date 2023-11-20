@@ -230,7 +230,6 @@ def configureScmWebhooks(def projectInfo) {
                                         ${projectInfo.jenkinsHostUrl} \
                                         ${projectInfo.id} \
                                         ${module.name} \
-                                        ${module.id} \
                                         ${module.isComponent ? 'build-component' : 'build-artifact'} \
                                         '${module.scmDeployKeyJenkinsId}' \
                                         \${GITHUB_ACCESS_TOKEN}
@@ -241,7 +240,6 @@ def configureScmWebhooks(def projectInfo) {
                                     ${projectInfo.jenkinsHostUrl} \
                                     ${projectInfo.id} \
                                     ${module.name} \
-                                    ${module.id} \
                                     ${module.isComponent ? 'build-component' : 'build-artifact'} \
                                     ${module.scmDeployKeyJenkinsId} \
                                     \${GITHUB_ACCESS_TOKEN}
