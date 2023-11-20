@@ -109,7 +109,7 @@ _delete_webhook() {
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
 
-    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL\"}) | .id")
+    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL}\"}) | .id")
 
     for HOOK_ID in ${HOOK_IDS}
     do
