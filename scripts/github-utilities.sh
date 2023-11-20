@@ -30,7 +30,7 @@ CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 EL_CICD_TMP_PREFIX='/tmp/tmp.elcicd'
 
 __configure_github_headers() {
-    GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHGITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
+    GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
 }
 
 
