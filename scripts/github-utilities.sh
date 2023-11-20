@@ -111,7 +111,7 @@ _delete_webhook() {
 
     for HOOK_ID in ${HOOK_IDS}
     do
-        ${CURL_COMMAND} -X DELETE  ${GITHUB_HEADERS} ${HOOKS_URL}/${HOOK_ID}
+        ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${HOOKS_URL}/${HOOK_ID}
         echo "--> DELETED GITHUB WEBHOOK; ID: ${HOOK_ID}"
     done
 }
@@ -139,7 +139,7 @@ _add_webhook() {
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
 
-    local WEBHOOK=$(${CURL_COMMAND} -X POST ${GITHUB_HEADERS} -d @${WEBHOOK_FILE} ${HOOKS_URL})
+    local WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${WEBHOOK_FILE} ${HOOKS_URL})
 
     echo
     echo "NEW GITHUB WEBHOOK CREATED; ID:"
