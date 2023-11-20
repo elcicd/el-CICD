@@ -37,7 +37,7 @@ _delete_scm_repo_deploy_key() {
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
-    local KEY_ID=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
+    local KEY_ID=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \'${DEPLOY_KEY_TITLE}\') | .id" 2>/dev/null)
     if [[ "${KEY_ID}" ]]
     then
         ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}"  ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
@@ -108,7 +108,7 @@ _delete_webhook() {
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
 
-    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == ${JENKINS_WEBOOK_URL}) | .id")
+    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \'${JENKINS_WEBOOK_URL\'}) | .id")
 
     for HOOK_ID in ${HOOK_IDS}
     do
