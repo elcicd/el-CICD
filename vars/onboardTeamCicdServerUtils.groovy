@@ -225,7 +225,6 @@ def configureScmWebhooks(def projectInfo) {
                     sh """
                         ${shCmd.echo  '', "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}", ''}
 
-                        set +x
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
                         echo 'Removing old webhook...'
