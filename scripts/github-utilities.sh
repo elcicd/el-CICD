@@ -36,6 +36,7 @@ __configure_github_headers() {
 
 _delete_scm_repo_deploy_key() {
     local GITHUB_API_HOST=${1}
+    
     local GITHUB_ORG=${2}
     local REPO_NAME=${3}
     local GITHUB_ACCESS_TOKEN=${4}
@@ -116,7 +117,7 @@ _delete_webhook() {
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks"
 
-    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL}\"}) | .id")
+    local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL}\") | .id" 2>/dev/null)
 
     for HOOK_ID in ${HOOK_IDS}
     do
