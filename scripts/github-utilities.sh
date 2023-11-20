@@ -73,6 +73,7 @@ _add_scm_repo_deploy_key() {
 
     local RESULT=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL})
 
+    echo
     RESULT=$(echo ${RESULT} | jq 'del(.key)')
     if [[ "$(echo ${RESULT} | jq '.title // empty')" ]]
     then
@@ -101,7 +102,7 @@ _delete_webhook() {
     local WEB_TRIGGER_AUTH_TOKEN=${8}
     local GITHUB_ACCESS_TOKEN=${9}
 
-    local GITHUB_HEADERS="-H 'Authorization: Bearer ${GITHUB_ACCESS_TOKEN}' -H '${GITHUB_REST_API_HEADER}'"
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
 
@@ -112,6 +113,7 @@ _delete_webhook() {
     for HOOK_ID in ${HOOK_IDS}
     do
         ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${HOOKS_URL}/${HOOK_ID}
+        echo
         echo "--> DELETED GITHUB WEBHOOK; ID: ${HOOK_ID}"
     done
 }
@@ -127,7 +129,7 @@ _add_webhook() {
     local WEB_TRIGGER_AUTH_TOKEN=${8}
     local GITHUB_ACCESS_TOKEN=${9}
 
-    local GITHUB_HEADERS="-H 'Authorization: Bearer ${GITHUB_ACCESS_TOKEN}' -H '${GITHUB_REST_API_HEADER}'"
+    local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
 
     local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT

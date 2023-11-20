@@ -190,17 +190,14 @@ def configureScmDeployKeys(def projectInfo) {
                 sh """
                     ${shCmd.echo  '', "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}", ''}
 
-                    set +x
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                    echo 'Removing old deploy key...'
                     _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                                 ${projectInfo.scmOrganization} \
                                                 ${module.scmRepoName} \
                                                 \${GITHUB_ACCESS_TOKEN} \
                                                 '${projectInfo.repoDeployKeyId}'
 
-                    echo 'Creating new deploy key...'
                     _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                             ${projectInfo.scmOrganization} \
                                             ${module.scmRepoName} \
@@ -218,7 +215,7 @@ def configureScmDeployKeys(def projectInfo) {
 }
 
 def configureScmWebhooks(def projectInfo) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Setup SCM webhooks', projectInfo.modules) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
