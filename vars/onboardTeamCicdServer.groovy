@@ -43,24 +43,12 @@ def call(Map args) {
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
-    stage('Configure SCM deploy keys') {
-        loggingUtils.echoBanner("CONFIGURE SCM DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
-    }
+    loggingUtils.echoBanner("CONFIGURE SCM DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
+    onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
 
-    stage('Push Webhooks to SCM') {
-        loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH SCM REPO")
+    loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH SCM REPO")
+    githubUtils.configureScmWebhooks([projectInfo)
 
-        jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
-        projectInfo.buildModules.each { module ->
-            if (!module.disableWebhook) {
-                githubUtils.configureScmWebhooks(module, module.isComponent ? 'build-component' : 'build-artifact')
-            }
-            else {
-                echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED.  SKIPPING..."
-            }
-        }
-    }
-
-    loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.", "CICD Server URL: ${projectInfo.jenkinsUrls.HOST}")
+    loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",
+                            "CICD Server URL: ${projectInfo.jenkinsUrls.HOST}")
 }
