@@ -46,6 +46,7 @@ _delete_scm_repo_deploy_key() {
 }
 
 _add_scm_repo_deploy_key() {
+    set +x
     local GITHUB_API_HOST=${1}
     local GITHUB_ORG=${2}
     local REPO_NAME=${3}
@@ -63,7 +64,7 @@ _add_scm_repo_deploy_key() {
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
-    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -base64 12)"
+    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
     CURRENT_DEPLOY_KEY_JSON=${GITHUB_DEPLOY_KEY_JSON/\%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}}
