@@ -148,7 +148,7 @@ _add_webhook() {
 
     local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
     trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
-    echo ${CURRENT_DEPLOY_KEY_JSON} > ${WEBHOOK_FILE}
+    echo ${CURRENT_WEBHOOK_JSON} > ${WEBHOOK_FILE}
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks"
     local WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${WEBHOOK_FILE} ${HOOKS_URL} )
