@@ -188,6 +188,7 @@ def configureScmDeployKeys(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
+                    set +x
                     echo
                     echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}"
                     echo

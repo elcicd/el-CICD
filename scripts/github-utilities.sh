@@ -16,10 +16,12 @@ GITHUB_WEBHOOK_JSON='
   "name": "web",
   "active": true,
   "events": [
-    "push"
+    "push",
+    "pull_request"
   ],
   "config": {
     "url": "%JENKINS_WEBOOK_URL%",
+    "content_type": "json",
     "insecure_ssl": "1"
   }
 }'
@@ -70,16 +72,16 @@ _add_scm_repo_deploy_key() {
     fi
 
     __configure_github_headers ${GITHUB_ACCESS_TOKEN}
-    local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
-
-    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
-    trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
     CURRENT_DEPLOY_KEY_JSON=${GITHUB_DEPLOY_KEY_JSON/\%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}}
     CURRENT_DEPLOY_KEY_JSON=${CURRENT_DEPLOY_KEY_JSON/\%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}
     CURRENT_DEPLOY_KEY_JSON=${CURRENT_DEPLOY_KEY_JSON/\%READ_ONLY%/${READ_ONLY}}
+    
+    local GITHUB_CREDS_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
+    trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
     echo "${CURRENT_DEPLOY_KEY_JSON}" > ${GITHUB_CREDS_FILE}
 
+    local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
     local RESULT=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${GITHUB_CREDS_FILE} ${EL_CICD_GITHUB_KEYS_URL})
 
     echo
@@ -140,16 +142,15 @@ _add_webhook() {
 
     __configure_github_headers ${GITHUB_ACCESS_TOKEN}
 
-    local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
-    trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
     local CURRENT_WEBHOOK_JSON=${GITHUB_WEBHOOK_JSON/\%JENKINS_WEBOOK_URL%/${JENKINS_WEBOOK_URL}}
 
+    local WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
+    trap "rm -f '${EL_CICD_TMP_PREFIX}.*'" EXIT
     echo ${CURRENT_DEPLOY_KEY_JSON} > ${WEBHOOK_FILE}
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks"
-
     local WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${WEBHOOK_FILE} ${HOOKS_URL} )
 
     echo
