@@ -37,12 +37,13 @@ _delete_scm_repo_deploy_key() {
     local GITHUB_HEADERS=(-H "Authorization: Bearer ${GITHUB_ACCESS_TOKEN}" -H "${GITHUB_REST_API_HEADER}")
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
-    local KEY_ID=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
-    if [[ "${KEY_ID}" ]]
-    then
+    local KEY_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
+
+    for KEY_ID in ${KEY_IDS}
+    do
         ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}"  ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
         echo "DELETED DEPLOY KEY FROM ${GITHUB_ORG}/${REPO_NAME}: ${KEY_ID}"
-    fi
+    done
 }
 
 _add_scm_repo_deploy_key() {
