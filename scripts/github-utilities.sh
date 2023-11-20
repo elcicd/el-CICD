@@ -139,10 +139,11 @@ _add_webhook() {
 
     local HOOKS_URL="https://${GITHUB_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/hooks/"
 
-    local HOOK_ID=$(${CURL_COMMAND} -X POST ${GITHUB_HEADERS} -d @${WEBHOOK_FILE} ${HOOKS_URL} | jq '.id')
+    local WEBHOOK=$(${CURL_COMMAND} -X POST ${GITHUB_HEADERS} -d @${WEBHOOK_FILE} ${HOOKS_URL})
 
     echo
-    echo "NEW GITHUB WEBHOOK CREATED; ID: ${HOOK_ID}"
+    echo "NEW GITHUB WEBHOOK CREATED; ID:"
+    echo ${WEBHOOK} | jq .
     echo
 
     rm -f ${WEBHOOK_FILE}
