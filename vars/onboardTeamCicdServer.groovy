@@ -45,7 +45,7 @@ def call(Map args) {
 
     stage('Configure SCM deploy keys') {
         loggingUtils.echoBanner("CONFIGURE SCM DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.configureDeployKeys(projectInfo)
+        onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
     }
 
     stage('Push Webhooks to SCM') {
@@ -54,7 +54,7 @@ def call(Map args) {
         jenkinsUtils.configureCicdJenkinsUrls(projectInfo)
         projectInfo.buildModules.each { module ->
             if (!module.disableWebhook) {
-                githubUtils.pushBuildWebhook(module, module.isComponent ? 'build-to-dev' : 'build-artifact')
+                githubUtils.configureScmWebhooks(module, module.isComponent ? 'build-component' : 'build-artifact')
             }
             else {
                 echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED.  SKIPPING..."

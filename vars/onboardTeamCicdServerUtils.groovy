@@ -181,7 +181,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
     """
 }
 
-def configureDeployKeys(def projectInfo) {
+def configureScmDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
@@ -192,15 +192,15 @@ def configureDeployKeys(def projectInfo) {
 
                     set +x
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
-                    set -x
 
+                    echo 'Removing old deploy key...'
                     _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                                 ${projectInfo.scmOrganization} \
                                                 ${module.scmRepoName} \
                                                 \${GITHUB_ACCESS_TOKEN} \
                                                 '${projectInfo.repoDeployKeyId}'
 
-                    ${shCmd.echo  ''}
+                    echo 'Creating new deploy key...'
                     _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                             ${projectInfo.scmOrganization} \
                                             ${module.scmRepoName} \
@@ -208,8 +208,56 @@ def configureDeployKeys(def projectInfo) {
                                             '${projectInfo.repoDeployKeyId}' \
                                             ${module.scmDeployKeyJenkinsId} \
                                             false
+                    set -x
                 """
             }
+        }
+    }
+
+    parallel(buildStages)
+}
+
+def configureScmWebhooks(def projectInfo) {
+    def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
+        if (!module.disableWebhook) {
+            withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+                dir(module.workDir) {
+                    sh """
+                        ${shCmd.echo  '', "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}", ''}
+
+                        set +x
+                        source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
+
+                        echo 'Removing old webhook...
+                        _delete_webhook ${projectInfo.scmRestApiHost} \
+                                        ${projectInfo.scmOrganization} \
+                                        ${module.scmRepoName} \
+                                        ${projectInfo.jenkinsHostUrl} \
+                                        ${projectInfo.id} \
+                                        ${module.name} \
+                                        ${module.id} \
+                                        ${module.isComponent ? 'build-component' : 'build-artifact'} \
+                                        ${module.scmDeployKeyJenkinsId} \
+                                        \${GITHUB_ACCESS_TOKEN}
+
+                        echo 'Adding new webhook...
+                        _add_webhook ${projectInfo.scmRestApiHost} \
+                                    ${projectInfo.scmOrganization} \
+                                    ${module.scmRepoName} \
+                                    ${projectInfo.jenkinsHostUrl} \
+                                    ${projectInfo.id} \
+                                    ${module.name} \
+                                    ${module.id} \
+                                    ${module.isComponent ? 'build-component' : 'build-artifact'} \
+                                    ${module.scmDeployKeyJenkinsId} \
+                                    \${GITHUB_ACCESS_TOKEN}
+                        set -x
+                    """
+                }
+            }
+        }
+        else {
+            echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED.  SKIPPING..."
         }
     }
 

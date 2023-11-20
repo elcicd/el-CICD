@@ -8,11 +8,6 @@ import groovy.transform.Field
 
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
-def configureCicdJenkinsUrls(def projectInfo) {
-    projectInfo.jenkinsUrls = [:]
-    projectInfo.jenkinsUrls.HOST = "https://${projectInfo.teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
-}
-
 def getImageRegistryCredentialsId(def env) {
     return "${el.cicd.IMAGE_REGISTRY_PULL_SECRET_PREFIX}${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
 }

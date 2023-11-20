@@ -30,9 +30,11 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     assert teamInfo && projectId : "teamInfo (${teamInfo?.id}) and (${projectId}) cannot be empty"
 
     def projectInfo = readProjectYaml(teamInfo, projectId)
-
+    
     projectInfo.teamInfo = teamInfo
     projectInfo.id = projectId
+    
+    projectInfo.jenkinsHostUrl = "https://${projectInfo.teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
 
     setRemoteRepoDeployKeyId(projectInfo)
 
