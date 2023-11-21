@@ -37,11 +37,6 @@ _bootstrap_el_cicd() {
 
     __bootstrap_el_cicd_onboarding_server
 
-    echo
-    echo 'ADDING EL-CICD CREDENTIALS TO SCM PROVIDER'
-    echo
-    _refresh_el_cicd_scm_credentials
-
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
     then
         _run_custom_config_script bootstrap-non-prod.sh
@@ -142,7 +137,7 @@ _cluster_info() {
     fi
 }
 
-_create_and_source_meta_info_file() {
+_create_and_source_meta_info_files() {
     set -e -o allexport
 
     echo
@@ -150,31 +145,21 @@ _create_and_source_meta_info_file() {
 
     source ${ROOT_CONFIG_FILE}
 
-    local EL_CICD_SCRIPTS_CONFIG_DIR=${EL_CICD_SCRIPTS_DIR}/config
+    local EL_CICD_CONSTANTS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/constants.conf
 
-    local EL_CICD_SYSTEM_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-system.conf
+    local EL_CICD_DEMO_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/demo.conf
 
-    local EL_CICD_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd.conf
-
-    local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-bootstrap.conf
-
-    local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-default-runtime.conf
-
-    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/el-cicd-lab-setup.conf
+    local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/runtime.conf
 
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
-    EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
-
-    if [[ "${EL_CICD_USE_LAB_CONFIG}" ]]
-    then
-        LAB_CONFIG_FILE_LIST="${EL_CICD_CONFIG_LAB_CONF} ${EL_CICD_LAB_CONF}"
-    fi
-
-    local CONFIG_FILE_LIST="${EL_CICD_SYSTEM_CONF} ${ROOT_CONFIG_FILE}  ${LAB_CONFIG_FILE_LIST} ${EL_CICD_CONF} ${EL_CICD_CONFIG_RUNTIME_CONF} ${EL_CICD_RUNTIME_CONF}"
+    local CONFIG_FILE_LIST="${EL_CICD_CONSTANTS_CONF} ${ROOT_CONFIG_FILE}  ${EL_CICD_DEMO_CONF} ${EL_CICD_RUNTIME_CONF}"
     __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_META_INFO_FILE}
 
-    local BOOTSTRAP_CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${EL_CICD_CONFIG_BOOTSTRAP_CONF} ${EL_CICD_BOOTSTRAP_CONF}"
-    __create_meta_info_file "${BOOTSTRAP_CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
+    local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/bootstrap.conf
+
+    EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
+    local CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${EL_CICD_BOOTSTRAP_CONF}"
+    __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
 
     source ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
 
@@ -249,10 +234,11 @@ __bootstrap_el_cicd_onboarding_server() {
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
     echo
+    sleep 5
 
     _create_rbac_helpers
-
-    _create_jenkins_secrets
+    
+    _refresh_el_cicd_credentials
 
     __create_onboarding_automation_server
 }
@@ -364,24 +350,17 @@ _delete_namespace() {
     local NAMESPACE=$1
     local SLEEP_SEC=$2
 
-    local DEL_NAMESPACE=$(oc projects -q | grep ${NAMESPACE} | tr -d '[:space:]')
+    local DEL_NAMESPACE=$(oc get namespaces -o custom-columns=:.metadata.name | grep ${NAMESPACE} | tr -d '[:space:]')
     if [[ "${DEL_NAMESPACE}" ]]
     then
         echo
-        oc delete project ${NAMESPACE}
+        oc delete namespace ${NAMESPACE}
         echo -n "Deleting ${NAMESPACE} namespace"
-        until !(oc project ${NAMESPACE} > /dev/null 2>&1)
+        until !(oc get namespaces ${NAMESPACE} -o custom-columns=:.metadata.name --no-headers)
         do
             echo -n '.'
-            sleep 1
+            sleep 2
         done
-
-        echo
-        if [[ "${SLEEP_SEC}" ]]
-        then
-            echo "Namespace ${NAMESPACE} deleted.  Sleep ${SLEEP_SEC} second(s) to confirm."
-            sleep ${SLEEP_SEC}
-        fi
     fi
 }
 

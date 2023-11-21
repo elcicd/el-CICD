@@ -46,8 +46,6 @@ def initMetaData(Map metaData) {
         el.cicd.nonProdEnvs.add(el.cicd.preProdEnv)
 
         el.cicd.prodEnv = el.cicd.PROD_ENV.toLowerCase()
-
-        el.cicd.RELEASE_CANDIDATE_TAG_REGEX = /\w+(?:-\w+|\.\w+)*/
     }
 }
 
@@ -170,7 +168,7 @@ def initializePipeline() {
             helm version
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Jenkins Service Account'}
-            oc whoami
+            oc config current-context
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}

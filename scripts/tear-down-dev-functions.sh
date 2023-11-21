@@ -47,7 +47,7 @@ __gather_lab_tear_down_info() {
     then
         _confirm_logged_into_cluster
         
-        if [[ ! -z $(oc get project --ignore-not-found ${DEMO_IMAGE_REGISTRY}) ]]
+        if [[ ! -z $(oc get namespace --ignore-not-found --no-headers ${DEMO_IMAGE_REGISTRY}) ]]
         then
             echo
             REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')

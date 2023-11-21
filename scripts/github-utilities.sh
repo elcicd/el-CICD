@@ -28,13 +28,11 @@ GITHUB_WEBHOOK_JSON='
 
 CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 
-
 EL_CICD_TMP_PREFIX='/tmp/tmp.elcicd'
 
 __configure_github_headers() {
     GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
 }
-
 
 _delete_scm_repo_deploy_key() {
     local GITHUB_API_HOST=${1}
@@ -49,6 +47,7 @@ _delete_scm_repo_deploy_key() {
 
     local KEY_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
 
+    echo
     for KEY_ID in ${KEY_IDS}
     do
         ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
@@ -89,15 +88,12 @@ _add_scm_repo_deploy_key() {
     if [[ "$(echo ${RESULT} | jq '.title // empty')" ]]
     then
         rm -f ${GITHUB_CREDS_FILE}
-        echo
         echo "ADDED NEW GITHUB DEPLOY KEY FOR ${GITHUB_ORG}/${REPO_NAME}:"
         echo ${RESULT} | jq .
-        echo
     else
         echo "ADDING NEW GITHUB DEPLOY KEY FOR ${GITHUB_ORG}/${REPO_NAME} FAILED:"
         echo ${RESULT} | jq .
         cat ${GITHUB_CREDS_FILE}
-        echo
         exit 1
     fi
 }
@@ -121,10 +117,10 @@ _delete_webhook() {
 
     local HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${HOOKS_URL} | jq ".[] | select(.config.url  == \"${JENKINS_WEBOOK_URL}\") | .id" 2>/dev/null)
 
+    echo
     for HOOK_ID in ${HOOK_IDS}
     do
         ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${HOOKS_URL}/${HOOK_ID}
-        echo
         echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${GITHUB_ORG}/${REPO_NAME}"
     done
 }
@@ -156,7 +152,6 @@ _add_webhook() {
     echo
     echo "NEW GITHUB WEBHOOK CREATED:"
     echo ${WEBHOOK} | jq '{"id":.id,"events": .events, "url": .config.url}'
-    echo
 
     rm -f ${WEBHOOK_FILE}
 }

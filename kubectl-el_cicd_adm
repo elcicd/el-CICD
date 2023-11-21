@@ -11,7 +11,7 @@ __main() {
 
     _echo_sudo_cluster_admin_warning
 
-    local EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_file')
+    local EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_files')
     while [[ $# -gt 0 ]]
     do
         __NEXT_ARG="${1}"
@@ -62,7 +62,7 @@ __main() {
             '--refresh-creds')
                 ELCICD_ADM_MSG="REFRESH CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_create_env_image_registry_secrets' '_refresh_el_cicd_scm_credentials')
+                EL_CICD_ADM_COMMANDS+=('_create_rbac_helpers' '_refresh_el_cicd_credentials')
                 shift 1
             ;;
 
@@ -124,6 +124,15 @@ __main() {
             ;;
         esac
     done
+    
+    if [[ -z ${ROOT_CONFIG_FILE} ]]
+    then
+        echo
+        echo "${EL_CICD_CLI_HELP_MSG}"
+        echo
+        echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
+        exit 1
+    fi
     
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} || ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
