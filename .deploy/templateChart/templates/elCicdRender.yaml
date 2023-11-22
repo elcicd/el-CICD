@@ -1,1 +1,1 @@
-{{- include "elCicdRenderer.render" . }}
+{{- include "elcicd-renderer.render" . }}

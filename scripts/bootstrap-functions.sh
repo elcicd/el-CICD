@@ -219,7 +219,7 @@ _create_rbac_helpers() {
         ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-cluster-rbac-values.yaml \
         -n kube-system \
         el-cicd-cluster-rbac-resources \
-        elCicdCharts/elCicdChart
+        elCicdCharts/elcicd-chart
     set +ex
 }
 
@@ -290,7 +290,7 @@ __create_onboarding_automation_server() {
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         ${JENKINS_DEPLOYMENT_NAME} \
-        elCicdCharts/elCicdChart
+        elCicdCharts/elcicd-chart
     set +ex
     sleep 3
 
@@ -324,7 +324,7 @@ __create_onboarding_automation_server() {
         -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
         sync-jenkins-pipelines \
-        elCicdCharts/elCicdChart
+        elCicdCharts/elcicd-chart
     set +ex
 }
 

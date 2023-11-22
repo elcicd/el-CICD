@@ -4,12 +4,12 @@ elCicdTemplates:
   type: application
 
   dependencies:
-  - name: elCicdRenderer
+  - name: elcicd-renderer
     version: 0.1.0
     repository: $<HELM_REPOSITORY_URL>
-  - name: elCicdKubernetes
+  - name: elcicd-kubernetes
     version: 0.1.0
     repository: $<HELM_REPOSITORY_URL>
-  - name: elCicdCommon
+  - name: elcicd-common
     version: 0.1.0
     repository: $<HELM_REPOSITORY_URL>

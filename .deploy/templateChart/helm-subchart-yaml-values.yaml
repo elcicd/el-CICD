@@ -4,9 +4,9 @@ elCicdTemplates:
   type: application
 
   dependencies:
-  - name: elCicdRenderer
+  - name: elcicd-renderer
     version: 0.1.0
-  - name: elCicdKubernetes
+  - name: elcicd-kubernetes
     version: 0.1.0
-  - name: elCicdCommon
+  - name: elcicd-common
     version: 0.1.0

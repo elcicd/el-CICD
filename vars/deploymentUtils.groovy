@@ -60,10 +60,10 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                 -exec echo -n ' {}' \\; 2>/dev/null)
                 set -e
 
-                helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+                helm repo add elcicd-charts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${elCicdOverlayDir}/${componentConfigFile} \
                      --set outputMergedValuesYaml=true \
-                     render-values-yaml elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+                     render-values-yaml elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
 
                 ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
 
@@ -74,7 +74,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
+                              elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
                 UPDATE_DEPENDENCIES='update-dependencies'
                 if [[ ! -f Chart.yaml ]]
@@ -82,9 +82,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
-                                  ${component.name} elCicdCharts/elCicdChart | sed -E '/^#|^---/d' > Chart.yaml
+                                  ${component.name} elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
 
-                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elCicdChart:")}
+                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elcicd-chart:")}
 
                     cat Chart.yaml
 

@@ -98,7 +98,7 @@ __create_jenkins_secrets() {
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-jenkins-secrets-values.yaml \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         el-cicd-jenkins-secrets \
-        elCicdCharts/elCicdChart
+        elCicdCharts/elcicd-chart
     set +e
 }
 

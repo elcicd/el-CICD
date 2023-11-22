@@ -13,7 +13,7 @@ def setupTeamCicdServer(def teamInfo) {
 
     sh """
         ${shCmd.echo ''}
-        helm repo add elCicdCharts ${el.cicd.EL_CICD_HELM_REPOSITORY}
+        helm repo add elcicd-charts ${el.cicd.EL_CICD_HELM_REPOSITORY}
 
         ${shCmd.echo ''}
         cat ${jenkinsConfigFile}
@@ -29,7 +29,7 @@ def setupTeamCicdServer(def teamInfo) {
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
             -n ${teamInfo.cicdMasterNamespace} \
             jenkins \
-            elCicdCharts/elCicdChart
+            elcicd-charts/elcicd-chart
 
         sleep 3
         ${shCmd.echo ''}
@@ -111,7 +111,7 @@ def setupProjectPvResources(def projectInfo) {
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
-                    elCicdCharts/elCicdChart
+                    elcicd-charts/elcicd-chart
             fi
         """
     }
@@ -150,7 +150,7 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
-            elCicdCharts/elCicdChart
+            elcicd-charts/elcicd-chart
         then
             set -e
             helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
@@ -177,7 +177,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
             -n ${cicdMasterNamespace} \
             sync-jenkins-pipelines \
-            elCicdCharts/elCicdChart
+            elcicd-charts/elcicd-chart
     """
 }
 

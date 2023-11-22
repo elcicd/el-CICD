@@ -303,7 +303,7 @@ __setup_image_registries() {
         -f ${EL_CICD_DIR}/${DEMO_CHART_DEPLOY_DIR}/demo-image-registry-values.yaml \
         -n ${DEMO_IMAGE_REGISTRY} \
         ${DEMO_IMAGE_REGISTRY} \
-        elCicdCharts/elCicdChart
+        elCicdCharts/elcicd-chart
     set +x
 
     __register_insecure_registries
