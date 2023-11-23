@@ -176,7 +176,7 @@ def initializePipeline() {
             echo \${HELM_REGISTRY_PASSWORD} | \
                 helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} \
                     -u \${HELM_REGISTRY_USERNAME} --password-stdin \
-                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
+                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY_DOMAIN}
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
