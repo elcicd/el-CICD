@@ -160,9 +160,7 @@ __parse_cli_flags() {
                 shift 1
             ;;
         esac
-    done
-    
-    echo ${EL_CICD_ADM_COMMANDS}    
+    done 
 }
 
 __load_basic_vars_and_scripts() {
