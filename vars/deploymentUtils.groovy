@@ -62,7 +62,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm template \${VALUES_FILES/ / -f } -f ${elCicdOverlayDir}/${componentConfigFile} \
                      --set outputMergedValuesYaml=true \
-                     render-values-yaml ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+                     render-values-yaml ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
 
                 ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
 
@@ -73,7 +73,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
+                              ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
                 UPDATE_DEPENDENCIES='update-dependencies'
                 if [[ ! -f Chart.yaml ]]
@@ -81,7 +81,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                     helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
                                   --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
-                                  ${component.name} ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
+                                  ${component.name} ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
 
                     ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elcicd-chart:")}
 

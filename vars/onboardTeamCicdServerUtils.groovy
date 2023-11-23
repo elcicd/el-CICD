@@ -26,7 +26,7 @@ def setupTeamCicdServer(def teamInfo) {
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
             -n ${teamInfo.cicdMasterNamespace} \
             jenkins \
-            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
 
         sleep 3
         ${shCmd.echo ''}
@@ -108,7 +108,7 @@ def setupProjectPvResources(def projectInfo) {
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
-                    ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
             fi
         """
     }
@@ -147,7 +147,7 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
-            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
         then
             set -e
             helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
@@ -174,7 +174,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
             -n ${cicdMasterNamespace} \
             sync-jenkins-pipelines \
-            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     """
 }
 
