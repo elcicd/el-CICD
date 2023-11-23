@@ -12,11 +12,11 @@ def initMetaData(Map metaData) {
         loggingUtils.echoBanner("INITIALIZING METADATA...")
 
         el.cicd.putAll(metaData)
-        
+
         el.cicd.EL_CICD_MASTER_NONPROD = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ?: false
         el.cicd.EL_CICD_MASTER_PROD = el.cicd.EL_CICD_MASTER_PROD?.toBoolean() ?: false
-        
-        el.cicd.EL_CICD_INSECURE_FLAG = el.cicd.EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS.toBoolean() ? '--insecure': ''
+
+        el.cicd.EL_CICD_INSECURE_FLAG = el.cicd.EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS.toBoolean() ? '' : '--insecure'
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
         el.cicd.EL_CICD_SCRIPTS_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}/scripts"
@@ -93,23 +93,27 @@ def node(Map args, Closure body) {
     ]) {
         node(args.agent) {
             try {
-                initializePipeline()
+                withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
+                                usernameVariable: 'HELM_REGISTRY_USERNAME',
+                                passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
+                    initializePipeline()
 
-                runHookScript(el.cicd.PRE, args)
+                    runHookScript(el.cicd.PRE, args)
 
-                if (args.teamId) {
-                    args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
-                    
-                    if (args.projectId != el.cicd.UNDEFINED) {
-                        args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
+                    if (args.teamId) {
+                        args.teamInfo = projectInfoUtils.gatherTeamInfo(args.teamId)
+
+                        if (args.projectId != el.cicd.UNDEFINED) {
+                            args.projectInfo = projectInfoUtils.gatherProjectInfoStage(args.teamInfo, args.projectId)
+                        }
                     }
+
+                    runHookScript(el.cicd.INIT, args)
+
+                    body.call(args)
+
+                    runHookScript(el.cicd.ON_SUCCESS, args)
                 }
-
-                runHookScript(el.cicd.INIT, args)
-
-                body.call(args)
-
-                runHookScript(el.cicd.ON_SUCCESS, args)
             }
             catch (Exception | AssertionError exception) {
                 (exception instanceof Exception) ?
@@ -168,6 +172,11 @@ def initializePipeline() {
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Helm Version'}
             helm version
+            ${shCmd.echo ''}
+            echo \${HELM_REGISTRY_PASSWORD} | \
+                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} \
+                    -u \${HELM_REGISTRY_USERNAME} --password-stdin \
+                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}

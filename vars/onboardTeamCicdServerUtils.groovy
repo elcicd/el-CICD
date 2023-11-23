@@ -20,7 +20,7 @@ def setupTeamCicdServer(def teamInfo) {
 
             ${shCmd.echo ''}
             echo \${HELM_REGISTRY_PASSWORD} | \
-                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
+                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
             ${shCmd.echo ''}
             helm upgrade --install --atomic --create-namespace --history-max=1 --timeout 10m0s \
                 -f ${jenkinsConfigFile} \

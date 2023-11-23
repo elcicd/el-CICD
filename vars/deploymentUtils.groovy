@@ -181,7 +181,9 @@ def runComponentDeploymentStages(def projectInfo, def components) {
             dir(component.deploymentDir) {
                 sh """
                     echo \${HELM_REGISTRY_PASSWORD} | \
-                        helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
+                        helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} \
+                             -u \${HELM_REGISTRY_USERNAME} --password-stdin \
+                              ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
 
                     helm upgrade --install --atomic  --history-max=1 \
                         -f values.yaml \
