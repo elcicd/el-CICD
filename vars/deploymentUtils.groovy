@@ -174,20 +174,19 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
-        def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
-            dir(component.deploymentDir) {
-                sh """
-                    helm upgrade --install --atomic  --history-max=1 \
-                        -f values.yaml \
-                        -n ${projectInfo.deployToNamespace} \
-                        ${component.name} \
-                        . \
-                        --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
-                        --post-renderer-args '${projectInfo.elCicdProfiles.join(',')}'
+    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
+        dir(component.deploymentDir) {
+            sh """
+                helm upgrade --install --atomic  --history-max=1 \
+                    -f values.yaml \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${component.name} \
+                    . \
+                    --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
+                    --post-renderer-args '${projectInfo.elCicdProfiles.join(',')}'
 
-                    helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
-                """
-            }
+                helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
+            """
         }
     }
 
