@@ -314,3 +314,11 @@ elCicdTemplates:
   fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
   toNamespace: $<HELM_RELEASE_NAMESPACE>
 
+- templateName: copyResource
+  objName: elcicd-helm-registry-credentials
+  mustHaveEveryProfile:
+  - cicd
+  kind: Secret
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<HELM_RELEASE_NAMESPACE>
+
