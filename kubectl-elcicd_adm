@@ -16,17 +16,42 @@ export JENKINS=jenkins
 export USERNAME=username
 export PASSWORD=password
 
-__main() {
-    __load_basic_vars_and_scripts
+__main() {        
+    if [[ -z ${ROOT_CONFIG_FILE} ]]
+    then
+        echo
+        echo "${EL_CICD_CLI_HELP_MSG}"
+        echo
+        echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
+        exit 1
+    fi
+    
+    _create_and_source_meta_info_files
+    
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} || ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        EL_CICD_ADM_COMMANDS+=('_verify_scm_secret_files_exist'
+                               '_verify_oci_registry_secrets' 
+                               '_oci_helm_registry_login' 
+                               '_bootstrap_el_cicd')
+        
+        if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} && ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+        then
+            ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD AND NON-PROD"
+        fi
+    fi
 
-    _load_kubectl_msgs
+    sleep 2
 
-    _echo_sudo_cluster_admin_warning
+    set +e
 
-    local EL_CICD_ADM_COMMANDS=('_create_and_source_meta_info_files')
-    while [[ $# -gt 0 ]]
+    _execute_kubectl_el_cicd_adm ${EL_CICD_ADM_COMMANDS[@]}
+}
+
+__parse_cli_flags() {    
+    EL_CICD_ADM_COMMANDS=()
+    for __NEXT_ARG in "${@}"
     do
-        __NEXT_ARG="${1}"
         case "${__NEXT_ARG}" in
             '--agents' | '-A')
                 ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
@@ -125,7 +150,7 @@ __main() {
             ;;
 
             *)
-                if [[ ! -z ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${__NEXT_ARG} ]]
+                if [[ ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${__NEXT_ARG} ]]
                 then
                     _unknown_cmd_opt_msg_and_exit
                 fi
@@ -137,33 +162,7 @@ __main() {
         esac
     done
     
-    if [[ -z ${ROOT_CONFIG_FILE} ]]
-    then
-        echo
-        echo "${EL_CICD_CLI_HELP_MSG}"
-        echo
-        echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
-        exit 1
-    fi
-    
-    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} || ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
-    then
-        EL_CICD_ADM_COMMANDS+=('_verify_scm_secret_files_exist'
-                               '_verify_oci_registry_secrets' 
-                               '_oci_helm_registry_login' 
-                               '_bootstrap_el_cicd')
-        
-        if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} && ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
-        then
-            ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD AND NON-PROD"
-        fi
-    fi
-
-    sleep 2
-
-    set +e
-
-    _execute_kubectl_el_cicd_adm ${EL_CICD_ADM_COMMANDS[@]}
+    echo ${EL_CICD_ADM_COMMANDS}    
 }
 
 __load_basic_vars_and_scripts() {
@@ -191,6 +190,14 @@ __load_basic_vars_and_scripts() {
         source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
     done
 }
+
+__load_basic_vars_and_scripts
+
+_load_kubectl_msgs
+
+_echo_sudo_cluster_admin_warning
+
+__parse_cli_flags "${@}"
 
 __main "$@";
 
