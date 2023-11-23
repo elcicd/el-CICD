@@ -10,7 +10,7 @@ def setupTeamCicdServer(def teamInfo) {
     def jenkinsDefs = getJenkinsConfigValues(teamInfo)
     def jenkinsConfigFile = "jenkins-config-values.yaml"
     writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
-    
+
     sh """
         ${shCmd.echo ''}
         cat ${jenkinsConfigFile}
@@ -130,67 +130,53 @@ def setupProjectCicdResources(def projectInfo) {
 
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
         projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+        
+    sh """
+        ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
+        cat ${cicdConfigFile}
 
-    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
-                     usernameVariable: 'HELM_REGISTRY_USERNAME',
-                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
-        sh """
-            ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-            cat ${cicdConfigFile}
-
-            ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-            set +e
-            echo \${HELM_REGISTRY_PASSWORD} | \
-                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
-            ${shCmd.echo ''}
-            if ! helm upgrade --install --history-max=1  \
-                -f ${cicdConfigFile} \
-                -f ${cicdSshConfigFile} \
-                -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
-                -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
-                -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-                ${chartName} \
-                ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-            then
-                set -e
-                helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-                exit 1
-            fi
+        ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
+        set +e
+        ${shCmd.echo ''}
+        if ! helm upgrade --install --history-max=1  \
+            -f ${cicdConfigFile} \
+            -f ${cicdSshConfigFile} \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
+            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
+            ${chartName} \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+        then
             set -e
-        """
-    }
+            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            exit 1
+        fi
+        set -e
+    """
 }
 
 def syncJenkinsPipelines(def cicdMasterNamespace) {
     def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+    
+    sh """
+        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
+        if [[ ! -z \$(helm list -n ${cicdMasterNamespace} | grep sync-jenkins-pipelines) ]]
+        then
+            helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
+        fi
 
-
-    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
-                     usernameVariable: 'HELM_REGISTRY_USERNAME',
-                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
-        sh """
-            ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
-            if [[ ! -z \$(helm list -n ${cicdMasterNamespace} | grep sync-jenkins-pipelines) ]]
-            then
-                helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
-            fi
-
-            ${shCmd.echo ''}
-            echo \${HELM_REGISTRY_PASSWORD} | \
-                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
-            ${shCmd.echo ''}
-            helm upgrade --wait --wait-for-jobs --install --history-max=1 \
-                --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-                --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
-                -n ${cicdMasterNamespace} \
-                sync-jenkins-pipelines \
-                ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-        """
-    }
+        ${shCmd.echo ''}
+        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
+            --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
+            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
+            -n ${cicdMasterNamespace} \
+            sync-jenkins-pipelines \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+    """
 }
 
 def configureScmDeployKeys(def projectInfo) {

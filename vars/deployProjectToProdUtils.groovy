@@ -80,28 +80,20 @@ def selectReleaseVersion(def projectInfo, def args) {
  }
 
  def deployProjectToProduction(def projectInfo) {
-    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
-                     usernameVariable: 'HELM_REGISTRY_USERNAME',
-                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
-        def postRendererArgs = projectInfo.releaseProfile ? "${projectInfo.prodEnv},${projectInfo.releaseProfile}" : projectInfo.prodEnv
-        dir(projectInfo.projectModule.workDir) {
-            sh """
-                ${shCmd.echo ''}
-                echo \${HELM_REGISTRY_PASSWORD} | \
-                    helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
-
-                ${shCmd.echo ''}
-                helm dependency update
-                
-                ${shCmd.echo ''}
-                helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
-                        --set-string elCicdProfiles="{${postRendererArgs}}" \
-                        --set-string elCicdDefs.PROD_ENV=${projectInfo.prodEnv} \
-                        --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
-                        --post-renderer-args ${postRendererArgs} \
-                        -n ${projectInfo.deployToNamespace} \
-                        ${projectInfo.id} .
-            """
-        }
+    def postRendererArgs = projectInfo.releaseProfile ? "${projectInfo.prodEnv},${projectInfo.releaseProfile}" : projectInfo.prodEnv
+    dir(projectInfo.projectModule.workDir) {
+        sh """
+            ${shCmd.echo ''}
+            helm dependency update
+            
+            ${shCmd.echo ''}
+            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
+                    --set-string elCicdProfiles="{${postRendererArgs}}" \
+                    --set-string elCicdDefs.PROD_ENV=${projectInfo.prodEnv} \
+                    --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
+                    --post-renderer-args ${postRendererArgs} \
+                    -n ${projectInfo.deployToNamespace} \
+                    ${projectInfo.id} .
+        """
     }
  }
