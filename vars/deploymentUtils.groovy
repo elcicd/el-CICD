@@ -174,17 +174,9 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
-    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
-                     usernameVariable: 'HELM_REGISTRY_USERNAME',
-                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
         def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
             dir(component.deploymentDir) {
                 sh """
-                    echo \${HELM_REGISTRY_PASSWORD} | \
-                        helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} \
-                             -u \${HELM_REGISTRY_USERNAME} --password-stdin \
-                              ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
-
                     helm upgrade --install --atomic  --history-max=1 \
                         -f values.yaml \
                         -n ${projectInfo.deployToNamespace} \

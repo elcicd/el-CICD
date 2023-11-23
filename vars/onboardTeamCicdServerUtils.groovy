@@ -10,35 +10,28 @@ def setupTeamCicdServer(def teamInfo) {
     def jenkinsDefs = getJenkinsConfigValues(teamInfo)
     def jenkinsConfigFile = "jenkins-config-values.yaml"
     writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
+    
+    sh """
+        ${shCmd.echo ''}
+        cat ${jenkinsConfigFile}
 
-    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
-                     usernameVariable: 'HELM_REGISTRY_USERNAME',
-                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
-        sh """
-            ${shCmd.echo ''}
-            cat ${jenkinsConfigFile}
+        ${shCmd.echo ''}
+        helm upgrade --install --atomic --create-namespace --history-max=1 --timeout 10m0s \
+            -f ${jenkinsConfigFile} \
+            --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
+            --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-pipeline-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
+            -n ${teamInfo.cicdMasterNamespace} \
+            jenkins \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
 
-            ${shCmd.echo ''}
-            echo \${HELM_REGISTRY_PASSWORD} | \
-                helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}
-            ${shCmd.echo ''}
-            helm upgrade --install --atomic --create-namespace --history-max=1 --timeout 10m0s \
-                -f ${jenkinsConfigFile} \
-                --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
-                --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-pipeline-setup-values.yaml \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
-                -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
-                -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
-                -n ${teamInfo.cicdMasterNamespace} \
-                jenkins \
-                ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-
-            sleep 3
-            ${shCmd.echo ''}
-            ${shCmd.echo 'JENKINS UP'}
-        """
-    }
+        sleep 3
+        ${shCmd.echo ''}
+        ${shCmd.echo 'JENKINS UP'}
+    """
 }
 
 def getJenkinsConfigValues(def teamInfo) {
