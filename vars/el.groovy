@@ -166,9 +166,6 @@ def initializePipeline() {
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Helm Version'}
             helm version
-            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
-            ${shCmd.echo 'Jenkins Service Account'}
-            oc config current-context
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
