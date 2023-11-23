@@ -115,7 +115,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
 
     echo
     echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
-
+    
     _confirm_continue
 }
 

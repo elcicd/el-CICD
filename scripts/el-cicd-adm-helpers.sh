@@ -176,16 +176,19 @@ _confirm_logged_into_cluster() {
 }
 
 _confirm_continue() {
-    read -t 0.1 -n 256 discard || :
-    echo
-    echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
-    CONTINUE='N'
-    read CONTINUE
-    if [[ ${CONTINUE} != ${_YES} ]]
+    if [[ "${ELCICD_ASSUME_YES}" != "${_TRUE}" ]]
     then
+        read -t 0.1 -n 256 discard || :
         echo
-        echo "You must enter '${_BOLD}${_YES}${_REGULAR}' to continue.  Exiting..."
-        exit 0
+        echo -n "Do you wish to continue? [${_YES}/${_NO}]: "
+        CONTINUE='N'
+        read CONTINUE
+        if [[ ${CONTINUE} != ${_YES} ]]
+        then
+            echo
+            echo "You must enter '${_BOLD}${_YES}${_REGULAR}' to continue.  Exiting..."
+            exit 0
+        fi
     fi
 }
 

@@ -96,20 +96,6 @@ __parse_cli_flags() {
                 shift 1
             ;;
 
-            '--refresh-creds')
-                ELCICD_ADM_MSG="REFRESH CREDENTIALS"
-
-                EL_CICD_ADM_COMMANDS+=('_create_rbac_helpers' '_refresh_el_cicd_credentials')
-                shift 1
-            ;;
-
-            '--refresh-cicd-creds')
-                ELCICD_ADM_MSG="REFRESH ALL CICD SERVERS CREDENTIALS"
-
-                echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
-                shift 1
-            ;;
-
             '--sealed-secrets')
                 ELCICD_ADM_MSG="INSTALL/UPGRADE SEALED SECRETS"
 
@@ -138,6 +124,11 @@ __parse_cli_flags() {
                 EL_CICD_USE_LAB_CONFIG='true'
 
                 EL_CICD_ADM_COMMANDS+=('_tear_down_lab_environment')
+                shift 1
+            ;;
+            
+            '--assumeyes' | '-y')
+                ELCICD_ASSUME_YES=${_TRUE}
                 shift 1
             ;;
 

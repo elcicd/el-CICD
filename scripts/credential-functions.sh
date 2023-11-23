@@ -36,7 +36,7 @@ _get_oci_registry_ids() {
     
     if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
-        OCI_REGISTRY_IDS+="${PROD_ENV}"
+        OCI_REGISTRY_IDS+="${PROD_ENV} "
     fi
     
     echo ${OCI_REGISTRY_IDS}

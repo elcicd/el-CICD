@@ -68,8 +68,9 @@ __create_el_cicd_scm_readonly_deploy_keys() {
 
 __create_jenkins_secrets() {
     local OCI_REGISTRY_IDS=$(_get_oci_registry_ids)
+    OCI_REGISTRY_IDS+="  ${HELM} "
 
-    local SET_FLAGS=$(__create_image_registry_values_flags ${OCI_REGISTRY_IDS})
+    local SET_FLAGS=$(__create_image_registry_values_flags "${OCI_REGISTRY_IDS}")
     
 	if [[ "${EL_CICD_MASTER_NONPROD}" && "$(ls -A ${BUILD_SECRETS_FILE_DIR})" ]]
     then
