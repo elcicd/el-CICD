@@ -9,7 +9,7 @@ import groovy.transform.Field
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 def getImageRegistryCredentialsId(def env) {
-    return "${el.cicd.IMAGE_REGISTRY_PULL_SECRET_PREFIX}${env.toLowerCase()}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    return "${el.cicd.OCI_REGISTRY_CREDENTIALS_PREFIX}${env.toLowerCase()}${el.cicd.OCI_REGISTRY_CREDENTIALS_POSTFIX}"
 }
 
 def displayInputWithTimeout(def inputMsg, def args, def inputs = null) {

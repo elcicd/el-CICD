@@ -15,7 +15,7 @@ def call(Map args) {
     }
         
     stage('Validate version tag unused') {
-        loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.releaseVersion} DOES NOT EXIST IN ANY COMPONENT\'S SCM REPOSITORY")
+        loggingUtils.echoBanner("VERIFY THE TAG ${projectInfo.releaseVersion} DOES NOT EXIST IN ANY COMPONENT\'S GIT REPOSITORY")
 
         createReleaseCandidateUtils.verifyVersionTagDoesNotExistInScm(projectInfo)
         

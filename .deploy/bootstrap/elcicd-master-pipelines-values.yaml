@@ -61,7 +61,7 @@ elCicdDefs-refresh-team-cicd-servers:
     $<AGENT_PIPELINE_ARG>,
   EL_CICD_API_METHOD: refreshTeamCicdServers
 
-elCicdTemplates-el-cicd-master-pipelines-defs:
+elCicdTemplates-elcicd-master-pipelines-defs:
 - templateName: configMap
   objNames: $<PIPELINE_NAMES>
   labels: $<JENKINS_PIPELINE_LABEL>

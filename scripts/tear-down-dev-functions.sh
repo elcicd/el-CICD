@@ -16,14 +16,14 @@ _tear_down_lab_environment() {
         _remove_existing_crc
     fi
 
-    if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
+    if [[ ${REMOVE_OCI_REGISTRY} == ${_YES} ]]
     then
         _remove_image_registry
 
         __remove_whitelisted_image_registry_host_names
     fi
 
-    if [[ ${REMOVE_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${REMOVE_OCI_REGISTRY_NFS} == ${_YES} ]]
     then
         __remove_image_registry_nfs_share
     fi
@@ -47,19 +47,19 @@ __gather_lab_tear_down_info() {
     then
         _confirm_logged_into_cluster
         
-        if [[ ! -z $(oc get namespace --ignore-not-found --no-headers ${DEMO_IMAGE_REGISTRY}) ]]
+        if [[ ! -z $(oc get namespace --ignore-not-found --no-headers ${DEMO_OCI_REGISTRY}) ]]
         then
             echo
-            REMOVE_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
+            REMOVE_OCI_REGISTRY=$(_get_yes_no_answer 'Do you wish to remove the development image registry? [Y/n] ')
         else
-            IMAGE_REGISTRY_NOT_FOUND=${_TRUE}
+            REGISTRY_NOT_FOUND=${_TRUE}
         fi
     fi
 
-    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} && \
-            (${REMOVE_IMAGE_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES} || ${IMAGE_REGISTRY_NOT_FOUND} == ${_TRUE})  ]]
+    if [[ -d ${DEMO_OCI_REGISTRY_DATA_NFS_DIR} && \
+            (${REMOVE_OCI_REGISTRY} == ${_YES} || ${REMOVE_CRC} == ${_YES} || ${REGISTRY_NOT_FOUND} == ${_TRUE})  ]]
     then
-        REMOVE_IMAGE_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
+        REMOVE_OCI_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to remove the image registry NFS share? [Y/n] ')
     fi
 
     if [[ ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
@@ -88,10 +88,10 @@ __summarize_and_confirm_lab_tear_down() {
     else 
         echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be torn down."
 
-        if [[ ${REMOVE_IMAGE_REGISTRY} == ${_YES} ]]
+        if [[ ${REMOVE_OCI_REGISTRY} == ${_YES} ]]
         then
             echo "The image registry ${_BOLD}WILL${_REGULAR} be torn down."
-        elif [[ ${IMAGE_REGISTRY_NOT_FOUND} == ${_TRUE} ]]
+        elif [[ ${REGISTRY_NOT_FOUND} == ${_TRUE} ]]
         then
             echo "The image registry was ${_BOLD}NOT${_REGULAR} found."
         else
@@ -100,7 +100,7 @@ __summarize_and_confirm_lab_tear_down() {
     fi
 
     echo -n "The image registry NFS share "
-    if [[ ${REMOVE_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${REMOVE_OCI_REGISTRY_NFS} == ${_YES} ]]
     then
         echo -n "${_BOLD}WILL${_REGULAR}"
     else
@@ -146,53 +146,53 @@ _remove_existing_crc() {
 }
 
 _remove_image_registry() {
-    if [[ ! -z $(helm list -q -n ${DEMO_IMAGE_REGISTRY} -f ${DEMO_IMAGE_REGISTRY}) ]]
+    if [[ ! -z $(helm list -q -n ${DEMO_OCI_REGISTRY} -f ${DEMO_OCI_REGISTRY}) ]]
     then
         echo
-        echo "Uninstalling ${DEMO_IMAGE_REGISTRY}..."
-        helm uninstall ${DEMO_IMAGE_REGISTRY} -n ${DEMO_IMAGE_REGISTRY}
+        echo "Uninstalling ${DEMO_OCI_REGISTRY}..."
+        helm uninstall ${DEMO_OCI_REGISTRY} -n ${DEMO_OCI_REGISTRY}
 
-        local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
+        local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
         local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
         for REGISTRY_NAME in ${REGISTRY_NAMES}
         do
-            local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+            local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
             IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
         done
         echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
     fi
-    oc delete project --ignore-not-found ${DEMO_IMAGE_REGISTRY}
+    oc delete project --ignore-not-found ${DEMO_OCI_REGISTRY}
 }
 
 __remove_image_registry_nfs_share() {
-    if [[ -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} ]]
+    if [[ -d ${DEMO_OCI_REGISTRY_DATA_NFS_DIR} ]]
     then
-        echo "Removing ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
+        echo "Removing ${DEMO_OCI_REGISTRY_DATA_NFS_DIR} and delisting it as an NFS share"
 
-        sudo rm -rf ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
-        sudo bash -c "cat /etc/exports | grep -v ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} > /etc/exports || :"
+        sudo rm -rf ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        sudo bash -c "cat /etc/exports | grep -v ${DEMO_OCI_REGISTRY_DATA_NFS_DIR} > /etc/exports || :"
         sudo exportfs -a
         sudo systemctl restart nfs-server.service
     else
-        echo "${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
+        echo "${DEMO_OCI_REGISTRY_DATA_NFS_DIR} not found.  Skipping..."
     fi
 }
 
 __remove_whitelisted_image_registry_host_names() {
-    local IMAGE_REGISTRYS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
-    local IMAGE_REGISTRYS=''
-    for REPO in ${IMAGE_REGISTRYS_LIST[@]}
+    local IMAGE_OCI_REGISTRYS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
+    local IMAGE_OCI_REGISTRYS=''
+    for REPO in ${IMAGE_OCI_REGISTRYS_LIST[@]}
     do
-        IMAGE_REGISTRYS="${IMAGE_REGISTRYS} $(eval echo \${${REPO}${IMAGE_REGISTRY_USERNAME_POSTFIX}})"
+        IMAGE_OCI_REGISTRYS="${IMAGE_OCI_REGISTRYS} $(eval echo \${${REPO}${REGISTRY_USERNAME_POSTFIX}})"
     done
-    IMAGE_REGISTRYS=$(echo ${IMAGE_REGISTRYS} | xargs -n1 | sort -u | xargs)
+    IMAGE_OCI_REGISTRYS=$(echo ${IMAGE_OCI_REGISTRYS} | xargs -n1 | sort -u | xargs)
 
     echo
     local HOST_NAMES=''
-    for REGISTRY_NAME in ${IMAGE_REGISTRYS}
+    for REGISTRY_NAME in ${IMAGE_OCI_REGISTRYS}
     do
-        HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+        HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
         echo "Removing whitelisted ${HOST_DOMAIN} as an insecure image registry."
         oc get image.config.openshift.io/cluster -o yaml | grep -v ${HOST_DOMAIN} | oc apply -f -
@@ -211,7 +211,7 @@ __delete_remote_el_cicd_git_repos() {
 __remove_git_repo() {
     GIT_REPO_DIR=${1}
 
-    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})}
+    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})}
 
     local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${__PAT} \
         ${GITHUB_REST_API_HDR}  \

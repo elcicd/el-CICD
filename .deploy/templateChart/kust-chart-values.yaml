@@ -2,9 +2,9 @@ elCicdTemplates-elcicd-kust:
 - templateName: kustomization
   fields:
     commonLabels:
-      el-cicd.io/teamid: $<TEAM_ID>
-      el-cicd.io/projectid: $<PROJECT_ID>
-      el-cicd.io/component: $<COMPONENT_NAME>
+      elcicd.io/teamid: $<TEAM_ID>
+      elcicd.io/projectid: $<PROJECT_ID>
+      elcicd.io/component: $<COMPONENT_NAME>
     
     configMapGenerator:
     - name: $<PROJECT_ID>-$<COMPONENT_NAME>-$<META_INFO_POSTFIX>
@@ -14,7 +14,7 @@ elCicdTemplates-elcicd-kust:
       - projectid=$<PROJECT_ID>
       - component=$<COMPONENT_NAME>
       - profiles=$<EL_CICD_PROFILES>
-      - scm-repo=$<SCM_REPO_NAME>
+      - scm-repo=$<GIT_REPO_NAME>
       - src-commit-hash=$<SRC_COMMIT_HASH>
       - deployment-branch=$<DEPLOYMENT_BRANCH>
       - release-version=$<RELEASE_VERSION>

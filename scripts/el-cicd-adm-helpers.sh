@@ -15,7 +15,7 @@ EOM
 )
 
 EL_CICD_CLI_HELP_MSG=$(cat <<-EOM
-Usage: oc el-cicd-adm [OPTION]... [root-config-file]
+Usage: oc elcicd-adm [OPTION]... [root-config-file]
 
 el-CICD Admin Utility
 
@@ -97,6 +97,16 @@ _echo_sudo_cluster_admin_warning() {
     echo "${EL_CICD_ADM_WARNING_MSG}"
 }
 
+_echo_loaded_scripts() {
+    echo
+    echo -n 'Loaded the following el-CICD scripts...'
+    echo
+    for FILE in $(echo ${EL_CICD_SCRIPTS} | xargs -n 1 basename)
+    do
+        echo "- ${FILE}"
+    done
+}
+
 _execute_kubectl_el_cicd_adm() {
     echo
     echo ${ELCICD_ADM_MSG}
@@ -106,14 +116,6 @@ _execute_kubectl_el_cicd_adm() {
 
     trap 'ERRO_LINENO=$LINENO' ERR
     trap '_failure' EXIT
-
-    echo
-    echo -n 'Loaded the following el-CICD scripts...'
-    echo
-    for FILE in $(echo ${EL_CICD_SCRIPTS} | xargs -n 1 basename)
-    do
-        echo "- ${FILE}"
-    done
 
     for COMMAND in ${COMMANDS[@]}
     do

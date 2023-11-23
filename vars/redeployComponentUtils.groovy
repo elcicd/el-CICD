@@ -6,7 +6,7 @@
 
 def checkoutAllRepos(def projectInfo) {
     def jsonPath = '{range .itecomp[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.deployment-branch}{" "}'
-    def script = "oc get cm -l el-cicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
+    def script = "oc get cm -l elcicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.deployToNamespace}"
     def compNameDepBranch = sh(returnStdout: true, script: script).split(' ')
 
     def branchPrefix = "${el.cicd.DEPLOYMENT_BRANCH_PREFIX}-${projectInfo.deployToEnv}-"
@@ -67,16 +67,16 @@ def selectComponentsToRedeploy(def projectInfo, def args) {
 def runVerifyImagesExistStages(def projectInfo) {
     def verifedMsgs = ["IMAGE(s) VERIFED TO EXIST IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_TO} IMAGE REPOSITORY:"]
-    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+    def imageRepo = el.cicd["${projectInfo.ENV_TO}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
+                                      usernameVariable: 'REGISTRY_USERNAME',
+                                      passwordVariable: 'REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
         def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_TO,
-                                                   'IMAGE_REGISTRY_USERNAME',
-                                                   'IMAGE_REGISTRY_PWD',
+                                                   'REGISTRY_USERNAME',
+                                                   'REGISTRY_PWD',
                                                    component.id,
                                                    component.deploymentImageTag)
 
@@ -103,16 +103,16 @@ def runVerifyImagesExistStages(def projectInfo) {
 
 def runTagImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'IMAGE_REGISTRY_PWD')])
+                                      usernameVariable: 'REGISTRY_USERNAME',
+                                      passwordVariable: 'REGISTRY_PWD')])
     {
-        def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"] + ":\${IMAGE_REGISTRY_PULL_TOKEN}"
+        def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.REGISTRY_USERNAME_POSTFIX}"] + ":\${REGISTRY_PULL_TOKEN}"
         def stageTitle = "Tag Images"
         def tagImagesStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
             def tagImageCmd =
                 shCmd.tagImage(projectInfo.ENV_TO,
-                               'IMAGE_REGISTRY_USERNAME',
-                               'IMAGE_REGISTRY_PWD',
+                               'REGISTRY_USERNAME',
+                               'REGISTRY_PWD',
                                component.id,
                                component.deploymentImageTag,
                                projectInfo.deployToEnv)

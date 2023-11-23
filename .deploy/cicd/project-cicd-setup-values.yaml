@@ -18,9 +18,9 @@ elCicdDefs-nonprod:
     teamId: '$<TEAM_ID>',
     projectId: '$<PROJECT_ID>',
     isBuild: true,
-    scmBranch: params.SCM_BRANCH
-  SCM_BRANCH_BUILD_PARAM: |-
-    stringParam('SCM_BRANCH', '$<SCM_BRANCH>', 'Git branch/tag/hash to build')
+    scmBranch: params.GIT_BRANCH
+  GIT_BRANCH_BUILD_PARAM: |-
+    stringParam('GIT_BRANCH', '$<GIT_BRANCH>', 'Git branch/tag/hash to build')
   REDEPLOY_RELEASE_CANDIDATE_PARAMS: |-
     parameters {
       stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
@@ -37,7 +37,7 @@ elCicdTemplates:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
     PIPELINE_PARAMS: |-
       parameters {
-        $<SCM_BRANCH_BUILD_PARAM>
+        $<GIT_BRANCH_BUILD_PARAM>
         choiceParam('DEPLOY_TO_NAMESPACE', $<BUILD_NAMESPACE_CHOICES>, 'Namespace to deploy to')
         booleanParam('REINSTALL', false, 'Uninstall $<BASE_OBJ_NAME> before deploying build?')
       }
@@ -61,7 +61,7 @@ elCicdTemplates:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
     PIPELINE_PARAMS: |-
       parameters {
-        $<SCM_BRANCH_BUILD_PARAM>
+        $<GIT_BRANCH_BUILD_PARAM>
         booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
       }
     EL_CICD_API_ARGS: |-
@@ -141,7 +141,7 @@ elCicdTemplates:
 
 - templateName: copyResource
   objNames: $<NONPROD_ENVS>
-  objName: el-cicd-$<>-pull-secret
+  objName: elcicd-$<>-registry-credentials
   mustHaveEveryProfile:
   - nonprod
   kind: Secret
@@ -149,7 +149,7 @@ elCicdTemplates:
   toNamespace: $<PROJECT_ID>-$<BASE_OBJ_NAME>
 
 - templateName: copyResource
-  objName: el-cicd-$<PROD_ENV>-pull-secret
+  objName: elcicd-$<PROD_ENV>-registry-credentials
   namespaces: $<PROD_NAMESPACES>
   mustHaveEveryProfile:
   - prod

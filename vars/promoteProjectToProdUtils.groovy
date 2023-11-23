@@ -37,7 +37,7 @@ def gatherReleaseCandidateRepos(def projectInfo) {
     }
 
     if (!projectInfo.componentsToPromote) {
-        loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN SCM")
+        loggingUtils.errorBanner("RELEASE CANDIDATE ${projectInfo.releaseVersion} NOT FOUND IN GIT")
     }
 }
 
@@ -83,15 +83,14 @@ def createReleaseVersionUmbrellaChart(def projectInfo) {
                   ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
                   ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
 
-            helm repo add elcicd-charts ${el.cicd.EL_CICD_HELM_REPOSITORY}
             helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamInfo.cicdMasterNamespace} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
-                          render-values-yaml elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > values.yaml
+                          render-values-yaml ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > values.yaml
 
             helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
-                          --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
+                          --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \
                           -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/helm-chart-yaml-values.yaml \
-                          ${projectInfo.id} elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
+                          ${projectInfo.id} ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
         """
     }
 }
@@ -103,7 +102,7 @@ def confirmPromotion(def projectInfo, def args) {
         loggingUtils.BANNER_SEPARATOR,
         '',
         '-> ACTIONS TO BE TAKEN:',
-        "   - A DEPLOYMENT BRANCH [${projectInfo.releaseVersion}] WILL BE CREATED IN THE SCM REPO ${projectInfo.projectModule.scmRepoName}",
+        "   - A DEPLOYMENT BRANCH [${projectInfo.releaseVersion}] WILL BE CREATED IN THE GIT REPO ${projectInfo.projectModule.scmRepoName}",
         "   - IMAGES TAGGED AS ${projectInfo.releaseVersion} WILL BE PUSHED TO THE PROD IMAGE REGISTRY",
         '   - COMPONENTS NOT IN THIS RELEASE WILL BE REMOVED FROM ${projectInfo.prodEnv}',
         '',
@@ -152,11 +151,11 @@ def pushReleaseVersion(def projectInfo) {
 
 def promoteReleaseCandidateImages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                                      usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
+                                      usernameVariable: 'FROM_OCI_REGISTRY_USERNAME',
+                                      passwordVariable: 'FROM_OCI_REGISTRY_PWD'),
                      usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.prodEnv),
-                                      usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+                                      usernameVariable: 'TO_OCI_REGISTRY_USERNAME',
+                                      passwordVariable: 'TO_OCI_REGISTRY_PWD')])
     {
         def stageTitle = "Promoting to Prod"
         def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
@@ -164,13 +163,13 @@ def promoteReleaseCandidateImages(def projectInfo) {
                                     
             def copyImage =
                 shCmd.copyImage(projectInfo.PRE_PROD_ENV,
-                                'FROM_IMAGE_REGISTRY_USERNAME',
-                                'FROM_IMAGE_REGISTRY_PWD',
+                                'FROM_OCI_REGISTRY_USERNAME',
+                                'FROM_OCI_REGISTRY_PWD',
                                 component.id,
                                 projectInfo.releaseVersion,
                                 projectInfo.PROD_ENV,
-                                'TO_IMAGE_REGISTRY_USERNAME',
-                                'TO_IMAGE_REGISTRY_PWD',
+                                'TO_OCI_REGISTRY_USERNAME',
+                                'TO_OCI_REGISTRY_PWD',
                                 component.id,
                                 projectInfo.releaseVersion)
                                 

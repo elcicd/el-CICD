@@ -16,7 +16,7 @@ def call(Map args) {
     }
 
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
-    def buildStages =  concurrentUtils.createParallelStages('Delete old SCM deploy keys', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Delete old GIT deploy keys', projectInfo.modules) { module ->
         githubUtils.deleteProjectDeployKeys(module)
     }    
     parallel(buildStages)
@@ -24,7 +24,7 @@ def call(Map args) {
     stage('Create and push public key for each github repo to github with curl') {
         loggingUtils.echoBanner("CREATE DEPLOY KEYS FOR EACH GIT REPO:",
                                 " - PUSH EACH PRIVATE KEY TO THE el-CICD ${projectInfo.rbacGroups[projectInfo.devEnv]} CICD JENKINS",
-                                " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE SCM HOST")
+                                " - PUSH EACH PUBLIC KEY FOR EACH PROJECT REPO TO THE GIT HOST")
 
         projectInfo.modules.each { module ->
             dir(module.workDir) {

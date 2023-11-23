@@ -58,13 +58,13 @@ def runVerifyImagesExistStages(def projectInfo) {
     def errorMsgs = ["MISSING IMAGE(s) IN THE ${projectInfo.ENV_FROM} IMAGE REPOSITORY:"]
     
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                      usernameVariable: 'IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'IMAGE_REGISTRY_PWD')]) {
+                                      usernameVariable: 'REGISTRY_USERNAME',
+                                      passwordVariable: 'REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
         def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
-                                                   'IMAGE_REGISTRY_USERNAME',
-                                                   'IMAGE_REGISTRY_PWD',
+                                                   'REGISTRY_USERNAME',
+                                                   'REGISTRY_PWD',
                                                    component.id,
                                                    projectInfo.deployFromEnv)
 
@@ -73,7 +73,7 @@ def runVerifyImagesExistStages(def projectInfo) {
                 errorMsgs << "    ${image} NOT FOUND IN ${projectInfo.deployFromEnv} (${projectInfo.deployFromNamespace})"
             }
             else {
-                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                def imageRepo = el.cicd["${projectInfo.ENV_FROM}${el.cicd.OCI_REGISTRY_POSTFIX}"]
                 verifedMsgs << "   VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
             }
         }
@@ -125,11 +125,11 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
 
 def runPromoteImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
-                                      usernameVariable: 'FROM_IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'FROM_IMAGE_REGISTRY_PWD'),
+                                      usernameVariable: 'FROM_OCI_REGISTRY_USERNAME',
+                                      passwordVariable: 'FROM_OCI_REGISTRY_PWD'),
                      usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployToEnv),
-                                      usernameVariable: 'TO_IMAGE_REGISTRY_USERNAME',
-                                      passwordVariable: 'TO_IMAGE_REGISTRY_PWD')])
+                                      usernameVariable: 'TO_OCI_REGISTRY_USERNAME',
+                                      passwordVariable: 'TO_OCI_REGISTRY_PWD')])
     {
         def stageTitle = "Promoting"
         def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
@@ -138,19 +138,19 @@ def runPromoteImagesStages(def projectInfo) {
             def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
             def copyImage =
                 shCmd.copyImage(projectInfo.ENV_FROM,
-                                'FROM_IMAGE_REGISTRY_USERNAME',
-                                'FROM_IMAGE_REGISTRY_PWD',
+                                'FROM_OCI_REGISTRY_USERNAME',
+                                'FROM_OCI_REGISTRY_PWD',
                                 component.id,
                                 projectInfo.deployFromEnv,
                                 projectInfo.ENV_TO,
-                                'TO_IMAGE_REGISTRY_USERNAME',
-                                'TO_IMAGE_REGISTRY_PWD',
+                                'TO_OCI_REGISTRY_USERNAME',
+                                'TO_OCI_REGISTRY_PWD',
                                 component.id,
                                 promoteTag)
 
             def tagImage = shCmd.tagImage(projectInfo.ENV_TO,
-                                          'TO_IMAGE_REGISTRY_USERNAME',
-                                          'TO_IMAGE_REGISTRY_PWD',
+                                          'TO_OCI_REGISTRY_USERNAME',
+                                          'TO_OCI_REGISTRY_PWD',
                                           component.id,
                                           promoteTag,
                                           projectInfo.deployToEnv)

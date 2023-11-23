@@ -13,7 +13,7 @@ elCicdTemplates:
 - templateName: job
   objName: sync-$<JENKINS>-pipeline
   image: $<JENKINS_SYNC_JOB_IMAGE>
-  imagePullSecret: el-cicd-$<JENKINS>-pull-secret
+  imagePullSecret: elcicd-$<JENKINS>-registry-credentials
   env:
   - name: JENKINS_NAMESPACE
     valueFrom:

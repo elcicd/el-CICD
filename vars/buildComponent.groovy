@@ -64,13 +64,13 @@ void call(Map args) {
         projectInfo.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
         loggingUtils.echoBanner("BUILD ${component.id}:${projectInfo.imageTag} IMAGE")
 
-        def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+        def imageRepo = el.cicd["${projectInfo.DEV_ENV}${el.cicd.OCI_REGISTRY_POSTFIX}"]
 
-        def tlsVerify = el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_IMAGE_REGISTRY_ENABLE_TLS}" : ''
+        def tlsVerify = el.cicd.DEV_OCI_REGISTRY_ENABLE_TLS ? "--tls-verify=${el.cicd.DEV_OCI_REGISTRY_ENABLE_TLS}" : ''
 
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.devEnv),
-                         usernameVariable: 'DEV_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'DEV_IMAGE_REGISTRY_PWD')]) {
+                         usernameVariable: 'DEV_OCI_REGISTRY_USERNAME',
+                         passwordVariable: 'DEV_OCI_REGISTRY_PWD')]) {
             dir(component.workDir) {
                 sh """
                     chmod 777 Dockerfile
@@ -80,7 +80,7 @@ void call(Map args) {
                     echo "\nLABEL SRC_COMMIT_HASH='${component.srcCommitHash}'" >> Dockerfile
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
                     
-                    podman login ${tlsVerify} --username \${DEV_IMAGE_REGISTRY_USERNAME} --password \${DEV_IMAGE_REGISTRY_PWD} ${imageRepo}
+                    podman login ${tlsVerify} --username \${DEV_OCI_REGISTRY_USERNAME} --password \${DEV_OCI_REGISTRY_PWD} ${imageRepo}
 
                     podman build --build-arg=EL_CICD_BUILD_SECRETS_NAME=./${el.cicd.EL_CICD_BUILD_SECRETS_NAME} --squash \
                                  -t ${imageRepo}/${component.id}:${projectInfo.imageTag} -f ./Dockerfile

@@ -48,7 +48,7 @@ def createTestNode(def codeBase, def projectInfo, def testModule, def components
             containers: [
                 containerTemplate(
                     name: 'jnlp',
-                    image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${codeBase}:latest",
+                    image: "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${codeBase}:latest",
                     alwaysPullImage: true,
                     args: '${computer.jnlpmac} ${computer.name}',
                     resourceRequestMemory: "${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}",

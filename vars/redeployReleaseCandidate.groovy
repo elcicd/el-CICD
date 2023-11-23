@@ -19,7 +19,7 @@ def call(Map args) {
         projectInfo.componentsToRemove = projectInfo.components.findAll { !it.releaseCandidateScmTag }
 
         if (!projectInfo.componentsToRedeploy)  {
-            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE SCM FOR RELEASE AS ${projectInfo.releaseVersion}")
+            loggingUtils.errorBanner("UNABLE TO FIND ANY COMPONENTS TAGGED IN THE GIT FOR RELEASE AS ${projectInfo.releaseVersion}")
         }
     }
 
@@ -39,17 +39,17 @@ def call(Map args) {
 
         def allImagesExist = true
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                         usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
-            def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_USERNAME_POSTFIX}"]
-            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+                         usernameVariable: 'PRE_PROD_OCI_REGISTRY_USERNAME',
+                         passwordVariable: 'PRE_PROD_OCI_REGISTRY_PWD')]) {
+            def imageRepoUserName = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.REGISTRY_USERNAME_POSTFIX}"]
+            def imageRepo = el.cicd["${projectInfo.PRE_PROD_ENV}${el.cicd.OCI_REGISTRY_POSTFIX}"]
 
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
                 
                 def verifyImageCmd = shCmd.verifyImage(projectInfo.PRE_PROD_ENV,
-                                                       'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                                       'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                                       'PRE_PROD_OCI_REGISTRY_USERNAME',
+                                                       'PRE_PROD_OCI_REGISTRY_PWD',
                                                        component.id,
                                                        imageTag)
                 def imageFound = sh(returnStdout: true, script: verifyImageCmd).trim()
@@ -97,16 +97,16 @@ def call(Map args) {
                                  "${projectInfo.componentsToRedeploy.collect { it.name } .join(', ')}")
 
         withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                         usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                         passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                         usernameVariable: 'PRE_PROD_OCI_REGISTRY_USERNAME',
+                         passwordVariable: 'PRE_PROD_OCI_REGISTRY_PWD')]) {
             projectInfo.componentsToRedeploy.each { component ->
                 def imageTag = "${projectInfo.preProdEnv}-${component.srcCommitHash}"
                 def msg = "${component.name}: ${imageTag} TAGGED AS ${projectInfo.preProdEnv}"
 
                 def tagImageEnvCmd =
                     shCmd.tagImage(projectInfo.PRE_PROD_ENV,
-                                   'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                   'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                   'PRE_PROD_OCI_REGISTRY_USERNAME',
+                                   'PRE_PROD_OCI_REGISTRY_PWD',
                                    component.id,
                                    imageTag,
                                    projectInfo.preProdEnv)

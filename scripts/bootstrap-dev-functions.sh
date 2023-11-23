@@ -19,7 +19,7 @@ _bootstrap_lab_environment() {
 
         __additional_cluster_config
     fi
-    
+
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
     if [[ "${CRC_EXEC}" ]]
     then
@@ -30,15 +30,15 @@ _bootstrap_lab_environment() {
         eval $(${CRC_EXEC} oc-env)
     fi
 
-    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
+    if [[ ${INSTALL_REGISTRY} == ${_YES} ]]
     then
         _remove_image_registry
-        oc wait --for=delete namespace/${DEMO_IMAGE_REGISTRY}
+        oc wait --for=delete namespace/${DEMO_OCI_REGISTRY}
 
         __setup_image_registries
     fi
 
-    if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
+    if [[ ${RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE} == ${_YES} ]]
     then
         __create_credentials
     fi
@@ -71,12 +71,12 @@ __gather_lab_setup_info() {
     fi
 
     echo
-    INSTALL_IMAGE_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
-    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
+    INSTALL_REGISTRY=$(_get_yes_no_answer 'Do you wish to install the development image registry on your cluster? [Y/n] ')
+    if [[ ${INSTALL_REGISTRY} == ${_YES} ]]
     then
-        SETUP_IMAGE_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
+        SETUP_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
 
-        if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+        if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
         then
             read -s -p "Sudo credentials required: " SUDO_PWD
 
@@ -88,7 +88,12 @@ __gather_lab_setup_info() {
     fi
 
     echo
-    GENERATE_CRED_FILES=$(_get_yes_no_answer 'Do you wish to (re)generate the credential files? [Y/n] ')
+    if [[ -f ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE} ]]
+    then
+        RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE=$(_get_yes_no_answer 'Do you wish to (re)create the Git admin access token file? [Y/n] ')
+    else
+        RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE=${_YES}
+    fi
 
     if [[ ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
     then
@@ -117,17 +122,17 @@ __gather_lab_setup_info() {
         fi
     fi
 
-    if [[ ${GENERATE_CRED_FILES} == ${_YES} || ${CREATE_GIT_REPOS} == ${_YES} ]]
+    if [[ ${RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE} == ${_YES} || ${CREATE_GIT_REPOS} == ${_YES} ]]
     then
-        if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
+        if [[ ${RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE} == ${_YES} ]]
         then
-            read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GITHUB_ACCESS_TOKEN
+            read -s -p "Enter Git host personal access token for ${EL_CICD_ORGANIZATION}:" GIT_ACCESS_TOKEN
             echo
         else
-            GITHUB_ACCESS_TOKEN=$(cat ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE})
+            GIT_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})
         fi
 
-        local TOKEN_TEST_RESULT=$(curl -sL -u :${GITHUB_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
+        local TOKEN_TEST_RESULT=$(curl -sL -u :${GIT_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
         if [[ -z ${TOKEN_TEST_RESULT} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
@@ -151,15 +156,15 @@ __summarize_and_confirm_lab_setup_info() {
     else
         echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be setup."
     fi
-    
+
     echo
     echo "Cluster wildcard Domain: ${_BOLD}*.${CLUSTER_WILDCARD_DOMAIN}${_REGULAR}"
 
     echo
-    if [[ ${INSTALL_IMAGE_REGISTRY} == ${_YES} ]]
+    if [[ ${INSTALL_REGISTRY} == ${_YES} ]]
     then
         echo -n "An image registry ${_BOLD}WILL${_REGULAR} be installed on your cluster ${_BOLD}WITH"
-        if [[ ${SETUP_IMAGE_REGISTRY_NFS} != ${_YES} ]]
+        if [[ ${SETUP_REGISTRY_NFS} != ${_YES} ]]
         then
             echo -n "OUT"
         fi
@@ -169,11 +174,11 @@ __summarize_and_confirm_lab_setup_info() {
     fi
 
     echo
-    if [[ ${GENERATE_CRED_FILES} == ${_YES} ]]
+    if [[ ${RECREATE_GIT_ADMIN_ACCESS_TOKEN_FILE} == ${_YES} ]]
     then
-        echo "Credential files ${_BOLD}WILL${_REGULAR} be (re)generated."
+        echo "The Git admin token file ${_BOLD}WILL${_REGULAR} be (re)created."
     else
-        echo "Credential files will ${_BOLD}NOT${_REGULAR} be (re)generated."
+        echo "The Git admin token file will ${_BOLD}NOT${_REGULAR} be (re)created."
     fi
 
     echo
@@ -243,17 +248,17 @@ __additional_cluster_config() {
 
 __create_image_registry_nfs_share() {
     echo
-    if [[ ! -d ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} || -z $(cat /etc/exports | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
+    if [[ ! -d ${DEMO_OCI_REGISTRY_DATA_NFS_DIR} || -z $(cat /etc/exports | grep ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}) ]]
     then
-        echo "Creating NFS share on host for developer image registries, if necessary: ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}"
-        if [[ -z $(cat /etc/exports | grep ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}) ]]
+        echo "Creating NFS share on host for developer image registries, if necessary: ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}"
+        if [[ -z $(cat /etc/exports | grep ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}) ]]
         then
-            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c "echo '${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)' | sudo tee -a /etc/exports"
+            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c "echo '${DEMO_OCI_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)' | sudo tee -a /etc/exports"
         fi
 
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DEMO_IMAGE_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
         printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=nfs --zone=libvirt
         printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=mountd --zone=libvirt
         printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=rpc-bind --zone=libvirt
@@ -266,28 +271,26 @@ __create_image_registry_nfs_share() {
 }
 
 __setup_image_registries() {
-    if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
     then
         __create_image_registry_nfs_share
 
-        DEMO_IMAGE_REGISTRY_PROFILES=${DEMO_IMAGE_REGISTRY_PROFILES},nfs
+        DEMO_OCI_REGISTRY_PROFILES=${DEMO_OCI_REGISTRY_PROFILES},nfs
     fi
 
-    _helm_repo_add_and_update_elCicdCharts
-
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local OBJ_NAME=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}
+        local OBJ_NAME=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}
         local OBJ_NAMES=${OBJ_NAMES:+${OBJ_NAMES},}${OBJ_NAME}
-        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_IMAGE_REGISTRY_USER_PWD})
+        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_OCI_REGISTRY_USER_PWD})
         local HTPASSWDS="${HTPASSWDS:+${HTPASSWDS} } --set-string elCicdDefs-htpasswd.${OBJ_NAME}_HTPASSWD=${HTPASSWD}"
     done
 
-    DEMO_IMAGE_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
+    DEMO_OCI_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
 
     local PROFILES='htpasswd'
-    if [[ ${SETUP_IMAGE_REGISTRY_NFS} == ${_YES} ]]
+    if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
     then
         PROFILES+=",nfs"
     fi
@@ -296,14 +299,14 @@ __setup_image_registries() {
     helm upgrade --install --atomic --create-namespace --history-max=1 \
         --set-string elCicdProfiles="{${PROFILES}}" \
         --set-string elCicdDefs.OBJ_NAMES="{${OBJ_NAMES}}" \
-        --set-string elCicdDefs.HOST_IP=${DEMO_IMAGE_REGISTRY_HOST_IP} \
-        --set-string elCicdDefs.DEMO_IMAGE_REGISTRY=${DEMO_IMAGE_REGISTRY} \
+        --set-string elCicdDefs.HOST_IP=${DEMO_OCI_REGISTRY_HOST_IP} \
+        --set-string elCicdDefs.DEMO_OCI_REGISTRY=${DEMO_OCI_REGISTRY} \
         ${HTPASSWDS} \
         --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         -f ${EL_CICD_DIR}/${DEMO_CHART_DEPLOY_DIR}/demo-image-registry-values.yaml \
-        -n ${DEMO_IMAGE_REGISTRY} \
-        ${DEMO_IMAGE_REGISTRY} \
-        elCicdCharts/elcicd-chart
+        -n ${DEMO_OCI_REGISTRY} \
+        ${DEMO_OCI_REGISTRY} \
+        ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     set +x
 
     __register_insecure_registries
@@ -323,10 +326,10 @@ __register_insecure_registries() {
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
 
-    local REGISTRY_NAMES=$(echo ${DEMO_IMAGE_REGISTRY_NAMES} | tr ':' ' ')
+    local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
     for REGISTRY_NAME in ${REGISTRY_NAMES}
     do
-        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_IMAGE_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
         oc get image.config.openshift.io/cluster -o yaml | grep -v "\- ${HOST_DOMAIN}" | oc apply -f -
 
@@ -338,18 +341,18 @@ __register_insecure_registries() {
 
 __create_credentials() {
     mkdir -p ${SECRET_FILE_DIR}
-    
+
     echo
-    echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}"
-    echo ${GITHUB_ACCESS_TOKEN} > ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE}
+    echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE}"
+    echo ${GIT_ACCESS_TOKEN} > ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE}
 
     local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
     for ENV in ${CICD_ENVIRONMENTS}
     do
         echo
         echo "Creating the image repository access token file for ${ENV} environment:"
-        echo ${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}
-        echo ${DEMO_IMAGE_REGISTRY_USER_PWD} > ${ENV@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}
+        echo ${ENV@L}${REGISTRY_CREDENTIALS_POSTFIX}
+        echo ${DEMO_OCI_REGISTRY_USER_PWD} > ${ENV@L}${REGISTRY_CREDENTIALS_POSTFIX}
     done
 }
 
@@ -393,7 +396,7 @@ __create_git_repo() {
     ${GIT_COMMAND} checkout -b  ${EL_CICD_GIT_REPO_BRANCH_NAME}
 
     ${GIT_COMMAND} \
-        -c credential.helper="!creds() { echo password=${GITHUB_ACCESS_TOKEN}; }; creds" \
+        -c credential.helper="!creds() { echo password=${GIT_ACCESS_TOKEN}; }; creds" \
         push -u origin ${EL_CICD_GIT_REPO_BRANCH_NAME}
 }
 
@@ -403,7 +406,7 @@ __create_remote_github_repo() {
     local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
 
     REMOTE_GIT_DIR_EXISTS=$(curl -sL -o /dev/null -w "%{http_code}" -X POST \
-        -u :${GITHUB_ACCESS_TOKEN} \
+        -u :${GIT_ACCESS_TOKEN} \
         ${GITHUB_REST_API_HDR}  \
         https://${GIT_API_DOMAIN}/user/repos \
         -d "${GIT_JSON_POST}")

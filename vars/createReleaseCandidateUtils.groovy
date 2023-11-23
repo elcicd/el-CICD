@@ -21,7 +21,7 @@ def verifyVersionTagValidSemver(projectInfo) {
             versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.releaseVersion}-[a-z0-9]\{7\}" || :/
             def tagExists = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
             if (tagExists) {
-                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseVersion} exists in SCM (${}), and CANNOT be reused")
+                loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseVersion} exists in GIT (${}), and CANNOT be reused")
             }
         }
     }
@@ -30,12 +30,12 @@ def verifyVersionTagValidSemver(projectInfo) {
  def verifyReleaseCandidateImagesDoNotExistInImageRegistry(def projectInfo) {
     def imageExists = true
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                     usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                     passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                     usernameVariable: 'PRE_PROD_OCI_REGISTRY_USERNAME',
+                     passwordVariable: 'PRE_PROD_OCI_REGISTRY_PWD')]) {
         imageExists = projectInfo.components.find { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.PRE_PROD_ENV,
-                                                   'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                                   'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                                   'PRE_PROD_OCI_REGISTRY_USERNAME',
+                                                   'PRE_PROD_OCI_REGISTRY_PWD',
                                                     component.id,
                                                     projectInfo.releaseVersion)
 
@@ -77,7 +77,7 @@ def verifyVersionTagValidSemver(projectInfo) {
 
  def getAvailableComponents(def projectInfo) {
     def jsonPath = '{range .items[?(@.data.src-commit-hash)]}{.data.component}{":"}{.data.src-commit-hash}{" "}'
-    def script = "oc get cm -l el-cicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
+    def script = "oc get cm -l elcicd.io/projectid=${projectInfo.id} -o jsonpath='${jsonPath}' -n ${projectInfo.preProdNamespace}"
 
     def msNameHashData = sh(returnStdout: true, script: script).split(' ')
     msNameHashMap = [:]
@@ -136,8 +136,8 @@ def verifyVersionTagValidSemver(projectInfo) {
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.releaseCandidateComponents) { component ->
         def gitReleaseCandidateTag = "${projectInfo.releaseVersion}-${component.srcCommitHash}"
         def tagImageCmd = shCmd.tagImage(projectInfo.PRE_PROD_ENV,
-                                         'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                         'PRE_PROD_IMAGE_REGISTRY_PWD',
+                                         'PRE_PROD_OCI_REGISTRY_USERNAME',
+                                         'PRE_PROD_OCI_REGISTRY_PWD',
                                          component.id,
                                          projectInfo.preProdEnv,
                                          projectInfo.releaseVersion)
@@ -145,8 +145,8 @@ def verifyVersionTagValidSemver(projectInfo) {
 
         withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
-                                             usernameVariable: 'PRE_PROD_IMAGE_REGISTRY_USERNAME',
-                                             passwordVariable: 'PRE_PROD_IMAGE_REGISTRY_PWD')]) {
+                                             usernameVariable: 'PRE_PROD_OCI_REGISTRY_USERNAME',
+                                             passwordVariable: 'PRE_PROD_OCI_REGISTRY_PWD')]) {
             sh """
                 git checkout ${component.deploymentBranch}
                 CUR_BRANCH=\$(git rev-parse --abbrev-ref HEAD)

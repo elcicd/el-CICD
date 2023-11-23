@@ -68,7 +68,7 @@ def node(Map args, Closure body) {
         yaml: """
           spec:
             imagePullSecrets:
-            - el-cicd-jenkins-pull-secret
+            - elcicd-jenkins-registry-credentials
             serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
             alwaysPullImage: true
             resources:
@@ -79,7 +79,7 @@ def node(Map args, Closure body) {
                 memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
             containers:
             - name: 'jnlp'
-              image: "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
+              image: "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}

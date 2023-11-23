@@ -25,13 +25,13 @@ elCicdDefs-htpasswd:
 elCicdDefs-nfs:
   STORAGE_CLASS_NAME: demo-image-registry-nfs
   VOLUME_MNT_NFS:
-    name: $<DEMO_IMAGE_REGISTRY>
+    name: $<DEMO_OCI_REGISTRY>
     mountPath: /var/lib/registry
     subPath: $<OBJ_NAME>
   VOLUME_NFS:
-    name: $<DEMO_IMAGE_REGISTRY>
+    name: $<DEMO_OCI_REGISTRY>
     persistentVolumeClaim:
-      claimName: $<DEMO_IMAGE_REGISTRY>-nfs-pvc
+      claimName: $<DEMO_OCI_REGISTRY>-nfs-pvc
 
 elCicdTemplates:
 - templateName: deploymentServiceIngress
@@ -63,7 +63,7 @@ elCicdTemplates:
     htpasswd: $<$<OBJ_NAME>_HTPASSWD>
     
 - templateName: persistentVolume
-  objName: $<DEMO_IMAGE_REGISTRY>-nfs
+  objName: $<DEMO_OCI_REGISTRY>-nfs
   mustHaveAnyProfile:
   - nfs
   storageClassName: $<STORAGE_CLASS_NAME>
@@ -71,15 +71,15 @@ elCicdTemplates:
   accessModes:
   - ReadWriteMany
   nfs:
-    path: /mnt/$<DEMO_IMAGE_REGISTRY>
+    path: /mnt/$<DEMO_OCI_REGISTRY>
     server: $<HOST_IP>
     
 - templateName: persistentVolumeClaim
-  objName: $<DEMO_IMAGE_REGISTRY>-nfs-pvc
+  objName: $<DEMO_OCI_REGISTRY>-nfs-pvc
   mustHaveAnyProfile:
   - nfs
   storageClassName: $<STORAGE_CLASS_NAME>
-  volumeName: $<DEMO_IMAGE_REGISTRY>-nfs
+  volumeName: $<DEMO_OCI_REGISTRY>-nfs
   accessMode: ReadWriteMany
   storageRequest: 10Gi
     

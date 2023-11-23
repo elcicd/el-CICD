@@ -10,10 +10,10 @@ _build_el_cicd_jenkins_image() {
     podman build --squash \
         --build-arg OKD_VERSION=${OKD_VERSION} \
         --build-arg JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH} \
-        -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME} \
+        -t ${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME} \
         -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.jenkins
         
-    podman push --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
+    podman push --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}
     set +ex
 
     rm -rf ${TARGET_JENKINS_BUILD_DIR}
@@ -59,11 +59,11 @@ _build_el_cicd_jenkins_agent_images() {
             set -e            
             podman build --squash \
                 --build-arg OKD_VERSION=${OKD_VERSION} \
-                --build-arg JENKINS_IMAGE_REGISTRY=${JENKINS_IMAGE_REGISTRY} \
-                -t ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
+                --build-arg JENKINS_OCI_REGISTRY=${JENKINS_OCI_REGISTRY} \
+                -t ${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME} \
                 -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME}
 
-            podman push --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
+            podman push --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${AGENT_NAME}
             set +e
         done
 
@@ -75,8 +75,8 @@ _build_el_cicd_jenkins_agent_images() {
 }
 
 _base_jenkins_agent_exists() {
-    IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
-    local HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
+    local HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
     if [[ -z ${HAS_BASE_AGENT} ]]
     then
         echo ${_FALSE}
@@ -86,7 +86,7 @@ _base_jenkins_agent_exists() {
 }
 
 get_jenkins_image_sha() {
-    local IMAGE_URL=docker://${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}
-    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    local IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}
+    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
 }
 

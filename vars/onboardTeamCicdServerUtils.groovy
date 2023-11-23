@@ -13,9 +13,6 @@ def setupTeamCicdServer(def teamInfo) {
 
     sh """
         ${shCmd.echo ''}
-        helm repo add elcicd-charts ${el.cicd.EL_CICD_HELM_REPOSITORY}
-
-        ${shCmd.echo ''}
         cat ${jenkinsConfigFile}
 
         ${shCmd.echo ''}
@@ -24,12 +21,12 @@ def setupTeamCicdServer(def teamInfo) {
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/prod-pipeline-setup-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-team-server-values.yaml \
             -n ${teamInfo.cicdMasterNamespace} \
             jenkins \
-            elcicd-charts/elcicd-chart
+            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
 
         sleep 3
         ${shCmd.echo ''}
@@ -62,7 +59,7 @@ def getJenkinsConfigValues(def teamInfo) {
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
     elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
-    elCicdDefs.JENKINS_IMAGE = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME}"
+    elCicdDefs.JENKINS_IMAGE = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_IMAGE_NAME}"
     elCicdDefs.JENKINS_URL = "${teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     elCicdDefs.JENKINS_UC = el.cicd.JENKINS_UC
     elCicdDefs.JENKINS_UC_INSECURE = el.cicd.JENKINS_UC_INSECURE
@@ -111,7 +108,7 @@ def setupProjectPvResources(def projectInfo) {
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
-                    elcicd-charts/elcicd-chart
+                    ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
             fi
         """
     }
@@ -146,11 +143,11 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
-            elcicd-charts/elcicd-chart
+            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
         then
             set -e
             helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
@@ -161,7 +158,7 @@ def setupProjectCicdResources(def projectInfo) {
 }
 
 def syncJenkinsPipelines(def cicdMasterNamespace) {
-    def baseAgentImage = "${el.cicd.JENKINS_IMAGE_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+    def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
 
     sh """
         ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
@@ -177,15 +174,15 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
             -n ${cicdMasterNamespace} \
             sync-jenkins-pipelines \
-            elcicd-charts/elcicd-chart
+            ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     """
 }
 
 def configureScmDeployKeys(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
-    def buildStages =  concurrentUtils.createParallelStages('Setup SCM deploy keys', projectInfo.modules) { module ->
-        withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
+        withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
                     set +x
@@ -198,13 +195,13 @@ def configureScmDeployKeys(def projectInfo) {
                     _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                                 ${projectInfo.scmOrganization} \
                                                 ${module.scmRepoName} \
-                                                \${GITHUB_ACCESS_TOKEN} \
+                                                \${GIT_ACCESS_TOKEN} \
                                                 '${projectInfo.repoDeployKeyId}'
 
                     _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
                                              ${projectInfo.scmOrganization} \
                                              ${module.scmRepoName} \
-                                             \${GITHUB_ACCESS_TOKEN} \
+                                             \${GIT_ACCESS_TOKEN} \
                                              '${projectInfo.repoDeployKeyId}' \
                                              ${module.scmDeployKeyJenkinsId} \
                                              false
@@ -218,9 +215,9 @@ def configureScmDeployKeys(def projectInfo) {
 }
 
 def configureScmWebhooks(def projectInfo) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup SCM webhooks', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
         if (!module.disableWebhook) {
-            withCredentials([string(credentialsId: el.cicd.EL_CICD_SCM_ADMIN_ACCESS_TOKEN_ID, variable: 'GITHUB_ACCESS_TOKEN')]) {
+            withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
                         set +x
@@ -238,7 +235,7 @@ def configureScmWebhooks(def projectInfo) {
                                         ${module.name} \
                                         ${module.isComponent ? 'build-component' : 'build-artifact'} \
                                         '${module.scmDeployKeyJenkinsId}' \
-                                        \${GITHUB_ACCESS_TOKEN}
+                                        \${GIT_ACCESS_TOKEN}
 
                         _add_webhook ${projectInfo.scmRestApiHost} \
                                     ${projectInfo.scmOrganization} \
@@ -248,7 +245,7 @@ def configureScmWebhooks(def projectInfo) {
                                     ${module.name} \
                                     ${module.isComponent ? 'build-component' : 'build-artifact'} \
                                     ${module.scmDeployKeyJenkinsId} \
-                                    \${GITHUB_ACCESS_TOKEN}
+                                    \${GIT_ACCESS_TOKEN}
                         set -x
                     """
                 }
@@ -360,7 +357,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.FOLDER_NAME = projectInfo.id
-    elCicdDefs.SCM_BRANCH = projectInfo.scmBranch
+    elCicdDefs.GIT_BRANCH = projectInfo.scmBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
     elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
@@ -380,7 +377,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
-    elCicdDefs.SCM_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
+    elCicdDefs.GIT_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
         if (!module.scmDeployKeyJenkinsId) {
             projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
         }
@@ -465,7 +462,7 @@ def createCompSshKeyValues(def projectInfo) {
 
             def sshKey = readFile(file: module.scmDeployKeyJenkinsId)
 
-            cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['SCM_REPO_SSH_KEY': sshKey ]
+            cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
         }
     }
 

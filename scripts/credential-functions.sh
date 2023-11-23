@@ -8,7 +8,8 @@ _verify_scm_secret_files_exist() {
           ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
           ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
           ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
-          ! -f ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE} ]]
+          ! -f ${EL_CICD_OCI_SECRETS_FILE} ||
+          ! -f ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE} ]]
     then
         echo
         echo "ERROR:"
@@ -17,32 +18,37 @@ _verify_scm_secret_files_exist() {
         echo "    ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}"
         echo "    ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE//${SECRET_FILE_DIR}\//}.pub"
-        echo "    ${EL_CICD_SCM_ADMIN_ACCESS_TOKEN_FILE//${SECRET_FILE_DIR}\//}"
+        echo "    ${EL_CICD_OCI_SECRETS_FILE//${SECRET_FILE_DIR}\//}"
+        echo "    ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE//${SECRET_FILE_DIR}\//}"
 
         __verify_continue
     fi
 }
 
-_verify_pull_secret_files_exist() {
-    local PULL_SECRET_TYPES="jenkins ${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } ${PRE_PROD_ENV} ${PROD}"
-    for PULL_SECRET_TYPE in ${PULL_SECRET_TYPES}
-    do
-        local USERNAME_PWD_FILE="${SECRET_FILE_DIR}/${IMAGE_REGISTRY_PULL_SECRET_PREFIX}${PULL_SECRET_TYPE@L}-${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
-
-        if [[ ! -f ${USERNAME_PWD_FILE} ]]
-        then
-            local PULL_SECRET_FILES=${PULL_SECRET_FILES:+$PULL_SECRET_FILES, }${TKN_FILE}
-        fi
-    done
-
-    if [[ "${PULL_SECRET_FILES}" ]]
+_get_oci_registry_ids() {
+    local OCI_REGISTRY_IDS="${JENKINS} "
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
     then
-        echo
-        echo "ERROR:"
-        echo "  MISSING THE FOLLOWING PULL SECRET FILES:"
-        echo "    '${PULL_SECRET_FILES//${SECRET_FILE_DIR}\//}'"
-        __verify_continue
+        OCI_REGISTRY_IDS+="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } "
     fi
+    
+    OCI_REGISTRY_IDS+="${PRE_PROD_ENV} "
+    
+    if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        OCI_REGISTRY_IDS+="${PROD_ENV}"
+    fi
+    
+    echo ${OCI_REGISTRY_IDS}
+}
+
+_verify_oci_registry_secrets() {
+    local OCI_REGISTRY_IDS=$(_get_oci_registry_ids)
+    
+    for OCI_REGISTRY_ID in ${OCI_REGISTRY_IDS@L}
+    do
+        _oci_registry_login ${OCI_REGISTRY_ID}
+    done
 }
 
 __verify_continue() {
@@ -131,23 +137,64 @@ _install_sealed_secrets() {
     set +e
 }
 
-_podman_login() {
-    echo
-    echo "Podman login to Jenkins image registry [${JENKINS_IMAGE_REGISTRY}]:"
-    JENKINS_USERNAME_PWD_FILE="${SECRET_FILE_DIR}/$(__get_pull_secret_id jenkins)"
-    local JENKINS_USERNAME=$(jq -r .username ${JENKINS_USERNAME_PWD_FILE})
-    local JENKINS_PASSWORD=$(jq -r .password ${JENKINS_USERNAME_PWD_FILE})
-    if [[ ! -z ${JENKINS_USERNAME} || "${JENKINS_PASSWORD}" ]]
+_oci_registry_login() {
+    OCI_REGISTRY_ID=${1}
+    
+    local OCI_USERNAME=$(_get_oci_username ${OCI_REGISTRY_ID})
+    local OCI_PASSWORD=$(_get_oci_password ${OCI_REGISTRY_ID})
+    local OCI_REGISTRY=${OCI_REGISTRY_ID@U}${OCI_REGISTRY_POSTFIX}
+    local ENABLE_TLS=${OCI_REGISTRY_ID@U}${OCI_ENABLE_TLS_POSTFIX}
+    
+    if [[ "${OCI_USERNAME}" && "${OCI_PASSWORD}" && "${!ENABLE_TLS}" && "${!OCI_REGISTRY}" ]]
     then
         set -e
-        podman login --tls-verify=${JENKINS_IMAGE_REGISTRY_ENABLE_TLS} -u ${JENKINS_USERNAME} -p ${JENKINS_PASSWORD} ${JENKINS_IMAGE_REGISTRY}
+        echo
+        echo -n "LOGIN TO ${OCI_REGISTRY_ID@U} OCI REGISTRY [${!OCI_REGISTRY}]: "
+        echo ${OCI_PASSWORD} | podman login ${!OCI_REGISTRY} --tls-verify=${!ENABLE_TLS} -u ${OCI_USERNAME} --password-stdin 
         set +e
     else
-        echo "ERROR: UNABLE TO FIND JENKINS IMAGE REGISTRY USERNAME/PASSWORD FILE: ${SECRET_FILE_DIR}/${JENKINS_USERNAME_PWD_FILE}"
+        PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))
+        echo "ERROR: ONE OF THE FOLLOWING NOT DEFINED FOR THE ${OCI_REGISTRY_ID@U} OCI REGISTRY:"
+        echo "- USERNAME/PASSWORD in ${PARENT_DIR}/$(basename ${EL_CICD_OCI_SECRETS_FILE})"
+        echo "- OCI_REGISTRY: ${!OCI_REGISTRY}"
         exit 1
     fi
 }
 
-__get_pull_secret_id() {
-    echo "${IMAGE_REGISTRY_PULL_SECRET_PREFIX}${1@L}${IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+_oci_helm_registry_login() {    
+    local HELM_REGISTRY_USERNAME=$(_get_oci_username ${HELM})
+    local HELM_REGISTRY_PASSWORD=$(_get_oci_password ${HELM})
+    
+    if [[ EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS == ${_FALSE} ]]
+    then 
+        local TLS_INSECURE='--insecure'
+    fi
+    
+    if [[ "${HELM_REGISTRY_USERNAME}" && "${HELM_REGISTRY_PASSWORD}" ]]
+    then
+        set -e
+        echo
+        echo -n "LOGIN TO HELM OCI REGISTRY [${EL_CICD_HELM_OCI_REGISTRY_DOMAIN}]: "
+        echo ${HELM_REGISTRY_PASSWORD} | \
+            helm registry login ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN} ${TLS_INSECURE} -u ${HELM_REGISTRY_USERNAME} --password-stdin 
+        set +e
+    else
+        PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))
+        echo "ERROR: ONE OF THE FOLLOWING NOT DEFINED FOR THE HELM OCI REGISTRY:"
+        echo "- USERNAME/PASSWORD in ${PARENT_DIR}/$(basename ${EL_CICD_OCI_SECRETS_FILE})"
+        echo "- EL_CICD_HELM_OCI_REGISTRY_DOMAIN: ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN}"
+        exit 1
+    fi
+}
+
+_oci_jenkins_registry_login() {
+    _oci_registry_login ${JENKINS}
+}
+
+_get_oci_username() {
+    jq -r ".${1}.username | select (.!=null)" ${EL_CICD_OCI_SECRETS_FILE}
+}
+
+_get_oci_password() {
+    jq -r ".${1}.password | select (.!=null)" ${EL_CICD_OCI_SECRETS_FILE}
 }

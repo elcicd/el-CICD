@@ -35,7 +35,7 @@ def removeComponents(def projectInfo, def components) {
 
 def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
-    def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.IMAGE_REGISTRY_POSTFIX}"]
+    def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
     def tmpValuesFile = 'values.yaml.tmp'
     def defaultChartValuesYaml = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
@@ -60,10 +60,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                 -exec echo -n ' {}' \\; 2>/dev/null)
                 set -e
 
-                helm repo add elcicd-charts ${el.cicd.EL_CICD_HELM_REPOSITORY}
                 helm template \${VALUES_FILES/ / -f } -f ${elCicdOverlayDir}/${componentConfigFile} \
                      --set outputMergedValuesYaml=true \
-                     render-values-yaml elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+                     render-values-yaml ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
 
                 ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
 
@@ -74,15 +73,15 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
+                              ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
 
                 UPDATE_DEPENDENCIES='update-dependencies'
                 if [[ ! -f Chart.yaml ]]
                 then
                     helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
-                                  --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_REPOSITORY} \
+                                  --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \
                                   -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
-                                  ${component.name} elcicd-charts/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
+                                  ${component.name} ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
 
                     ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elcicd-chart:")}
 
@@ -140,9 +139,9 @@ def getProjectCommonHelmValues(def projectInfo) {
     ]
 
     def ingressHostDomain = (projectInfo.deployToEnv != projectInfo.prodEnv) ? "-${projectInfo.deployToEnv}" : ''
-    def imagePullSecret = "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}"
+    def imagePullSecret = "elcicd-${projectInfo.deployToEnv}${el.cicd.OCI_REGISTRY_CREDENTIALS_POSTFIX}"
     def elCicdDefaults = [
-        imagePullSecret: "el-cicd-${projectInfo.deployToEnv}${el.cicd.IMAGE_REGISTRY_PULL_SECRET_POSTFIX}",
+        imagePullSecret: "elcicd-${projectInfo.deployToEnv}${el.cicd.OCI_REGISTRY_CREDENTIALS_POSTFIX}",
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     ]
 
@@ -167,7 +166,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
-    configValuesMap.elCicdDefs.SCM_REPO_NAME = component.scmRepoName
+    configValuesMap.elCicdDefs.GIT_REPO_NAME = component.scmRepoName
     configValuesMap.elCicdDefs.SRC_COMMIT_HASH = component.srcCommitHash ?: el.cicd.UNDEFINED
     configValuesMap.elCicdDefs.DEPLOYMENT_BRANCH = component.deploymentBranch ?: el.cicd.UNDEFINED
 
@@ -199,7 +198,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 def waitForAllTerminatingPodsToFinish(def projectInfo) {
     def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     sh """
-        TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l el-cicd.io/projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
+        TERMINATING_PODS=\$(oc get pods -n ${projectInfo.deployToNamespace} -l elcicd.io/projectid=${projectInfo.id} -o=${jsonPath} | tr '\n' ' ')
         if [[ "\${TERMINATING_PODS}" ]]
         then
             ${shCmd.echo '', '--> WAIT FOR PODS TO COMPLETE TERMINATION', ''}

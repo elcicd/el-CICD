@@ -50,7 +50,7 @@ elCicdTemplates:
          $JENKINS_JAVA_OVERRIDES
          -jar /usr/share/java/jenkins.war >> /var/log/jenkins-startup.log;
   strategyType: RollingUpdate
-  imagePullSecret: el-cicd-jenkins-pull-secret
+  imagePullSecret: elcicd-jenkins-registry-credentials
   serviceAccountName: $<JENKINS_SERVICE_NAME>
   env:
   - name: JENKINS_JAVA_OVERRIDES
@@ -279,7 +279,7 @@ elCicdTemplates:
   toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objName: el-cicd-jenkins-pull-secret
+  objName: elcicd-jenkins-registry-credentials
   mustHaveAnyProfile:
   - cicd
   kind: Secret
@@ -296,7 +296,7 @@ elCicdTemplates:
 
 - templateName: copyResource
   objNames: $<PROD_ENVS>
-  objName: el-cicd-$<>-pull-secret
+  objName: elcicd-$<>-registry-credentials
   mustHaveEveryProfile:
   - cicd
   - prod
@@ -306,7 +306,7 @@ elCicdTemplates:
 
 - templateName: copyResource
   objNames: $<NONPROD_ENVS>
-  objName: el-cicd-$<>-pull-secret
+  objName: elcicd-$<>-registry-credentials
   mustHaveEveryProfile:
   - cicd
   - nonprod

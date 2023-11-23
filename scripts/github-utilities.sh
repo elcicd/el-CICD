@@ -39,10 +39,10 @@ _delete_scm_repo_deploy_key() {
     
     local GITHUB_ORG=${2}
     local REPO_NAME=${3}
-    local GITHUB_ACCESS_TOKEN=${4}
+    local GIT_ACCESS_TOKEN=${4}
     local DEPLOY_KEY_TITLE=${5}
 
-    __configure_github_headers ${GITHUB_ACCESS_TOKEN}
+    __configure_github_headers ${GIT_ACCESS_TOKEN}
     local EL_CICD_GITHUB_KEYS_URL="https://${GITHUB_API_HOST}/repos/${GITHUB_ORG}/${REPO_NAME}/keys"
 
     local KEY_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
@@ -59,18 +59,18 @@ _add_scm_repo_deploy_key() {
     local GITHUB_API_HOST=${1}
     local GITHUB_ORG=${2}
     local REPO_NAME=${3}
-    local GITHUB_ACCESS_TOKEN=${4}
+    local GIT_ACCESS_TOKEN=${4}
     local DEPLOY_KEY_TITLE=${5}
     local DEPLOY_KEY_FILE="${6}.pub"
 
     # READ_ONLY *MUST* be 'false' (case insensitive) to push a read/write key
     local READ_ONLY=${7}
-    if [[ ${READ_ONLY,,} != 'false' ]]
+    if [[ ${READ_ONLY@L} != 'false' ]]
     then
         READ_ONLY=true
     fi
 
-    __configure_github_headers ${GITHUB_ACCESS_TOKEN}
+    __configure_github_headers ${GIT_ACCESS_TOKEN}
 
     CURRENT_DEPLOY_KEY_JSON=${GITHUB_DEPLOY_KEY_JSON/\%DEPLOY_KEY_TITLE%/${DEPLOY_KEY_TITLE}}
     CURRENT_DEPLOY_KEY_JSON=${CURRENT_DEPLOY_KEY_JSON/\%DEPLOY_KEY%/$(<${DEPLOY_KEY_FILE})}
@@ -107,9 +107,9 @@ _delete_webhook() {
     local MODULE_ID=${6}
     local BUILD_TYPE=${7}
     local WEB_TRIGGER_AUTH_TOKEN=${8}
-    local GITHUB_ACCESS_TOKEN=${9}
+    local GIT_ACCESS_TOKEN=${9}
 
-    __configure_github_headers ${GITHUB_ACCESS_TOKEN}
+    __configure_github_headers ${GIT_ACCESS_TOKEN}
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"
 
@@ -134,9 +134,9 @@ _add_webhook() {
     local MODULE_ID=${6}
     local BUILD_TYPE=${7}
     local WEB_TRIGGER_AUTH_TOKEN=${8}
-    local GITHUB_ACCESS_TOKEN=${9}
+    local GIT_ACCESS_TOKEN=${9}
 
-    __configure_github_headers ${GITHUB_ACCESS_TOKEN}
+    __configure_github_headers ${GIT_ACCESS_TOKEN}
 
 
     local JENKINS_WEBOOK_URL="${JENKINS_HOST}/job/${PROJECT_ID}/job/${MODULE_ID}-${BUILD_TYPE}?token=${WEB_TRIGGER_AUTH_TOKEN}"

@@ -9,7 +9,7 @@ EL_CICD_DEPLOY_FINAL=elcicd-deploy-final.yaml
 PROJECT_NAME=$(basename ${CHART_DIR})
 
 BASE=base
-EL_CICD_KUSTOMIZE=el-cicd-kustomize
+EL_CICD_KUSTOMIZE=elcicd-kustomize
 
 HELM_OUT_FILES_PREFIX=helmOut
 HELM_OUT_FILES_POSTFIX='%03d.yaml'

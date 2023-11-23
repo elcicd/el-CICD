@@ -1,12 +1,6 @@
 #!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-export _TRUE='true'
-export _FALSE='false'
-
-export _YES='Yes'
-export _NO='No'
-
 _bootstrap_el_cicd() {
     if [[ -z "${EL_CICD_MASTER_NAMESPACE}" ]]
     then
@@ -85,7 +79,7 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     get_jenkins_image_sha
     if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
-        echo "${_BOLD}WARNING:${_REGULAR} '${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}' image was not found."
+        echo "${_BOLD}WARNING:${_REGULAR} ${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME} image was not found."
         echo
         echo "The el-CICD Jenkins image ${_BOLD}WILL BE BUILT${_REGULAR}."
     fi
@@ -93,13 +87,14 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     local JENKINS_BASE_AGENT_EXISTS=$(_base_jenkins_agent_exists)
     if [[ ${JENKINS_BASE_AGENT_EXISTS} == ${_FALSE} ]]
     then
+        local JENKINS_BASE_AGENT=${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
         echo
-        echo "${_BOLD}WARNING:${_REGULAR} THE JENKINS BASE AGENT WAS NOT FOUND."
+        echo "${_BOLD}WARNING:${_REGULAR} THE JENKINS BASE AGENT ${JENKINS_BASE_AGENT} WAS NOT FOUND."
         if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
         then
             echo
             echo "${_BOLD}JENKINS_SKIP_AGENT_BUILDS IS TRUE:${_REGULAR} Jenkins agents will not be built."
-            echo "To manually rebuild Jenkins Agents, run the 'el-cicd-adm' utility with the --agents flag."
+            echo "To manually rebuild Jenkins Agents, run the 'elcicd-adm' utility with the --agents flag."
         else
             echo
             echo "All Jenkins agents ${_BOLD}WILL BE BUILT${_REGULAR}."
@@ -147,12 +142,14 @@ _create_and_source_meta_info_files() {
 
     local EL_CICD_CONSTANTS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/constants.conf
 
-    local EL_CICD_DEMO_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/demo.conf
+    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/lab.conf
 
     local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/runtime.conf
 
+    local EL_CICD_JENKINS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/jenkins.conf
+
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
-    local CONFIG_FILE_LIST="${EL_CICD_CONSTANTS_CONF} ${ROOT_CONFIG_FILE}  ${EL_CICD_DEMO_CONF} ${EL_CICD_RUNTIME_CONF}"
+    local CONFIG_FILE_LIST="${EL_CICD_CONSTANTS_CONF} ${ROOT_CONFIG_FILE}  ${EL_CICD_LAB_CONF} ${EL_CICD_RUNTIME_CONF} ${EL_CICD_JENKINS_CONF}"
     __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_META_INFO_FILE}
 
     local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/bootstrap.conf
@@ -209,17 +206,17 @@ _create_rbac_helpers() {
         local SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
     fi
 
-    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-okd-scc-nonroot-builder-values.yaml"}
+    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"}
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
     echo
     set -ex
     helm upgrade --install --atomic --history-max=1 \
-        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-cluster-rbac-values.yaml \
+        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
         -n kube-system \
-        el-cicd-cluster-rbac-resources \
-        elCicdCharts/elcicd-chart
+        elcicd-cluster-rbac-resources \
+        ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     set +ex
 }
 
@@ -233,11 +230,10 @@ __bootstrap_el_cicd_onboarding_server() {
     echo "NOTE: This DOES NOT apply to CICD servers"
     echo
     echo "======= BE AWARE: ONBOARDING REQUIRES CLUSTER ADMIN PERMISSIONS ======="
-    echo
     sleep 5
 
     _create_rbac_helpers
-    
+
     _refresh_el_cicd_credentials
 
     __create_onboarding_automation_server
@@ -254,7 +250,6 @@ __create_onboarding_automation_server() {
 
     __remove_failed_jenkins_server ${JENKINS_DEPLOYMENT_NAME}
 
-
     if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
         get_jenkins_image_sha
@@ -267,7 +262,7 @@ __create_onboarding_automation_server() {
     set -ex
     helm upgrade --install --atomic --cleanup-on-fail --history-max=1 --timeout 10m0s \
         --set-string elCicdProfiles="{${PROFILES}}" \
-        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
+        --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
         --set-string elCicdDefs.JENKINS_CPU_REQUEST=${JENKINS_MASTER_CPU_REQUEST} \
@@ -284,13 +279,13 @@ __create_onboarding_automation_server() {
         --set-file 'elCicdDefs.$<CONFIG|EL_CICD_META_INFO>'=${EL_CICD_META_INFO_FILE} \
         --set-file elCicdDefs.JENKINS_CASC_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_CASC_FILE} \
         --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${EL_CICD_CONFIG_JENKINS_DIR}/${JENKINS_MASTER_PLUGINS_FILE} \
-        -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-el-cicd-master-values.yaml \
-        -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/el-cicd-master-pipelines-values.yaml \
-        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/el-cicd-jenkins-pipeline-template-values.yaml \
+        -f ${EL_CICD_CONFIG_DIR}/${CHART_DEPLOY_DIR}/default-elcicd-master-values.yaml \
+        -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-master-pipelines-values.yaml \
+        -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         ${JENKINS_DEPLOYMENT_NAME} \
-        elCicdCharts/elcicd-chart
+        ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     set +ex
     sleep 3
 
@@ -319,12 +314,12 @@ __create_onboarding_automation_server() {
     echo
     set -ex
     helm install --atomic --wait-for-jobs \
-        --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_IMAGE_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
+        --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH}/ \
         -n ${EL_CICD_MASTER_NAMESPACE} \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
         sync-jenkins-pipelines \
-        elCicdCharts/elcicd-chart
+        ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     set +ex
 }
 
@@ -338,12 +333,6 @@ __remove_failed_jenkins_server() {
         echo 'Removing failed/incomplete Jenkins deployment'
         helm uninstall ${JENKINS_DEPLOYMENT_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
     fi
-}
-
-_helm_repo_add_and_update_elCicdCharts() {
-    echo
-    helm repo add elCicdCharts --force-update ${EL_CICD_HELM_REPOSITORY}
-    helm repo update elCicdCharts
 }
 
 _delete_namespace() {

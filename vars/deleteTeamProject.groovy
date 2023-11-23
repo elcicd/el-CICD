@@ -11,7 +11,7 @@ def call(Map args) {
         def msg = loggingUtils.echoBanner(
             "ALL CICD NAMESPACES FOR ${projectInfo.id} WILL BE REMOVED FROM THE CLUSTER",
             '',
-            "ALL DEPLOY KEYS FOR FOR ${projectInfo.id} WILL BE REMOVED FROM THE SCM",
+            "ALL DEPLOY KEYS FOR FOR ${projectInfo.id} WILL BE REMOVED FROM THE GIT",
             ''
             "Should project ${projectInfo.id} be deleted?"
         )
@@ -20,7 +20,7 @@ def call(Map args) {
     }
 
     loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
-    def buildStages =  concurrentUtils.createParallelStages('Delete SCM deploy keys', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Delete GIT deploy keys', projectInfo.modules) { module ->
         githubUtils.deleteProjectDeployKeys(module)
     }    
     parallel(buildStages)

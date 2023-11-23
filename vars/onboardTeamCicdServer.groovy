@@ -43,10 +43,10 @@ def call(Map args) {
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
-    loggingUtils.echoBanner("CONFIGURE SCM DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
+    loggingUtils.echoBanner("CONFIGURE GIT DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
     onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
 
-    loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH SCM REPO")
+    loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH GIT REPO")
     onboardTeamCicdServerUtils.configureScmWebhooks(projectInfo)
 
     stage('Summary') {

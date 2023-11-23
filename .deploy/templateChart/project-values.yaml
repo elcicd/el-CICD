@@ -3,7 +3,7 @@ elCicdTemplates:
   valuesYaml:
     elCicdTemplates:
     - templateName: copyResource
-      objName: el-cicd-\$<PROD_ENV>-pull-secret
+      objName: elcicd-\$<PROD_ENV>-registry-credentials
       kind: Secret
       fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
       toNamespace: \$<HELM_RELEASE_NAMESPACE>
