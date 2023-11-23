@@ -15,6 +15,8 @@ def initMetaData(Map metaData) {
         
         el.cicd.EL_CICD_MASTER_NONPROD = el.cicd.EL_CICD_MASTER_NONPROD?.toBoolean() ?: false
         el.cicd.EL_CICD_MASTER_PROD = el.cicd.EL_CICD_MASTER_PROD?.toBoolean() ?: false
+        
+        el.cicd.EL_CICD_INSECURE_FLAG = el.cicd.EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS.toBoolean() ? '--insecure': ''
 
         el.cicd.EL_CICD_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}"
         el.cicd.EL_CICD_SCRIPTS_DIR = "${WORKSPACE}/${el.cicd.EL_CICD_REPO}/scripts"

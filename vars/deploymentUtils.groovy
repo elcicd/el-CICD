@@ -174,19 +174,26 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
-    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
-        dir(component.deploymentDir) {
-            sh """
-                helm upgrade --install --atomic  --history-max=1 \
-                    -f values.yaml \
-                    -n ${projectInfo.deployToNamespace} \
-                    ${component.name} \
-                    . \
-                    --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
-                    --post-renderer-args '${projectInfo.elCicdProfiles.join(',')}'
+    withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
+                     usernameVariable: 'HELM_REGISTRY_USERNAME',
+                     passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
+        def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
+            dir(component.deploymentDir) {
+                sh """
+                    echo \${HELM_REGISTRY_PASSWORD} | \
+                        helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} -u \${HELM_REGISTRY_USERNAME} --password-stdin
 
-                helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
-            """
+                    helm upgrade --install --atomic  --history-max=1 \
+                        -f values.yaml \
+                        -n ${projectInfo.deployToNamespace} \
+                        ${component.name} \
+                        . \
+                        --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \
+                        --post-renderer-args '${projectInfo.elCicdProfiles.join(',')}'
+
+                    helm get manifest ${component.name} -n ${projectInfo.deployToNamespace}
+                """
+            }
         }
     }
 
