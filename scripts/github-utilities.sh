@@ -6,7 +6,7 @@ GITHUB_REST_API_VERSION_HEADER="X-GitHub-Api-Version: 2022-11-28"
 
 GITHUB_DEPLOY_KEY_JSON='
 {
-    "title": "%_DEPLOY_KEY_TITLE%",
+    "title": "%DEPLOY_KEY_TITLE%",
     "key": "%DEPLOY_KEY%",
     "read_only": %READ_ONLY%
 }'
@@ -20,7 +20,7 @@ GITHUB_WEBHOOK_JSON='
     "pull_request"
   ],
   "config": {
-    "url": "%_JENKINS_WEBOOK_URL%",
+    "url": "%JENKINS_WEBOOK_URL%",
     "content_type": "json",
     "insecure_ssl": "1"
   }
