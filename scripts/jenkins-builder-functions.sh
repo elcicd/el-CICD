@@ -38,7 +38,7 @@ __init_jenkins_build() {
 }
 
 _build_el_cicd_jenkins_agent_images() {
-    if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) != ${_TRUE} ]]
+    if [[ ${JENKINS_SKIP_AGENT_BUILDS} != ${_TRUE} ]]
     then
         echo
         echo "Creating Jenkins Agents"
@@ -75,9 +75,9 @@ _build_el_cicd_jenkins_agent_images() {
 }
 
 _base_jenkins_agent_exists() {
-    IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
-    local HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
-    if [[ -z ${HAS_BASE_AGENT} ]]
+    _IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
+    local _HAS_BASE_AGENT=$(skopeo inspect --format '{{.Name}}({{.Digest}})' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${_IMAGE_URL} 2> /dev/null)
+    if [[ -z ${_HAS_BASE_AGENT} ]]
     then
         echo ${_FALSE}
     else
@@ -86,7 +86,7 @@ _base_jenkins_agent_exists() {
 }
 
 get_jenkins_image_sha() {
-    local IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}
-    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${IMAGE_URL} 2> /dev/null)
+    local _IMAGE_URL=docker://${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}
+    JENKINS_MASTER_IMAGE_SHA=$(skopeo inspect --format '{{.Digest}}' --tls-verify=${JENKINS_OCI_REGISTRY_ENABLE_TLS} ${_IMAGE_URL} 2> /dev/null)
 }
 

@@ -103,14 +103,14 @@ __gather_lab_setup_info() {
         if [[ ${CREATE_GIT_REPOS} == ${_YES} && ${EL_CICD_ORGANIZATION} != ${DEFAULT_EL_CICD_ORGANIZATION_NAME} ]]
         then
             echo
-            local HOST_DOMAIN='github.com'
+            local _HOST_DOMAIN='github.com'
             echo 'NOTE: Only GitHub is supported as a remote host.'
-            read -p "Enter Git host domain (default's to '${HOST_DOMAIN}' if left blank): " GIT_HOST_DOMAIN
-            GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${HOST_DOMAIN}}
+            read -p "Enter Git host domain (default's to '${_HOST_DOMAIN}' if left blank): " GIT_HOST_DOMAIN
+            GIT_HOST_DOMAIN=${GIT_HOST_DOMAIN:-${_HOST_DOMAIN}}
 
-            local API_DOMAIN='api.github.com'
-            read -p "Enter Git host REST API domain (default's to '${API_DOMAIN}' if left blank): " GIT_API_DOMAIN
-            GIT_API_DOMAIN=${GIT_API_DOMAIN:-${API_DOMAIN}}
+            local _API_DOMAIN='api.github.com'
+            read -p "Enter Git host REST API domain (default's to '${_API_DOMAIN}' if left blank): " GIT_API_DOMAIN
+            GIT_API_DOMAIN=${GIT_API_DOMAIN:-${_API_DOMAIN}}
 
             read -p "Enter Git user/organization: " EL_CICD_ORGANIZATION
             if [[ -z ${EL_CICD_ORGANIZATION} ]]
@@ -132,8 +132,8 @@ __gather_lab_setup_info() {
             GIT_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})
         fi
 
-        local TOKEN_TEST_RESULT=$(curl -sL -u :${GIT_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
-        if [[ -z ${TOKEN_TEST_RESULT} ]]
+        local _TOKEN_TEST_RESULT=$(curl -sL -u :${GIT_ACCESS_TOKEN} https://${EL_CICD_GIT_API_URL}/user | jq -r '.login')
+        if [[ -z ${_TOKEN_TEST_RESULT} ]]
         then
             echo "ERROR: INVALID GIT TOKEN"
             echo "A valid git personal access token for [${EL_CICD_ORGANIZATION}] must be provided when generating credentials and/or Git repositories"
@@ -212,14 +212,14 @@ __bootstrap_clean_crc() {
 
 _start_crc() {
     CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
-    local CICD_PASSWORD=elcicd
+    local _CICD_PASSWORD=elcicd
     if [[ -z $(${CRC_EXEC} status | grep Started) ]]
     then
         echo
         echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
-        echo "kubeadmin password is '${CICD_PASSWORD}'"
+        echo "kubeadmin password is '${_CICD_PASSWORD}'"
         echo
-        ${CRC_EXEC} config set kubeadmin-password ${CICD_PASSWORD}
+        ${CRC_EXEC} config set kubeadmin-password ${_CICD_PASSWORD}
         ${CRC_EXEC} config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
         ${CRC_EXEC} config set cpus ${CRC_V_CPU}
         ${CRC_EXEC} config set memory ${CRC_MEMORY}
@@ -278,30 +278,30 @@ __setup_image_registries() {
         DEMO_OCI_REGISTRY_PROFILES=${DEMO_OCI_REGISTRY_PROFILES},nfs
     fi
 
-    local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
-    for REGISTRY_NAME in ${REGISTRY_NAMES}
+    local _REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
+    for REGISTRY_NAME in ${_REGISTRY_NAMES}
     do
-        local OBJ_NAME=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}
-        local OBJ_NAMES=${OBJ_NAMES:+${OBJ_NAMES},}${OBJ_NAME}
-        local HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_OCI_REGISTRY_USER_PWD})
-        local HTPASSWDS="${HTPASSWDS:+${HTPASSWDS} } --set-string elCicdDefs-htpasswd.${OBJ_NAME}_HTPASSWD=${HTPASSWD}"
+        local _OBJ_NAME=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}
+        local _OBJ_NAMES=${_OBJ_NAMES:+${_OBJ_NAMES},}${_OBJ_NAME}
+        local _HTPASSWD=$(htpasswd -Bbn elcicd${REGISTRY_NAME} ${DEMO_OCI_REGISTRY_USER_PWD})
+        local _HTPASSWDS="${_HTPASSWDS:+${_HTPASSWDS} } --set-string elCicdDefs-htpasswd.${_OBJ_NAME}_HTPASSWD=${_HTPASSWD}"
     done
 
     DEMO_OCI_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
 
-    local PROFILES='htpasswd'
+    local _PROFILES='htpasswd'
     if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
     then
-        PROFILES+=",nfs"
+        _PROFILES+=",nfs"
     fi
 
     set -x
     helm upgrade --install --atomic --create-namespace --history-max=1 \
-        --set-string elCicdProfiles="{${PROFILES}}" \
-        --set-string elCicdDefs.OBJ_NAMES="{${OBJ_NAMES}}" \
+        --set-string elCicdProfiles="{${_PROFILES}}" \
+        --set-string elCicdDefs.OBJ_NAMES="{${_OBJ_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_OCI_REGISTRY_HOST_IP} \
         --set-string elCicdDefs.DEMO_OCI_REGISTRY=${DEMO_OCI_REGISTRY} \
-        ${HTPASSWDS} \
+        ${_HTPASSWDS} \
         --set-string elCicdDefaults.ingressHostDomain=${CLUSTER_WILDCARD_DOMAIN} \
         -f ${EL_CICD_DIR}/${DEMO_CHART_DEPLOY_DIR}/demo-image-registry-values.yaml \
         -n ${DEMO_OCI_REGISTRY} \
@@ -326,16 +326,16 @@ __register_insecure_registries() {
         echo "Array for whitelisting insecure image registries already exists.  Skipping..."
     fi
 
-    local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
-    for REGISTRY_NAME in ${REGISTRY_NAMES}
+    local _REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
+    for REGISTRY_NAME in ${_REGISTRY_NAMES}
     do
-        local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+        local _HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
-        oc get image.config.openshift.io/cluster -o yaml | grep -v "\- ${HOST_DOMAIN}" | oc apply -f -
+        oc get image.config.openshift.io/cluster -o yaml | grep -v "\- ${_HOST_DOMAIN}" | oc apply -f -
 
-        echo "Whitelisting ${HOST_DOMAIN} as an insecure image registry."
+        echo "Whitelisting ${_HOST_DOMAIN} as an insecure image registry."
         oc patch image.config.openshift.io/cluster --type=json \
-            -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries/-", "value": "'"${HOST_DOMAIN}"'" }]'
+            -p='[{"op": "add", "path": "/spec/registrySources/insecureRegistries/-", "value": "'"${_HOST_DOMAIN}"'" }]'
     done
 }
 
@@ -346,8 +346,8 @@ __create_credentials() {
     echo "Creating ${EL_CICD_ORGANIZATION} access token file: ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE}"
     echo ${GIT_ACCESS_TOKEN} > ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE}
 
-    local CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
-    for ENV in ${CICD_ENVIRONMENTS}
+    local _CICD_ENVIRONMENTS="${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV}"
+    for ENV in ${_CICD_ENVIRONMENTS}
     do
         echo
         echo "Creating the image repository access token file for ${ENV} environment:"
@@ -365,65 +365,65 @@ __init_el_cicd_repos() {
     find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
     find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
 
-    local ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO} ${EL_CICD_CONFIG_REPO} ${EL_CICD_DEPLOY_REPO} ${EL_CICD_DOCS_REPO} ${EL_CICD_TEST_PROJECTS}")
-    for EL_CICD_REPO_dir in ${ALL_EL_CICD_REPOS}
+    local _ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO} ${EL_CICD_CONFIG_REPO} ${EL_CICD_DEPLOY_REPO} ${EL_CICD_DOCS_REPO} ${EL_CICD_TEST_PROJECTS}")
+    for EL_CICD_REPO_dir in ${_ALL_EL_CICD_REPOS}
     do
         __create_git_repo ${EL_CICD_REPO_dir}
     done
 }
 
 __create_git_repo() {
-    local GIT_REPO_DIR=${1}
+    local _GIT_REPO_DIR=${1}
 
     echo
-    echo "CREATING REMOTE REPOSITORY: ${GIT_REPO_DIR}"
+    echo "CREATING REMOTE REPOSITORY: ${_GIT_REPO_DIR}"
 
-    local GIT_COMMAND="git -C ${EL_CICD_HOME}/${GIT_REPO_DIR}"
-    if [[ ! -d ${EL_CICD_HOME}/${GIT_REPO_DIR}/.git ]]
+    local _GIT_COMMAND="git -C ${EL_CICD_HOME}/${_GIT_REPO_DIR}"
+    if [[ ! -d ${EL_CICD_HOME}/${_GIT_REPO_DIR}/.git ]]
     then
-        git init ${EL_CICD_HOME}/${GIT_REPO_DIR}
-        ${GIT_COMMAND} add -A
-        ${GIT_COMMAND} commit -am 'Initial commit of el-CICD repositories by bootstrap script'
-        ${GIT_COMMAND} config --global user.name ${EL_CICD_ORGANIZATION}
-        ${GIT_COMMAND} config --global user.email ${EL_CICD_ORGANIZATION_EMAIL}
+        git init ${EL_CICD_HOME}/${_GIT_REPO_DIR}
+        ${_GIT_COMMAND} add -A
+        ${_GIT_COMMAND} commit -am 'Initial commit of el-CICD repositories by bootstrap script'
+        ${_GIT_COMMAND} config --global user.name ${EL_CICD_ORGANIZATION}
+        ${_GIT_COMMAND} config --global user.email ${EL_CICD_ORGANIZATION_EMAIL}
     else
-        echo "Repo ${GIT_REPO_DIR} already initialized.  Skipping..."
+        echo "Repo ${_GIT_REPO_DIR} already initialized.  Skipping..."
     fi
 
-    __create_remote_github_repo ${GIT_REPO_DIR}
+    __create_remote_github_repo ${_GIT_REPO_DIR}
 
-    ${GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}.git
-    ${GIT_COMMAND} checkout -b  ${EL_CICD_GIT_REPO_BRANCH_NAME}
+    ${_GIT_COMMAND} remote add origin git@${GIT_HOST_DOMAIN}:${EL_CICD_ORGANIZATION}/${_GIT_REPO_DIR}.git
+    ${_GIT_COMMAND} checkout -b  ${EL_CICD_GIT_REPO_BRANCH_NAME}
 
-    ${GIT_COMMAND} \
+    ${_GIT_COMMAND} \
         -c credential.helper="!creds() { echo password=${GIT_ACCESS_TOKEN}; }; creds" \
         push -u origin ${EL_CICD_GIT_REPO_BRANCH_NAME}
 }
 
 __create_remote_github_repo() {
-    local GIT_REPO_DIR=${1}
+    local _GIT_REPO_DIR=${1}
 
-    local GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
+    local _GIT_JSON_POST=$(jq -n --arg GIT_REPO_DIR "${_GIT_REPO_DIR}" '{"name":$GIT_REPO_DIR}')
 
     REMOTE_GIT_DIR_EXISTS=$(curl -sL -o /dev/null -w "%{http_code}" -X POST \
         -u :${GIT_ACCESS_TOKEN} \
         ${GITHUB_REST_API_HDR}  \
         https://${GIT_API_DOMAIN}/user/repos \
-        -d "${GIT_JSON_POST}")
+        -d "${_GIT_JSON_POST}")
     if [[ ${REMOTE_GIT_DIR_EXISTS} == 201 ]]
     then
-        echo "Created ${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+        echo "Created ${EL_CICD_ORGANIZATION}/${_GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
     else
-        echo "ERROR: DID NOT create ${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
+        echo "ERROR: DID NOT create ${EL_CICD_ORGANIZATION}/${_GIT_REPO_DIR} at ${GIT_API_DOMAIN}"
         echo "Check your Git credentials and whether the repo already exists."
     fi
 }
 
 
 __set_config_value(){
-    local KEY=${1}
-    local NEW_VALUE=${2}
-    local FILE=${3}
+    local _KEY=${1}
+    local _NEW_VALUE=${2}
+    local _FILE=${3}
 
-    sed -i -e "/${KEY}=/ s/=.*/=${NEW_VALUE}/" ${FILE}
+    sed -i -e "/${_KEY}=/ s/=.*/=${_NEW_VALUE}/" ${_FILE}
 }

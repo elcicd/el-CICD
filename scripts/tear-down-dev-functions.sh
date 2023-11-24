@@ -152,15 +152,15 @@ _remove_image_registry() {
         echo "Uninstalling ${DEMO_OCI_REGISTRY}..."
         helm uninstall ${DEMO_OCI_REGISTRY} -n ${DEMO_OCI_REGISTRY}
 
-        local REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
-        local IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
-        for REGISTRY_NAME in ${REGISTRY_NAMES}
+        local _REGISTRY_NAMES=$(echo ${DEMO_OCI_REGISTRY_NAMES} | tr ':' ' ')
+        local _IMAGE_CONFIG_CLUSTER=$(oc get image.config.openshift.io/cluster -o yaml)
+        for REGISTRY_NAME in ${_REGISTRY_NAMES}
         do
-            local HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+            local _HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
-            IMAGE_CONFIG_CLUSTER=$(echo "${IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${HOST_DOMAIN}")
+            _IMAGE_CONFIG_CLUSTER=$(echo "${_IMAGE_CONFIG_CLUSTER}" | grep -v "\- ${_HOST_DOMAIN}")
         done
-        echo "${IMAGE_CONFIG_CLUSTER}" | oc apply -f -
+        echo "${_IMAGE_CONFIG_CLUSTER}" | oc apply -f -
     fi
     oc delete project --ignore-not-found ${DEMO_OCI_REGISTRY}
 }
@@ -180,29 +180,28 @@ __remove_image_registry_nfs_share() {
 }
 
 __remove_whitelisted_image_registry_host_names() {
-    local IMAGE_OCI_REGISTRYS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
-    local IMAGE_OCI_REGISTRYS=''
-    for REPO in ${IMAGE_OCI_REGISTRYS_LIST[@]}
+    local _IMAGE_OCI_REGISTRYS_LIST=(${DEV_ENV} ${HOTFIX_ENV} $(echo ${TEST_ENVS} | sed 's/:/ /g') ${PRE_PROD_ENV} ${PROD_ENV})
+    local _IMAGE_OCI_REGISTRYS=''
+    for REPO in ${_IMAGE_OCI_REGISTRYS_LIST[@]}
     do
-        IMAGE_OCI_REGISTRYS="${IMAGE_OCI_REGISTRYS} $(eval echo \${${REPO}${REGISTRY_USERNAME_POSTFIX}})"
+        _IMAGE_OCI_REGISTRYS="${_IMAGE_OCI_REGISTRYS} $(eval echo \${${REPO}${REGISTRY_USERNAME_POSTFIX}})"
     done
-    IMAGE_OCI_REGISTRYS=$(echo ${IMAGE_OCI_REGISTRYS} | xargs -n1 | sort -u | xargs)
+    _IMAGE_OCI_REGISTRYS=$(echo ${_IMAGE_OCI_REGISTRYS} | xargs -n1 | sort -u | xargs)
 
     echo
-    local HOST_NAMES=''
-    for REGISTRY_NAME in ${IMAGE_OCI_REGISTRYS}
+    for REGISTRY_NAME in ${_IMAGE_OCI_REGISTRYS}
     do
-        HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
+        _HOST_DOMAIN=${REGISTRY_NAME}-${DEMO_OCI_REGISTRY}.${CLUSTER_WILDCARD_DOMAIN}
 
-        echo "Removing whitelisted ${HOST_DOMAIN} as an insecure image registry."
-        oc get image.config.openshift.io/cluster -o yaml | grep -v ${HOST_DOMAIN} | oc apply -f -
+        echo "Removing whitelisted ${_HOST_DOMAIN} as an insecure image registry."
+        oc get image.config.openshift.io/cluster -o yaml | grep -v ${_HOST_DOMAIN} | oc apply -f -
     done
 }
 
 __delete_remote_el_cicd_git_repos() {
     echo
-    local ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS_REPO}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
-    for GIT_REPO_DIR in ${ALL_EL_CICD_DIRS}
+    local _ALL_EL_CICD_DIRS=$(echo "${EL_CICD_REPO_DIRS}:${EL_CICD_DOCS_REPO}:${EL_CICD_TEST_PROJECTS}" | tr ':' ' ')
+    for GIT_REPO_DIR in ${_ALL_EL_CICD_DIRS}
     do
         __remove_git_repo ${GIT_REPO_DIR}
     done
@@ -211,14 +210,14 @@ __delete_remote_el_cicd_git_repos() {
 __remove_git_repo() {
     GIT_REPO_DIR=${1}
 
-    local __PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})}
+    local _PAT=${EL_CICD_GIT_REPO_ACCESS_TOKEN:-$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})}
 
-    local REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${__PAT} \
+    local _REMOTE_GIT_DIR_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u :${_PAT} \
         ${GITHUB_REST_API_HDR}  \
         https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR})
-    if [[ ${REMOTE_GIT_DIR_EXISTS} == 200 ]]
+    if [[ ${_REMOTE_GIT_DIR_EXISTS} == 200 ]]
     then
-        curl -X DELETE -sIL -o /dev/null -u :${__PAT} \
+        curl -X DELETE -sIL -o /dev/null -u :${_PAT} \
             ${GITHUB_REST_API_HDR}  https://${EL_CICD_GIT_API_URL}/repos/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}
         echo "${GIT_REPO_DIR} deleted from Git host ${EL_CICD_GIT_DOMAIN}/${EL_CICD_ORGANIZATION}/${GIT_REPO_DIR}"
     else

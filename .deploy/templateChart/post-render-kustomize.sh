@@ -96,7 +96,7 @@ __createBaseKustomize() {
 __createProfilesDirs() {
     KUST_DIR=${1}
 
-    local LAST_DIR=${BASE}
+    local _LAST_DIR=${BASE}
     for PROFILE in ${PROFILES} ${EL_CICD_KUSTOMIZE}
     do
         CURR_DIR=${KUST_DIR}/${PROFILE}
@@ -107,9 +107,9 @@ __createProfilesDirs() {
         fi
 
         (cd ${CURR_DIR} && \
-         kustomize edit remove resource ../${LAST_DIR} && \
-         kustomize edit add resource ../${LAST_DIR})
-        LAST_DIR=${PROFILE}
+         kustomize edit remove resource ../${_LAST_DIR} && \
+         kustomize edit add resource ../${_LAST_DIR})
+        _LAST_DIR=${PROFILE}
     done
 }
 

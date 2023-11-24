@@ -204,18 +204,3 @@ _get_yes_no_answer() {
         echo ${_NO}
     fi
 }
-
-_compare_ignore_case_and_extra_whitespace() {
-    local FIRST=$(echo "${1}" | xargs)
-    local SECOND=$(echo "${2}" | xargs)
-    if [[ -z $(echo "${FIRST}" | grep --ignore-case "^${SECOND}$") ]]
-    then
-        echo ${_FALSE}
-    else
-        echo ${_TRUE}
-    fi
-}
-
-_get_bool() {
-    _compare_ignore_case_and_extra_whitespace "${1}" ${_TRUE}
-}

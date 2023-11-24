@@ -26,26 +26,26 @@ _verify_scm_secret_files_exist() {
 }
 
 _get_oci_registry_ids() {
-    local OCI_REGISTRY_IDS="${JENKINS} "
+    local _OCI_REGISTRY_IDS="${JENKINS} "
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
     then
-        OCI_REGISTRY_IDS+="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } "
+        _OCI_REGISTRY_IDS+="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } "
     fi
     
-    OCI_REGISTRY_IDS+="${PRE_PROD_ENV} "
+    _OCI_REGISTRY_IDS+="${PRE_PROD_ENV} "
     
     if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
-        OCI_REGISTRY_IDS+="${PROD_ENV} "
+        _OCI_REGISTRY_IDS+="${PROD_ENV} "
     fi
     
-    echo ${OCI_REGISTRY_IDS}
+    echo ${_OCI_REGISTRY_IDS}
 }
 
 _verify_oci_registry_secrets() {
-    local OCI_REGISTRY_IDS=$(_get_oci_registry_ids)
+    local _OCI_REGISTRY_IDS=$(_get_oci_registry_ids)
     
-    for OCI_REGISTRY_ID in ${OCI_REGISTRY_IDS@L}
+    for OCI_REGISTRY_ID in ${_OCI_REGISTRY_IDS@L}
     do
         _oci_registry_login ${OCI_REGISTRY_ID}
     done
@@ -86,13 +86,13 @@ _collect_sealed_secret_info() {
         echo 'NO CURRENTLY INSTALLED SEALED SECRETS VERSION FOUND: Use the --sealed-secrets flag to install.'
     fi
 
-    local SS_URL='https://bitnami-labs.github.io/sealed-secrets'
+    local _SS_URL='https://bitnami-labs.github.io/sealed-secrets'
     if [[ -z ${SEALED_SECRETS_CHART_VERSION} ]]
     then
-        SEALED_SECRETS_CHART_VERSION=$(helm show chart sealed-secrets --repo ${SS_URL} | grep version | tr -d 'version: ')
+        SEALED_SECRETS_CHART_VERSION=$(helm show chart sealed-secrets --repo ${_SS_URL} | grep version | tr -d 'version: ')
     fi
 
-    SEALED_SECRETS_RELEASE_VERSION=$(helm show chart sealed-secrets --version ${SEALED_SECRETS_CHART_VERSION} --repo ${SS_URL} | grep appVersion)
+    SEALED_SECRETS_RELEASE_VERSION=$(helm show chart sealed-secrets --version ${SEALED_SECRETS_CHART_VERSION} --repo ${_SS_URL} | grep appVersion)
     SEALED_SECRETS_RELEASE_VERSION=$(echo ${SEALED_SECRETS_RELEASE_VERSION} | tr -d 'appVersion: ')
     SEALED_SECRETS_RELEASE_INFO="Helm Chart ${SEALED_SECRETS_CHART_VERSION} / Release ${SEALED_SECRETS_RELEASE_VERSION}"
 }
@@ -102,8 +102,8 @@ _confirm_upgrade_install_sealed_secrets() {
     echo "SEALED SECRETS VERSION TO BE INSTALLED: ${SEALED_SECRETS_RELEASE_INFO}"
 
     echo
-    local MSG="Do you wish to install/upgrade sealed-secrets and kubeseal to ${SEALED_SECRETS_RELEASE_INFO}? [Y/n] "
-    INSTALL_SEALED_SECRETS=$(_get_yes_no_answer "${MSG}")
+    local _MSG="Do you wish to install/upgrade sealed-secrets and kubeseal to ${SEALED_SECRETS_RELEASE_INFO}? [Y/n] "
+    INSTALL_SEALED_SECRETS=$(_get_yes_no_answer "${_MSG}")
 }
 
 _install_sealed_secrets() {
@@ -125,14 +125,14 @@ _install_sealed_secrets() {
 
     echo
     echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
-    local SEALED_SECRETS_DIR=/tmp/sealedsecrets
-    mkdir -p ${SEALED_SECRETS_DIR}
-    local KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download"
-    KUBESEAL_URL="${KUBESEAL_URL}/${SEALED_SECRETS_RELEASE_VERSION}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:1}-linux-amd64.tar.gz"
-    sudo rm -f ${SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
-    wget -qc --show-progress ${KUBESEAL_URL} -O ${SEALED_SECRETS_DIR}/kubeseal.tar.gz
-    tar -xvzf ${SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${SEALED_SECRETS_DIR}
-    sudo install -m 755 ${SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
+    local _SEALED_SECRETS_DIR=/tmp/sealedsecrets
+    mkdir -p ${_SEALED_SECRETS_DIR}
+    local _KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download"
+    _KUBESEAL_URL="${_KUBESEAL_URL}/${SEALED_SECRETS_RELEASE_VERSION}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:1}-linux-amd64.tar.gz"
+    sudo rm -f ${_SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
+    wget -qc --show-progress ${_KUBESEAL_URL} -O ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz
+    tar -xvzf ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${_SEALED_SECRETS_DIR}
+    sudo install -m 755 ${_SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
 
     set +e
 }
@@ -140,43 +140,43 @@ _install_sealed_secrets() {
 _oci_registry_login() {
     OCI_REGISTRY_ID=${1}
     
-    local OCI_USERNAME=$(_get_oci_username ${OCI_REGISTRY_ID})
-    local OCI_PASSWORD=$(_get_oci_password ${OCI_REGISTRY_ID})
-    local OCI_REGISTRY=${OCI_REGISTRY_ID@U}${OCI_REGISTRY_POSTFIX}
-    local ENABLE_TLS=${OCI_REGISTRY_ID@U}${OCI_ENABLE_TLS_POSTFIX}
+    local _OCI_USERNAME=$(_get_oci_username ${OCI_REGISTRY_ID})
+    local _OCI_PASSWORD=$(_get_oci_password ${OCI_REGISTRY_ID})
+    local _OCI_REGISTRY=${OCI_REGISTRY_ID@U}${OCI_REGISTRY_POSTFIX}
+    local _ENABLE_TLS=${OCI_REGISTRY_ID@U}${OCI_ENABLE_TLS_POSTFIX}
     
-    if [[ "${OCI_USERNAME}" && "${OCI_PASSWORD}" && "${!ENABLE_TLS}" && "${!OCI_REGISTRY}" ]]
+    if [[ "${_OCI_USERNAME}" && "${_OCI_PASSWORD}" && "${!_ENABLE_TLS}" && "${!_OCI_REGISTRY}" ]]
     then
         set -e
         echo
-        echo -n "LOGIN TO ${OCI_REGISTRY_ID@U} OCI REGISTRY [${!OCI_REGISTRY}]: "
-        echo ${OCI_PASSWORD} | podman login ${!OCI_REGISTRY} --tls-verify=${!ENABLE_TLS} -u ${OCI_USERNAME} --password-stdin 
+        echo -n "LOGIN TO ${OCI_REGISTRY_ID@U} OCI REGISTRY [${!_OCI_REGISTRY}]: "
+        echo ${_OCI_PASSWORD} | podman login ${!_OCI_REGISTRY} --tls-verify=${!_ENABLE_TLS} -u ${_OCI_USERNAME} --password-stdin 
         set +e
     else
         PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))
         echo "ERROR: ONE OF THE FOLLOWING NOT DEFINED FOR THE ${OCI_REGISTRY_ID@U} OCI REGISTRY:"
         echo "- USERNAME/PASSWORD in ${PARENT_DIR}/$(basename ${EL_CICD_OCI_SECRETS_FILE})"
-        echo "- OCI_REGISTRY: ${!OCI_REGISTRY}"
+        echo "- OCI_REGISTRY: ${!_OCI_REGISTRY}"
         exit 1
     fi
 }
 
 _oci_helm_registry_login() {    
-    local HELM_REGISTRY_USERNAME=$(_get_oci_username ${HELM})
-    local HELM_REGISTRY_PASSWORD=$(_get_oci_password ${HELM})
+    local _HELM_REGISTRY_USERNAME=$(_get_oci_username ${HELM})
+    local _HELM_REGISTRY_PASSWORD=$(_get_oci_password ${HELM})
     
     if [[ EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS == ${_FALSE} ]]
     then 
-        local TLS_INSECURE='--insecure'
+        local _TLS_INSECURE='--insecure'
     fi
     
-    if [[ "${HELM_REGISTRY_USERNAME}" && "${HELM_REGISTRY_PASSWORD}" ]]
+    if [[ "${_HELM_REGISTRY_USERNAME}" && "${_HELM_REGISTRY_PASSWORD}" ]]
     then
         set -e
         echo
         echo -n "LOGIN TO HELM OCI REGISTRY [${EL_CICD_HELM_OCI_REGISTRY_DOMAIN}]: "
-        echo ${HELM_REGISTRY_PASSWORD} | \
-            helm registry login ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN} ${TLS_INSECURE} -u ${HELM_REGISTRY_USERNAME} --password-stdin 
+        echo ${_HELM_REGISTRY_PASSWORD} | \
+            helm registry login ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN} ${_TLS_INSECURE} -u ${_HELM_REGISTRY_USERNAME} --password-stdin 
         set +e
     else
         PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))

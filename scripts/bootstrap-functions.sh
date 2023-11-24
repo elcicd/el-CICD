@@ -53,7 +53,7 @@ __gather_bootstrap_info() {
     _collect_sealed_secret_info
 
     EL_CICD_MASTER_NAMESPACE_EXISTS=$(oc get project ${EL_CICD_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)
-    if [[ -z ${EL_CICD_MASTER_NAMESPACE_EXISTS} && -z ${HAS_SEALED_SECRETS} ]]
+    if [[ -z ${EL_CICD_MASTER_NAMESPACE_EXISTS} && -z ${_HAS_SEALED_SECRETS} ]]
     then
         _confirm_upgrade_install_sealed_secrets
     fi
@@ -84,13 +84,13 @@ __summarize_and_confirm_bootstrap_run_with_user() {
         echo "The el-CICD Jenkins image ${_BOLD}WILL BE BUILT${_REGULAR}."
     fi
 
-    local JENKINS_BASE_AGENT_EXISTS=$(_base_jenkins_agent_exists)
-    if [[ ${JENKINS_BASE_AGENT_EXISTS} == ${_FALSE} ]]
+    local _JENKINS_BASE_AGENT_EXISTS=$(_base_jenkins_agent_exists)
+    if [[ ${_JENKINS_BASE_AGENT_EXISTS} == ${_FALSE} ]]
     then
-        local JENKINS_BASE_AGENT=${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
+        local _JENKINS_BASE_AGENT=${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT}
         echo
-        echo "${_BOLD}WARNING:${_REGULAR} THE JENKINS BASE AGENT ${JENKINS_BASE_AGENT} WAS NOT FOUND."
-        if [[ $(_get_bool ${JENKINS_SKIP_AGENT_BUILDS}) == ${_TRUE} ]]
+        echo "${_BOLD}WARNING:${_REGULAR} THE JENKINS BASE AGENT ${_JENKINS_BASE_AGENT} WAS NOT FOUND."
+        if [[ ${JENKINS_SKIP_AGENT_BUILDS} == ${_TRUE} ]]
         then
             echo
             echo "${_BOLD}JENKINS_SKIP_AGENT_BUILDS IS TRUE:${_REGULAR} Jenkins agents will not be built."
@@ -103,19 +103,19 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     fi
 
     echo
-    local EL_CICD_MASTER_NAMESPACE_RESULT
+    local _EL_CICD_MASTER_NAMESPACE_RESULT
     case "${EL_CICD_MASTER_NAMESPACE_EXISTS}" in
-        '') EL_CICD_MASTER_NAMESPACE_RESULT='create and install' ;;
-         *) EL_CICD_MASTER_NAMESPACE_RESULT='refresh and upgrade' ;;
+        '') _EL_CICD_MASTER_NAMESPACE_RESULT='create and install' ;;
+         *) _EL_CICD_MASTER_NAMESPACE_RESULT='refresh and upgrade' ;;
     esac
 
-    echo "${EL_CICD_MASTER_NAMESPACE} namespace and el-CICD Master: ${_BOLD}${EL_CICD_MASTER_NAMESPACE_RESULT}${_REGULAR}"
-
+    echo "${EL_CICD_MASTER_NAMESPACE} namespace and el-CICD Master: ${_BOLD}${_EL_CICD_MASTER_NAMESPACE_RESULT}${_REGULAR}"
+    
     _cluster_info
 
     echo
     echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
-    
+
     _confirm_continue
 }
 
@@ -133,6 +133,14 @@ _cluster_info() {
 }
 
 _create_and_source_meta_info_files() {
+    echo
+    echo 'Loaded the following el-CICD scripts...'
+    echo
+    for FILE in $(echo ${EL_CICD_SCRIPTS} | xargs -n 1 basename)
+    do
+        echo "- ${FILE}"
+    done
+    
     set -e -o allexport
 
     echo
@@ -140,23 +148,23 @@ _create_and_source_meta_info_files() {
 
     source ${ROOT_CONFIG_FILE}
 
-    local EL_CICD_CONSTANTS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/constants.conf
+    local _EL_CICD_CONSTANTS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/constants.conf
 
-    local EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/lab.conf
+    local _EL_CICD_LAB_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/lab.conf
 
-    local EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/runtime.conf
+    local _EL_CICD_RUNTIME_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/runtime.conf
 
-    local EL_CICD_JENKINS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/jenkins.conf
+    local _EL_CICD_JENKINS_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/jenkins.conf
 
     EL_CICD_META_INFO_FILE=/tmp/el_cicd_meta_info_file.conf
-    local CONFIG_FILE_LIST="${EL_CICD_CONSTANTS_CONF} ${ROOT_CONFIG_FILE}  ${EL_CICD_LAB_CONF} ${EL_CICD_RUNTIME_CONF} ${EL_CICD_JENKINS_CONF}"
-    __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_META_INFO_FILE}
+    local _CONFIG_FILE_LIST="${_EL_CICD_CONSTANTS_CONF} ${ROOT_CONFIG_FILE}  ${_EL_CICD_LAB_CONF} ${_EL_CICD_RUNTIME_CONF} ${_EL_CICD_JENKINS_CONF}"
+    __create_meta_info_file "${_CONFIG_FILE_LIST}" ${EL_CICD_META_INFO_FILE}
 
-    local EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/bootstrap.conf
+    local _EL_CICD_BOOTSTRAP_CONF=${EL_CICD_SCRIPTS_CONFIG_DIR}/bootstrap.conf
 
     EL_CICD_BOOTSTRAP_META_INFO_FILE=/tmp/el_cicd_bootstrap_meta_info_file.conf
-    local CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${EL_CICD_BOOTSTRAP_CONF}"
-    __create_meta_info_file "${CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
+    local _CONFIG_FILE_LIST="${EL_CICD_META_INFO_FILE} ${_EL_CICD_BOOTSTRAP_CONF}"
+    __create_meta_info_file "${_CONFIG_FILE_LIST}" ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
 
     source ${EL_CICD_BOOTSTRAP_META_INFO_FILE}
 
@@ -167,32 +175,32 @@ _create_and_source_meta_info_files() {
 }
 
 __create_meta_info_file() {
-    local CONF_FILE_LIST=${1}
-    local META_INFO_FILE=${2}
+    local _CONF_FILE_LIST=${1}
+    local _META_INFO_FILE=${2}
 
-    local META_INFO_FILE_TMP=${META_INFO_FILE}.tmp
+    local _META_INFO_FILE_TMP=${_META_INFO_FILE}.tmp
 
-    rm -f ${META_INFO_FILE} ${META_INFO_FILE_TMP}
+    rm -f ${_META_INFO_FILE} ${_META_INFO_FILE_TMP}
 
     # ignore duplicate values: config file precedence is left to right
-    awk -F= '!line[$1]++' ${CONF_FILE_LIST} >> ${META_INFO_FILE_TMP}
+    awk -F= '!line[$1]++' ${_CONF_FILE_LIST} >> ${_META_INFO_FILE_TMP}
 
     # remove blank lines, comments, and any trailing whitespace
-    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${META_INFO_FILE_TMP}
+    sed -i -e 's/\s*$//' -e '/^$/d' -e '/^#.*$/d' ${_META_INFO_FILE_TMP}
 
-    echo "EL_CICD_MASTER_NONPROD=${EL_CICD_MASTER_NONPROD}" >> ${META_INFO_FILE_TMP}
-    echo "EL_CICD_MASTER_PROD=${EL_CICD_MASTER_PROD}" >> ${META_INFO_FILE_TMP}
+    echo "EL_CICD_MASTER_NONPROD=${EL_CICD_MASTER_NONPROD}" >> ${_META_INFO_FILE_TMP}
+    echo "EL_CICD_MASTER_PROD=${EL_CICD_MASTER_PROD}" >> ${_META_INFO_FILE_TMP}
 
-    sort -o ${META_INFO_FILE_TMP} ${META_INFO_FILE_TMP}
+    sort -o ${_META_INFO_FILE_TMP} ${_META_INFO_FILE_TMP}
 
-    source ${META_INFO_FILE_TMP}
-    cat ${META_INFO_FILE_TMP} | envsubst > ${META_INFO_FILE}
+    source ${_META_INFO_FILE_TMP}
+    cat ${_META_INFO_FILE_TMP} | envsubst > ${_META_INFO_FILE}
 
-    rm -f ${META_INFO_FILE_TMP}
+    rm -f ${_META_INFO_FILE_TMP}
 
     echo
-    echo "${_BOLD}${META_INFO_FILE}${_REGULAR} created from the following config files:"
-    for CONF_FILE in ${CONF_FILE_LIST}
+    echo "${_BOLD}${_META_INFO_FILE}${_REGULAR} created from the following config files:"
+    for CONF_FILE in ${_CONF_FILE_LIST}
     do
         echo "- $(basename ${CONF_FILE}) "
     done
@@ -200,20 +208,20 @@ __create_meta_info_file() {
 }
 
 _create_rbac_helpers() {
-    local HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
-    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || "${HAS_SEALED_SECRETS}" ]]
+    local _HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
+    if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || "${_HAS_SEALED_SECRETS}" ]]
     then
-        local SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
+        local _SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
     fi
 
-    local OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"}
+    local _OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"}
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
     echo
     set -ex
     helm upgrade --install --atomic --history-max=1 \
-        ${SET_PROFILES} ${OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
+        ${_SET_PROFILES} ${_OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
         -n kube-system \
         elcicd-cluster-rbac-resources \
         ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
@@ -240,15 +248,15 @@ __bootstrap_el_cicd_onboarding_server() {
 }
 
 __create_onboarding_automation_server() {
-    local PROFILES='onboarding'
-    PROFILES="${PROFILES}${OKD_VERSION:+,okd}"
-    PROFILES="${PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
-    PROFILES="${PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
-    PROFILES="${PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
+    local _PROFILES='onboarding'
+    _PROFILES="${_PROFILES}${OKD_VERSION:+,okd}"
+    _PROFILES="${_PROFILES}${JENKINS_MASTER_PERSISTENT:+,jenkinsPersistent}"
+    _PROFILES="${_PROFILES}${EL_CICD_MASTER_NONPROD:+,nonprod}"
+    _PROFILES="${_PROFILES}${EL_CICD_MASTER_PROD:+,prod}"
 
-    local JENKINS_DEPLOYMENT_NAME='jenkins'
+    local _JENKINS_DEPLOYMENT_NAME='jenkins'
 
-    __remove_failed_jenkins_server ${JENKINS_DEPLOYMENT_NAME}
+    __remove_failed_jenkins_server ${_JENKINS_DEPLOYMENT_NAME}
 
     if [[ -z ${JENKINS_MASTER_IMAGE_SHA} ]]
     then
@@ -261,7 +269,7 @@ __create_onboarding_automation_server() {
     JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
     helm upgrade --install --atomic --cleanup-on-fail --history-max=1 --timeout 10m0s \
-        --set-string elCicdProfiles="{${PROFILES}}" \
+        --set-string elCicdProfiles="{${_PROFILES}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
         --set-string elCicdDefs.OPENSHIFT_ENABLE_OAUTH=${JENKINS_OPENSHIFT_ENABLE_OAUTH} \
@@ -284,7 +292,7 @@ __create_onboarding_automation_server() {
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
         -f ${EL_CICD_DIR}/${JENKINS_CHART_DEPLOY_DIR}/jenkins-config-values.yaml \
         -n ${EL_CICD_MASTER_NAMESPACE} \
-        ${JENKINS_DEPLOYMENT_NAME} \
+        ${_JENKINS_DEPLOYMENT_NAME} \
         ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     set +ex
     sleep 3
@@ -292,14 +300,14 @@ __create_onboarding_automation_server() {
     echo
     echo 'JENKINS UP'
 
-    local JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
-    local TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${JSONPATH} | tr '\n' ' ')
+    local _JSONPATH="jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
+    local _TERMINATING_POD=$(oc get pods -n ${EL_CICD_MASTER_NAMESPACE} -l name=jenkins -o=${_JSONPATH} | tr '\n' ' ')
     if [[ "${TERMINATING_PODS}" ]]
     then
         echo
         echo 'Wait for old Jenkins pod to terminate...'
 
-        oc wait --for=delete pod ${TERMINATING_POD} -n ${EL_CICD_MASTER_NAMESPACE} --timeout=600s
+        oc wait --for=delete pod ${_TERMINATING_POD} -n ${EL_CICD_MASTER_NAMESPACE} --timeout=600s
     fi
 
     if [[ ! -z $(helm list -n ${EL_CICD_MASTER_NAMESPACE} | grep sync-jenkins-pipelines) ]]
@@ -324,32 +332,14 @@ __create_onboarding_automation_server() {
 }
 
 __remove_failed_jenkins_server() {
-    local JENKINS_DEPLOYMENT_NAME=${1}
+    local _JENKINS_DEPLOYMENT_NAME=${1}
 
-    if [[ ! -z $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${JENKINS_DEPLOYMENT_NAME}$) && \
-          $(oc get pods -l name=${JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
+    if [[ ! -z $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${_JENKINS_DEPLOYMENT_NAME}$) && \
+          $(oc get pods -l name=${_JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
     then
         echo
         echo 'Removing failed/incomplete Jenkins deployment'
-        helm uninstall ${JENKINS_DEPLOYMENT_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
-    fi
-}
-
-_delete_namespace() {
-    local NAMESPACE=$1
-    local SLEEP_SEC=$2
-
-    local DEL_NAMESPACE=$(oc get namespaces -o custom-columns=:.metadata.name | grep ${NAMESPACE} | tr -d '[:space:]')
-    if [[ "${DEL_NAMESPACE}" ]]
-    then
-        echo
-        oc delete namespace ${NAMESPACE}
-        echo -n "Deleting ${NAMESPACE} namespace"
-        until !(oc get namespaces ${NAMESPACE} -o custom-columns=:.metadata.name --no-headers)
-        do
-            echo -n '.'
-            sleep 2
-        done
+        helm uninstall ${_JENKINS_DEPLOYMENT_NAME} -n ${EL_CICD_MASTER_NAMESPACE}
     fi
 }
 

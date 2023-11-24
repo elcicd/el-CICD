@@ -16,55 +16,54 @@ export JENKINS=jenkins
 export USERNAME=username
 export PASSWORD=password
 
-__main() {        
-    if [[ -z ${ROOT_CONFIG_FILE} ]]
-    then
-        echo
-        echo "${EL_CICD_CLI_HELP_MSG}"
-        echo
-        echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
-        exit 1
-    fi
+__main() {
+    __load_basic_vars_and_scripts
+
+    _load_kubectl_msgs
+
+    _echo_sudo_cluster_admin_warning
     
-    _create_and_source_meta_info_files
-    
+    set +e
+
+    __parse_cli_flags "${@}"
+
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} || ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
-        EL_CICD_ADM_COMMANDS+=('_verify_scm_secret_files_exist'
-                               '_verify_oci_registry_secrets' 
-                               '_oci_helm_registry_login' 
-                               '_bootstrap_el_cicd')
-        
-        if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} && ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
-        then
-            ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD AND NON-PROD"
-        fi
+        __configure_for_bootstrapping_server
     fi
 
-    sleep 2
+    _create_and_source_meta_info_files
 
-    set +e
+    sleep 2
 
     _execute_kubectl_el_cicd_adm ${EL_CICD_ADM_COMMANDS[@]}
 }
 
-__parse_cli_flags() {    
+__parse_cli_flags() {
     EL_CICD_ADM_COMMANDS=()
-    for __NEXT_ARG in "${@}"
-    do
-        case "${__NEXT_ARG}" in
-            '--agents' | '-A')
-                ELCICD_ADM_MSG="BUILD JENKINS AGENT IMAGES"
 
+    while [[ ${1} ]]
+    do
+        case "${1}" in
+            '--agents' | '-A')
                 EL_CICD_ADM_COMMANDS+=('_oci_jenkins_registry_login' '_build_el_cicd_jenkins_agent_images')
-                
-                if [[ ${2} =~ ^--[a-z][a-z0-9-]+$ || ${2} =~ ^-[a-zA-Z]$ || ${2} =~ ^[a-zA-Z][a-zA-Z0-9-]++\.[a-zA-Z][a-zA-Z0-9]+$ ]]
+
+                unset JENKINS_SKIP_AGENT_BUILDS
+                if [[ ${2} =~ ^--?[a-zA-Z0-9-]+$ ]]
                 then
-                    shift 1
+                    ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS AGENT IMAGES"
                 else
-                    BUILD_AGENT_NAMES=${2}
-                    shift 2
+                    while [[ ${3} && ${2} && ${2} =~ ^[a-zA-Z0-9][a-zA-Z0-9-]+$ ]]
+                    do
+                        shift
+                        BUILD_AGENT_NAMES+="${1} "
+                    done
+                    ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS AGENT IMAGE(S) [$(echo ${BUILD_AGENT_NAMES} | xargs)]"
                 fi
+            ;;
+
+            '--assumeyes' | 'y')
+                EL_CICD_ASSUME_YES = ${_TRUE}
             ;;
 
             '--help' | '-h')
@@ -74,65 +73,59 @@ __parse_cli_flags() {
             ;;
 
             '--jenkins' | '-J')
-                ELCICD_ADM_MSG="BUILD JENKINS IMAGE"
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS IMAGE"
 
                 EL_CICD_ADM_COMMANDS+=('_oci_jenkins_registry_login' '_build_el_cicd_jenkins_image')
-                shift 1
             ;;
 
             '--nonprod' | '-N')
-                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT NON-PROD"
-                
                 EL_CICD_MASTER_NONPROD=${_TRUE}
-
-                shift 1
             ;;
 
             '--prod' | '-P')
-                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD"
-                
                 EL_CICD_MASTER_PROD=${_TRUE}
+            ;;
 
-                shift 1
+            '--refresh-creds')
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH CREDENTIALS"
+
+                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_create_rbac_helpers' '_refresh_el_cicd_credentials')
+            ;;
+
+            '--refresh-cicd-creds')
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH ALL CICD SERVERS CREDENTIALS"
+
+                echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
             ;;
 
             '--sealed-secrets')
-                ELCICD_ADM_MSG="INSTALL/UPGRADE SEALED SECRETS"
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }INSTALL/UPGRADE SEALED SECRETS"
 
                 EL_CICD_ADM_COMMANDS+=('_check_upgrade_install_sealed_secrets' '_create_rbac_helpers')
-                shift 1
             ;;
 
             '--setup-lab' | '-L')
-                ELCICD_ADM_MSG="BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BOOTSTRAPPING EL-CICD LAB ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
                 EL_CICD_ADM_COMMANDS+=('_oci_helm_registry_login' '_bootstrap_lab_environment')
-                shift 1
             ;;
 
             '--start-cluster' | '-S')
-                ELCICD_ADM_MSG="STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
                 EL_CICD_ADM_COMMANDS+=('_start_crc')
-                shift 1
             ;;
 
             '--tear-down-lab' | '-T')
-                ELCICD_ADM_MSG="TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }TEARING DOWN EL-CICD DEVELOPMENT ENVIRONMENT"
                 EL_CICD_USE_LAB_CONFIG='true'
 
                 EL_CICD_ADM_COMMANDS+=('_tear_down_lab_environment')
-                shift 1
-            ;;
-            
-            '--assumeyes' | '-y')
-                ELCICD_ASSUME_YES=${_TRUE}
-                shift 1
             ;;
 
-            -*|--*)
+            -?-[\w-]+)
                 echo
                 echo "ERROR: Unknown command option '${1}'"
                 echo
@@ -140,18 +133,44 @@ __parse_cli_flags() {
                 exit 1
             ;;
 
-            *)
-                if [[ ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${__NEXT_ARG} ]]
+            [a-zA-Z0-9][a-zA-Z0-9-./]*)
+                if [[ ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${1} ]]
                 then
                     _unknown_cmd_opt_msg_and_exit
                 fi
 
-                ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${__NEXT_ARG}
+                ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${1}
+            ;;
 
-                shift 1
+            *)
+                if [[ -z ${ROOT_CONFIG_FILE} ]]
+                then
+                    echo
+                    echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
+                    exit 1
+                fi
             ;;
         esac
-    done 
+        shift
+    done
+}
+
+__configure_for_bootstrapping_server() {
+    EL_CICD_ADM_COMMANDS+=('_verify_scm_secret_files_exist'
+                           '_verify_oci_registry_secrets'
+                           '_oci_helm_registry_login'
+                           '_bootstrap_el_cicd')
+
+    if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} && ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD AND NON-PROD"
+    elif [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
+    then
+        ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BOOTSTRAPPING EL-CICD MASTER TO SUPPORT NON-PROD"
+    elif [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
+    then
+        ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BOOTSTRAPPING EL-CICD MASTER TO SUPPORT PROD"
+    fi
 }
 
 __load_basic_vars_and_scripts() {
@@ -179,14 +198,6 @@ __load_basic_vars_and_scripts() {
         source "${EL_CICD_SCRIPTS_DIR}/${FILE}"
     done
 }
-
-__load_basic_vars_and_scripts
-
-_load_kubectl_msgs
-
-_echo_sudo_cluster_admin_warning
-
-__parse_cli_flags "${@}"
 
 __main "$@";
 
