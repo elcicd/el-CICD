@@ -139,7 +139,10 @@ def uninstallSdlcEnvironments(def projectInfo) {
             
             for NAMESPACE in ${namespaces.join(' ')}
             do
-                oc wait --for=delete namespace \${NAMESPACE} --timeout=600s
+                if [[ -n "oc get namespace --ignore-not-found --no-headers  -o name \${NAMESPACE}" ]]
+                then
+                    oc wait --for=delete namespace \${NAMESPACE} --timeout=600s
+                fi
             done
         else
             ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
