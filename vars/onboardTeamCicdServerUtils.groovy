@@ -193,7 +193,7 @@ def setupProjectPvResources(def projectInfo) {
             """
         }
         else {
-            echo "\n--> NO VOLUMES DEFINED FOR MOUNTING TO PODS: SKIPPNG"
+            echo "\n--> NO VOLUMES DEFINED FOR MOUNTING TO PODS: SKIPPING"
         }
     }
 }
@@ -205,6 +205,7 @@ def getPvCicdConfigValues(def projectInfo) {
     projectInfo.staticPvs.each { pv ->
         pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
+            echo "--> ${component.name}/${namespace}/${component.staticPvs}"
             if (namespace) {
                 projectInfo.components.each { component ->
                     if (component.staticPvs.contains(pv.name)) {
@@ -227,6 +228,7 @@ def getPvCicdConfigValues(def projectInfo) {
         }
     }
 
+    echo "${pvValues}"
     return pvValues
 }
 

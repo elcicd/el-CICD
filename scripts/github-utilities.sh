@@ -31,7 +31,7 @@ CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
 EL_CICD_TMP_PREFIX='/tmp/tmp.elcicd'
 
 __configure_github_headers() {
-    GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
+    __GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
 }
 
 _delete_git_repo_deploy_key() {
@@ -45,12 +45,12 @@ _delete_git_repo_deploy_key() {
     __configure_github_headers ${_GIT_ACCESS_TOKEN}
     local _EL_CICD_GITHUB_KEYS_URL="https://${_GITHUB_API_HOST}/repos/${_GITHUB_ORG}/${_REPO_NAME}/keys"
 
-    local _KEY_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${_DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
+    local _KEY_IDS=$(${CURL_COMMAND} "${__GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${_DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
 
     echo
     for KEY_ID in ${_KEY_IDS}
     do
-        ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
+        ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
         echo "DELETED DEPLOY KEY ${KEY_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
     done
 }
@@ -81,7 +81,7 @@ _add_git_repo_deploy_key() {
     echo "${CURRENT_DEPLOY_KEY_JSON}" > ${_GITHUB_CREDS_FILE}
 
     local _EL_CICD_GITHUB_KEYS_URL="https://${_GITHUB_API_HOST}/repos/${_GITHUB_ORG}/${_REPO_NAME}/keys"
-    local _RESULT=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${_GITHUB_CREDS_FILE} ${_EL_CICD_GITHUB_KEYS_URL})
+    local _RESULT=$(${CURL_COMMAND} -X POST "${__GITHUB_HEADERS[@]}" -d @${_GITHUB_CREDS_FILE} ${_EL_CICD_GITHUB_KEYS_URL})
 
     echo
     _RESULT=$(echo ${_RESULT} | jq 'del(.key)')
@@ -99,6 +99,7 @@ _add_git_repo_deploy_key() {
 }
 
 _delete_webhook() {
+    set -x
     local _GITHUB_HOST=${1}
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}
@@ -115,17 +116,20 @@ _delete_webhook() {
 
     local _HOOKS_URL="https://${_GITHUB_HOST}/repos/${_GITHUB_ORG}/${_REPO_NAME}/hooks"
 
-    local _HOOK_IDS=$(${CURL_COMMAND} "${GITHUB_HEADERS[@]}" ${_HOOKS_URL} | jq ".[] | select(.config.url  == \"${_JENKINS_WEBOOK_URL}\") | .id" 2>/dev/null)
+    local _HOOK_IDS=$(${CURL_COMMAND} "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL} | jq ".[] | select(.config.url  == \"${_JENKINS_WEBOOK_URL}\") | .id" 2>/dev/null)
 
     echo
     for HOOK_ID in ${_HOOK_IDS}
     do
-        ${CURL_COMMAND} -X DELETE "${GITHUB_HEADERS[@]}" ${_HOOKS_URL}/${HOOK_ID}
+        ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL}/${HOOK_ID}
         echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
     done
+    
+    set +x
 }
 
 _add_webhook() {
+    set -x
     local _GITHUB_HOST=${1}
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}
@@ -140,18 +144,19 @@ _add_webhook() {
 
 
     local _JENKINS_WEBOOK_URL="${_JENKINS_HOST}/job/${_PROJECT_ID}/job/${_MODULE_ID}-${_BUILD_TYPE}?token=${_WEB_TRIGGER_AUTH_TOKEN}"
-    local _CURRENT_WEBHOOK_JSON=${GITHUB_WEBHOOK_JSON/\%_JENKINS_WEBOOK_URL%/${_JENKINS_WEBOOK_URL}}
+    local _CURRENT_WEBHOOK_JSON=${GITHUB_WEBHOOK_JSON/\%JENKINS_WEBOOK_URL%/${_JENKINS_WEBOOK_URL}}
 
     local _WEBHOOK_FILE="${EL_CICD_TMP_PREFIX}.$(openssl rand -hex 5)"
     trap "rm -f ${EL_CICD_TMP_PREFIX}.*" EXIT
     echo ${_CURRENT_WEBHOOK_JSON} > ${_WEBHOOK_FILE}
 
     local _HOOKS_URL="https://${_GITHUB_HOST}/repos/${_GITHUB_ORG}/${_REPO_NAME}/hooks"
-    local _WEBHOOK=$(${CURL_COMMAND} -X POST "${GITHUB_HEADERS[@]}" -d @${_WEBHOOK_FILE} ${_HOOKS_URL} )
+    local _WEBHOOK=$(${CURL_COMMAND} -X POST "${__GITHUB_HEADERS[@]}" -d @${_WEBHOOK_FILE} ${_HOOKS_URL} )
 
     echo
     echo "NEW GITHUB WEBHOOK CREATED:"
     echo ${_WEBHOOK} | jq '{"id":.id,"events": .events, "url": .config.url}'
 
     rm -f ${_WEBHOOK_FILE}
+    set +x
 }
