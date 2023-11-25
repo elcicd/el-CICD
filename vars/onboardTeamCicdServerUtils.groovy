@@ -121,25 +121,25 @@ def getProjectPvChartName(def projectInfo) {
 
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
-    def envsConfigFile = "cicd-pipeline-config-values.yaml"
+    def cicdsConfigFile = "cicd-pipeline-config-values.yaml"
     writeYaml(file: envsConfigFile, data: projectDefs)
 
-    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def cicdSshConfigFile = "module-ssh-values.yaml"
-    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
+    def modulesSshKeyDefs = createCompSshKeyValues(projectInfo)
+    def modulesSshConfigFile = "module-ssh-values.yaml"
+    writeYaml(file: modulesSshConfigFile, data: modulesSshKeyDefs)
 
     def chartName = "${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-        cat ${envsConfigFile}
+        cat ${cicdsConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
         ${shCmd.echo ''}
         if ! helm upgrade --install --history-max=1  \
-            -f ${envsConfigFile} \
-            -f ${cicdSshConfigFile} \
+            -f ${cicdsConfigFile} \
+            -f ${modulesSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
@@ -161,7 +161,7 @@ def setupProjectEnvironments(def projectInfo) {
     def envsConfigFile = "envs-config-values.yaml"
     writeYaml(file: envsConfigFile, data: projectDefs)
 
-    def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS}"
+    def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
