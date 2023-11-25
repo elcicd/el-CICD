@@ -76,16 +76,6 @@ def getJenkinsConfigValues(def teamInfo) {
     return jenkinsConfigValues
 }
 
-def resetProjectPvResources(def projectInfo) {
-    sh """
-        PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
-        if [[ "\${PVS_INSTALLED}" ]]
-        then
-            helm uninstall ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-        fi
-    """
-}
-
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
     def pipelinesValuesFile = 'pipelines-config-values.yaml'
@@ -177,6 +167,16 @@ def setupProjectEnvironments(def projectInfo) {
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+    """
+}
+
+def resetProjectPvResources(def projectInfo) {
+    sh """
+        PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
+        if [[ "\${PVS_INSTALLED}" ]]
+        then
+            helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+        fi
     """
 }
 
