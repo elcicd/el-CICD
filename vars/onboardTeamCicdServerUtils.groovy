@@ -119,7 +119,45 @@ def getProjectPvChartName(def projectInfo) {
         "${projectInfo.id}-pv" : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 }
 
-def setupProjectCicdResources(def projectInfo) {
+def setupProjectPipelines(def projectInfo) {
+    def projectDefs = getElCicdChartConfigValues(projectInfo)
+    def cicdConfigFile = "cicd-pipeline-config-values.yaml"
+    writeYaml(file: cicdConfigFile, data: projectDefs)
+
+    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
+    def cicdSshConfigFile = "module-ssh-values.yaml"
+    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
+
+    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
+        projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+
+    sh """
+        ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
+        cat ${cicdConfigFile}
+
+        ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
+        set +e
+        ${shCmd.echo ''}
+        if ! helm upgrade --install --history-max=1  \
+            -f ${cicdConfigFile} \
+            -f ${cicdSshConfigFile} \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
+            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
+            ${chartName} \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+        then
+            set -e
+            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            exit 1
+        fi
+        set -e
+    """
+}
+
+def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartConfigValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
@@ -130,7 +168,7 @@ def setupProjectCicdResources(def projectInfo) {
 
     def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
         projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
-        
+
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${cicdConfigFile}
@@ -142,10 +180,8 @@ def setupProjectCicdResources(def projectInfo) {
             -f ${cicdConfigFile} \
             -f ${cicdSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/scm-secret-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-env-cicd-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-env-setup-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
@@ -160,7 +196,7 @@ def setupProjectCicdResources(def projectInfo) {
 
 def syncJenkinsPipelines(def cicdMasterNamespace) {
     def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-    
+
     sh """
         ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
         if [[ ! -z \$(helm list -n ${cicdMasterNamespace} | grep sync-jenkins-pipelines) ]]
@@ -294,7 +330,7 @@ def getPvCicdConfigValues(def projectInfo) {
     return cicdConfigValues
 }
 
-def getElCicdChartConfigValues(def projectInfo) {
+def getElCicdChartCicdConfigValues(def projectInfo) {
     cicdConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= cicdConfigValues.elCicdDefs
 
@@ -302,7 +338,27 @@ def getElCicdChartConfigValues(def projectInfo) {
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
-    getElCicdCodeBaseChartValues(projectInfo, elCicdDefs)
+    projectInfo.components.each { component ->
+        cicdConfigValues["elCicdDefs-${component.name}"] =
+            ['CODE_BASE' : component.codeBase ]
+    }
+
+    projectInfo.artifacts.each { artifact ->
+        cicdConfigValues["elCicdDefs-${artifact.name}"] =
+            ['CODE_BASE' : artifact.codeBase ]
+    }
+
+    return cicdConfigValues
+}
+
+
+def getElCicdChartEnvConfigValues(def projectInfo) {
+    cicdConfigValues = [elCicdDefs: [:]]
+    def elCicdDefs= cicdConfigValues.elCicdDefs
+
+    createElCicdProfiles(cicdConfigValues, elCicdDefs)
+
+    getElCicdNamespaceChartValues(projectInfo, cicdConfigValues)
 
     def rqProfiles = [:]
     def cicdEnvs = []
@@ -373,8 +429,6 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
 
-    getElCicdNamespaceChartValues(projectInfo, cicdConfigValues)
-
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
@@ -383,18 +437,6 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
             projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
         }
         return module.scmDeployKeyJenkinsId
-    }
-}
-
-def getElCicdCodeBaseChartValues(def projectInfo, def elCicdDefs) {
-    projectInfo.components.each { component ->
-        cicdConfigValues["elCicdDefs-${component.name}"] =
-            ['CODE_BASE' : component.codeBase ]
-    }
-
-    projectInfo.artifacts.each { art ->
-        cicdConfigValues["elCicdDefs-${art.name}"] =
-            ['CODE_BASE' : art.codeBase ]
     }
 }
 

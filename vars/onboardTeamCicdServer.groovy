@@ -31,16 +31,21 @@ def call(Map args) {
         }
     }
 
-    stage('Install/upgrade project CICD resources') {
-        loggingUtils.echoBanner("DEPLOY RESOURCES ${projectInfo.teamInfo.cicdMasterNamespace} TO SUPPORT PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
-
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT NON-PROD STATIC PERSISTENT VOLUMES FOR ${projectInfo.id}")
-        onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
-        onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
+    stage('Configure project CICD resources') {
+        loggingUtils.echoBanner("SETUP PIPELINES ${projectInfo.teamInfo.cicdMasterNamespace} TO SUPPORT PROJECT ${projectInfo.id}")
+        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 
         loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH CONFIGURATION")
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+    }
+
+    stage('Configure project environments') {
+        loggingUtils.echoBanner("SETUP ENVIRONMENTS TO SUPPORT PROJECT ${projectInfo.id}")
+        onboardTeamCicdServerUtils.setupProjectEnvironments(projectInfo)
+
+        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT PERSISTENT VOLUMES FOR PROJECT ${projectInfo.id}")
+        onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
+        onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
     }
 
     loggingUtils.echoBanner("CONFIGURE GIT DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
