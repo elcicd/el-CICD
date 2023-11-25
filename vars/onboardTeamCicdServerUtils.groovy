@@ -157,7 +157,7 @@ def setupProjectPipelines(def projectInfo) {
 }
 
 def setupProjectEnvironments(def projectInfo) {
-    def projectDefs = getElCicdChartProjectEnvValues(projectInfo)
+    def projectDefs = getElCicdChartProjectEnvironmentsValues(projectInfo)
     def environmentsValuesFile = "envs-config-values.yaml"
     writeYaml(file: environmentsValuesFile, data: projectDefs)
 
@@ -324,77 +324,29 @@ def getPvCicdConfigValues(def projectInfo) {
 }
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {
-    cicdConfigValues = [elCicdDefs: [:]]
-    def elCicdDefs= cicdConfigValues.elCicdDefs
+    pipelineValues = [elCicdDefs: [:]]
+    def elCicdDefs= pipelineValues.elCicdDefs
 
-    createElCicdProfiles(cicdConfigValues, elCicdDefs)
+    createElCicdProfiles(pipelineValues, elCicdDefs)
+    
+    getElCicdEnvironmentValues(pipelineValues, elCicdDefs)
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
     projectInfo.components.each { component ->
-        cicdConfigValues["elCicdDefs-${component.name}"] =
+        pipelineValues["elCicdDefs-${component.name}"] =
             ['CODE_BASE' : component.codeBase ]
     }
 
     projectInfo.artifacts.each { artifact ->
-        cicdConfigValues["elCicdDefs-${artifact.name}"] =
+        pipelineValues["elCicdDefs-${artifact.name}"] =
             ['CODE_BASE' : artifact.codeBase ]
     }
 
-    return cicdConfigValues
+    return pipelineValues
 }
 
-
-def getElCicdChartProjectEnvValues(def projectInfo) {
-    cicdConfigValues = [elCicdDefs: [:]]
-    def elCicdDefs= cicdConfigValues.elCicdDefs
-
-    createElCicdProfiles(cicdConfigValues, elCicdDefs)
-
-    getElCicdNamespaceChartValues(projectInfo, cicdConfigValues)
-
-    def rqProfiles = [:]
-    def cicdEnvs = []
-    elCicdDefs.CICD_NAMESPACES = []
-    if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
-
-        getElCicdRbacNonProdGroupsValues(projectInfo, elCicdDefs)
-
-        elCicdDefs.CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
-        elCicdDefs.CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
-    }
-
-    if (el.cicd.EL_CICD_MASTER_PROD) {
-        getElCicdProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
-
-        getElCicdRbacProdGroupsValues(projectInfo, elCicdDefs)
-
-        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
-        elCicdDefs.CICD_NAMESPACES += projectInfo.prodNamespaces.values()
-    }
-    cicdConfigValues.elCicdProfiles += rqProfiles.keySet()
-
-    return cicdConfigValues
-}
-
-def getElCicdNamespaceChartValues(def projectInfo, def cicdConfigValues) {
-    cicdConfigValues.elCicdNamespaces = []
-
-    if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
-        if (projectInfo.sandboxNamespaces) {
-            cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
-        }
-    }
-
-    if (el.cicd.EL_CICD_MASTER_PROD) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
-    }
-}
-
-
-def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
+def getElCicdEnvironmentValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
@@ -403,7 +355,9 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENV = projectInfo.prodEnv
     }
+}
 
+def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.FOLDER_NAME = projectInfo.id
@@ -430,6 +384,57 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
             projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
         }
         return module.gitDeployKeyJenkinsId
+    }
+}
+
+
+def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
+    environmentsValues = [elCicdDefs: [:]]
+    def elCicdDefs= environmentsValues.elCicdDefs
+
+    createElCicdProfiles(environmentsValues, elCicdDefs)
+    
+    getElCicdEnvironmentValues(pipelineValues, elCicdDefs)
+
+    getElCicdNamespaceChartValues(projectInfo, environmentsValues)
+
+    def rqProfiles = [:]
+    def cicdEnvs = []
+    elCicdDefs.CICD_NAMESPACES = []
+    if (el.cicd.EL_CICD_MASTER_NONPROD) {
+        getElCicdNonProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
+
+        getElCicdRbacNonProdGroupsValues(projectInfo, elCicdDefs)
+
+        elCicdDefs.CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
+        elCicdDefs.CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
+    }
+
+    if (el.cicd.EL_CICD_MASTER_PROD) {
+        getElCicdProdEnvsResourceQuotasValues(projectInfo, elCicdDefs, rqProfiles)
+
+        getElCicdRbacProdGroupsValues(projectInfo, elCicdDefs)
+
+        elCicdDefs.PROD_NAMESPACES = projectInfo.prodNamespaces.values()
+        elCicdDefs.CICD_NAMESPACES += projectInfo.prodNamespaces.values()
+    }
+    environmentsValues.elCicdProfiles += rqProfiles.keySet()
+
+    return environmentsValues
+}
+
+def getElCicdNamespaceChartValues(def projectInfo, def cicdConfigValues) {
+    cicdConfigValues.elCicdNamespaces = []
+
+    if (el.cicd.EL_CICD_MASTER_NONPROD) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+        if (projectInfo.sandboxNamespaces) {
+            cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+        }
+    }
+
+    if (el.cicd.EL_CICD_MASTER_PROD) {
+        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
     }
 }
 
