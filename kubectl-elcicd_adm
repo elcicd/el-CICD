@@ -62,7 +62,7 @@ __parse_cli_flags() {
                 fi
             ;;
 
-            '--assumeyes' | 'y')
+            '--assumeyes' | '-y')
                 EL_CICD_ASSUME_YES = ${_TRUE}
             ;;
 
