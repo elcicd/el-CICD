@@ -138,7 +138,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 
 def uninstallSdlcEnvironments(def projectInfo) {
     sh """
-        HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}"
+        HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}")
         if [[ "\${HELM_CHART}" ]]
         then
             helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
