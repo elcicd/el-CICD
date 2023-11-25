@@ -193,7 +193,7 @@ def setupProjectPvResources(def projectInfo) {
             """
         }
         else {
-            echo "\n--> NO VOLUMES DEFINED FOR MOUNTING TO PODS: SKIPPING"
+            echo "--> NO VOLUMES DEFINED FOR MOUNTING TO PODS: SKIPPING"
         }
     }
 }
