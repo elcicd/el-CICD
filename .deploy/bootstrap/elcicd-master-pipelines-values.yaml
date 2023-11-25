@@ -6,15 +6,15 @@ elCicdDefs:
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
   TEAM_ID_PIPELINE_PARAM: stringParam('TEAM_ID', null, 'Team ID')
-  RECREATE_CICD_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_CICD_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
+  RECREATE_SDLC_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_SDLC_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
   AGENT_PIPELINE_ARG: |-
     agent:  el.cicd.JENKINS_AGENT_DEFAULT
   TEAM_ID_PIPELINE_ARG: |-
     teamId: params.TEAM_ID
   PROJECT_ID_PIPELINE_ARG: |-
     projectId:  el.cicd.UNDEFINED
-  RECREATE_CICD_ENVS_PIPELINE_ARG: |-
-    recreateCicdEnvs: params.RECREATE_CICD_ENVS
+  RECREATE_SDLC_ENVS_PIPELINE_ARG: |-
+    recreateSdlcEnvs: params.RECREATE_SDLC_ENVS
   EL_CICD_API_ARGS: |-
     teamId: params.TEAM_ID
     
@@ -34,13 +34,13 @@ elCicdDefs-onboard-team-cicd-server:
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      $<RECREATE_CICD_ENVS_PIPELINE_PARAM>
+      $<RECREATE_SDLC_ENVS_PIPELINE_PARAM>
     }
   EL_CICD_API_ARGS: |-
     $<AGENT_PIPELINE_ARG>,
     $<TEAM_ID_PIPELINE_ARG>,
     $<PROJECT_ID_PIPELINE_ARG>,
-    $<RECREATE_CICD_ENVS_PIPELINE_ARG>
+    $<RECREATE_SDLC_ENVS_PIPELINE_ARG>
 
 elCicdDefs-delete-team-project:
   PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"

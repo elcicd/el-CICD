@@ -7,19 +7,20 @@
 def call(Map args) {
     def teamInfo = args.teamInfo
     def projectInfo = args.projectInfo
+    def recreateSdlcEnvs = args.recreateSdlcEnvs
 
     stage("Install/upgrade CICD Jenkins") {
         onboardTeamCicdServerUtils.setupTeamCicdServer(teamInfo)
     }
 
-    stage('Uninstall current project CICD resources (optional)') {
-        if (args.recreateCicdEnvs) {
+    stage('Recreate SDLC environments [optional]') {
+        if (recreateSdlcEnvs) {
             loggingUtils.echoBanner("RECREATE SLDC ENVIRONMENTS REQUESTED: UNINSTALLING")
             
             onboardTeamCicdServerUtils.uninstallSdlcEnvironments(projectInfo)
         }
         else {
-            echo '--> REBUILD SDLC ENVIRONMENTS NOT SELECTED; Skipping...'
+            echo '--> RECREATE SDLC ENVIRONMENTS NOT SELECTED; Skipping...'
         }
     }
 
@@ -31,8 +32,8 @@ def call(Map args) {
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
-    stage('Configure project environments') {
-        loggingUtils.echoBanner("CREATE CICD ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
+    stage('Configure project SDLC environments') {
+        loggingUtils.echoBanner("CREATE SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectEnvironments(projectInfo)
 
         loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
