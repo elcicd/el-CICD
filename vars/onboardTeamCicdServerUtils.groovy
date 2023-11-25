@@ -38,7 +38,7 @@ def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= jenkinsConfigValues.elCicdDefs
 
-    createElCicdProfiles(jenkinsConfigValues, elCicdDefs)
+    createElCicdProfiles(jenkinsConfigValues)
     jenkinsConfigValues.elCicdProfiles += ['user-group']
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
@@ -290,7 +290,7 @@ def configureScmWebhooks(def projectInfo) {
 }
 
 def getPvCicdConfigValues(def projectInfo) {
-    cicdConfigValues = [:]
+    configValues = [:]
     elCicdDefs = [:]
 
     elCicdDefs.VOLUME_OBJ_NAMES = []
@@ -312,22 +312,22 @@ def getPvCicdConfigValues(def projectInfo) {
                         volumeMap.VOLUME_TYPE = pv.volumeType
                         volumeMap.VOLUME_DEF = pv.volumeDef
 
-                        cicdConfigValues["elCicdDefs-${objName}"] = volumeMap
+                        configValues["elCicdDefs-${objName}"] = volumeMap
                     }
                 }
             }
         }
     }
 
-    cicdConfigValues.elCicdDefs = elCicdDefs
-    return cicdConfigValues
+    configValues.elCicdDefs = elCicdDefs
+    return configValues
 }
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {
     def pipelineValues = [elCicdDefs: [:]]
     def elCicdDefs = pipelineValues.elCicdDefs
 
-    createElCicdProfiles(projectInfo, elCicdDefs)
+    createElCicdProfiles(pipelineValues)
     
     getElCicdEnvironmentValues(projectInfo, elCicdDefs)
 
@@ -392,7 +392,7 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
     def environmentsValues = [elCicdDefs: [:]]
     def elCicdDefs = environmentsValues.elCicdDefs
 
-    createElCicdProfiles(projectInfo, elCicdDefs)
+    createElCicdProfiles(environmentsValues)
     
     getElCicdEnvironmentValues(projectInfo, elCicdDefs)
 
@@ -423,18 +423,18 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
     return environmentsValues
 }
 
-def getElCicdNamespaceChartValues(def projectInfo, def cicdConfigValues) {
-    cicdConfigValues.elCicdNamespaces = []
+def getElCicdNamespaceChartValues(def projectInfo, def configValues) {
+    configValues.elCicdNamespaces = []
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
+        configValues.elCicdNamespaces.addAll(projectInfo.nonProdNamespaces.values())
         if (projectInfo.sandboxNamespaces) {
-            cicdConfigValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
+            configValues.elCicdNamespaces.addAll(projectInfo.sandboxNamespaces.values())
         }
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
-        cicdConfigValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
+        configValues.elCicdNamespaces.addAll(projectInfo.prodNamespaces.values())
     }
 }
 
@@ -493,7 +493,7 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
 }
 
 def createCompSshKeyValues(def projectInfo) {
-    cicdConfigValues = [:]
+    configValues = [:]
 
     projectInfo.modules.each { module ->
         dir(module.workDir) {
@@ -503,14 +503,14 @@ def createCompSshKeyValues(def projectInfo) {
 
             def sshKey = readFile(file: module.gitDeployKeyJenkinsId)
 
-            cicdConfigValues["elCicdDefs-${module.gitDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
+            configValues["elCicdDefs-${module.gitDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
         }
     }
 
-    return cicdConfigValues
+    return configValues
 }
 
-def createElCicdProfiles(def configValues, def elCicdDefs) {
+def createElCicdProfiles(def configValues) {
     configValues.elCicdProfiles = ['cicd']
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
