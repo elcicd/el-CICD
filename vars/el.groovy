@@ -52,7 +52,7 @@ def initMetaData(Map metaData) {
 }
 
 def node(Map args, Closure body) {
-    def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT}
+    def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT
     
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
@@ -131,11 +131,7 @@ def node(Map args, Closure body) {
     }
 }
 
-def runHookScript(def prefix, def args) {
-    runHookScript(prefix, args, null)
-}
-
-def runHookScript(def prefix, def args, def exception) {
+def runHookScript(def prefix, def args, def exception = null) {
     dir(el.cicd.HOOK_SCRIPTS_DIR) {
         def hookScriptFile = findFiles(glob: "**/${prefix}-${args.pipelineName}.groovy")
         if (hookScriptFile) {

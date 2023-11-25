@@ -116,7 +116,10 @@ __summarize_and_confirm_bootstrap_run_with_user() {
     echo
     echo "=================== ${_BOLD}END SUMMARY${_REGULAR} ==================="
 
-    _confirm_continue
+    if [[ "${EL_CICD_ASSUME_YES}" != "${_TRUE}" ]]
+    then
+        _confirm_continue
+    fi
 }
 
 _cluster_info() {
