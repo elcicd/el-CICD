@@ -175,7 +175,7 @@ def resetProjectPvResources(def projectInfo) {
         PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
         if [[ "\${PVS_INSTALLED}" ]]
         then
-            helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            helm uninstall --wait ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
         fi
     """
 }
