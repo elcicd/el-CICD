@@ -120,7 +120,7 @@ def getProjectPvChartName(def projectInfo) {
 }
 
 def setupProjectPipelines(def projectInfo) {
-    def projectDefs = getElCicdChartConfigValues(projectInfo)
+    def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
     def cicdConfigFile = "cicd-pipeline-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
 
@@ -158,7 +158,7 @@ def setupProjectPipelines(def projectInfo) {
 }
 
 def setupProjectEnvironments(def projectInfo) {
-    def projectDefs = getElCicdChartConfigValues(projectInfo)
+    def projectDefs = getElCicdChartProjectEnvValues(projectInfo)
     def cicdConfigFile = "cicd-config-values.yaml"
     writeYaml(file: cicdConfigFile, data: projectDefs)
 
@@ -330,7 +330,7 @@ def getPvCicdConfigValues(def projectInfo) {
     return cicdConfigValues
 }
 
-def getElCicdChartCicdConfigValues(def projectInfo) {
+def getElCicdChartProjectPipelineValues(def projectInfo) {
     cicdConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= cicdConfigValues.elCicdDefs
 
@@ -352,7 +352,7 @@ def getElCicdChartCicdConfigValues(def projectInfo) {
 }
 
 
-def getElCicdChartEnvConfigValues(def projectInfo) {
+def getElCicdChartProjectEnvValues(def projectInfo) {
     cicdConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= cicdConfigValues.elCicdDefs
 
