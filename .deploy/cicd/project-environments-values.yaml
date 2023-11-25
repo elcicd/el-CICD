@@ -1,0 +1,31 @@
+- templateName: roleBinding
+  objName: $<PROJECT_ID>-edit
+  namespaces: $<CICD_NAMESPACES>
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: $<HELM_RELEASE_NAMESPACE>
+  - kind: Group
+    name: $<$<NAME_SPACE>_GROUP>
+
+- templateName: copyResource
+  objNames: $<NONPROD_ENVS>
+  objName: elcicd-$<>-registry-credentials
+  mustHaveEveryProfile:
+  - nonprod
+  kind: Secret
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<PROJECT_ID>-$<BASE_OBJ_NAME>
+
+- templateName: copyResource
+  objName: elcicd-$<PROD_ENV>-registry-credentials
+  namespaces: $<PROD_NAMESPACES>
+  mustHaveEveryProfile:
+  - prod
+  kind: Secret
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<NAME_SPACE>
