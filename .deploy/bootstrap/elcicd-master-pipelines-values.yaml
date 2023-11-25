@@ -49,7 +49,7 @@ elCicdDefs-delete-team-project:
     }
   EL_CICD_API_ARGS: |-
     $<TEAM_ID_PIPELINE_ARG>,
-    $<PROJECT_ID_PIPELINE_ARG>
+    $<PROJECT_ID_PIPELINE_ARG>,
     tearDownSdlcEnvironments: params.DELETE_SDLC_ENVIRONMENTS
 
 elCicdDefs-refresh-team-cicd-servers:
