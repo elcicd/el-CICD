@@ -39,13 +39,13 @@ elCicdDefs-onboard-team-cicd-server:
 elCicdDefs-delete-team-project:
   PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
   EL_CICD_API_METHOD: deleteTeamProject
-  TEAR_DOWN_DESCRIPTION: |-
-    Tear down the project SDLC environments? WARNING: ALL project namespaces in the cluster will be deleted
+  DELETE_SDLC_ENVIRONMENTS_DESCRIPTION: |-
+    Delete the project SDLC environments? WARNING: ALL project namespaces in the cluster will be deleted
   PIPELINE_PARAMS: |-
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      booleanParam('TEAR_DOWN_SDLC_ENVIRONMENTS', false, '$<TEAR_DOWN_DESCRIPTION>')
+      booleanParam('DELETE_SDLC_ENVIRONMENTS', false, '$<DELETE_SDLC_ENVIRONMENTS_DESCRIPTION>')
     }
   EL_CICD_API_ARGS: |-
     $<TEAM_ID_PIPELINE_ARG>,
