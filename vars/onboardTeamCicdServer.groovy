@@ -15,7 +15,7 @@ def call(Map args) {
         if (recreateSdlcEnvs) {
             loggingUtils.echoBanner("RECREATE SLDC ENVIRONMENTS REQUESTED: UNINSTALLING")
             
-            onboardTeamCicdServerUtils.uninstallSdlcEnvironments(projectInfo)
+            projectUtils.uninstallSdlcEnvironments(projectInfo)
         }
         else {
             echo '--> RECREATE SDLC ENVIRONMENTS NOT SELECTED: SKIPPING'

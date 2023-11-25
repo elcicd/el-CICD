@@ -4,7 +4,6 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    def tearDownSdlcEnvironments = args.tearDownSdlcEnvironments
     
     stage('Confirm project removal') {
         def forProject = "for project ${projectInfo.id}"
@@ -42,17 +41,11 @@ def call(Map args) {
             else
                 ${shCmd.echo "--> PIPELINES FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
             fi
-            
-            if [[ "${tearDownSdlcEnvironments ? 'true' : ''}" ]]
-            then
-                if [[ -n "\$(helm list -q ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})" ]]
-                then
-                    helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-                else
-                    ${shCmd.echo "--> SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
-                fi
-            fi
         """
+        
+        if (args.tearDownSdlcEnvironments) {
+            projectUnils.uninstallSdlcEnvironments(projectInfo)
+        }
         
         projectUtils.syncJenkinsPipelines(projectInfo)
         

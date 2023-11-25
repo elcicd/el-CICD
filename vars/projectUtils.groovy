@@ -23,6 +23,30 @@ def syncJenkinsPipelines(def projectInfo) {
     """
 }
 
+def uninstallSdlcEnvironments(def projectInfo) {
+    def namespaces = [:].keySet()
+    namespaces.addAll(projectInfo.buildNamespaces)
+    namespaces.addAll(projectInfo.nonProdNamespaces.values())
+    namespaces.addAll(projectInfo.prodNamespaces.values())
+    sh """
+        HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}")
+        if [[ "\${HELM_CHART}" ]]
+        then
+            helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            
+            for NAMESPACE in ${namespaces.join(' ')}
+            do
+                if [[ -n "\$(oc get namespace --ignore-not-found --no-headers  -o name \${NAMESPACE})" ]]
+                then
+                    oc wait --for=delete namespace \${NAMESPACE} --timeout=600s
+                fi
+            done
+        else
+            ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
+        fi
+    """
+}
+
 def removeGitDeployKeysFromProject(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
