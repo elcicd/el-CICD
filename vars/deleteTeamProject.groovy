@@ -18,7 +18,7 @@ def call(Map args) {
             "All PIPELINES ${forProject} ${willBeRemoved} THE JENKINS SERVER",
             '',
             "All DEPLOY KEYS and WEBHOOKS ${forProject} ${willBeRemoved} THE GIT SERVER",
-            ''
+            '',
             "Should project ${projectInfo.id} be deleted?"
         )
 

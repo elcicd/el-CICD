@@ -164,21 +164,23 @@ def initializePipeline(def jenkinsAgent) {
 
             ${shCmd.echo("\n${loggingUtils.BANNER_SEPARATOR}\n")}
             ${shCmd.echo "Jenkins Agent: ${jenkinsAgent}"}
-            ${shCmd.echo ''}
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'OCP Runtime'}
             oc version
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             ${shCmd.echo 'Helm Version'}
             helm version
             ${shCmd.echo ''}
-            echo \${HELM_REGISTRY_PASSWORD} | \
+            ${shCmd.echo '\${HELM_REGISTRY_PASSWORD}'} | \
                 helm registry login ${el.cicd.EL_CICD_INSECURE_FLAG} \
                     -u \${HELM_REGISTRY_USERNAME} --password-stdin \
                     ${el.cicd.EL_CICD_HELM_OCI_REGISTRY_DOMAIN}
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
 
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
             git config --global user.email "${el.cicd.EL_CICD_ORGANIZATION}@donotreply.com"
+            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
         """
 
         dir (el.cicd.EL_CICD_DIR) {
