@@ -32,18 +32,18 @@ def call(Map args) {
     }
 
     stage('Configure project CICD resources') {
-        loggingUtils.echoBanner("SETUP PIPELINES ${projectInfo.teamInfo.cicdMasterNamespace} TO SUPPORT PROJECT ${projectInfo.id}")
+        loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 
-        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH CONFIGURATION")
+        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PIPELINE CONFIGURATION")
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
     stage('Configure project environments') {
-        loggingUtils.echoBanner("SETUP ENVIRONMENTS TO SUPPORT PROJECT ${projectInfo.id}")
+        loggingUtils.echoBanner("CREATE CICD ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectEnvironments(projectInfo)
 
-        loggingUtils.echoBanner("CONFIGURE CLUSTER TO SUPPORT PERSISTENT VOLUMES FOR PROJECT ${projectInfo.id}")
+        loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
         onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
     }

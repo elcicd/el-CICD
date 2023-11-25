@@ -1,3 +1,4 @@
+elCicdTemplates:
 - templateName: roleBinding
   objName: $<PROJECT_ID>-edit
   namespaces: $<CICD_NAMESPACES>
