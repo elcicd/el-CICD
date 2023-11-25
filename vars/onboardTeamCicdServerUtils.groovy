@@ -174,7 +174,7 @@ def setupProjectEnvironments(def projectInfo) {
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticPvs) {
         def pvValues = getPvCicdConfigValues(projectInfo)
-        if (pvValues.VOLUME_OBJ_NAMES) {
+        if (pvValues.elCicdDefs.VOLUME_OBJ_NAMES) {
             def volumeCicdConfigValues = writeYaml(data: pvValues, returnText: true)
 
             def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
@@ -207,7 +207,6 @@ def getPvCicdConfigValues(def projectInfo) {
             def namespace = projectInfo.nonProdNamespaces[env]
             if (namespace) {
                 projectInfo.components.each { component ->
-                    echo "--> ${component.name}/${namespace}/${component.staticPvs}"
                     if (component.staticPvs.contains(pv.name)) {
                         def objName = "${el.cicd.PV_PREFIX}-${pv.name}-${component.name}-${env}"
                         pvValues.elCicdDefs.VOLUME_OBJ_NAMES << objName
@@ -228,7 +227,6 @@ def getPvCicdConfigValues(def projectInfo) {
         }
     }
 
-    echo "${pvValues}"
     return pvValues
 }
 

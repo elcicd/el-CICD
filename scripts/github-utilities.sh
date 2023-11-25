@@ -26,7 +26,7 @@ GITHUB_WEBHOOK_JSON='
   }
 }'
 
-CURL_COMMAND='curl --retry 9 --retry-all-errors -ksSL --fail-with-body'
+CURL_COMMAND='curl --retry 9 --max-time 10 --retry-delay 0 --retry-max-time 90 --retry-all-errors -ksSL --fail-with-body'
 
 EL_CICD_TMP_PREFIX='/tmp/tmp.elcicd'
 
@@ -99,7 +99,6 @@ _add_git_repo_deploy_key() {
 }
 
 _delete_webhook() {
-    set -x
     local _GITHUB_HOST=${1}
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}
@@ -124,12 +123,9 @@ _delete_webhook() {
         ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL}/${HOOK_ID}
         echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
     done
-    
-    set +x
 }
 
 _add_webhook() {
-    set -x
     local _GITHUB_HOST=${1}
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}
@@ -158,5 +154,4 @@ _add_webhook() {
     echo ${_WEBHOOK} | jq '{"id":.id,"events": .events, "url": .config.url}'
 
     rm -f ${_WEBHOOK_FILE}
-    set +x
 }
