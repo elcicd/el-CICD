@@ -173,20 +173,20 @@ def runPromoteImagesStages(def projectInfo) {
 }
 
 def createAndCheckoutDeploymentBranches(def projectInfo) {
-    def scmBranchesFound = ["DEPLOYMENT BRANCHES FOUND:"]
-    def scmBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
+    def gitBranchesFound = ["DEPLOYMENT BRANCHES FOUND:"]
+    def gitBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
     concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
         def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
         def deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
         deployBranchExists = !deployBranchExists.isEmpty()
 
-        def scmBranch = deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
-        if (scmBranch) {            
-            sh "git checkout ${scmBranch}"        
+        def gitBranch = deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
+        if (gitBranch) {            
+            sh "git checkout ${gitBranch}"        
         }
         
         if (!deployBranchExists) {
-            withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                 sh """
                     ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
                                          "git checkout -b ${component.deploymentBranch}",
@@ -194,18 +194,18 @@ def createAndCheckoutDeploymentBranches(def projectInfo) {
                 """
             }
             
-            scmBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
+            gitBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
         }
         else {
-            scmBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
+            gitBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
         }
     }
     
-    if (scmBranchesFound.size() > 1 && scmBranchesCreated.size() > 1) {
-        loggingUtils.echoBanner(scmBranchesFound, '', scmBranchesCreated)
+    if (gitBranchesFound.size() > 1 && gitBranchesCreated.size() > 1) {
+        loggingUtils.echoBanner(gitBranchesFound, '', gitBranchesCreated)
     }
     else {
-        def resultMsgs = (scmBranchesFound.size() > 1 ) ? scmBranchesFound : scmBranchesCreated
+        def resultMsgs = (gitBranchesFound.size() > 1 ) ? gitBranchesFound : gitBranchesCreated
         loggingUtils.echoBanner(resultMsgs)
     }
 }

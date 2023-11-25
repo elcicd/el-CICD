@@ -28,18 +28,18 @@ def call(Map args) {
 
         projectInfo.modules.each { module ->
             dir(module.workDir) {
-                echo "Pushing deploy key for ${module.scmRepoName}"
+                echo "Pushing deploy key for ${module.gitRepoName}"
 
                 sh """
-                    ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' \
+                    ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' \
                         -q -N '' -C 'el-CICD Component Deploy key' 2>/dev/null <<< y >/dev/null
                 """
 
-                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.scmDeployKeyJenkinsId, module.scmDeployKeyJenkinsId)
+                jenkinsUtils.pushSshCredentialsToJenkins(projectInfo, module.gitDeployKeyJenkinsId, module.gitDeployKeyJenkinsId)
 
-                githubUtils.addProjectDeployKey(module, "${module.scmDeployKeyJenkinsId}.pub")
+                githubUtils.addProjectDeployKey(module, "${module.gitDeployKeyJenkinsId}.pub")
 
-                sh "rm -f ${module.scmDeployKeyJenkinsId} ${module.scmDeployKeyJenkinsId}.pub"
+                sh "rm -f ${module.gitDeployKeyJenkinsId} ${module.gitDeployKeyJenkinsId}.pub"
             }
         }
     }

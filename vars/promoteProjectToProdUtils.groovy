@@ -3,11 +3,11 @@
  */
 
 def verifyProjectReleaseVersion(def projectInfo) {
-    withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-        versionTagScript = /git ls-remote ${projectInfo.projectModule.scmRepoUrl} '${projectInfo.releaseVersion}'/
-        scmReleaseVersionBranch = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
+    withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+        versionTagScript = /git ls-remote ${projectInfo.projectModule.gitRepoUrl} '${projectInfo.releaseVersion}'/
+        gitReleaseVersionBranch = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
 
-        if (scmReleaseVersionBranch) {
+        if (gitReleaseVersionBranch) {
             loggingUtils.errorBanner("RELEASE VERSION ${projectInfo.releaseVersion} HAS ALREADY BEEN PROMOTED")
         }
     }
@@ -15,21 +15,21 @@ def verifyProjectReleaseVersion(def projectInfo) {
 
 def gatherReleaseCandidateRepos(def projectInfo) {
     projectInfo.componentsToPromote = projectInfo.components.findAll{ component ->
-        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} '${projectInfo.releaseVersion}-*'/
-            scmRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
+        withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            versionTagScript = /git ls-remote --tags ${component.gitRepoUrl} '${projectInfo.releaseVersion}-*'/
+            gitRepoTag = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript)).trim()
 
-            if (scmRepoTag) {
-                scmRepoTag = scmRepoTag.substring(scmRepoTag.lastIndexOf('/') + 1)
-                def msg = "Release candidate tags in Git must be of the form <RELEASE VERSION>-<SRC-COMMIT_HASH: ${scmRepoTag}"
-                assert scmRepoTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
+            if (gitRepoTag) {
+                gitRepoTag = gitRepoTag.substring(gitRepoTag.lastIndexOf('/') + 1)
+                def msg = "Release candidate tags in Git must be of the form <RELEASE VERSION>-<SRC-COMMIT_HASH: ${gitRepoTag}"
+                assert gitRepoTag ==~ /${projectInfo.releaseVersion}-[\w]{7}/ : msg
                 
-                echo "--> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.scmRepoName} / ${scmRepoTag}"
-                component.releaseCandidateScmTag = scmRepoTag
+                echo "--> RELEASE ${projectInfo.releaseVersion} COMPONENT FOUND: ${component.gitRepoName} / ${gitRepoTag}"
+                component.releaseCandidateScmTag = gitRepoTag
                 component.srcCommitHash = component.releaseCandidateScmTag.split('-').last()
             }
             else {
-                echo "--> Release ${projectInfo.releaseVersion} component NOT found: ${component.scmRepoName}"
+                echo "--> Release ${projectInfo.releaseVersion} component NOT found: ${component.gitRepoName}"
             }
 
             return component.releaseCandidateScmTag
@@ -102,7 +102,7 @@ def confirmPromotion(def projectInfo, def args) {
         loggingUtils.BANNER_SEPARATOR,
         '',
         '-> ACTIONS TO BE TAKEN:',
-        "   - A DEPLOYMENT BRANCH [${projectInfo.releaseVersion}] WILL BE CREATED IN THE GIT REPO ${projectInfo.projectModule.scmRepoName}",
+        "   - A DEPLOYMENT BRANCH [${projectInfo.releaseVersion}] WILL BE CREATED IN THE GIT REPO ${projectInfo.projectModule.gitRepoName}",
         "   - IMAGES TAGGED AS ${projectInfo.releaseVersion} WILL BE PUSHED TO THE PROD IMAGE REGISTRY",
         '   - COMPONENTS NOT IN THIS RELEASE WILL BE REMOVED FROM ${projectInfo.prodEnv}',
         '',
@@ -137,8 +137,8 @@ def confirmPromotion(def projectInfo, def args) {
 }
 
 def pushReleaseVersion(def projectInfo) {
-    echo "projectInfo.projectModule.scmDeployKeyJenkinsId: ${projectInfo.projectModule.scmDeployKeyJenkinsId}"
-    withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+    echo "projectInfo.projectModule.gitDeployKeyJenkinsId: ${projectInfo.projectModule.gitDeployKeyJenkinsId}"
+    withCredentials([sshUserPrivateKey(credentialsId: projectInfo.projectModule.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
         dir(projectInfo.projectModule.workDir) {
             sh """
                 git add -A

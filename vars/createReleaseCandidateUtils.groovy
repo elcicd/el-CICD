@@ -17,8 +17,8 @@ def verifyVersionTagValidSemver(projectInfo) {
 
  def verifyVersionTagDoesNotExistInScm(def projectInfo) {
     projectInfo.components.each { component ->
-        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-            versionTagScript = /git ls-remote --tags ${component.scmRepoUrl} | grep "${projectInfo.releaseVersion}-[a-z0-9]\{7\}" || :/
+        withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            versionTagScript = /git ls-remote --tags ${component.gitRepoUrl} | grep "${projectInfo.releaseVersion}-[a-z0-9]\{7\}" || :/
             def tagExists = sh(returnStdout: true, script: shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', versionTagScript))
             if (tagExists) {
                 loggingUtils.errorBanner("TAGGING FAILED: Version tag ${projectInfo.releaseVersion} exists in GIT (${}), and CANNOT be reused")
@@ -143,7 +143,7 @@ def verifyVersionTagValidSemver(projectInfo) {
                                          projectInfo.releaseVersion)
         component.deploymentBranch = projectInfoUtils.getNonProdDeploymentBranchName(projectInfo, component, projectInfo.preProdEnv)
 
-        withCredentials([sshUserPrivateKey(credentialsId: component.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
+        withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY'),
                             usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.preProdEnv),
                                              usernameVariable: 'PRE_PROD_OCI_REGISTRY_USERNAME',
                                              passwordVariable: 'PRE_PROD_OCI_REGISTRY_PWD')]) {
@@ -152,7 +152,7 @@ def verifyVersionTagValidSemver(projectInfo) {
                 CUR_BRANCH=\$(git rev-parse --abbrev-ref HEAD)
                 ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY', "git tag ${gitReleaseCandidateTag}", "git push --tags")}
                 ${shCmd.echo ''}
-                ${shCmd.echo "--> Git repo '${component.scmRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
+                ${shCmd.echo "--> Git repo '${component.gitRepoName}' tag created in branch '\${CUR_BRANCH}' as '${gitReleaseCandidateTag}'"}
 
                 ${tagImageCmd}
                 ${shCmd.echo "--> Image ${component.id}:${projectInfo.preProdEnv} tagged as ${component.id}:${projectInfo.releaseVersion}"}

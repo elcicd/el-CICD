@@ -3,7 +3,7 @@
 
 export GITHUB_REST_API_HDR='Accept: application/vnd.github.v3+json'
 
-_verify_scm_secret_files_exist() {
+_verify_git_secret_files_exist() {
     if [[ ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||
           ! -f ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}.pub ||
           ! -f ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE} ||

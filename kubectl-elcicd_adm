@@ -156,7 +156,7 @@ __parse_cli_flags() {
 }
 
 __configure_for_bootstrapping_server() {
-    EL_CICD_ADM_COMMANDS+=('_verify_scm_secret_files_exist'
+    EL_CICD_ADM_COMMANDS+=('_verify_git_secret_files_exist'
                            '_verify_oci_registry_secrets'
                            '_oci_helm_registry_login'
                            '_bootstrap_el_cicd')

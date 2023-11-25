@@ -18,7 +18,7 @@ elCicdDefs-nonprod:
     teamId: '$<TEAM_ID>',
     projectId: '$<PROJECT_ID>',
     isBuild: true,
-    scmBranch: params.GIT_BRANCH
+    gitBranch: params.GIT_BRANCH
   GIT_BRANCH_BUILD_PARAM: |-
     stringParam('GIT_BRANCH', '$<GIT_BRANCH>', 'Git branch/tag/hash to build')
   REDEPLOY_RELEASE_CANDIDATE_PARAMS: |-
@@ -48,7 +48,7 @@ elCicdTemplates:
       recreate: params.REINSTALL,
     EL_CICD_API_METHOD: buildComponent
     AUTH_TOKEN:
-      $<PROJECT_ID>-$<BASE_OBJ_NAME>-scm-repo-private-contentkey
+      $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
@@ -70,7 +70,7 @@ elCicdTemplates:
       isSnapshot: params.IS_SNAPSHOT
     EL_CICD_API_METHOD: buildArtifact
     AUTH_TOKEN:
-      $<PROJECT_ID>-$<BASE_OBJ_NAME>-scm-repo-private-contentkey
+      $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap

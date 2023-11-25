@@ -361,9 +361,9 @@ __init_el_cicd_repos() {
     __set_config_value EL_CICD_GIT_DOMAIN ${GIT_HOST_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
     __set_config_value EL_CICD_GIT_API_URL ${GIT_API_DOMAIN} "${EL_CICD_CONFIG_DIR}/${ROOT_CONFIG_FILE}"
 
-    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmOrganization:.*$/scmOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
-    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmHost:.*$/scmHost: ${GIT_HOST_DOMAIN}/" {} \;
-    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/scmRestApiHost:.*$/scmRestApiHost: ${GIT_API_DOMAIN}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/gitOrganization:.*$/gitOrganization: ${EL_CICD_ORGANIZATION}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/gitHost:.*$/gitHost: ${GIT_HOST_DOMAIN}/" {} \;
+    find ${EL_CICD_CONFIG_DIR}/project-defs/*.yml -type f -exec sed -i "s/gitRestApiHost:.*$/gitRestApiHost: ${GIT_API_DOMAIN}/" {} \;
 
     local _ALL_EL_CICD_REPOS=$(echo "${EL_CICD_REPO} ${EL_CICD_CONFIG_REPO} ${EL_CICD_DEPLOY_REPO} ${EL_CICD_DOCS_REPO} ${EL_CICD_TEST_PROJECTS}")
     for EL_CICD_REPO_dir in ${_ALL_EL_CICD_REPOS}

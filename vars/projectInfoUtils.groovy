@@ -128,20 +128,20 @@ def initProjectModuleData(def projectInfo) {
 def setModuleData(def projectInfo, def module) {
     module.projectInfo = projectInfo
 
-    module.name = module.scmRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
+    module.name = module.gitRepoName.toLowerCase().replaceAll(/[^-0-9a-z]/, '-')
     module.id = "${projectInfo.id}-${module.name}"
 
-    module.workDir = "${WORKSPACE}/${module.scmRepoName}"
+    module.workDir = "${WORKSPACE}/${module.gitRepoName}"
 
-    module.scmRepoUrl = "git@${projectInfo.scmHost}:${projectInfo.scmOrganization}/${module.scmRepoName}.git"
-    module.scmBranch = projectInfo.scmBranch
-    module.scmDeployKeyJenkinsId = "${projectInfo.id}-${module.name}-${el.cicd.GIT_CREDS_POSTFIX}"
+    module.gitRepoUrl = "git@${projectInfo.gitHost}:${projectInfo.gitOrganization}/${module.gitRepoName}.git"
+    module.gitBranch = projectInfo.gitBranch
+    module.gitDeployKeyJenkinsId = "${projectInfo.id}-${module.name}-${el.cicd.GIT_CREDS_POSTFIX}"
 }
 
 def createProjectModule(def projectInfo) {
-    projectInfo.projectModule = [scmRepoName: projectInfo.id]
+    projectInfo.projectModule = [gitRepoName: projectInfo.id]
     setModuleData(projectInfo, projectInfo.projectModule)
-    projectInfo.projectModule.scmDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.GIT_CREDS_POSTFIX}"
+    projectInfo.projectModule.gitDeployKeyJenkinsId = "${projectInfo.id}-${el.cicd.GIT_CREDS_POSTFIX}"
 }
 
 def initProjectEnvNamespaceData(def projectInfo) {
@@ -216,25 +216,25 @@ def validateProjectInfo(def projectInfo) {
     def errMsg = "missing ${projectInfo.devEnv} rbacGroup: this is the default RBAC group for all environments if not otherwise specified"
     assert projectInfo.defaultRbacGroup : errMsg
 
-    assert projectInfo.scmHost ==~
+    assert projectInfo.gitHost ==~
         /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/ :
-        "bad or missing scmHost '${projectInfo.scmHost}"
-    assert projectInfo.scmRestApiHost ==~
+        "bad or missing gitHost '${projectInfo.gitHost}"
+    assert projectInfo.gitRestApiHost ==~
         /^(([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])\.)*([\p{Alnum}]|[\p{Alnum}][\p{Alnum}-]*[\p{Alnum}])(\/[\p{Alnum}][\p{Alnum}-]*)*$/ :
-        "bad or missing scmRestApiHost '${projectInfo.scmHost}"
-    assert projectInfo.scmOrganization : "missing scmOrganization"
-    assert projectInfo.scmBranch : "missing git branch"
+        "bad or missing gitRestApiHost '${projectInfo.gitHost}"
+    assert projectInfo.gitOrganization : "missing gitOrganization"
+    assert projectInfo.gitBranch : "missing git branch"
     assert ((projectInfo.modules.size() - projectInfo.testModules.size()) > 0) : "No components or artifacts defined"
 
     projectInfo.buildModules.each { buildModule ->
-        assert buildModule.scmRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.scmRepoName}"
+        assert buildModule.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.gitRepoName}"
         assert buildModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${buildModule.codeBase}"
     }
 
     projectInfo.testModules.each { testModule ->
         assert testModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${testModule.codeBase}"
-        testModule.componentRepos.each { scmRepoName ->
-            assert projectInfo.components.find { it.scmRepoName == scmRepoName }  : "System test has undefined component repo ${scmRepoName}"
+        testModule.componentRepos.each { gitRepoName ->
+            assert projectInfo.components.find { it.gitRepoName == gitRepoName }  : "System test has undefined component repo ${gitRepoName}"
         }        
     }
 
@@ -269,18 +269,18 @@ def validateProjectPvs(def projectInfo) {
 def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = null) {
     gitReference = gitReference ?: 'origin/*'
     dir (module.workDir) {
-        checkout scmGit(
+        checkout gitGit(
             branches: [[ name: gitReference ]],
             userRemoteConfigs: [
                 [ 
-                    url: module.scmRepoUrl,
-                    credentialsId: module.scmDeployKeyJenkinsId
+                    url: module.gitRepoUrl,
+                    credentialsId: module.gitDeployKeyJenkinsId
                 ]
             ]
         )
         
         if (postProcessing) {
-            withCredentials([sshUserPrivateKey(credentialsId: module.scmDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: module.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
                 postProcessing?.call(module)
             }            
         }

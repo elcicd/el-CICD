@@ -4,29 +4,29 @@
 _refresh_el_cicd_credentials() {
     set -e
     
-    __create_el_cicd_scm_readonly_deploy_keys
+    __create_el_cicd_git_readonly_deploy_keys
 
     GIT_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})
-    _delete_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
+    _delete_git_repo_deploy_key ${EL_CICD_GIT_API_URL} \
                                 ${EL_CICD_ORGANIZATION} \
                                 ${EL_CICD_REPO} \
                                 ${GIT_ACCESS_TOKEN} \
                                 ${EL_CICD_MASTER_NAMESPACE}
     
-    _add_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
+    _add_git_repo_deploy_key ${EL_CICD_GIT_API_URL} \
                              ${EL_CICD_ORGANIZATION} \
                              ${EL_CICD_REPO} \
                              ${GIT_ACCESS_TOKEN} \
                              ${EL_CICD_MASTER_NAMESPACE} \
                              ${EL_CICD_SSH_READ_ONLY_DEPLOY_KEY_FILE}
 
-    _delete_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
+    _delete_git_repo_deploy_key ${EL_CICD_GIT_API_URL} \
                                 ${EL_CICD_ORGANIZATION} \
                                 ${EL_CICD_CONFIG_REPO} \
                                 ${GIT_ACCESS_TOKEN} \
                                 ${EL_CICD_MASTER_NAMESPACE}
 
-    _add_scm_repo_deploy_key ${EL_CICD_GIT_API_URL} \
+    _add_git_repo_deploy_key ${EL_CICD_GIT_API_URL} \
                              ${EL_CICD_ORGANIZATION} \
                              ${EL_CICD_CONFIG_REPO} \
                              ${GIT_ACCESS_TOKEN} \
@@ -50,7 +50,7 @@ _refresh_el_cicd_credentials() {
     set +e
 }
 
-__create_el_cicd_scm_readonly_deploy_keys() {
+__create_el_cicd_git_readonly_deploy_keys() {
     mkdir -p ${SECRET_FILE_DIR}
 
     echo

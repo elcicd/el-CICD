@@ -14,15 +14,15 @@ def call(Map args) {
     def componentsToTest = args.componentsToTest
 
     def repoToMsMap = componentsToTest.collectEntries {
-        [it.scmRepoName, it]
+        [it.gitRepoName, it]
     }
 
     def codeBasesToNodes = [:]
     testModulesToRun.each { testModule ->
         def msCodeBaseList = []
-        testModule.componentRepos.each { scmRepoName ->
-            if (repoToMsMap[scmRepoName]) {
-                msCodeBaseList.add(repoToMsMap[scmRepoName])
+        testModule.componentRepos.each { gitRepoName ->
+            if (repoToMsMap[gitRepoName]) {
+                msCodeBaseList.add(repoToMsMap[gitRepoName])
             }
         }
 
@@ -30,7 +30,7 @@ def call(Map args) {
             codeBasesToNodes[testModule.codeBase] = createTestNode(testModule.codeBase, projectInfo, testModule, msCodeBaseList)
         }
     
-        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.scmRepoName}")
+        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.gitRepoName}")
     }
 
     parallel(codeBasesToNodes)
@@ -75,11 +75,11 @@ def createTestNode(def codeBase, def projectInfo, def testModule, def components
                     }
 
                     stage ('Pull test code') {
-                        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.scmRepoName}")
+                        loggingUtils.echoBanner("CLONING SYSTEM TEST REPO: ${testModule.gitRepoName}")
                         dir(testModule.workDir) {
-                            git url: testModule.scmRepoUrl,
-                                branch: projectInfo.scmTestBranch,
-                                credentialsId: testModule.scmDeployKeyJenkinsId
+                            git url: testModule.gitRepoUrl,
+                                branch: projectInfo.gitTestBranch,
+                                credentialsId: testModule.gitDeployKeyJenkinsId
                         }
                     }
 

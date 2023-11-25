@@ -34,7 +34,7 @@ __configure_github_headers() {
     GITHUB_HEADERS=(-H "Authorization: Bearer ${1}" -H "${GITHUB_REST_API_ACCEPT_HEADER}" -H "${GITHUB_REST_API_VERSION_HEADER}")
 }
 
-_delete_scm_repo_deploy_key() {
+_delete_git_repo_deploy_key() {
     local _GITHUB_API_HOST=${1}
     
     local _GITHUB_ORG=${2}
@@ -55,7 +55,7 @@ _delete_scm_repo_deploy_key() {
     done
 }
 
-_add_scm_repo_deploy_key() {
+_add_git_repo_deploy_key() {
     local _GITHUB_API_HOST=${1}
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}

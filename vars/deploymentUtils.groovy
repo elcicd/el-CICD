@@ -166,7 +166,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 
     configValuesMap.elCicdDefs.COMPONENT_NAME = component.name
     configValuesMap.elCicdDefs.CODE_BASE = component.codeBase
-    configValuesMap.elCicdDefs.GIT_REPO_NAME = component.scmRepoName
+    configValuesMap.elCicdDefs.GIT_REPO_NAME = component.gitRepoName
     configValuesMap.elCicdDefs.SRC_COMMIT_HASH = component.srcCommitHash ?: el.cicd.UNDEFINED
     configValuesMap.elCicdDefs.DEPLOYMENT_BRANCH = component.deploymentBranch ?: el.cicd.UNDEFINED
 
@@ -216,12 +216,12 @@ def outputDeploymentSummary(def projectInfo) {
         if (component.flaggedForDeployment || component.flaggedForRemoval) {
             resultsMsgs += "**********"
             resultsMsgs += ''
-            def checkoutBranch = component.deploymentBranch ?: component.scmBranch
+            def checkoutBranch = component.deploymentBranch ?: component.gitBranch
             resultsMsgs += component.flaggedForDeployment ? "${component.name} DEPLOYED FROM GIT:" : "${component.name} REMOVED FROM NAMESPACE"
             if (component.flaggedForDeployment) {
-                def refs = component.scmBranch.startsWith(component.srcCommitHash) ?
+                def refs = component.gitBranch.startsWith(component.srcCommitHash) ?
                     "    Git image source ref: ${component.srcCommitHash}" :
-                    "    Git image source refs: ${component.scmBranch} / ${component.srcCommitHash}"
+                    "    Git image source refs: ${component.gitBranch} / ${component.srcCommitHash}"
 
                 resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
                 resultsMsgs += "    git checkout ${checkoutBranch}"

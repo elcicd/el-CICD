@@ -7,7 +7,7 @@ void call(Map args) {
     def projectInfo = args.projectInfo
     def component = projectInfo.components.find { it.name == args.componentName }
 
-    component.scmBranch = args.scmBranch
+    component.gitBranch = args.gitBranch
 
     projectInfo.deployToEnv = projectInfo.devEnv
     projectInfo.deployToNamespace = args.deployToNamespace
@@ -21,9 +21,9 @@ void call(Map args) {
     }
 
     stage('Checkout code from repository') {
-        loggingUtils.echoBanner("CLONING ${component.scmRepoName} REPO, REFERENCE: ${component.scmBranch}")
+        loggingUtils.echoBanner("CLONING ${component.gitRepoName} REPO, REFERENCE: ${component.gitBranch}")
 
-        projectInfoUtils.cloneGitRepo(component, component.scmBranch) {
+        projectInfoUtils.cloneGitRepo(component, component.gitBranch) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :
@@ -75,8 +75,8 @@ void call(Map args) {
                 sh """
                     chmod 777 Dockerfile
                 
-                    echo "\nLABEL SRC_COMMIT_REPO='${component.scmRepoUrl}'" >> Dockerfile
-                    echo "\nLABEL SRC_COMMIT_BRANCH='${component.scmBranch}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_REPO='${component.gitRepoUrl}'" >> Dockerfile
+                    echo "\nLABEL SRC_COMMIT_BRANCH='${component.gitBranch}'" >> Dockerfile
                     echo "\nLABEL SRC_COMMIT_HASH='${component.srcCommitHash}'" >> Dockerfile
                     echo "\nLABEL EL_CICD_BUILD_TIME='\$(date +%d.%m.%Y-%H.%M.%S%Z)'" >> Dockerfile
                     

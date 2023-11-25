@@ -30,7 +30,7 @@ def call(Map args) {
         def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
 
         projectInfo.deployToNamespace = cicdInfo.buildToNamespace
-        projectInfo.scmBranch = cicdInfo.scmBranch
+        projectInfo.gitBranch = cicdInfo.gitBranch
         projectInfo.cleanNamespace = cicdInfo.cleanNamespace
         projectInfo.buildModules.each { module ->
             module.build =

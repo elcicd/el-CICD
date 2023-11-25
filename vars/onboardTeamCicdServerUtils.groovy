@@ -128,8 +128,7 @@ def setupProjectPipelines(def projectInfo) {
     def cicdSshConfigFile = "module-ssh-values.yaml"
     writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
 
-    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
-        projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+    def chartName = "${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
@@ -166,8 +165,7 @@ def setupProjectEnvironments(def projectInfo) {
     def cicdSshConfigFile = "module-ssh-values.yaml"
     writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
 
-    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
-        projectInfo.id : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}"
+    def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
@@ -224,23 +222,23 @@ def configureScmDeployKeys(def projectInfo) {
                 sh """
                     set +x
                     echo
-                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.scmRepoName}"
+                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.gitRepoName}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                    _delete_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
-                                                ${projectInfo.scmOrganization} \
-                                                ${module.scmRepoName} \
+                    _delete_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
+                                                ${projectInfo.gitOrganization} \
+                                                ${module.gitRepoName} \
                                                 \${GIT_ACCESS_TOKEN} \
                                                 '${projectInfo.repoDeployKeyId}'
 
-                    _add_scm_repo_deploy_key ${projectInfo.scmRestApiHost} \
-                                             ${projectInfo.scmOrganization} \
-                                             ${module.scmRepoName} \
+                    _add_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
+                                             ${projectInfo.gitOrganization} \
+                                             ${module.gitRepoName} \
                                              \${GIT_ACCESS_TOKEN} \
                                              '${projectInfo.repoDeployKeyId}' \
-                                             ${module.scmDeployKeyJenkinsId} \
+                                             ${module.gitDeployKeyJenkinsId} \
                                              false
                     set -x
                 """
@@ -259,29 +257,29 @@ def configureScmWebhooks(def projectInfo) {
                     sh """
                         set +x
                         echo
-                        echo "--> CREATING NEW WEBOOK FOR: ${module.scmRepoName}"
+                        echo "--> CREATING NEW WEBOOK FOR: ${module.gitRepoName}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                        _delete_webhook ${projectInfo.scmRestApiHost} \
-                                        ${projectInfo.scmOrganization} \
-                                        ${module.scmRepoName} \
+                        _delete_webhook ${projectInfo.gitRestApiHost} \
+                                        ${projectInfo.gitOrganization} \
+                                        ${module.gitRepoName} \
                                         ${projectInfo.jenkinsHostUrl} \
                                         ${projectInfo.id} \
                                         ${module.name} \
                                         ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                        '${module.scmDeployKeyJenkinsId}' \
+                                        '${module.gitDeployKeyJenkinsId}' \
                                         \${GIT_ACCESS_TOKEN}
 
-                        _add_webhook ${projectInfo.scmRestApiHost} \
-                                    ${projectInfo.scmOrganization} \
-                                    ${module.scmRepoName} \
+                        _add_webhook ${projectInfo.gitRestApiHost} \
+                                    ${projectInfo.gitOrganization} \
+                                    ${module.gitRepoName} \
                                     ${projectInfo.jenkinsHostUrl} \
                                     ${projectInfo.id} \
                                     ${module.name} \
                                     ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                    ${module.scmDeployKeyJenkinsId} \
+                                    ${module.gitDeployKeyJenkinsId} \
                                     \${GIT_ACCESS_TOKEN}
                         set -x
                     """
@@ -414,7 +412,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
     elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.FOLDER_NAME = projectInfo.id
-    elCicdDefs.GIT_BRANCH = projectInfo.scmBranch
+    elCicdDefs.GIT_BRANCH = projectInfo.gitBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
     elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
@@ -433,10 +431,10 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
 
     elCicdDefs.GIT_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
-        if (!module.scmDeployKeyJenkinsId) {
+        if (!module.gitDeployKeyJenkinsId) {
             projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
         }
-        return module.scmDeployKeyJenkinsId
+        return module.gitDeployKeyJenkinsId
     }
 }
 
@@ -499,13 +497,13 @@ def createCompSshKeyValues(def projectInfo) {
 
     projectInfo.modules.each { module ->
         dir(module.workDir) {
-            echo "Creating deploy key for ${module.scmRepoName}"
+            echo "Creating deploy key for ${module.gitRepoName}"
 
-            sh "ssh-keygen -b 2048 -t rsa -f '${module.scmDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
+            sh "ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
 
-            def sshKey = readFile(file: module.scmDeployKeyJenkinsId)
+            def sshKey = readFile(file: module.gitDeployKeyJenkinsId)
 
-            cicdConfigValues["elCicdDefs-${module.scmDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
+            cicdConfigValues["elCicdDefs-${module.gitDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
         }
     }
 

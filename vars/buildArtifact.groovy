@@ -8,13 +8,13 @@ void call(Map args) {
     def projectInfo = args.projectInfo
     def artifact = projectInfo.artifacts.find { it.name == args.artifactName }
 
-    artifact.scmBranch = args.scmBranch
+    artifact.gitBranch = args.gitBranch
     artifact.isSnapshot = args.isSnapshot
 
     stage('Checkout code from repository') {
-        loggingUtils.echoBanner("CLONING ${artifact.scmRepoName} REPO, REFERENCE: ${artifact.scmBranch}")
+        loggingUtils.echoBanner("CLONING ${artifact.gitRepoName} REPO, REFERENCE: ${artifact.gitBranch}")
 
-        projectInfoUtils.cloneGitRepo(artifact, artifact.scmBranch) {
+        projectInfoUtils.cloneGitRepo(artifact, artifact.gitBranch) {
             sh """
                 ${shCmd.echo 'filesChanged:'}
                 git diff HEAD^ HEAD --stat 2> /dev/null || :

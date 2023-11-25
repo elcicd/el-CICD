@@ -12,7 +12,7 @@ def call(Map args) {
         def TEST_CODE_BASE = 'Test Type:'
         def inputs = [choice(name: TEST_ENV, description: '', choices: allEnvs)]
 
-        inputs.addAll(projectInfo.testModules.collect { booleanParam(name: "${it.scmRepoName}/${it.codeBase}") } )
+        inputs.addAll(projectInfo.testModules.collect { booleanParam(name: "${it.gitRepoName}/${it.codeBase}") } )
 
         def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select environment and test types to run:", args, inputs)
 
@@ -24,7 +24,7 @@ def call(Map args) {
         projectInfo.testModulesToRun = [] as Set
         cicdInfo.each { name, answer ->
             if (name != TEST_ENV && answer) {
-                def testModule = projectInfo.testModules.find { "${it.scmRepoName}/${it.codeBase}" == name }
+                def testModule = projectInfo.testModules.find { "${it.gitRepoName}/${it.codeBase}" == name }
                 if (testModule) {
                     projectInfo.testModulesToRun += testModule
                 }
@@ -49,7 +49,7 @@ def call(Map args) {
         def inputs = []
         def compTestPossibilities = [] as Set
         projectInfo.components.each { component ->
-            if (compNames.contains(component.name) && testMicroServiceReposSet.contains(component.scmRepoName)) {
+            if (compNames.contains(component.name) && testMicroServiceReposSet.contains(component.gitRepoName)) {
                 compTestPossibilities += component
                 inputs += booleanParam(name: component.name)
             }
@@ -73,7 +73,7 @@ def call(Map args) {
         projectInfo.testModulesToRun = [] as Set
         projectInfo.componentsToTest.each { component ->
             def sts = projectInfo.testModules.findAll { testModule -> 
-                testModule.componentRepos.find { it == component.scmRepoName }
+                testModule.componentRepos.find { it == component.gitRepoName }
             }
             projectInfo.testModulesToRun.addAll(sts)
         }

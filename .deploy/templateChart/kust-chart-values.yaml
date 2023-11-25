@@ -14,7 +14,7 @@ elCicdTemplates-elcicd-kust:
       - projectid=$<PROJECT_ID>
       - component=$<COMPONENT_NAME>
       - profiles=$<EL_CICD_PROFILES>
-      - scm-repo=$<GIT_REPO_NAME>
+      - git-repo=$<GIT_REPO_NAME>
       - src-commit-hash=$<SRC_COMMIT_HASH>
       - deployment-branch=$<DEPLOYMENT_BRANCH>
       - release-version=$<RELEASE_VERSION>
