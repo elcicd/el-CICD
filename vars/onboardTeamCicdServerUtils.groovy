@@ -105,7 +105,7 @@ def setupProjectPvResources(def projectInfo) {
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pv-values.yaml \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
                     ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
@@ -140,8 +140,8 @@ def setupProjectPipelines(def projectInfo) {
         if ! helm upgrade --install --history-max=1  \
             -f ${pipelinesValuesFile} \
             -f ${modulesSshValuesFile} \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-pipeline-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
@@ -173,8 +173,8 @@ def setupProjectEnvironments(def projectInfo) {
         if ! helm upgrade --install --history-max=1  \
             -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
-            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-env-cicd-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-env-setup-values.yaml \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-environments-values.yaml \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-environments-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${chartName} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
