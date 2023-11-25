@@ -1,6 +1,4 @@
-elCicdDefs:
-  EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
-  
+elCicdDefs:  
   TEAM_PIPELINE_CONFIG_MAP_DATA:
     contentKey: $<OBJ_NAME>
     $<OBJ_NAME>: $<EL_CICD_TEAM_PIPELINE_TEMPLATE>

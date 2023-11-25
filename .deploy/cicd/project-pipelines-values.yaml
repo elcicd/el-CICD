@@ -86,10 +86,8 @@ elCicdTemplates:
   - nonprod
   labels: $<SHARED_PROJECT_PIPELINE_LABELS>
   elCicdDefs:
-    EL_CICD_AGENT: el.cicd.JENKINS_AGENT_DEFAULT
     PIPELINE_NAME: $<BASE_OBJ_NAME>
     EL_CICD_API_ARGS: |-
-      agent: el.cicd.JENKINS_AGENT_DEFAULT,
       teamId: '$<TEAM_ID>',
       projectId: '$<PROJECT_ID>',
       $<EXTRA_PIPELINE_ARGS>
