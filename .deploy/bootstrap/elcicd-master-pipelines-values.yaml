@@ -6,7 +6,7 @@ elCicdDefs:
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
   TEAM_ID_PIPELINE_PARAM: stringParam('TEAM_ID', null, 'Team ID')
-  RECREATE_SDLC_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_SDLC_ENVS', false, 'Destroy and recreate CICD namespace environments for each project?')
+  RECREATE_SDLC_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_SDLC_ENVS', false, 'Tear down and recreate the project SDLC environments?')
   AGENT_PIPELINE_ARG: |-
     agent:  el.cicd.JENKINS_AGENT_DEFAULT
   TEAM_ID_PIPELINE_ARG: |-
@@ -19,7 +19,7 @@ elCicdDefs:
     teamId: params.TEAM_ID
     
 elCicdDefs-nonprod:
-  PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, 'Comma delimited list of Project ID; leave blank if create a team Prod deployment server')
+  PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, 'Project ID')
   PIPELINE_NAMES:
   - onboard-team-cicd-server
   - refresh-team-cicd-servers
