@@ -329,7 +329,7 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
 
     createElCicdProfiles(pipelineValues)
     
-    getElCicdEnvironmentValues(projectInfo, elCicdDefs)
+    getElCicdProjectCommonValues(projectInfo, elCicdDefs)
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
@@ -346,7 +346,7 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     return pipelineValues
 }
 
-def getElCicdEnvironmentValues(def projectInfo, def elCicdDefs) {
+def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
@@ -355,6 +355,8 @@ def getElCicdEnvironmentValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENV = projectInfo.prodEnv
     }
+    
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
 }
 
 def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
@@ -366,7 +368,6 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.EL_CICD_GIT_REPO = el.cicd.EL_CICD_GIT_REPO
     elCicdDefs.EL_CICD_GIT_REPO_BRANCH_NAME = el.cicd.EL_CICD_GIT_REPO_BRANCH_NAME
     elCicdDefs.EL_CICD_META_INFO_NAME = el.cicd.EL_CICD_META_INFO_NAME
-    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
     elCicdDefs.DEV_ENV = projectInfo.devEnv
 
@@ -394,7 +395,7 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
 
     createElCicdProfiles(environmentsValues)
     
-    getElCicdEnvironmentValues(projectInfo, elCicdDefs)
+    getElCicdProjectCommonValues(projectInfo, elCicdDefs)
 
     getElCicdNamespaceChartValues(projectInfo, environmentsValues)
 
