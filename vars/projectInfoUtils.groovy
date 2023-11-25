@@ -269,7 +269,7 @@ def validateProjectPvs(def projectInfo) {
 def cloneGitRepo(def module, def gitReference = null, Closure postProcessing = null) {
     gitReference = gitReference ?: 'origin/*'
     dir (module.workDir) {
-        checkout gitGit(
+        checkout scmGit(
             branches: [[ name: gitReference ]],
             userRemoteConfigs: [
                 [ 
