@@ -121,8 +121,8 @@ def getProjectPvChartName(def projectInfo) {
 
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
-    def cicdConfigFile = "cicd-pipeline-config-values.yaml"
-    writeYaml(file: cicdConfigFile, data: projectDefs)
+    def envsConfigFile = "cicd-pipeline-config-values.yaml"
+    writeYaml(file: envsConfigFile, data: projectDefs)
 
     def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
     def cicdSshConfigFile = "module-ssh-values.yaml"
@@ -132,13 +132,13 @@ def setupProjectPipelines(def projectInfo) {
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-        cat ${cicdConfigFile}
+        cat ${envsConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
         ${shCmd.echo ''}
         if ! helm upgrade --install --history-max=1  \
-            -f ${cicdConfigFile} \
+            -f ${envsConfigFile} \
             -f ${cicdSshConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
@@ -158,25 +158,20 @@ def setupProjectPipelines(def projectInfo) {
 
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvValues(projectInfo)
-    def cicdConfigFile = "cicd-config-values.yaml"
-    writeYaml(file: cicdConfigFile, data: projectDefs)
-
-    def moduleSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def cicdSshConfigFile = "module-ssh-values.yaml"
-    writeYaml(file: cicdSshConfigFile, data: moduleSshKeyDefs)
+    def envsConfigFile = "envs-config-values.yaml"
+    writeYaml(file: envsConfigFile, data: projectDefs)
 
     def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-        cat ${cicdConfigFile}
+        cat ${envsConfigFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
         ${shCmd.echo ''}
         if ! helm upgrade --install --history-max=1  \
-            -f ${cicdConfigFile} \
-            -f ${cicdSshConfigFile} \
+            -f ${envsConfigFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-env-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-env-setup-values.yaml \
