@@ -325,11 +325,11 @@ def getPvCicdConfigValues(def projectInfo) {
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {
     pipelineValues = [elCicdDefs: [:]]
-    def elCicdDefs= pipelineValues.elCicdDefs
+    def elCicdDef = pipelineValues.elCicdDefs
 
-    createElCicdProfiles(pipelineValues, elCicdDefs)
+    createElCicdProfiles(projectInfo, elCicdDefs)
     
-    getElCicdEnvironmentValues(pipelineValues, elCicdDefs)
+    getElCicdEnvironmentValues(projectInfo, elCicdDefs)
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
@@ -390,11 +390,11 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
 
 def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
     environmentsValues = [elCicdDefs: [:]]
-    def elCicdDefs= environmentsValues.elCicdDefs
+    def elCicdDefs = environmentsValues.elCicdDefs
 
-    createElCicdProfiles(environmentsValues, elCicdDefs)
+    createElCicdProfiles(projectInfo, elCicdDefs)
     
-    getElCicdEnvironmentValues(pipelineValues, elCicdDefs)
+    getElCicdEnvironmentValues(projectInfo, elCicdDefs)
 
     getElCicdNamespaceChartValues(projectInfo, environmentsValues)
 
