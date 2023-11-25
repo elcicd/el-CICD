@@ -105,6 +105,7 @@ def setupProjectPvResources(def projectInfo) {
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
+                                                                               project-persistent-volume-values
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
@@ -192,7 +193,7 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 
     sh """
         ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
-        if [[ ! -z \$(helm list -n ${cicdMasterNamespace} | grep sync-jenkins-pipelines) ]]
+        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${cicdMasterNamespace}) ]]
         then
             helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
         fi
