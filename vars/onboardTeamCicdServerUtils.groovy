@@ -105,27 +105,6 @@ def setupProjectPipelines(def projectInfo) {
     """
 }
 
-def syncJenkinsPipelines(def cicdMasterNamespace) {
-    def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-
-    sh """
-        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
-        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${cicdMasterNamespace}) ]]
-        then
-            helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
-        fi
-
-        ${shCmd.echo ''}
-        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
-            --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
-            -n ${cicdMasterNamespace} \
-            sync-jenkins-pipelines \
-            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-    """
-}
-
 def uninstallSdlcEnvironments(def projectInfo) {
     def namespaces = [:].keySet()
     namespaces.addAll(projectInfo.buildNamespaces)
@@ -240,87 +219,6 @@ def getPvCicdConfigValues(def projectInfo) {
     }
 
     return pvValues
-}
-
-def configureScmDeployKeys(def projectInfo) {
-    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
-
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
-        withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
-            dir(module.workDir) {
-                sh """
-                    set +x
-                    echo
-                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${module.gitRepoName}"
-                    echo
-
-                    source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
-
-                    _delete_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
-                                                ${projectInfo.gitOrganization} \
-                                                ${module.gitRepoName} \
-                                                \${GIT_ACCESS_TOKEN} \
-                                                '${projectInfo.repoDeployKeyId}'
-
-                    _add_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
-                                             ${projectInfo.gitOrganization} \
-                                             ${module.gitRepoName} \
-                                             \${GIT_ACCESS_TOKEN} \
-                                             '${projectInfo.repoDeployKeyId}' \
-                                             ${module.gitDeployKeyJenkinsId} \
-                                             false
-                    set -x
-                """
-            }
-        }
-    }
-
-    parallel(buildStages)
-}
-
-def configureScmWebhooks(def projectInfo) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
-        if (!module.disableWebhook) {
-            withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
-                dir(module.workDir) {
-                    sh """
-                        set +x
-                        echo
-                        echo "--> CREATING NEW WEBOOK FOR: ${module.gitRepoName}"
-                        echo
-
-                        source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
-
-                        _delete_webhook ${projectInfo.gitRestApiHost} \
-                                        ${projectInfo.gitOrganization} \
-                                        ${module.gitRepoName} \
-                                        ${projectInfo.jenkinsHostUrl} \
-                                        ${projectInfo.id} \
-                                        ${module.name} \
-                                        ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                        '${module.gitDeployKeyJenkinsId}' \
-                                        \${GIT_ACCESS_TOKEN}
-
-                        _add_webhook ${projectInfo.gitRestApiHost} \
-                                    ${projectInfo.gitOrganization} \
-                                    ${module.gitRepoName} \
-                                    ${projectInfo.jenkinsHostUrl} \
-                                    ${projectInfo.id} \
-                                    ${module.name} \
-                                    ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                    ${module.gitDeployKeyJenkinsId} \
-                                    \${GIT_ACCESS_TOKEN}
-                        set -x
-                    """
-                }
-            }
-        }
-        else {
-            echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED: SKIPPING"
-        }
-    }
-
-    parallel(buildStages)
 }
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {

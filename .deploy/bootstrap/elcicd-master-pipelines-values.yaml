@@ -6,17 +6,12 @@ elCicdDefs:
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
   TEAM_ID_PIPELINE_PARAM: stringParam('TEAM_ID', null, 'Team ID')
-  RECREATE_SDLC_ENVS_PIPELINE_PARAM: booleanParam('RECREATE_SDLC_ENVS', false, 'Tear down and recreate the project SDLC environments?')
   AGENT_PIPELINE_ARG: |-
     agent:  el.cicd.JENKINS_AGENT_DEFAULT
   TEAM_ID_PIPELINE_ARG: |-
     teamId: params.TEAM_ID
   PROJECT_ID_PIPELINE_ARG: |-
     projectId:  el.cicd.UNDEFINED
-  RECREATE_SDLC_ENVS_PIPELINE_ARG: |-
-    recreateSdlcEnvs: params.RECREATE_SDLC_ENVS
-  EL_CICD_API_ARGS: |-
-    teamId: params.TEAM_ID
     
 elCicdDefs-nonprod:
   PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, 'Project ID')
@@ -34,31 +29,31 @@ elCicdDefs-onboard-team-cicd-server:
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      $<RECREATE_SDLC_ENVS_PIPELINE_PARAM>
+      booleanParam('RECREATE_SDLC_ENVS', false, 'Tear down and recreate the project SDLC environments?')
     }
   EL_CICD_API_ARGS: |-
-    $<AGENT_PIPELINE_ARG>,
     $<TEAM_ID_PIPELINE_ARG>,
     $<PROJECT_ID_PIPELINE_ARG>,
-    $<RECREATE_SDLC_ENVS_PIPELINE_ARG>
+    recreateSdlcEnvs: params.RECREATE_SDLC_ENVS
 
 elCicdDefs-delete-team-project:
   PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
   EL_CICD_API_METHOD: deleteTeamProject
+  TEAR_DOWN_DESCRIPTION: |-
+    Tear down the project SDLC environments? WARNING: ALL project namespaces in the cluster will be deleted
   PIPELINE_PARAMS: |-
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
+      booleanParam('TEAR_DOWN_SDLC_ENVIRONMENTS', false, '$<TEAR_DOWN_DESCRIPTION>')
     }
   EL_CICD_API_ARGS: |-
-    $<AGENT_PIPELINE_ARG>,
     $<TEAM_ID_PIPELINE_ARG>,
     $<PROJECT_ID_PIPELINE_ARG>
+    tearDownSdlcEnvironments: params.DELETE_SDLC_ENVIRONMENTS
 
 elCicdDefs-refresh-team-cicd-servers:
   PIPELINE_DESCRIPTION: "Refresh configuration and credentials for each team's CICD server"
-  EL_CICD_API_ARGS: |-
-    $<AGENT_PIPELINE_ARG>,
   EL_CICD_API_METHOD: refreshTeamCicdServers
 
 elCicdTemplates-elcicd-master-pipelines-defs:

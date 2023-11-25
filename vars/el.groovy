@@ -52,8 +52,8 @@ def initMetaData(Map metaData) {
 }
 
 def node(Map args, Closure body) {
-    assert args.agent
-
+    def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT}
+    
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
@@ -63,7 +63,7 @@ def node(Map args, Closure body) {
     }
 
     podTemplate([
-        label: "${args.agent}",
+        label: "${jenkinsAgent}",
         cloud: 'openshift',
         podRetention: onFailure(),
         idleMinutes: 90, // "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
@@ -81,7 +81,7 @@ def node(Map args, Closure body) {
                 memory: ${el.cicd.JENKINS_AGENT_MEMORY_LIMIT}
             containers:
             - name: 'jnlp'
-              image: "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${args.agent}:latest"
+              image: "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${jenkinsAgent}:latest"
               envFrom:
               - configMapRef:
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
@@ -91,12 +91,12 @@ def node(Map args, Closure body) {
         """,
         volumes: volumeDefs
     ]) {
-        node(args.agent) {
+        node(jenkinsAgent) {
             try {
                 withCredentials([usernamePassword(credentialsId: el.cicd.EL_CICD_HELM_OCI_REGISTRY_CREDENTIALS,
                                 usernameVariable: 'HELM_REGISTRY_USERNAME',
                                 passwordVariable: 'HELM_REGISTRY_PASSWORD')]) {
-                    initializePipeline()
+                    initializePipeline(jenkinsAgent)
 
                     runHookScript(el.cicd.PRE, args)
 
@@ -153,7 +153,7 @@ def runHookScript(def prefix, def args, def exception) {
     }
 }
 
-def initializePipeline() {
+def initializePipeline(def jenkinsAgent) {
     stage('Initializing pipeline') {
         loggingUtils.echoBanner("INITIALIZING PIPELINE...")
 
@@ -167,6 +167,8 @@ def initializePipeline() {
             mkdir -p '${el.cicd.TEMP_DIR}'
 
             ${shCmd.echo("\n${loggingUtils.BANNER_SEPARATOR}\n")}
+            ${shCmd.echo "Jenkins Agent: ${jenkinsAgent}"}
+            ${shCmd.echo ''}
             ${shCmd.echo 'OCP Runtime'}
             oc version
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}

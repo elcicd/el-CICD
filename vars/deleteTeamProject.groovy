@@ -1,17 +1,23 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Delete a project from OKD; i.e. the opposite of onboarding a project.
  */
 
 def call(Map args) {
     def projectInfo = args.projectInfo
+    def tearDownSdlcEnvironments = args.tearDownSdlcEnvironments
     
-    stage('Confirm removing project and namespaces from cluster') {
+    stage('Confirm project removal') {
+        def forProject = "for project ${projectInfo.id}"
+        def willBeRemoved = "WILL BE REMOVED FROM"
+        def envsMsg = "All SDLC NAMESPACES ${forProject} "
+        envsMsg += tearDownSdlcEnvironments ?
+            "${willBeRemoved} from the cluster" : "WILL BE RETAINED in the cluster"
         def msg = loggingUtils.echoBanner(
-            "ALL CICD NAMESPACES FOR ${projectInfo.id} WILL BE REMOVED FROM THE CLUSTER",
+            envsMsg,
             '',
-            "ALL DEPLOY KEYS FOR FOR ${projectInfo.id} WILL BE REMOVED FROM THE GIT",
+            "All PIPELINES ${forProject} ${willBeRemoved} THE JENKINS SERVER",
+            '',
+            "All DEPLOY KEYS and WEBHOOKS ${forProject} ${willBeRemoved} THE GIT SERVER",
             ''
             "Should project ${projectInfo.id} be deleted?"
         )
@@ -19,21 +25,37 @@ def call(Map args) {
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
-    loggingUtils.echoBanner("REMOVING OLD DEPLOY KEYS FROM PROJECT ${projectInfo.id} GIT REPOS")
-    def buildStages =  concurrentUtils.createParallelStages('Delete GIT deploy keys', projectInfo.modules) { module ->
-        githubUtils.deleteProjectDeployKeys(module)
-    }    
-    parallel(buildStages)
+
+    loggingUtils.echoBanner("REMOVE DEPLOY KEYS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+    projectUtils.removeGitDeployKeysFromProject(projectInfo)
+
+    loggingUtils.echoBanner("REMOVE WEBHOOKS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+    projectUtils.removeGitWebhooksFromProject(projectInfo)
 
     stage('Remove project from cluster') {
-        loggingUtils.echoBanner("REMOVING ALL PROJECT ${projectInfo.id} FROM CLUSTER")
+        loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
         
         sh """
-            helm uninstall ${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX} --wait --no-hooks
+            if [[ -n "\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace}) --filter ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX})" ]]
+            then
+                helm uninstall --wait  ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            else
+                ${shCmd.echo "--> PIPELINES FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
+            fi
+            
+            if [[ "${tearDownSdlcEnvironments ? 'true' : ''}" ]]
+            then
+                if [[ -n "\$(helm list -q ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})" ]]
+                then
+                    helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+                else
+                    ${shCmd.echo "--> SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
+                fi
+            fi
         """
         
-        onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+        projectUtils.syncJenkinsPipelines(projectInfo)
         
-        loggingUtils.echoBanner("${projectInfo.id} REMOVED FROM CLUSTER")
+        loggingUtils.echoBanner("PROJECT ${projectInfo.id} REMOVED FROM CLUSTER")
     }
 }

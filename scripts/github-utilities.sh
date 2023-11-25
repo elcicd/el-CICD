@@ -36,7 +36,6 @@ __configure_github_headers() {
 
 _delete_git_repo_deploy_key() {
     local _GITHUB_API_HOST=${1}
-    
     local _GITHUB_ORG=${2}
     local _REPO_NAME=${3}
     local _GIT_ACCESS_TOKEN=${4}

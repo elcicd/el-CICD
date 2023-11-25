@@ -1,7 +1,5 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
- *
- * Defines the bulk of the project onboarding pipeline.
  */
 
 def call(Map args) {
@@ -29,7 +27,7 @@ def call(Map args) {
         onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 
         loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
-        onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
+        projectUtils.syncJenkinsPipelines(projectInfo)
     }
 
     stage('Configure project SDLC environments') {
@@ -46,11 +44,11 @@ def call(Map args) {
         }
     }
 
-    loggingUtils.echoBanner("CONFIGURE GIT DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
-    onboardTeamCicdServerUtils.configureScmDeployKeys(projectInfo)
+    loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+    projectUtils.createNewGitDeployKeysForProject(projectInfo)
 
-    loggingUtils.echoBanner("PUSH ${projectInfo.id} JENKINS WEBHOOK TO EACH GIT REPO")
-    onboardTeamCicdServerUtils.configureScmWebhooks(projectInfo)
+    loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+    projectUtils.createNewGitWebhooksForProject(projectInfo)
 
     stage('Summary') {
         loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",
