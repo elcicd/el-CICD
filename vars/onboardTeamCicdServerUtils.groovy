@@ -302,10 +302,9 @@ def configureScmWebhooks(def projectInfo) {
 }
 
 def getPvCicdConfigValues(def projectInfo) {
-    configValues = [:]
-    elCicdDefs = [:]
+    pvValues = [elCicdDefs: [:]]
 
-    elCicdDefs.VOLUME_OBJ_NAMES = []
+    pvValues.elCicdDefs.VOLUME_OBJ_NAMES = []
     projectInfo.staticPvs.each { pv ->
         pv.envs.each { env ->
             def namespace = projectInfo.nonProdNamespaces[env]
@@ -313,7 +312,7 @@ def getPvCicdConfigValues(def projectInfo) {
                 projectInfo.components.each { component ->
                     if (component.staticPvs.contains(pv.name)) {
                         def objName = "${el.cicd.PV_PREFIX}-${pv.name}-${component.name}-${env}"
-                        elCicdDefs.VOLUME_OBJ_NAMES << objName
+                        pvValues.elCicdDefs.VOLUME_OBJ_NAMES << objName
 
                         volumeMap = [:]
                         volumeMap.VOLUME_MODE = pv.volumeMode
@@ -324,15 +323,14 @@ def getPvCicdConfigValues(def projectInfo) {
                         volumeMap.VOLUME_TYPE = pv.volumeType
                         volumeMap.VOLUME_DEF = pv.volumeDef
 
-                        configValues["elCicdDefs-${objName}"] = volumeMap
+                        pvValues["elCicdDefs-${objName}"] = volumeMap
                     }
                 }
             }
         }
     }
 
-    configValues.elCicdDefs = elCicdDefs
-    return configValues
+    return pvValues
 }
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {
