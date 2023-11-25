@@ -121,25 +121,25 @@ def getProjectPvChartName(def projectInfo) {
 
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
-    def cicdsConfigFile = "cicd-pipeline-config-values.yaml"
-    writeYaml(file: envsConfigFile, data: projectDefs)
+    def pipelinesValuesFile = "cicd-pipeline-config-values.yaml"
+    writeYaml(file: pipelinesValuesFile, data: projectDefs)
 
     def modulesSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def modulesSshConfigFile = "module-ssh-values.yaml"
-    writeYaml(file: modulesSshConfigFile, data: modulesSshKeyDefs)
+    def modulesSshValuesFile = "module-ssh-values.yaml"
+    writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
 
     def chartName = "${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-        cat ${cicdsConfigFile}
+        cat ${pipelinesValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
         ${shCmd.echo ''}
         if ! helm upgrade --install --history-max=1  \
-            -f ${cicdsConfigFile} \
-            -f ${modulesSshConfigFile} \
+            -f ${pipelinesValuesFile} \
+            -f ${modulesSshValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-non-prod-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-cicd-setup-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
@@ -158,20 +158,20 @@ def setupProjectPipelines(def projectInfo) {
 
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvValues(projectInfo)
-    def envsConfigFile = "envs-config-values.yaml"
-    writeYaml(file: envsConfigFile, data: projectDefs)
+    def environmentsValuesFile = "envs-config-values.yaml"
+    writeYaml(file: environmentsValuesFile, data: projectDefs)
 
     def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}"
 
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
-        cat ${envsConfigFile}
+        cat ${environmentsValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         set +e
         ${shCmd.echo ''}
         if ! helm upgrade --install --history-max=1  \
-            -f ${envsConfigFile} \
+            -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-env-cicd-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-env-setup-values.yaml \
