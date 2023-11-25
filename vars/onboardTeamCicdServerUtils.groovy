@@ -77,49 +77,13 @@ def getJenkinsConfigValues(def teamInfo) {
 }
 
 def resetProjectPvResources(def projectInfo) {
-    def chartName = getProjectPvChartName(projectInfo)
     sh """
-        PVS_INSTALLED=\$(helm list --short --filter '${chartName}' -n ${projectInfo.teamInfo.cicdMasterNamespace})
+        PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
         if [[ "\${PVS_INSTALLED}" ]]
         then
-            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            helm uninstall ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
         fi
     """
-}
-
-def setupProjectPvResources(def projectInfo) {
-    if (projectInfo.staticPvs) {
-        def pvYaml = getPvCicdConfigValues(projectInfo)
-        echo '============='
-        echo pvYaml
-        echo '============='
-        def volumeCicdConfigValues = writeYaml(data: pvYaml, returnText: true)
-
-        def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
-        writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
-
-        def chartName = getProjectPvChartName(projectInfo)
-
-        sh """
-            ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
-            cat ${volumeCicdConfigFile}
-
-            if [[ ! -z '${projectInfo.staticPvs ? 'hasPvs' : ''}' ]]
-            then
-                helm install \
-                    -f ${volumeCicdConfigFile} \
-                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
-                    -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-                    ${chartName} \
-                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-            fi
-        """
-    }
-}
-
-def getProjectPvChartName(def projectInfo) {
-    def chartName = projectInfo.id.endsWith(el.cicd.HELM_RELEASE_PROJECT_SUFFIX) ?
-        "${projectInfo.id}-pv" : "${projectInfo.id}-${el.cicd.HELM_RELEASE_PROJECT_SUFFIX}-pv"
 }
 
 def setupProjectPipelines(def projectInfo) {
@@ -131,16 +95,14 @@ def setupProjectPipelines(def projectInfo) {
     def modulesSshValuesFile = "module-ssh-values.yaml"
     writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
 
-    def chartName = "${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX}"
-
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${pipelinesValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        set +e
+        
         ${shCmd.echo ''}
-        if ! helm upgrade --install --history-max=1  \
+        helm upgrade --install --atomic --history-max=1 \
             -f ${pipelinesValuesFile} \
             -f ${modulesSshValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-pipeline-values.yaml \
@@ -148,14 +110,8 @@ def setupProjectPipelines(def projectInfo) {
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-            ${chartName} \
+            ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-        then
-            set -e
-            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            exit 1
-        fi
-        set -e
     """
 }
 
@@ -197,30 +153,81 @@ def setupProjectEnvironments(def projectInfo) {
     def environmentsValuesFile = "environments-config-values.yaml"
     writeYaml(file: environmentsValuesFile, data: projectDefs)
 
-    def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}"
-
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${environmentsValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        set +e
+        
         ${shCmd.echo ''}
-        if ! helm upgrade --install --history-max=1  \
+        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-environments-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-environments-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
-            ${chartName} \
+            ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-        then
-            set -e
-            helm uninstall ${chartName} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            exit 1
-        fi
-        set -e
     """
+}
+
+def setupProjectPvResources(def projectInfo) {
+    if (projectInfo.staticPvs) {
+        def pvValues = getPvCicdConfigValues(projectInfo)
+        if (pvValues.VOLUME_OBJ_NAMES) {
+            def volumeCicdConfigValues = writeYaml(data: pvValues, returnText: true)
+
+            def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
+            writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
+
+            sh """
+                ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
+                cat ${volumeCicdConfigFile}
+                
+                helm install --atomic \
+                    -f ${volumeCicdConfigFile} \
+                    -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
+                    -n ${projectInfo.teamInfo.cicdMasterNamespace} \
+                    ${projectInfo.id}-${el.cicd.PVS_POSTFIX} \
+                    ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+            """
+        }
+        else {
+            echo "\n--> NO VOLUMES DEFINED FOR MOUNTING TO PODS: SKIPPNG"
+        }
+    }
+}
+
+def getPvCicdConfigValues(def projectInfo) {
+    pvValues = [elCicdDefs: [:]]
+
+    pvValues.elCicdDefs.VOLUME_OBJ_NAMES = []
+    projectInfo.staticPvs.each { pv ->
+        pv.envs.each { env ->
+            def namespace = projectInfo.nonProdNamespaces[env]
+            if (namespace) {
+                projectInfo.components.each { component ->
+                    if (component.staticPvs.contains(pv.name)) {
+                        def objName = "${el.cicd.PV_PREFIX}-${pv.name}-${component.name}-${env}"
+                        pvValues.elCicdDefs.VOLUME_OBJ_NAMES << objName
+
+                        volumeMap = [:]
+                        volumeMap.VOLUME_MODE = pv.volumeMode
+                        volumeMap.RECLAIM_POLICY = pv.reclaimPolicy
+                        volumeMap.STORAGE_CAPACITY = pv.capacity
+                        volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
+                        volumeMap.VOLUME_NAMESPACE = namespace
+                        volumeMap.VOLUME_TYPE = pv.volumeType
+                        volumeMap.VOLUME_DEF = pv.volumeDef
+
+                        pvValues["elCicdDefs-${objName}"] = volumeMap
+                    }
+                }
+            }
+        }
+    }
+
+    return pvValues
 }
 
 def configureScmDeployKeys(def projectInfo) {
@@ -297,43 +304,11 @@ def configureScmWebhooks(def projectInfo) {
             }
         }
         else {
-            echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED.  SKIPPING..."
+            echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED: SKIPPING"
         }
     }
 
     parallel(buildStages)
-}
-
-def getPvCicdConfigValues(def projectInfo) {
-    pvValues = [elCicdDefs: [:]]
-
-    pvValues.elCicdDefs.VOLUME_OBJ_NAMES = []
-    projectInfo.staticPvs.each { pv ->
-        pv.envs.each { env ->
-            def namespace = projectInfo.nonProdNamespaces[env]
-            if (namespace) {
-                projectInfo.components.each { component ->
-                    if (component.staticPvs.contains(pv.name)) {
-                        def objName = "${el.cicd.PV_PREFIX}-${pv.name}-${component.name}-${env}"
-                        pvValues.elCicdDefs.VOLUME_OBJ_NAMES << objName
-
-                        volumeMap = [:]
-                        volumeMap.VOLUME_MODE = pv.volumeMode
-                        volumeMap.RECLAIM_POLICY = pv.reclaimPolicy
-                        volumeMap.STORAGE_CAPACITY = pv.capacity
-                        volumeMap.ACCESS_MODES = pv.accessModes ? pv.accessModes : [pv.accessMode]
-                        volumeMap.VOLUME_NAMESPACE = namespace
-                        volumeMap.VOLUME_TYPE = pv.volumeType
-                        volumeMap.VOLUME_DEF = pv.volumeDef
-
-                        pvValues["elCicdDefs-${objName}"] = volumeMap
-                    }
-                }
-            }
-        }
-    }
-
-    return pvValues
 }
 
 def getElCicdChartProjectPipelineValues(def projectInfo) {

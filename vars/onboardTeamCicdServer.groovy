@@ -20,7 +20,7 @@ def call(Map args) {
             onboardTeamCicdServerUtils.uninstallSdlcEnvironments(projectInfo)
         }
         else {
-            echo '--> RECREATE SDLC ENVIRONMENTS NOT SELECTED; Skipping...'
+            echo '--> RECREATE SDLC ENVIRONMENTS NOT SELECTED: SKIPPING'
         }
     }
 
@@ -36,9 +36,14 @@ def call(Map args) {
         loggingUtils.echoBanner("CREATE SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectEnvironments(projectInfo)
 
-        loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
-        onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
+        if (projectInfo.staticPvs) {
+            loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
+            onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
+        }
+        else {
+            echo("--> NO PERSISTENT VOLUME DEFINITIONS DEFINED FOR PROJECT ${projectInfo.id}: SKIPPING")
+        }
     }
 
     loggingUtils.echoBanner("CONFIGURE GIT DEPLOY KEYS FOR PROJECT ${projectInfo.id}")
