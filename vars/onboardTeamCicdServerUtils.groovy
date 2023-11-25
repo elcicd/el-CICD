@@ -139,7 +139,7 @@ def uninstallSdlcEnvironments(def projectInfo) {
             
             for NAMESPACE in ${namespaces.join(' ')}
             do
-                if [[ -n "oc get namespace --ignore-not-found --no-headers  -o name \${NAMESPACE}" ]]
+                if [[ -n $(oc get namespace --ignore-not-found --no-headers  -o name \${NAMESPACE}) ]]
                 then
                     oc wait --for=delete namespace \${NAMESPACE} --timeout=600s
                 fi
