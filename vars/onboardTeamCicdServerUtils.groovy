@@ -121,7 +121,7 @@ def getProjectPvChartName(def projectInfo) {
 
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
-    def pipelinesValuesFile = "cicd-pipeline-config-values.yaml"
+    def pipelinesValuesFile = 'pipelines-config-values.yaml'
     writeYaml(file: pipelinesValuesFile, data: projectDefs)
 
     def modulesSshKeyDefs = createCompSshKeyValues(projectInfo)
@@ -158,7 +158,7 @@ def setupProjectPipelines(def projectInfo) {
 
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvironmentsValues(projectInfo)
-    def environmentsValuesFile = "envs-config-values.yaml"
+    def environmentsValuesFile = "environments-config-values.yaml"
     writeYaml(file: environmentsValuesFile, data: projectDefs)
 
     def chartName = "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}"
@@ -346,7 +346,10 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     return pipelineValues
 }
 
-def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
+def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {    
+    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
+    elCicdDefs.PROJECT_ID = projectInfo.id
+    
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
@@ -355,13 +358,10 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_PROD) {
         elCicdDefs.PROD_ENV = projectInfo.prodEnv
     }
-    
-    elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
 }
 
 def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.TEAM_ID = projectInfo.teamInfo.id
-    elCicdDefs.PROJECT_ID = projectInfo.id
     elCicdDefs.FOLDER_NAME = projectInfo.id
     elCicdDefs.GIT_BRANCH = projectInfo.gitBranch
     elCicdDefs.DEV_NAMESPACE = projectInfo.devNamespace
