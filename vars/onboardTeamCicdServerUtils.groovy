@@ -105,7 +105,6 @@ def setupProjectPvResources(def projectInfo) {
             then
                 helm install \
                     -f ${volumeCicdConfigFile} \
-                                                                               project-persistent-volume-values
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${chartName} \
@@ -157,6 +156,39 @@ def setupProjectPipelines(def projectInfo) {
     """
 }
 
+def syncJenkinsPipelines(def cicdMasterNamespace) {
+    def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
+
+    sh """
+        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
+        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${cicdMasterNamespace}) ]]
+        then
+            helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
+        fi
+
+        ${shCmd.echo ''}
+        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
+            --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
+            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
+            -n ${cicdMasterNamespace} \
+            sync-jenkins-pipelines \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+    """
+}
+
+def uninstallSdlcEnvironments(def projectInfo) {
+    sh """
+        HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter "${projectInfo.id}-${ENVIRONMENTS_POSTFIX}"
+        if [[ "\${HELM_CHART}" ]]
+        then
+            helm uninstall --wait ${projectInfo.id}-${ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+        else
+            ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
+        fi
+    """
+}
+
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvironmentsValues(projectInfo)
     def environmentsValuesFile = "environments-config-values.yaml"
@@ -185,27 +217,6 @@ def setupProjectEnvironments(def projectInfo) {
             exit 1
         fi
         set -e
-    """
-}
-
-def syncJenkinsPipelines(def cicdMasterNamespace) {
-    def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-
-    sh """
-        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${cicdMasterNamespace}"}
-        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${cicdMasterNamespace}) ]]
-        then
-            helm uninstall sync-jenkins-pipelines -n ${cicdMasterNamespace}
-        fi
-
-        ${shCmd.echo ''}
-        helm upgrade --wait --wait-for-jobs --install --history-max=1 \
-            --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
-            --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
-            -n ${cicdMasterNamespace} \
-            sync-jenkins-pipelines \
-            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     """
 }
 

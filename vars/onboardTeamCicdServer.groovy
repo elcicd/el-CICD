@@ -14,20 +14,12 @@ def call(Map args) {
 
     stage('Uninstall current project CICD resources (optional)') {
         if (args.recreateCicdEnvs) {
-            loggingUtils.echoBanner("REBUILDING SLDC ENVIRONMENTS REQUESTED: REMOVING OLD ENVIRONMENTS")
-
-            sh """
-                HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} | grep -E '^${projectInfo.id}\$')
-                if [[ "\${HELM_CHART}" ]]
-                then
-                    helm uninstall --wait ${projectInfo.id} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-                else
-                    ${shCmd.echo "--> CICD resources not found for project ${projectInfo.id}. Skipping..."}
-                fi
-            """
+            loggingUtils.echoBanner("RECREATE SLDC ENVIRONMENTS REQUESTED: UNINSTALLING")
+            
+            onboardTeamCicdServerUtils.uninstallSdlcEnvironments(projectInfo)
         }
         else {
-            echo '--> REBUILD CICD ENVIRONMENTS NOT SELECTED; Skipping...'
+            echo '--> REBUILD SDLC ENVIRONMENTS NOT SELECTED; Skipping...'
         }
     }
 
@@ -35,7 +27,7 @@ def call(Map args) {
         loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 
-        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PIPELINE CONFIGURATION")
+        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
         onboardTeamCicdServerUtils.syncJenkinsPipelines(projectInfo.teamInfo.cicdMasterNamespace)
     }
 
