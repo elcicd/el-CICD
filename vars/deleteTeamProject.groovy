@@ -36,9 +36,9 @@ def call(Map args) {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
         
         sh """
-            if [[ -n "\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace}) --filter ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX})" ]]
+            if [[ -n "\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX})" ]]
             then
-                helm uninstall --wait  ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+                helm uninstall --wait ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
             else
                 ${shCmd.echo "--> PIPELINES FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
             fi

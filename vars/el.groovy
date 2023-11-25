@@ -176,8 +176,6 @@ def initializePipeline(def jenkinsAgent) {
                     -u \${HELM_REGISTRY_USERNAME} --password-stdin \
                     ${el.cicd.EL_CICD_HELM_OCI_REGISTRY_DOMAIN}
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}"}
-
-            ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
             git config --global user.name ${el.cicd.EL_CICD_ORGANIZATION}
             git config --global user.email "${el.cicd.EL_CICD_ORGANIZATION}@donotreply.com"
             ${shCmd.echo "\n${loggingUtils.BANNER_SEPARATOR}\n"}
