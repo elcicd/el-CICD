@@ -4,6 +4,7 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
+    def tearDownSdlcEnvironments = args.tearDownSdlcEnvironments
     
     stage('Confirm project removal') {
         def forProject = "for project ${projectInfo.id}"
@@ -43,7 +44,7 @@ def call(Map args) {
             fi
         """
         
-        if (args.tearDownSdlcEnvironments) {
+        if (tearDownSdlcEnvironments) {
             projectUnils.uninstallSdlcEnvironments(projectInfo)
         }
         
