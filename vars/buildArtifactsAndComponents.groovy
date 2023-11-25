@@ -9,7 +9,7 @@ def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
-    stage("Select sandbox, component, and branch") {
+    stage("Select environment, component(s), and branch") {
         def BUILD_SELECTED = 'Build and Deploy Selected'
         def BUILD_ALL = 'Build and Deploy All'
         def BUILD_ALL_COMPONENTS = 'Build and Deploy All Components'

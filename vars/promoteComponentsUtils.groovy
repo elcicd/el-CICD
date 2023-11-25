@@ -123,6 +123,44 @@ def verifyDeploymentsInPreviousEnv(def projectInfo) {
     }
 }
 
+def createAndCheckoutDeploymentBranches(def projectInfo) {
+    def gitBranchesFound = ["DEPLOYMENT BRANCHES FOUND:"]
+    def gitBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
+    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
+        def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
+        def deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
+        deployBranchExists = !deployBranchExists.isEmpty()
+
+        def gitBranch = deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
+        if (gitBranch) {            
+            sh "git checkout ${gitBranch}"        
+        }
+        
+        if (!deployBranchExists) {
+            withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
+                sh """
+                    ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
+                                         "git checkout -b ${component.deploymentBranch}",
+                                         "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
+                """
+            }
+            
+            gitBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
+        }
+        else {
+            gitBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
+        }
+    }
+    
+    if (gitBranchesFound.size() > 1 && gitBranchesCreated.size() > 1) {
+        loggingUtils.echoBanner(gitBranchesFound, '', gitBranchesCreated)
+    }
+    else {
+        def resultMsgs = (gitBranchesFound.size() > 1 ) ? gitBranchesFound : gitBranchesCreated
+        loggingUtils.echoBanner(resultMsgs)
+    }
+}
+
 def runPromoteImagesStages(def projectInfo) {
     withCredentials([usernamePassword(credentialsId: jenkinsUtils.getImageRegistryCredentialsId(projectInfo.deployFromEnv),
                                       usernameVariable: 'FROM_OCI_REGISTRY_USERNAME',
@@ -131,7 +169,7 @@ def runPromoteImagesStages(def projectInfo) {
                                       usernameVariable: 'TO_OCI_REGISTRY_USERNAME',
                                       passwordVariable: 'TO_OCI_REGISTRY_PWD')])
     {
-        def stageTitle = "Promoting"
+        def stageTitle = "Promote images"
         def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
                                     
@@ -169,43 +207,5 @@ def runPromoteImagesStages(def projectInfo) {
         }
 
         parallel(copyImageStages)
-    }
-}
-
-def createAndCheckoutDeploymentBranches(def projectInfo) {
-    def gitBranchesFound = ["DEPLOYMENT BRANCHES FOUND:"]
-    def gitBranchesCreated = ["DEPLOYMENT BRANCHES CREATED:"]
-    concurrentUtils.runCloneGitReposStages(projectInfo, projectInfo.componentsToPromote) { component ->
-        def checkDeployBranchScript = "git show-branch refs/remotes/origin/${component.deploymentBranch} || : | tr -d '[:space:]'"
-        def deployBranchExists = sh(returnStdout: true, script: checkDeployBranchScript)
-        deployBranchExists = !deployBranchExists.isEmpty()
-
-        def gitBranch = deployBranchExists ? component.deploymentBranch : component.previousDeploymentBranch
-        if (gitBranch) {            
-            sh "git checkout ${gitBranch}"        
-        }
-        
-        if (!deployBranchExists) {
-            withCredentials([sshUserPrivateKey(credentialsId: component.gitDeployKeyJenkinsId, keyFileVariable: 'GITHUB_PRIVATE_KEY')]) {
-                sh """
-                    ${shCmd.sshAgentBash('GITHUB_PRIVATE_KEY',
-                                         "git checkout -b ${component.deploymentBranch}",
-                                         "git push origin ${component.deploymentBranch}:${component.deploymentBranch}")}
-                """
-            }
-            
-            gitBranchesCreated += "    ${component.name}: ${component.deploymentBranch}"
-        }
-        else {
-            gitBranchesFound += "    ${component.name}: ${component.deploymentBranch}"
-        }
-    }
-    
-    if (gitBranchesFound.size() > 1 && gitBranchesCreated.size() > 1) {
-        loggingUtils.echoBanner(gitBranchesFound, '', gitBranchesCreated)
-    }
-    else {
-        def resultMsgs = (gitBranchesFound.size() > 1 ) ? gitBranchesFound : gitBranchesCreated
-        loggingUtils.echoBanner(resultMsgs)
     }
 }
