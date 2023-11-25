@@ -90,6 +90,9 @@ def resetProjectPvResources(def projectInfo) {
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticPvs) {
         def pvYaml = getPvCicdConfigValues(projectInfo)
+        echo '============='
+        echo pvYaml
+        echo '============='
         def volumeCicdConfigValues = writeYaml(data: pvYaml, returnText: true)
 
         def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
