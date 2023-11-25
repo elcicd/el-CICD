@@ -137,9 +137,8 @@ def syncJenkinsPipelines(def cicdMasterNamespace) {
 }
 
 def uninstallSdlcEnvironments(def projectInfo) {
-    def jsonPath = "jsonpath='{.items[?(@.metadata.deletionTimestamp)].metadata.name}'"
     def namespaces = [:].keySet()
-    namespaces.addAll(projectInfo.buildNamespaces.values())
+    namespaces.addAll(projectInfo.buildNamespaces)
     namespaces.addAll(projectInfo.nonProdNamespaces.values())
     namespaces.addAll(projectInfo.prodNamespaces.values())
     sh """
