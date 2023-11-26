@@ -15,7 +15,7 @@ mkdir ${TMP_DIR}
 
 cat <&0 > ${TMP_DIR}/${PROJECT_YAML}
 
-helm template --set-string PROJECT_ID=${PROJECT_ID},TEAM_ID=${TEAM_ID} \
+helm template --set-string elCicdDefs.PROJECT_ID=${PROJECT_ID},elCicdDefs.TEAM_ID=${TEAM_ID} \
     -f  onboarding-kustomization.yaml project-labels \
     ${elcicd_EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${TMP_DIR}/kustomization.yaml
     
