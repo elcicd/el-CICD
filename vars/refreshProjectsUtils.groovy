@@ -21,7 +21,7 @@ def collectrefreshProjectMap(def includeTeams, def includeProjects) {
                 teamId = projectAndFile[0]
                 projectId = projectAndFile[1]
                 if ((!includeTeams || includeTeams.matcher.matches(teamId)) &&
-                    (!includeProjects || includeProjects.matcher.matches(projectId))
+                    (!includeProjects || includeProjects.matcher.matches(projectId)))
                 {
 
                     projectList = refreshProjectMap.get(projectAndFile[0]) ?: []
