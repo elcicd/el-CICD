@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 set -ex
 
+echo "COMMAND LINE: ${0}"
+
 CICD_DIR=${1}
 TEAM_ID=${2}
 
