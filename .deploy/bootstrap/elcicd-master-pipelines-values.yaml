@@ -31,7 +31,7 @@ elCicdDefs-onboard-project:
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      booleanParam('RECREATE_SDLC_ENVS', false, '$<RECREATE_SDLC_ENVS_DESCRIPTION>')
+      booleanParam('RECREATE_SDLC_ENVS', false, "$<RECREATE_SDLC_ENVS_DESCRIPTION>")
     }
   EL_CICD_API_ARGS: |-
     $<TEAM_ID_PIPELINE_ARG>,
@@ -48,7 +48,7 @@ elCicdDefs-delete-project:
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      booleanParam('DELETE_SDLC_ENVIRONMENTS', false, '$<DELETE_SDLC_ENVIRONMENTS_DESCRIPTION>')
+      booleanParam('DELETE_SDLC_ENVIRONMENTS', false, "$<DELETE_SDLC_ENVIRONMENTS_DESCRIPTION>")
     }
   EL_CICD_API_ARGS: |-
     $<TEAM_ID_PIPELINE_ARG>,

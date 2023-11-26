@@ -4,8 +4,8 @@
  */
 
 def collectrefreshProjectMap(def includeTeams, def includeProjects) {   
-    includeTeams = includeTeams ? ~/${includeTeams}/ ? ''
-    includeProjects = includeProjects ? ~/${includeProjects}/ ? '' 
+    includeTeams = includeTeams ? ~/${includeTeams}/ : ''
+    includeProjects = includeProjects ? ~/${includeProjects}/ : '' 
     
     def refreshProjectMap = [:]
     dir (el.cicd.PROJECT_DEFS_DIR) {
