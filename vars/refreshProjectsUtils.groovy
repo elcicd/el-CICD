@@ -1,19 +1,19 @@
-/* 
+/*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  */
 
-def getProjectRefreshMap(def includeTeams, def includeProjects) {   
+def getProjectRefreshMap(def includeTeams, def includeProjects) {
     includeTeams = includeTeams ? ~/${includeTeams}/ : ''
-    includeProjects = includeProjects ? ~/${includeProjects}/ : '' 
-    
+    includeProjects = includeProjects ? ~/${includeProjects}/ : ''
+
     def projectRefreshMap = [:]
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def allProjectFiles = []
         allProjectFiles.addAll(findFiles(glob: "**/*.json"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
-        
+
         allProjectFiles.each { file ->
             path = file.path
             if (path.contains('/')) {
@@ -30,9 +30,23 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
                 }
             }
         }
+        
+        echo "${projectRefreshMap}"
+
+        removeUndeployedTeams(projectRefreshMap)
     }
-    
+
     return projectRefreshMap
+}
+
+def removeUndeployedTeams(def projectRefreshMap) {
+    teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
+
+    teamMasterNamespaces = sh(returnStdOut: true, script """
+            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ') | tr -d 'namespaces/'
+        """).split('\n')
+
+    projectRefreshMap.retainAll(teamMasterNamespaces)
 }
 
 def confirmProjectsForRefresh(def projectRefreshMap, def args) {
@@ -49,10 +63,10 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
             ''
         ]
     }
-    
-    
+
+
     def msg = loggingUtils.createBanner(
-        "THE FOLLOWING PROJECT WILL BE REFRESHED:",
+        "THE FOLLOWING TEAMS AND THEIR PROJECTS WILL BE REFRESHED IF THEY ARE ALREADY ONBOARDED:",
         msgList,
         'PLEASE CAREFULLY REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS',
         '',

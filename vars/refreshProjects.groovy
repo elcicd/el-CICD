@@ -27,14 +27,19 @@ def call(Map args) {
             echo '--> USER CONFIRMATION NOT REQUESTED; SKIPPING'
         }
     }
-    
-    // projectInfos = []
-    // projectInfos.addAll(jenkinsRefresh.values())
-    // stage('refresh each CICD server') {
-    //     projectInfos.each { projectInfo ->
-    //         onboardTeamCicdServerUtils.setupTeamCicdServer(projectInfo)
-    //     }
-    // }
+
+    stage('Update Team Servers') {
+        if (refreshTeamServers) {
+        }
+        else {
+            echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
+        }
+        loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
+        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
+
+        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
+        projectUtils.syncJenkinsPipelines(projectInfo)
+    }
     
     // stage("refresh each project's CICD") {
     //     cicdProjects.each { projectInfo ->

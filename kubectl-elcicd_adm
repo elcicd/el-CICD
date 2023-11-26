@@ -110,6 +110,10 @@ __parse_cli_flags() {
 
                 EL_CICD_ADM_COMMANDS+=('_oci_helm_registry_login' '_bootstrap_lab_environment')
             ;;
+            
+            '--skip-creds-refresh')
+                EL_CICD_SKIP_CREDENTIAL_REFRESH=${_TRUE}
+            ;;
 
             '--start-cluster' | '-S')
                 ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }STARTING EL-CICD DEVELOPMENT ENVIRONMENT"
