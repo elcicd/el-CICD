@@ -4,7 +4,7 @@
 
 def syncJenkinsPipelines(def projectInfo) {
     def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
-    
+
     sh """
         ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${projectInfo.teamInfo.cicdMasterNamespace}"}
         if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${projectInfo.teamInfo.cicdMasterNamespace}) ]]
@@ -33,14 +33,8 @@ def uninstallSdlcEnvironments(def projectInfo) {
         if [[ "\${HELM_CHART}" ]]
         then
             helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            
-            for NAMESPACE in ${namespaces.join(' ')}
-            do
-                if [[ -n "\$(oc get namespace --ignore-not-found --no-headers  -o name \${NAMESPACE})" ]]
-                then
-                    oc wait --for=delete namespace \${NAMESPACE} --timeout=600s
-                fi
-            done
+
+            oc wait --for=delete --timeout=600s namespace ${namespaces.join(' ')}
         else
             ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
         fi
