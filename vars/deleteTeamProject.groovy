@@ -45,7 +45,7 @@ def call(Map args) {
         """
         
         if (tearDownSdlcEnvironments) {
-            projectUnils.uninstallSdlcEnvironments(projectInfo)
+            projectUtils.uninstallSdlcEnvironments(projectInfo)
         }
         
         projectUtils.syncJenkinsPipelines(projectInfo)

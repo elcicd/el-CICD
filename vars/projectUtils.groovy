@@ -53,11 +53,10 @@ def removeGitDeployKeysFromProject(def projectInfo) {
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
-                def moduleId = "${projectInfo.teamInfo.id}/${projectInfo.id}/${module.gitRepoName}"
                 sh """
                     set +x
                     echo
-                    echo "--> REMOVING GIT DEPLOY KEY FOR: ${moduleId}"
+                    echo "--> REMOVING GIT DEPLOY KEY FOR:${getLongformModuleId(projectInfo, module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -78,12 +77,11 @@ def createNewGitDeployKeysForProject(def projectInfo) {
 
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
-            def moduleId = "${projectInfo.teamInfo.id}/${projectInfo.id}/${module.gitRepoName}"
             dir(module.workDir) {
                 sh """
                     set +x
                     echo
-                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${moduleId}"
+                    echo "--> CREATING NEW GIT DEPLOY KEY FOR:${getLongformModuleId(projectInfo, module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -110,12 +108,11 @@ def removeGitWebhooksFromProject(def projectInfo) {
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
-                def moduleId = "${projectInfo.teamInfo.id}/${projectInfo.id}/${module.gitRepoName}"
                 dir(module.workDir) {
                     sh """
                         set +x
                         echo
-                        echo "--> REMOVING GIT WEBOOK FOR: ${moduleId}"
+                        echo "--> REMOVING GIT WEBOOK FOR:${getLongformModuleId(projectInfo, module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -139,12 +136,11 @@ def createNewGitWebhooksForProject(def projectInfo) {
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
-                def moduleId = "${projectInfo.teamInfo.id}/${projectInfo.id}/${module.gitRepoName}"
                 dir(module.workDir) {
                     sh """
                         set +x
                         echo
-                        echo "--> CREATING NEW WEBOOK FOR: ${moduleId}"
+                        echo "--> CREATING NEW WEBOOK FOR:${getLongformModuleId(projectInfo, module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -195,4 +191,8 @@ def getDeleteWebhookFunctionCall(def projectInfo, def module) {
                         '${module.gitDeployKeyJenkinsId}' \
                         \${GIT_ACCESS_TOKEN}
     """
+}
+
+def getLongformModuleId(def projectInfo, def module) {
+    return "${projectInfo.teamInfo.id}:${projectInfo.id}:${module.gitRepoName}"
 }

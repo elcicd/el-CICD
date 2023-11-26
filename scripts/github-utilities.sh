@@ -47,11 +47,16 @@ _delete_git_repo_deploy_key() {
     local _KEY_IDS=$(${CURL_COMMAND} "${__GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL} | jq ".[] | select(.title  == \"${_DEPLOY_KEY_TITLE}\") | .id" 2>/dev/null)
 
     echo
-    for KEY_ID in ${_KEY_IDS}
-    do
-        ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
-        echo "DELETED DEPLOY KEY ${KEY_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
-    done
+    if [[ ${_KEY_IDS} ]]
+    then
+        for KEY_ID in ${_KEY_IDS}
+        do
+            ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_EL_CICD_GITHUB_KEYS_URL}/${KEY_ID} | jq 'del(.key)'
+            echo "DELETED DEPLOY KEY ${KEY_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
+        done
+    else
+        echo "NO DEPLOY KEYS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}; SKIPPING"
+    fi
 }
 
 _add_git_repo_deploy_key() {
@@ -117,11 +122,16 @@ _delete_webhook() {
     local _HOOK_IDS=$(${CURL_COMMAND} "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL} | jq ".[] | select(.config.url  == \"${_JENKINS_WEBOOK_URL}\") | .id" 2>/dev/null)
 
     echo
-    for HOOK_ID in ${_HOOK_IDS}
-    do
-        ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL}/${HOOK_ID}
-        echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
-    done
+    if [[ ${_HOOK_IDS} ]]
+    then
+        for HOOK_ID in ${_HOOK_IDS}
+        do
+            ${CURL_COMMAND} -X DELETE "${__GITHUB_HEADERS[@]}" ${_HOOKS_URL}/${HOOK_ID}
+            echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
+        done
+    else
+        echo "--> NO GITHUB WEBHOOKS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}; SKIPPING"
+    fi
 }
 
 _add_webhook() {
