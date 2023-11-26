@@ -44,12 +44,14 @@ def removeUndeployedTeams(def projectRefreshMap) {
     echo "teamMasterNamespaces: ${teamMasterNamespaces}"
 
     teamMasterNamespaces = sh(returnStdout: true, script: """
-            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | tr -d 'namespaces/'
+            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
+                tr -d 'namespaces/' | \
+                tr -d '-${el.cicd.EL_CICD_MASTER_NAMESPACE}'
         """).split('\n')
         
     echo "teamMasterNamespaces: ${teamMasterNamespaces}"
 
-    projectRefreshMap.keySet().retainAll(teamMasterNamespaces)
+    projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
         
     echo "projectRefreshMap: ${projectRefreshMap}"
 }
