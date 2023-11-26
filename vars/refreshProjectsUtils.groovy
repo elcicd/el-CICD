@@ -3,11 +3,11 @@
  *
  */
 
-def collectrefreshProjectMap(def includeTeams, def includeProjects) {   
+def getProjectRefreshMap(def includeTeams, def includeProjects) {   
     includeTeams = includeTeams ? ~/${includeTeams}/ : ''
     includeProjects = includeProjects ? ~/${includeProjects}/ : '' 
     
-    def refreshProjectMap = [:]
+    def projectRefreshMap = [:]
     dir (el.cicd.PROJECT_DEFS_DIR) {
         def allProjectFiles = []
         allProjectFiles.addAll(findFiles(glob: "**/*.json"))
@@ -24,25 +24,25 @@ def collectrefreshProjectMap(def includeTeams, def includeProjects) {
                     (!includeProjects || includeProjects.matcher.matches(projectId)))
                 {
 
-                    projectList = refreshProjectMap.get(projectAndFile[0]) ?: []
+                    projectList = projectRefreshMap.get(projectAndFile[0]) ?: []
                     projectList.add(projectAndFile[1])
-                    refreshProjectMap.put(projectAndFile[0], projectList)
+                    projectRefreshMap.put(projectAndFile[0], projectList)
                 }
             }
         }
     }
     
-    return refreshProjectMap
+    return projectRefreshMap
 }
 
-def confirmrefreshProjectMap(def refreshProjectMap) {
+def confirmProjectsForRefresh(def projectRefreshMap) {
     def msgList = []
-    refreshProjectMap.keySet().each { teamName ->
+    projectRefreshMap.keySet().each { teamName ->
         msgList += [
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            "${teamName}: ${refreshProjectMap[(teamName)]}",
+            "${teamName}: ${projectRefreshMap[(teamName)]}",
             '',
             loggingUtils.BANNER_SEPARATOR,
             ''

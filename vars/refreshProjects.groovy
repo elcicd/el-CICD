@@ -12,16 +12,16 @@ def call(Map args) {
     def refreshCredentials = args.refreshCredentials
     def confirmBeforeRefreshing = args.confirmBeforeRefreshing
     
-    def refreshProjectMap
+    def projectRefreshMap
     stage('Gather all projects') {
         loggingUtils.echoBanner('GATHER LIST OF PROJECTS FOR REFRESH')
         
-        refreshProjectMap = refreshProjectsUtils.collectProjectsForRefresh(includeTeams, includeProjects)
+        projectRefreshMap = refreshProjectsUtils.getProjectRefreshMap(includeTeams, includeProjects)
     }
     
     stage('Confirm projects to be refreshed') {
         if (confirmBeforeRefreshing) {
-            confirmProjectsForRefresh(refreshProjectMap)
+            confirmProjectsForRefresh(projectRefreshMap)
         }
         else {
             echo '--> USER CONFIRMATION NOT REQUESTED; SKIPPING'
