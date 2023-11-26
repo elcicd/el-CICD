@@ -43,7 +43,7 @@ def removeUndeployedTeams(def projectRefreshMap) {
     teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
 
     teamMasterNamespaces = sh(returnStdOut: true, script: """
-            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ') | tr -d 'namespaces/'
+            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | tr -d 'namespaces/'
         """).split('\n')
 
     projectRefreshMap.retainAll(teamMasterNamespaces)
