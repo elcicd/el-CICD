@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 set -ex
 
-
 cd $(dirname "${0}")
 
 TEAM_ID=${1}
