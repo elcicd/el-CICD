@@ -8,7 +8,7 @@ TEAM_ID=${1}
 PROJECT_ID=${2}
 PROJECT_YAML=${PROJECT_ID}-helmOut.yaml
 
-TMP_DIR=./tmp
+TMP_DIR=./${TEAM_ID}-tmp
 
 mkdir ${TMP_DIR}
 
