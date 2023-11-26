@@ -45,7 +45,7 @@ def removeUndeployedTeams(def projectRefreshMap) {
 
     teamMasterNamespaces = sh(returnStdout: true, script: """
             oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
-                sed -e 's|namespace/||' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||'
+                sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
         """).split('\n')
         
     echo "teamMasterNamespaces: ${teamMasterNamespaces}"
