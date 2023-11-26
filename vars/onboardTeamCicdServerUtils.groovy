@@ -117,11 +117,14 @@ def setupProjectEnvironments(def projectInfo) {
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
         
         ${shCmd.echo ''}
+        chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-environments-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-environments-values.yaml \
+            --post-renderer ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh \
+            --post-renderer-args ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR},${projectInfo.teamInfo.id},${projectInfo.id} \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart

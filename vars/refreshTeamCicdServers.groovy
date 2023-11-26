@@ -4,15 +4,12 @@
  */
 
 def call(Map args) {
-    onboardTeamCicdServerUtils.init()
-
     jenkinsRefresh = [:]
     cicdProjects = []
     stage('gather project info for refresh') {
         dir (el.cicd.PROJECT_DEFS_DIR) {
             def allProjectFiles = []
             allProjectFiles.addAll(findFiles(glob: "**/*.json"))
-            allProjectFiles.addAll(findFiles(glob: "**/*.js"))
             allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
             allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
             
