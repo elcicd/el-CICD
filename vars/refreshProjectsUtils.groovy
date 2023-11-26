@@ -35,7 +35,7 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
     return projectRefreshMap
 }
 
-def confirmProjectsForRefresh(def projectRefreshMap) {
+def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     def msgList = []
     projectRefreshMap.keySet().each { teamName ->
         msgList += [
