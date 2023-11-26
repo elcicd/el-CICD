@@ -43,7 +43,7 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            "${teamName}: ${projectRefreshMap[(teamName)].minus(extPattern)}",
+            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
             '',
             loggingUtils.BANNER_SEPARATOR,
             ''
