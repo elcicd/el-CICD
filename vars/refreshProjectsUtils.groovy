@@ -37,12 +37,13 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
 
 def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     def msgList = []
+    extPattern = ~/[.].*/
     projectRefreshMap.keySet().each { teamName ->
         msgList += [
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            "${teamName}: ${projectRefreshMap[(teamName)]}",
+            "${teamName}: ${projectRefreshMap[(teamName)].minus(extPattern)}",
             '',
             loggingUtils.BANNER_SEPARATOR,
             ''
