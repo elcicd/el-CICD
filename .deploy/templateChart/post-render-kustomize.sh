@@ -2,7 +2,7 @@
 set -ex
 
 PROFILES=$(echo ${1} | tr ',' ' ')
-CHART_DIR=$(dirname "$0")
+CHART_DIR=$(dirname "${0}")
 
 cd "${CHART_DIR}"
 EL_CICD_DEPLOY_FINAL=elcicd-deploy-final.yaml

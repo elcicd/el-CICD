@@ -1,6 +1,8 @@
 elCicdTemplates-elcicd-kust:
 - templateName: kustomization
   fields:
+    resources:
+    - $<PROJECT_ID>-helmOut.yaml
     commonLabels:
       elcicd.io/teamid: $<TEAM_ID>
       elcicd.io/projectid: $<PROJECT_ID>

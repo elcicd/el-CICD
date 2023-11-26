@@ -1,17 +1,17 @@
 #!/usr/bin/bash
 set -ex
 
-echo "COMMAND LINE: ${0}"
 
-CICD_DIR=${1}
-TEAM_ID=${2}
+cd $(dirname "${0}")
 
-PROJECT_ID=${3}
+TEAM_ID=${1}
+
+PROJECT_ID=${2}
 PROJECT_YAML=${PROJECT_ID}-helmOut.yaml
 
-TMP_DIR=/tmp/${PROJECT_ID}
+TMP_DIR=./tmp
 
-mkdir -p ${TMP_DIR}
+mkdir ${TMP_DIR}
 
 cd ${TMP_DIR}
 
@@ -21,6 +21,4 @@ helm template --set-string PROJECT_ID=${PROJECT_ID},TEAM_ID=${TEAM_ID} \
     -f onboarding-kustomization.yaml project-labels \
     ${elcicd_EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart > kustomization.yaml
     
-kustomize edit add resource ${PROJECT_YAML}
-
 kustomize build .
