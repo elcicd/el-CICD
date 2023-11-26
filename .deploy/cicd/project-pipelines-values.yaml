@@ -1,15 +1,18 @@
 elCicdDefs-nonprod:
   BUILD_COMPONENT_PIPELINE_LABELS:
+    teamId: $<TEAM_ID>
     projectid: $<PROJECT_ID>
     component: $<BASE_OBJ_NAME>
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   BUILD_ARTIFACT_PIPELINE_LABELS:
+    teamId: $<TEAM_ID>
     projectid: $<PROJECT_ID>
     artifact: $<BASE_OBJ_NAME>
     jenkins-pipeline: 'true'
     jenkins-build-pipeline: 'true'
   SHARED_PROJECT_PIPELINE_LABELS:
+    teamId: $<TEAM_ID>
     projectid: $<PROJECT_ID>
     jenkins-pipeline: 'true'
     jenkins-shared-pipeline: 'true'

@@ -22,7 +22,7 @@ def call(Map args) {
         }
     }
 
-    stage('Configure project CICD resources') {
+    stage('Configure project CICD pipelines') {
         loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
         onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 

@@ -1,7 +1,7 @@
 elCicdDefs:
   PIPELINE_NAMES:
-  - onboard-team-cicd-server
-  - refresh-team-cicd-servers
+  - onboard-project
+  - refresh-projects
   PIPELINE_NAME: $<OBJ_NAME>
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
@@ -16,31 +16,34 @@ elCicdDefs:
 elCicdDefs-nonprod:
   PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, 'Project ID')
   PIPELINE_NAMES:
-  - onboard-team-cicd-server
-  - refresh-team-cicd-servers
-  - delete-team-project
+  - onboard-project
+  - refresh-projects
+  - delete-project
   PROJECT_ID_PIPELINE_ARG: |-
     projectId:  params.PROJECT_ID
   
-elCicdDefs-onboard-team-cicd-server:
+elCicdDefs-onboard-project:
   PIPELINE_DESCRIPTION: 'Onboard or update a team CICD servers'
   EL_CICD_API_METHOD: onboardTeamCicdServer
+  RECREATE_SDLC_ENVS_DESCRIPTION: |-
+    Tear down the project's SDLC environments? [WARNING: ALL deployments in those namespaces will be deleted]
   PIPELINE_PARAMS: |-
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
       $<PROJECT_ID_PIPELINE_PARAM>
-      booleanParam('RECREATE_SDLC_ENVS', false, 'Tear down and recreate the project SDLC environments?')
+      booleanParam('RECREATE_SDLC_ENVS', false, '$<RECREATE_SDLC_ENVS_DESCRIPTION>')
     }
   EL_CICD_API_ARGS: |-
     $<TEAM_ID_PIPELINE_ARG>,
     $<PROJECT_ID_PIPELINE_ARG>,
     recreateSdlcEnvs: params.RECREATE_SDLC_ENVS
 
-elCicdDefs-delete-team-project:
-  PIPELINE_DESCRIPTION: "Delete a project from a CICD server [WARNING: All project pipelines, namespaces, and deployments will be removed from the cluster]"
+elCicdDefs-delete-project:
+  PIPELINE_DESCRIPTION: |-
+    Delete a project from a CICD server [WARNING: All project pipelines and/or namespaces will be removed from the cluster]
   EL_CICD_API_METHOD: deleteTeamProject
   DELETE_SDLC_ENVIRONMENTS_DESCRIPTION: |-
-    Delete the project SDLC environments? WARNING: ALL project namespaces in the cluster will be deleted
+    Delete the project SDLC environments [WARNING: ALL project namespaces in the cluster will be deleted]
   PIPELINE_PARAMS: |-
     parameters {
       $<TEAM_ID_PIPELINE_PARAM>
@@ -52,9 +55,27 @@ elCicdDefs-delete-team-project:
     $<PROJECT_ID_PIPELINE_ARG>,
     tearDownSdlcEnvironments: params.DELETE_SDLC_ENVIRONMENTS
 
-elCicdDefs-refresh-team-cicd-servers:
-  PIPELINE_DESCRIPTION: "Refresh configuration and credentials for each team's CICD server"
-  EL_CICD_API_METHOD: refreshTeamCicdServers
+elCicdDefs-refresh-projects:
+  PIPELINE_DESCRIPTION: "Refresh configuration and credentials for each project"
+  PIPELINE_PARAMS: |-
+    parameters {
+      stringParam('TEAM_ID_REGEX', null, 'Filter Team IDs by regular expression (leave blank to refresh all Teams)')
+      stringParam('PROJECT_ID_REGEX', null, 'Filter Project IDs by regular expression(leave blank to refresh all Projects)')
+      booleanParam('REFRESH_TEAM_SERVERS', true, 'Refresh team servers?')
+      booleanParam('REFRESH_PIPELINES', true, 'Refresh project pipelines?')
+      booleanParam('REFRESH_SDLC_ENVIRONMENTS', true, 'Refresh project SDLC environments?')
+      booleanParam('REFRESH_CREDENTIALS', true, 'Refresh project credentials and webhooks?')
+      booleanParam('CONFIRM_BEFORE_REFRESHING', true, 'Ask user to confirm  list of projects to be refreshed before continuing?')
+    }
+  EL_CICD_API_METHOD: refreshProjects
+  EL_CICD_API_ARGS: |-
+    includeTeams: params.TEAM_ID_REGEX,
+    includeProjects: params.PROJECT_ID_REGEX,
+    refreshTeamServers: params.REFRESH_TEAM_SERVERS,
+    refreshPipelines: params.REFRESH_PIPELINES,
+    refreshEnvironments: params.REFRESH_SDLC_ENVIRONMENTS,
+    refreshCredentials: params.REFRESH_CREDENTIALS,
+    confirmBeforeRefreshing: params.CONFIRM_BEFORE_REFRESHING
 
 elCicdTemplates-elcicd-master-pipelines-defs:
 - templateName: configMap
