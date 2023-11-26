@@ -63,12 +63,14 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
             '',
             loggingUtils.BANNER_SEPARATOR,
             '',
-            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
-            '',
-            loggingUtils.BANNER_SEPARATOR,
-            ''
+            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}"
         ]
     }
+    msgList += [
+        '',
+        loggingUtils.BANNER_SEPARATOR,
+        ''
+    ]
 
 
     def msg = loggingUtils.createBanner(
