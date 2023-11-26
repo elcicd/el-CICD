@@ -10,7 +10,8 @@ PROJECT_YAML=${PROJECT_ID}-helmOut.yaml
 
 TMP_DIR=./${TEAM_ID}-tmp
 
-mkdir -p ${TMP_DIR}
+rm -rf ${TMP_DIR}
+mkdir ${TMP_DIR}
 
 cat <&0 > ${TMP_DIR}/${PROJECT_YAML}
 
