@@ -61,21 +61,17 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     projectRefreshMap.keySet().each { teamName ->
         msgList += [
             '',
-            loggingUtils.BANNER_SEPARATOR,
+            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
             '',
-            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}"
         ]
     }
-    msgList += [
-        '',
-        loggingUtils.BANNER_SEPARATOR,
-        ''
-    ]
 
 
     def msg = loggingUtils.createBanner(
         "THE FOLLOWING TEAMS AND THEIR PROJECTS WILL BE REFRESHED IF THEY ARE ALREADY ONBOARDED:",
         msgList,
+        '',
+        loggingUtils.BANNER_SEPARATOR,
         'PLEASE CAREFULLY REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS',
         '',
         "Do you wish to continue?"
