@@ -24,17 +24,11 @@ def syncJenkinsPipelines(def projectInfo) {
 }
 
 def uninstallSdlcEnvironments(def projectInfo) {
-    def namespaces = [:].keySet()
-    namespaces.addAll(projectInfo.buildNamespaces)
-    namespaces.addAll(projectInfo.nonProdNamespaces.values())
-    namespaces.addAll(projectInfo.prodNamespaces.values())
     sh """
         HELM_CHART=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter "${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}")
         if [[ "\${HELM_CHART}" ]]
         then
             helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-
-            oc wait --for=delete --timeout=600s namespace ${namespaces.join(' ')}
         else
             ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
         fi

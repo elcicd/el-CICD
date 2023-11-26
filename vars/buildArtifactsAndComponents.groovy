@@ -1,15 +1,13 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
  *
- * Defines the bulk of the build-artifacts-and-components pipeline.
- *
  */
 
 def call(Map args) {
     def projectInfo = args.projectInfo
     projectInfo.deployToEnv = projectInfo.devEnv
 
-    stage("Select environment, component(s), and branch") {
+    stage("Select environment, module(s), and branch") {
         def BUILD_SELECTED = 'Build and Deploy Selected'
         def BUILD_ALL = 'Build and Deploy All'
         def BUILD_ALL_COMPONENTS = 'Build and Deploy All Components'
