@@ -29,6 +29,7 @@ def uninstallSdlcEnvironments(def projectInfo) {
         if [[ "\${HELM_CHART}" ]]
         then
             helm uninstall --wait ${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            sleep 2
         else
             ${shCmd.echo "--> SDLC environments for project ${projectInfo.id} not installed; Skipping..."}
         fi
