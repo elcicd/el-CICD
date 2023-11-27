@@ -64,6 +64,17 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
+def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def projectInfoList) {
+    def projectInfoList = []
+    projectRefreshMap.each { teamId, projectList ->
+        def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
+        teamInfoList.add(teamInfo)
+        projectInfoList += projectList.collect { projectId ->
+            return projectInfoUtils.gatherProjectInfo(teamInfo, projectId)
+        }
+    }
+}
+
 def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
         echo "--> REFRESHING PIPELINES NOT REQUESTED; SKIPPING"
