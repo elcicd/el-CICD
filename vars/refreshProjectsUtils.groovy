@@ -41,19 +41,12 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
 def removeUndeployedTeams(def projectRefreshMap) {
     teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
 
-    echo "projectRefreshMap: ${projectRefreshMap}"
-    echo "teamMasterNamespaces: ${teamMasterNamespaces}"
-
     teamMasterNamespaces = sh(returnStdout: true, script: """
             oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
                 sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
         """).split('\n')
 
-    echo "teamMasterNamespaces: ${teamMasterNamespaces}"
-
     projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
-
-    echo "projectRefreshMap: ${projectRefreshMap}"
 }
 
 def confirmProjectsForRefresh(def projectRefreshMap, def args) {
