@@ -31,11 +31,15 @@ def call(Map args) {
     teamInfoList = []
     projectInfoList = []
     
-    projectRefreshMap.each { teamId, projectList ->
-        def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
-        teamInfoList.add(teamInfo)
-        projectInfoList += projectList.collect { projectId ->
-            return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
+    stage('Gather each projects information') {
+        loggingUtils.echoBanner("GATHER INFORMATION FOR EACH PROJECTS TO BE REFRESHED")
+        
+        projectRefreshMap.each { teamId, projectList ->
+            def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
+            teamInfoList.add(teamInfo)
+            projectInfoList += projectList.collect { projectId ->
+                return projectInfoUtils.gatherProjectInfo(teamInfo, projectId)
+            }
         }
     }
     

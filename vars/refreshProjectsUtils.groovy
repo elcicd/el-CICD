@@ -38,17 +38,6 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
     return projectRefreshMap
 }
 
-def removeUndeployedTeams(def projectRefreshMap) {
-    teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
-
-    teamMasterNamespaces = sh(returnStdout: true, script: """
-            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
-                sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
-        """).split('\n')
-
-    projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
-}
-
 def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     def msgList = []
     projectRefreshMap.each { teamName, projectList ->
@@ -157,4 +146,15 @@ def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
     }
 
     parallel(refreshTeamServerStages)
+}
+
+def removeUndeployedTeams(def projectRefreshMap) {
+    teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
+
+    teamMasterNamespaces = sh(returnStdout: true, script: """
+            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
+                sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
+        """).split('\n')
+
+    projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
 }
