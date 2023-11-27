@@ -36,10 +36,7 @@ def uninstallSdlcEnvironments(def projectInfo) {
     """
 }
 
-def removeGitDeployKeysFromProject(def projectInfo) {
-    echo '!!!!!!!!!!!!!!!!'
-    echo "projectInfo.modules: ${projectInfo.modules}"
-    
+def removeGitDeployKeysFromProject(def projectInfo) {    
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
