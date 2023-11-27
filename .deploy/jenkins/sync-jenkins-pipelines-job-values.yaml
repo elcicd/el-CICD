@@ -4,8 +4,7 @@ elCicdDefs:
   JOBS_DIR: jobs
   JENKINS_RELOAD_URL: $<JENKINS>:8080/reload
   JENKINS_RELOAD_CASC_URL: $<JENKINS>:8080/reload-configuration-as-code/?casc-reload-token=elcicd
-  RELOAD_CURL_COMMAND: curl -ksSL -o /dev/null -f --retry 9 --max-time 10 --retry-delay 0 --retry-max-time 90 -X POST -w '%{http_code}\n'
-  CASC_CURL_COMMAND: curl -ksSL -o /dev/null -f --retry 9 --max-time 10 --retry-delay 0 --retry-max-time 90 -X POST -w '%{http_code}\n'
+  CURL_COMMAND: curl -ksSL -o /dev/null -f --retry 9 --max-time 10 --retry-delay 0 --retry-max-time 90 -X POST -w '%{http_code}\n'
   CURL_HEADER: -H "Authorization:Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" 
   OC_EXEC: oc exec -i $JENKINS_POD -n $JENKINS_NAMESPACE
 
@@ -43,9 +42,9 @@ elCicdTemplates:
     tar -czf - *.yaml | $<OC_EXEC> -- tar -C $<JENKINS_CONFIG_FILE_PATH> -xzvf -;
     echo -n "HTTP CODE FROM JENKINS RESTART -> ";
     set +x;
-    echo '$<RELOAD_CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_URL>' ;
-    $<RELOAD_CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_URL> ;
+    echo '$<CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_URL>' ;
+    $<CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_URL> ;
     sleep 5;
-    echo '$<CASC_CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_CASC_URL>' ;
-    $<CASC_CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_CASC_URL> ;
+    echo '$<CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_CASC_URL>' ;
+    $<CURL_COMMAND> $<CURL_HEADER> $<JENKINS_RELOAD_CASC_URL> ;
     echo "el-CICD Jenkins $<JOBS_DIR> updated";
