@@ -111,16 +111,18 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
         echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
     }
 
-    def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh project credentials", refreshProjectInfoList) { projectInfo ->
-        loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-        projectUtils.createNewGitDeployKeysForProject(projectInfo)
-
-        loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-        projectUtils.createNewGitWebhooksForProject(projectInfo)
+    def refreshProjectModuleList = []
+    if (shouldRefresh) {
+        projectInfoList.each { projectInfo ->
+            refreshProjectModuleList.addAll(projectInfo.modules)
+        }
     }
+    
+    loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR EACH PROJECT IN EACH TEAM")
+    projectUtils.createNewGitDeployKeysForProject(refreshProjectModuleList)
 
-    parallel(refreshStages)
+    loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR EACH PROJECT IN EACH TEAM")
+    projectUtils.createNewGitWebhooksForProject(refreshProjectModuleList)
 }
 
 def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {

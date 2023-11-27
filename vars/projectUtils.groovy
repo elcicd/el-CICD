@@ -36,10 +36,10 @@ def uninstallSdlcEnvironments(def projectInfo) {
     """
 }
 
-def removeGitDeployKeysFromProject(def projectInfo) {
+def removeGitDeployKeysFromProject(def moduleList) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
@@ -61,10 +61,10 @@ def removeGitDeployKeysFromProject(def projectInfo) {
     parallel(buildStages)
 }
 
-def createNewGitDeployKeysForProject(def projectInfo) {
+def createNewGitDeployKeysForProject(def moduleList) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
@@ -93,8 +93,8 @@ def createNewGitDeployKeysForProject(def projectInfo) {
     parallel(buildStages)
 }
 
-def removeGitWebhooksFromProject(def projectInfo) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
+def removeGitWebhooksFromProject(def moduleList) {
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', moduleList) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
@@ -121,8 +121,8 @@ def removeGitWebhooksFromProject(def projectInfo) {
     parallel(buildStages)
 }
 
-def createNewGitWebhooksForProject(def projectInfo) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', projectInfo.modules) { module ->
+def createNewGitWebhooksForProject(def moduleList) {
+    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', moduleList) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {

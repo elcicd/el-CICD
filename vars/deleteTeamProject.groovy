@@ -27,10 +27,10 @@ def call(Map args) {
 
 
     loggingUtils.echoBanner("REMOVE DEPLOY KEYS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.removeGitDeployKeysFromProject(projectInfo)
+    projectUtils.removeGitDeployKeysFromProject(projectInfo.modules)
 
     loggingUtils.echoBanner("REMOVE WEBHOOKS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.removeGitWebhooksFromProject(projectInfo)
+    projectUtils.removeGitWebhooksFromProject(projectInfo.modules)
 
     stage('Remove project from cluster') {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")

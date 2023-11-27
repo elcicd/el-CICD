@@ -36,10 +36,10 @@ def call(Map args) {
     }
 
     loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.createNewGitDeployKeysForProject(projectInfo)
+    projectUtils.createNewGitDeployKeysForProject(projectInfo.modules)
 
     loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.createNewGitWebhooksForProject(projectInfo)
+    projectUtils.createNewGitWebhooksForProject(projectInfo.modules)
 
     stage('Summary') {
         loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",
