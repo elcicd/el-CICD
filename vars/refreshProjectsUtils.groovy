@@ -70,14 +70,14 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
         msgList,
         '',
         loggingUtils.BANNER_SEPARATOR,
-        ''
-        "TEAM SERVERS ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED"
-        ''
-        "PROJECT PIPELINES ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED"
-        ''
-        "PROJECT SDLC ENVIRONMENTS ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED"
-        ''
-        "PROJECT CREDENTIALS ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED"
+        '',
+        "TEAM SERVERS ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        '',
+        "PROJECT PIPELINES ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        '',
+        "PROJECT SDLC ENVIRONMENTS ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        '',
+        "PROJECT CREDENTIALS ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
