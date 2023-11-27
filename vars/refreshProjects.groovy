@@ -34,6 +34,7 @@ def call(Map args) {
     projectRefreshMap.each { teamId, projectList ->
         def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
         teamInfoList.add(teamInfo)
+        echo "teamInfo: ${teamInfo}"
         projectInfoList += projectList.collect { projectId ->
             return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
         }
