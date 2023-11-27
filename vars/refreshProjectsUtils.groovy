@@ -65,7 +65,6 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
 }
 
 def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def projectInfoList) {
-    def projectInfoList = []
     projectRefreshMap.each { teamId, projectList ->
         def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
         teamInfoList.add(teamInfo)
