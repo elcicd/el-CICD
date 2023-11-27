@@ -27,61 +27,36 @@ def call(Map args) {
             echo '--> USER CONFIRMATION NOT REQUESTED; SKIPPING'
         }
     }
-
-    stage('Update Team Servers') {
-        if (refreshTeamServers) {
+    
+    teamInfoList = []
+    projectInfoList = []
+    
+    projectRefreshMap.each { teamId, projectList ->
+        def teamInfo = projectInfoUtils.gatherTeamInfo(projectData.key)
+        teamInfoList.add(teamInfo)
+        projectInfoList += projectList.collect { projectId ->
+            return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
         }
-        else {
-            echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
-        }
-        loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
-
-        loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
-        projectUtils.syncJenkinsPipelines(projectInfo)
     }
     
-    // stage("refresh each project's CICD") {
-    //     cicdProjects.each { projectInfo ->
-    //         onboardTeamCicdServerUtils.setupProjectCicdResources(projectInfo)
-    //     }
-    // }
+    refreshProjects(projectInfoList, refreshPipelines, 'pipelines')
     
-    // stage('refresh every deployed projects credentials') {
-    //     cicdProjects.each { projectInfo ->
-    //         manageCicdCredentials([projectInfo: projectInfo, isNonProd: true])
-    //     }
-    // }
+    refreshProjects(projectInfoList, refreshEnvironments, 'SDLC environments')
     
-    // stage('sync all Jenkins pipelines') {
-    //     if (projectInfos) {
-    //         parallel(
-    //             firstBatch: {
-    //                 stage('synching first batch of CICD servers') {
-    //                     syncPipelines(projectInfos)
-    //                 }
-    //             },
-    //             secondBatch: {
-    //                 stage('synching second batch of CICD servers') {
-    //                     syncPipelines(projectInfos)
-    //                 }
-    //             },
-    //             thirdBatch: {
-    //                 stage('synching third batch of CICD servers') {
-    //                     syncPipelines(projectInfos)
-    //                 }
-    //             },
-    //             fourthBatch: {
-    //                 stage('synching fourth batch of CICD servers') {
-    //                     syncPipelines(projectInfos)
-    //                 }
-    //             },
-    //             fifthBatch: {
-    //                 stage('synching fifth batch of CICD servers') {
-    //                     syncPipelines(projectInfos)
-    //                 }
-    //             }
-    //         )
-    //     }
-    // }
+    refreshProjects(projectInfoList, refreshCredentials, 'credentials')
+
+    if (!refreshTeamServers) {
+        echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
+    }
+    
+    def refreshTeamServerList = refreshTeamServers ? teamInfoList : []
+    def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
+        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER")
+        onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
+
+        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR TEAM ${teamInfo.teamId}")
+        projectUtils.syncJenkinsPipelines(teamInfo)
+    }
+
+    parallel(refreshTeamServerStages)
 }

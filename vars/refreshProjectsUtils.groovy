@@ -62,7 +62,6 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
         msgList += [
             '',
             "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
-            '',
         ]
     }
 
@@ -72,10 +71,27 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
         msgList,
         '',
         loggingUtils.BANNER_SEPARATOR,
+        '',
         'PLEASE CAREFULLY REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS',
         '',
         "Do you wish to continue?"
     )
 
     jenkinsUtils.displayInputWithTimeout(msg, args)
+}
+
+def refreshProjects(def projectInfoList, def shouldRefresh, def titleClause) {
+    def uppercaseTitle = titleClause.toUpperCase()
+    if (!shouldRefresh) {
+        echo "--> REFRESH ${uppercaseTitle} NOT REQUESTED; SKIPPING"
+    }
+    
+    def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
+    def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo -> 
+        echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED")
+        
+        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
+    }
+
+    parallel(refreshStages)
 }

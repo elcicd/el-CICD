@@ -27,7 +27,7 @@ def call(Map args) {
         onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
 
         loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
-        projectUtils.syncJenkinsPipelines(projectInfo)
+        projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
     }
 
     stage('Configure project SDLC environments') {

@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-def syncJenkinsPipelines(def projectInfo) {
+def syncJenkinsPipelines(def teamInfo) {
     def baseAgentImage = "${el.cicd.JENKINS_OCI_REGISTRY}/${el.cicd.JENKINS_AGENT_IMAGE_PREFIX}-${el.cicd.JENKINS_AGENT_DEFAULT}"
 
     sh """
-        ${shCmd.echo '', "SYNCING pipeline definitions for the CICD Server in ${projectInfo.teamInfo.cicdMasterNamespace}"}
-        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${projectInfo.teamInfo.cicdMasterNamespace}) ]]
+        ${shCmd.echo '', "--> SYNCING pipeline definitions for the CICD Server in ${teamInfo.cicdMasterNamespace}"}
+        if [[ ! -z \$(helm list --short --filter sync-jenkins-pipelines -n ${teamInfo.cicdMasterNamespace}) ]]
         then
-            helm uninstall sync-jenkins-pipelines -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            helm uninstall sync-jenkins-pipelines -n ${teamInfo.cicdMasterNamespace}
         fi
 
         ${shCmd.echo ''}
@@ -17,7 +17,7 @@ def syncJenkinsPipelines(def projectInfo) {
             --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${baseAgentImage} \
             --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${el.cicd.JENKINS_CONFIG_FILE_PATH} \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/sync-jenkins-pipelines-job-values.yaml \
-            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
+            -n ${teamInfo.cicdMasterNamespace} \
             sync-jenkins-pipelines \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     """

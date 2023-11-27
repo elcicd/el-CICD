@@ -48,7 +48,7 @@ def call(Map args) {
             projectUtils.uninstallSdlcEnvironments(projectInfo)
         }
         
-        projectUtils.syncJenkinsPipelines(projectInfo)
+        projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
         
         loggingUtils.echoBanner("PROJECT ${projectInfo.id} REMOVED FROM CLUSTER")
     }
