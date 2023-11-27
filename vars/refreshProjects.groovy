@@ -43,6 +43,8 @@ def call(Map args) {
     
     refreshProjectsUtils.refreshProjectSdlcEnvironments(projectInfoList, refreshEnvironments)
     
+    refreshProjectsUtils.refreshProjectCredentials(projectInfoList, refreshCredentials)
+    
     refreshProjectsUtils.refreshCredentials(projectInfoList, refreshCredentials)
     
     refreshProjectsUtils.refreshTeamCicdServers(teamInfoList, refreshTeamServers)

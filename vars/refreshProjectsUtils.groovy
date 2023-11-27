@@ -107,6 +107,22 @@ def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
     parallel(refreshStages)
 }
 
+def refreshProjectCredentials(def projectInfoList, def shouldRefresh) {
+    if (!shouldRefresh) {
+        echo "--> REFRESHING SDLC ENVIRONMENTS NOT REQUESTED; SKIPPING"
+    }
+
+    def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
+    def refreshStages = concurrentUtils.createParallelStages("Refresh Project Crendentials", refreshProjectInfoList) { projectInfo ->
+        echo "projectInfo.teamInfo: ${projectInfo.teamInfo}"
+        echo "--> REFRESHING PROJECT CREDENTIALS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
+
+        onboardProjectUtils.setupProjectCredentials(projectInfo)
+    }
+
+    parallel(refreshStages)
+}
+
 def refreshCredentials(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
         echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
@@ -118,8 +134,6 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
             refreshProjectModuleList.addAll(projectInfo.modules)
         }
     }
-        
-    projectUtils.createModuleSshKeys(refreshProjectModuleList)
     
     loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR EACH PROJECT IN EACH TEAM")
     projectUtils.createNewGitDeployKeysForProject(refreshProjectModuleList)
