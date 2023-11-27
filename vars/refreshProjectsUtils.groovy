@@ -39,7 +39,7 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
 
 def removeUndeployedTeams(def projectRefreshMap) {
     teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
-        
+
     echo "projectRefreshMap: ${projectRefreshMap}"
     echo "teamMasterNamespaces: ${teamMasterNamespaces}"
 
@@ -47,11 +47,11 @@ def removeUndeployedTeams(def projectRefreshMap) {
             oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
                 sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
         """).split('\n')
-        
+
     echo "teamMasterNamespaces: ${teamMasterNamespaces}"
 
     projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
-        
+
     echo "projectRefreshMap: ${projectRefreshMap}"
 }
 
@@ -65,10 +65,19 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
         ]
     }
 
-
     def msg = loggingUtils.createBanner(
         "THE FOLLOWING TEAMS AND THEIR PROJECTS WILL BE REFRESHED IF THEY ARE ALREADY ONBOARDED:",
         msgList,
+        '',
+        loggingUtils.BANNER_SEPARATOR,
+        ''
+        "TEAM SERVERS ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED"
+        ''
+        "PROJECT PIPELINES ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED"
+        ''
+        "PROJECT SDLC ENVIRONMENTS ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED"
+        ''
+        "PROJECT CREDENTIALS ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED"
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
@@ -85,11 +94,11 @@ def refreshProjects(def projectInfoList, def shouldRefresh, def titleClause) {
     if (!shouldRefresh) {
         echo "--> REFRESH ${uppercaseTitle} NOT REQUESTED; SKIPPING"
     }
-    
+
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo -> 
+    def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo ->
         echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED")
-        
+
         onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
 

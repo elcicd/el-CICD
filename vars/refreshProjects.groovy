@@ -51,7 +51,7 @@ def call(Map args) {
     
     def refreshTeamServerList = refreshTeamServers ? teamInfoList : []
     def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
-        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER")
+        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
         onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
 
         echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR TEAM ${teamInfo.teamId}")
