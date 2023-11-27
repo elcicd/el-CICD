@@ -14,6 +14,7 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
         allProjectFiles.addAll(findFiles(glob: "**/*.yml"))
         allProjectFiles.addAll(findFiles(glob: "**/*.yaml"))
 
+        extPattern = ~/[.].*/
         allProjectFiles.each { file ->
             path = file.path
             if (path.contains('/')) {
@@ -25,7 +26,7 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
                 {
 
                     projectList = projectRefreshMap.get(projectAndFile[0]) ?: []
-                    projectList.add(projectAndFile[1])
+                    projectList.add(projectAndFile[1].minus(extPattern))
                     projectRefreshMap.put(projectAndFile[0], projectList)
                 }
             }
@@ -57,10 +58,9 @@ def removeUndeployedTeams(def projectRefreshMap) {
 
 def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     def msgList = []
-    extPattern = ~/[.].*/
-    projectRefreshMap.keySet().each { teamName ->
+    projectRefreshMap.each { teamName, projectList ->
         msgList += [
-            "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
+            "${teamName}: ${projectList}",
             '',
         ]
     }
