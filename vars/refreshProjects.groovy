@@ -38,7 +38,6 @@ def call(Map args) {
             return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
         }
     }
-    echo "projectInfoList: ${projectInfoList.size()}"
     
     refreshProjectsUtils.refreshProjectPipelines(projectInfoList, refreshPipelines)
     
