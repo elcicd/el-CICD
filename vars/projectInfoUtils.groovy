@@ -123,8 +123,6 @@ def initProjectModuleData(def projectInfo) {
         createProjectModule(projectInfo)
         projectInfo.modules.add(projectInfo.projectModule)
     }
-    
-    echo "projectInfo.modules: ${projectInfo.modules}"
 }
 
 def setModuleData(def projectInfo, def module) {

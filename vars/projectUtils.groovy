@@ -36,7 +36,7 @@ def uninstallSdlcEnvironments(def projectInfo) {
     """
 }
 
-def removeGitDeployKeysFromProject(def projectInfo) {    
+def removeGitDeployKeysFromProject(def projectInfo) {
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
@@ -68,7 +68,7 @@ def createNewGitDeployKeysForProject(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
-                    set -x
+                    set +x
                     echo
                     echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${getLongformModuleId(projectInfo, module)}"
                     echo
@@ -99,7 +99,7 @@ def removeGitWebhooksFromProject(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
-                        set -x
+                        set +x
                         echo
                         echo "--> REMOVING GIT WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
                         echo
@@ -127,7 +127,7 @@ def createNewGitWebhooksForProject(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
-                        set -x
+                        set +x
                         echo
                         echo "--> CREATING NEW WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
                         echo
