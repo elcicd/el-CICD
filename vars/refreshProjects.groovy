@@ -36,28 +36,17 @@ def call(Map args) {
         teamInfoList.add(teamInfo)
         projectInfoList += projectList.collect { projectId ->
             def projectInfo = projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
-            echo "projectInfo.teamInfo: ${projectInfo.teamInfo}"
         }
     }
     
-    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshPipelines, 'pipelines')
+    refreshProjectsUtils.refreshProjectPipelines(projectInfoList, refreshPipelines)
     
-    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshEnvironments, 'SDLC environments')
+    refreshProjectsUtils.refreshProjectSdlcEnvironments(projectInfoList, refreshEnvironments)
     
-    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshCredentials, 'credentials')
-
-    if (!refreshTeamServers) {
-        echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
-    }
+    refreshProjectsUtils.refreshCredentials(projectInfoList, refreshCredentials)
     
-    def refreshTeamServerList = refreshTeamServers ? teamInfoList : []
-    def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
-        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
-        onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
+    refreshProjectsUtils.runTeamCicdServers(teamInfoList, refreshTeamServers)
+    
+    loggingUtils.echoBanner('ALL TEAMS AND PROJECTS REFRESHED')
 
-        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR TEAM ${teamInfo.teamId}"
-        projectUtils.syncJenkinsPipelines(teamInfo)
-    }
-
-    parallel(refreshTeamServerStages)
 }

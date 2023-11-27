@@ -75,18 +75,67 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
-def runRefreshStages(def projectInfoList, def shouldRefresh, def titleClause) {
-    def uppercaseTitle = titleClause.toUpperCase()
+def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESH ${uppercaseTitle} NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING PIPELINES NOT REQUESTED; SKIPPING"
     }
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo ->
-        echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED"
+    def refreshStages = concurrentUtils.createParallelStages("Refresh pipelines", refreshProjectInfoList) { projectInfo ->
+
+        echo "--> REFRESHING PIPELINES FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
 
     parallel(refreshStages)
+}
+
+def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
+    if (!shouldRefresh) {
+        echo "--> REFRESHING SDLC ENVIRONMENTS NOT REQUESTED; SKIPPING"
+    }
+
+    def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
+    def refreshStages = concurrentUtils.createParallelStages("Refresh SDLC environments", refreshProjectInfoList) { projectInfo ->
+        echo "--> REFRESHING SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id}"
+
+        onboardProjectUtils.setProjectSdlc(projectInfo)
+    }
+
+    parallel(refreshStages)
+}
+
+def refreshCredentials(def projectInfoList, def shouldRefresh) {
+    if (!shouldRefresh) {
+        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
+    }
+
+    def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
+    def refreshStages = concurrentUtils.createParallelStages("Refresh project credentials", refreshProjectInfoList) { projectInfo ->
+        loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.createNewGitDeployKeysForProject(projectInfo)
+
+        loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.createNewGitWebhooksForProject(projectInfo)
+    }
+
+    parallel(refreshStages)
+}
+
+def runTeamCicdServers(def teamInfoList, def shouldRefresh) {
+    if (!refreshTeamServers) {
+        echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
+    }
+    
+    def refreshTeamServerList = refreshTeamServers ? teamInfoList : []
+    def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
+        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
+        onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
+
+        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR ALL TEAM ${teamInfo.teamId} PROJECTS"
+        projectUtils.syncJenkinsPipelines(teamInfo)
+    }
+
+    parallel(refreshTeamServerStages)
 }

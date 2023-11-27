@@ -31,17 +31,8 @@ def call(Map args) {
     }
 
     stage('Configure project SDLC environments') {
-        loggingUtils.echoBanner("CREATE SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
-        onboardProjectUtils.setupProjectEnvironments(projectInfo)
-
-        onboardProjectUtils.resetProjectPvResources(projectInfo)
-        if (projectInfo.staticPvs) {
-            loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
-            onboardProjectUtils.setupProjectPvResources(projectInfo)
-        }
-        else {
-            echo("--> NO PERSISTENT VOLUME DEFINITIONS DEFINED FOR PROJECT ${projectInfo.id}: SKIPPING")
-        }
+        loggingUtils.echoBanner("SETUP SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
+        onboardProjectUtils.setProjectSdlc(projectInfo)
     }
 
     loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")

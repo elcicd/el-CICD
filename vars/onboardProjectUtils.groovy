@@ -105,6 +105,19 @@ def setupProjectPipelines(def projectInfo) {
     """
 }
 
+def setProjectSdlc(def projectInfo) {
+    onboardProjectUtils.setupProjectEnvironments(projectInfo)
+
+    onboardProjectUtils.resetProjectPvResources(projectInfo)
+    if (projectInfo.staticPvs) {
+        echo("--> DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
+        onboardProjectUtils.setupProjectPvResources(projectInfo)
+    }
+    else {
+        echo("--> NO PERSISTENT VOLUME DEFINITIONS DEFINED FOR PROJECT ${projectInfo.id}: SKIPPING")
+    }
+}
+
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvironmentsValues(projectInfo)
     def environmentsValuesFile = "environments-config-values.yaml"
