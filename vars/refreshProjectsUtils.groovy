@@ -123,6 +123,9 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
     projectUtils.createNewGitDeployKeysForProject(refreshProjectModuleList)
 
     loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR EACH PROJECT IN EACH TEAM")
+    refreshProjectModuleList = refreshProjectModuleList.findAll {
+        it.projectInfo.projectModule != it
+    }
     projectUtils.createNewGitWebhooksForProject(refreshProjectModuleList)
 }
 

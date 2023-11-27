@@ -135,14 +135,14 @@ def createNewGitWebhooksForProject(def moduleList) {
                         ${getDeleteWebhookFunctionCall(module)}
 
                         _add_webhook ${projectInfo.gitRestApiHost} \
-                                    ${projectInfo.gitOrganization} \
-                                    ${module.gitRepoName} \
-                                    ${projectInfo.jenkinsHostUrl} \
-                                    ${projectInfo.id} \
-                                    ${module.name} \
-                                    ${module.isComponent ? 'build-component' : 'build-artifact'} \
-                                    ${module.gitDeployKeyJenkinsId} \
-                                    \${GIT_ACCESS_TOKEN}
+                                     ${projectInfo.gitOrganization} \
+                                     ${module.gitRepoName} \
+                                     ${projectInfo.jenkinsHostUrl} \
+                                     ${projectInfo.id} \
+                                     ${module.name} \
+                                     ${module.isComponent ? 'build-component' : 'build-artifact'} \
+                                     ${module.gitDeployKeyJenkinsId} \
+                                     \${GIT_ACCESS_TOKEN}
                         set -x
                     """
                 }

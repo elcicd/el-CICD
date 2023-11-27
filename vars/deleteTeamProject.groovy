@@ -25,12 +25,11 @@ def call(Map args) {
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
-
     loggingUtils.echoBanner("REMOVE DEPLOY KEYS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
     projectUtils.removeGitDeployKeysFromProject(projectInfo.modules)
 
     loggingUtils.echoBanner("REMOVE WEBHOOKS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.removeGitWebhooksFromProject(projectInfo.modules)
+    projectUtils.removeGitWebhooksFromProject(projectInfo.components + projectInfo.artifacts)
 
     stage('Remove project from cluster') {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
