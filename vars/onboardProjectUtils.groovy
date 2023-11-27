@@ -106,7 +106,7 @@ def setupProjectPipelines(def projectInfo) {
 }
 
 def setProjectSdlc(def projectInfo) {
-    onboardProjectUtils.setupProjectEnvironments(projectInfo)
+    setupProjectEnvironments(projectInfo)
 
     onboardProjectUtils.resetProjectPvResources(projectInfo)
     if (projectInfo.staticPvs) {
