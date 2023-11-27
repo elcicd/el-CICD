@@ -45,12 +45,12 @@ def removeGitDeployKeysFromProject(def moduleList) {
                 sh """
                     set +x
                     echo
-                    echo "--> REMOVING GIT DEPLOY KEY FOR: ${getLongformModuleId(projectInfo, module)}"
+                    echo "--> REMOVING GIT DEPLOY KEY FOR: ${getLongformModuleId(module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                    ${getDeleteDeployKeyFunctionCall(projectInfo, module)}
+                    ${getDeleteDeployKeyFunctionCall(module)}
 
                     set -x
                 """
@@ -70,12 +70,12 @@ def createNewGitDeployKeysForProject(def moduleList) {
                 sh """
                     set +x
                     echo
-                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${getLongformModuleId(projectInfo, module)}"
+                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${getLongformModuleId(module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                    ${getDeleteDeployKeyFunctionCall(projectInfo, module)}
+                    ${getDeleteDeployKeyFunctionCall(module)}
 
                     _add_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
                                              ${projectInfo.gitOrganization} \
@@ -101,12 +101,12 @@ def removeGitWebhooksFromProject(def moduleList) {
                     sh """
                         set +x
                         echo
-                        echo "--> REMOVING GIT WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
+                        echo "--> REMOVING GIT WEBOOK FOR: ${getLongformModuleId(module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                        ${getDeleteWebhookFunctionCall(projectInfo, module)}
+                        ${getDeleteWebhookFunctionCall(module)}
 
                         set -x
                     """
@@ -129,12 +129,12 @@ def createNewGitWebhooksForProject(def moduleList) {
                     sh """
                         set +x
                         echo
-                        echo "--> CREATING NEW WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
+                        echo "--> CREATING NEW WEBOOK FOR: ${getLongformModuleId(module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
 
-                        ${getDeleteWebhookFunctionCall(projectInfo, module)}
+                        ${getDeleteWebhookFunctionCall(module)}
 
                         _add_webhook ${projectInfo.gitRestApiHost} \
                                     ${projectInfo.gitOrganization} \
@@ -158,7 +158,8 @@ def createNewGitWebhooksForProject(def moduleList) {
     parallel(buildStages)
 }
 
-def getDeleteDeployKeyFunctionCall(def projectInfo, def module) {
+def getDeleteDeployKeyFunctionCall(def module) {
+    def projectInfo = module.projectInfo
     return """
         _delete_git_repo_deploy_key ${projectInfo.gitRestApiHost} \
                                     ${projectInfo.gitOrganization} \
@@ -168,7 +169,8 @@ def getDeleteDeployKeyFunctionCall(def projectInfo, def module) {
     """
 }
 
-def getDeleteWebhookFunctionCall(def projectInfo, def module) {
+def getDeleteWebhookFunctionCall(def module) {
+    def projectInfo = module.projectInfo
     return """
         _delete_webhook ${projectInfo.gitRestApiHost} \
                         ${projectInfo.gitOrganization} \
@@ -182,6 +184,8 @@ def getDeleteWebhookFunctionCall(def projectInfo, def module) {
     """
 }
 
-def getLongformModuleId(def projectInfo, def module) {
-    return "${projectInfo.teamInfo.id}:${projectInfo.id}:${module.gitRepoName}"
+def getLongformModuleId(def module) {
+    def projectInfo = module.projectInfo
+    def teamInfo = projectInfo.teamInfo
+    return "${teamInfo.id}:${projectInfo.id}:${module.gitRepoName}"
 }

@@ -83,7 +83,7 @@ def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
     def refreshStages = concurrentUtils.createParallelStages("Refresh pipelines", refreshProjectInfoList) { projectInfo ->
 
-        echo "--> REFRESHING PIPELINES FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id}"
+        echo "--> REFRESHING PIPELINES FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
@@ -98,7 +98,8 @@ def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
     def refreshStages = concurrentUtils.createParallelStages("Refresh SDLC environments", refreshProjectInfoList) { projectInfo ->
-        echo "--> REFRESHING SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id}"
+        echo "projectInfo.teamInfo: ${projectInfo.teamInfo}"
+        echo "--> REFRESHING SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setProjectSdlc(projectInfo)
     }
