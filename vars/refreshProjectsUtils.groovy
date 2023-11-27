@@ -82,7 +82,6 @@ def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
     def refreshStages = concurrentUtils.createParallelStages("Refresh pipelines", refreshProjectInfoList) { projectInfo ->
-
         echo "--> REFRESHING PIPELINES FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectPipelines(projectInfo)
@@ -98,7 +97,6 @@ def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
     def refreshStages = concurrentUtils.createParallelStages("Refresh SDLC environments", refreshProjectInfoList) { projectInfo ->
-        echo "projectInfo.teamInfo: ${projectInfo.teamInfo}"
         echo "--> REFRESHING SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setProjectSdlc(projectInfo)
@@ -109,12 +107,11 @@ def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
 
 def refreshProjectCredentials(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESHING SDLC ENVIRONMENTS NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
     }
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh Project Crendentials", refreshProjectInfoList) { projectInfo ->
-        echo "projectInfo.teamInfo: ${projectInfo.teamInfo}"
+    def refreshStages = concurrentUtils.createParallelStages("Refresh project credentials", refreshProjectInfoList) { projectInfo ->
         echo "--> REFRESHING PROJECT CREDENTIALS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectCredentials(projectInfo)
