@@ -54,7 +54,7 @@ def call(Map args) {
         echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
         onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
 
-        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR TEAM ${teamInfo.teamId}")
+        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR TEAM ${teamInfo.teamId}"
         projectUtils.syncJenkinsPipelines(teamInfo)
     }
 
