@@ -35,7 +35,7 @@ def setupTeamCicdServer(def teamInfo) {
 }
 
 def getJenkinsConfigValues(def teamInfo) {
-    jenkinsConfigValues = [elCicdDefs: [:]]
+    def jenkinsConfigValues = [elCicdDefs: [:]]
     def elCicdDefs= jenkinsConfigValues.elCicdDefs
 
     createElCicdProfiles(jenkinsConfigValues)
