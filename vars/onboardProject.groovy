@@ -37,7 +37,7 @@ def call(Map args) {
     
     stage('Configure project credentials') {
         loggingUtils.echoBanner("CONFIGURE PROJECT CREDENTIALS")
-        onboardingUtils.setupProjectCredentials(projectInfo)
+        onboardProjectUtils.setupProjectCredentials(projectInfo)
 
         loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
         projectUtils.createNewGitDeployKeysForProject(projectInfo.modules)
