@@ -100,7 +100,7 @@ def setupProjectPipelines(def projectInfo) {
 }
 
 def setupProjectCredentials(def projectInfo) {
-    def modulesSshKeyDefs = createProjectSshKeyValues(projectInfo.modules)
+    def modulesSshKeyDefs = createProjectSshKeyValues(projectInfo)
     def modulesSshValuesFile = "${projectInfo.id}-module-ssh-values.yaml"
     writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
 
