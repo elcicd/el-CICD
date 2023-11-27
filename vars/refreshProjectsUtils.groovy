@@ -60,14 +60,13 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     extPattern = ~/[.].*/
     projectRefreshMap.keySet().each { teamName ->
         msgList += [
-            '',
             "${teamName}: ${projectRefreshMap[(teamName)].collect { it.minus(extPattern) }}",
+            '',
         ]
     }
 
     def msg = loggingUtils.createBanner(
         msgList,
-        '',
         loggingUtils.BANNER_SEPARATOR,
         '',
         'PLEASE REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS AND THE FOLLOWING CAREFULLY:',
