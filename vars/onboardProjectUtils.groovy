@@ -208,11 +208,11 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     createElCicdProfiles(pipelineValues)
 
     if (projectInfo.components) {
-        pipelineValues.elCicdDefs.add('hasComponents')
+        pipelineValues.elCicdProfiles += 'hasComponents'
     }
 
     if (projectInfo.artifacts) {
-        pipelineValues.elCicdDefs.add('hasArtifacts')
+        pipelineValues.elCicdProfiles += 'hasArtifacts'
     }
 
     getElCicdProjectCommonValues(projectInfo, elCicdDefs)
