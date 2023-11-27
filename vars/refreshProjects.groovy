@@ -32,7 +32,7 @@ def call(Map args) {
     projectInfoList = []
     
     projectRefreshMap.each { teamId, projectList ->
-        def teamInfo = projectInfoUtils.gatherTeamInfo(projectData.key)
+        def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
         teamInfoList.add(teamInfo)
         projectInfoList += projectList.collect { projectId ->
             return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
