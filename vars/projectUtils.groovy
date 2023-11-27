@@ -37,8 +37,6 @@ def uninstallSdlcEnvironments(def projectInfo) {
 }
 
 def removeGitDeployKeysFromProject(def moduleList) {
-    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
-
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
@@ -62,8 +60,6 @@ def removeGitDeployKeysFromProject(def moduleList) {
 }
 
 def createNewGitDeployKeysForProject(def moduleList) {
-    projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
-
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             def projectInfo = module.projectInfo
