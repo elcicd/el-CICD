@@ -66,6 +66,7 @@ def createNewGitDeployKeysForProject(def moduleList) {
 
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
+            def projectInfo = module.projectInfo
             dir(module.workDir) {
                 sh """
                     set +x
@@ -125,6 +126,7 @@ def createNewGitWebhooksForProject(def moduleList) {
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', moduleList) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
+                def projectInfo = module.projectInfo
                 dir(module.workDir) {
                     sh """
                         set +x
