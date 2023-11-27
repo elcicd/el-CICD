@@ -66,22 +66,16 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     }
 
     def msg = loggingUtils.createBanner(
-        "THE FOLLOWING TEAMS AND THEIR PROJECTS WILL BE REFRESHED IF THEY ARE ALREADY ONBOARDED:",
         msgList,
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
-        "TEAM SERVERS ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        'PLEASE REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS AND THE FOLLOWING CAREFULLY:',
         '',
-        "PROJECT PIPELINES ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
-        '',
-        "PROJECT SDLC ENVIRONMENTS ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED",
-        '',
-        "PROJECT CREDENTIALS ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED",
-        '',
-        loggingUtils.BANNER_SEPARATOR,
-        '',
-        'PLEASE CAREFULLY REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS',
+        "Team Servers ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        "Project pipelines ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        "Project SDLC environments ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED",
+        "Project credentials ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         '',
         "Do you wish to continue?"
     )
