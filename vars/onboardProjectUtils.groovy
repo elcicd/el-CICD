@@ -405,7 +405,7 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
 }
 
 def createProjectSshKeyValues(def projectInfo) {
-    projectInfo.createModuleSshKeys(projectInfo.modules)
+    projectUtils.createModuleSshKeys(projectInfo.modules)
     
     configValues = [:]
     projectInfo.modules.each { module ->
