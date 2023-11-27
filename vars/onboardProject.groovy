@@ -8,7 +8,7 @@ def call(Map args) {
     def recreateSdlcEnvs = args.recreateSdlcEnvs
 
     stage("Install/upgrade CICD Jenkins") {
-        onboardTeamCicdServerUtils.setupTeamCicdServer(teamInfo)
+        onboardProjectUtils.setupTeamCicdServer(teamInfo)
     }
 
     stage('Recreate SDLC environments [optional]') {
@@ -24,7 +24,7 @@ def call(Map args) {
 
     stage('Configure project CICD pipelines') {
         loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
+        onboardProjectUtils.setupProjectPipelines(projectInfo)
 
         loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
         projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
@@ -32,12 +32,12 @@ def call(Map args) {
 
     stage('Configure project SDLC environments') {
         loggingUtils.echoBanner("CREATE SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
-        onboardTeamCicdServerUtils.setupProjectEnvironments(projectInfo)
+        onboardProjectUtils.setupProjectEnvironments(projectInfo)
 
-        onboardTeamCicdServerUtils.resetProjectPvResources(projectInfo)
+        onboardProjectUtils.resetProjectPvResources(projectInfo)
         if (projectInfo.staticPvs) {
             loggingUtils.echoBanner("DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
-            onboardTeamCicdServerUtils.setupProjectPvResources(projectInfo)
+            onboardProjectUtils.setupProjectPvResources(projectInfo)
         }
         else {
             echo("--> NO PERSISTENT VOLUME DEFINITIONS DEFINED FOR PROJECT ${projectInfo.id}: SKIPPING")

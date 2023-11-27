@@ -24,7 +24,7 @@ elCicdDefs-nonprod:
   
 elCicdDefs-onboard-project:
   PIPELINE_DESCRIPTION: 'Onboard or update a team CICD servers'
-  EL_CICD_API_METHOD: onboardTeamCicdServer
+  EL_CICD_API_METHOD: onboardProject
   RECREATE_SDLC_ENVS_DESCRIPTION: |-
     Tear down the project's SDLC environments? [WARNING: ALL deployments in those namespaces will be deleted]
   PIPELINE_PARAMS: |-

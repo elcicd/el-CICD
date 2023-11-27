@@ -90,7 +90,7 @@ def refreshProjects(def projectInfoList, def shouldRefresh, def titleClause) {
     def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo -> 
         echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED")
         
-        onboardTeamCicdServerUtils.setupProjectPipelines(projectInfo)
+        onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
 
     parallel(refreshStages)
