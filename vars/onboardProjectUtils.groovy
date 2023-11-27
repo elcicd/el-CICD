@@ -8,7 +8,7 @@ def setupTeamCicdServer(def teamInfo) {
     loggingUtils.echoBanner("CONFIGURING JENKINS IN NAMESPACE ${teamInfo.cicdMasterNamespace} FOR TEAM ${teamInfo.id}")
 
     def jenkinsDefs = getJenkinsConfigValues(teamInfo)
-    def jenkinsConfigFile = "jenkins-config-values.yaml"
+    def jenkinsConfigFile = "${teamInfo.id}-jenkins-config-values.yaml"
     writeYaml(file: jenkinsConfigFile, data: jenkinsDefs)
 
     sh """
@@ -78,11 +78,11 @@ def getJenkinsConfigValues(def teamInfo) {
 
 def setupProjectPipelines(def projectInfo) {
     def projectDefs = getElCicdChartProjectPipelineValues(projectInfo)
-    def pipelinesValuesFile = 'pipelines-config-values.yaml'
+    def pipelinesValuesFile = "${projectInfo.id}-pipelines-config-values.yaml"
     writeYaml(file: pipelinesValuesFile, data: projectDefs)
 
     def modulesSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def modulesSshValuesFile = "module-ssh-values.yaml"
+    def modulesSshValuesFile = "${projectInfo.id}-module-ssh-values.yaml"
     writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
 
     sh """
@@ -120,7 +120,7 @@ def setProjectSdlc(def projectInfo) {
 
 def setupProjectEnvironments(def projectInfo) {
     def projectDefs = getElCicdChartProjectEnvironmentsValues(projectInfo)
-    def environmentsValuesFile = "environments-config-values.yaml"
+    def environmentsValuesFile = "${projectInfo.id}-environments-config-values.yaml"
     writeYaml(file: environmentsValuesFile, data: projectDefs)
 
     sh """
@@ -161,7 +161,7 @@ def setupProjectPvResources(def projectInfo) {
         if (pvValues.elCicdDefs.VOLUME_OBJ_NAMES) {
             def volumeCicdConfigValues = writeYaml(data: pvValues, returnText: true)
 
-            def volumeCicdConfigFile = "volume-cicd-config-values.yaml"
+            def volumeCicdConfigFile = "${projectInfo.id}-volume-cicd-config-values.yaml"
             writeFile(file: volumeCicdConfigFile, text: volumeCicdConfigValues)
 
             sh """
