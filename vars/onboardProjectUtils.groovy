@@ -108,10 +108,10 @@ def setupProjectPipelines(def projectInfo) {
 def setProjectSdlc(def projectInfo) {
     setupProjectEnvironments(projectInfo)
 
-    onboardProjectUtils.resetProjectPvResources(projectInfo)
+    resetProjectPvResources(projectInfo)
     if (projectInfo.staticPvs) {
         echo("--> DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
-        onboardProjectUtils.setupProjectPvResources(projectInfo)
+        setupProjectPvResources(projectInfo)
     }
     else {
         echo("--> NO PERSISTENT VOLUME DEFINITIONS DEFINED FOR PROJECT ${projectInfo.id}: SKIPPING")
