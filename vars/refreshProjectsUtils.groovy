@@ -133,10 +133,10 @@ def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
     
     def refreshTeamServerList = shouldRefresh ? teamInfoList : []
     def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
-        echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
-        onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
+        echo "--> REFRESH TEAM ${teamInfo.id} SERVER"
+        onboardProjectUtils.setupTeamCicdServer(teamInfo)
 
-        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR ALL TEAM ${teamInfo.teamId} PROJECTS"
+        echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR ALL TEAM ${teamInfo.id} PROJECTS"
         projectUtils.syncJenkinsPipelines(teamInfo)
     }
 
