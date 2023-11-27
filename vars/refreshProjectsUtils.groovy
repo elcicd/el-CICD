@@ -128,7 +128,7 @@ def runTeamCicdServers(def teamInfoList, def shouldRefresh) {
         echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
     }
     
-    def refreshTeamServerList = refreshTeamServers ? teamInfoList : []
+    def refreshTeamServerList = shouldRefresh ? teamInfoList : []
     def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
         echo "--> REFRESH TEAM ${teamInfo.teamId} SERVER"
         onboardProjectUtils.setupTeamCicdServer(teamInfo.teamId)
