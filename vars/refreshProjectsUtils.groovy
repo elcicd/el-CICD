@@ -97,7 +97,7 @@ def refreshProjects(def projectInfoList, def shouldRefresh, def titleClause) {
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
     def refreshStages = concurrentUtils.createParallelStages("Refresh ${titleClause}", refreshProjectInfoList) { projectInfo ->
-        echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED")
+        echo "--> ${uppercaseTitle} FOR PROJECT ${projectInfo.teamInfo.teamId}:${projectInfo.id} REFRESHED"
 
         onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
