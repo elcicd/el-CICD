@@ -90,7 +90,7 @@ def setupProjectPipelines(def projectInfo) {
         cat ${pipelinesValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        
+
         ${shCmd.echo ''}
         helm upgrade --install --atomic --history-max=1 \
             -f ${pipelinesValuesFile} \
@@ -115,7 +115,7 @@ def setupProjectEnvironments(def projectInfo) {
         cat ${environmentsValuesFile}
 
         ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
-        
+
         ${shCmd.echo ''}
         chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
@@ -154,7 +154,7 @@ def setupProjectPvResources(def projectInfo) {
             sh """
                 ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
                 cat ${volumeCicdConfigFile}
-                
+
                 helm install --atomic \
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
@@ -206,7 +206,15 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     def elCicdDefs = pipelineValues.elCicdDefs
 
     createElCicdProfiles(pipelineValues)
-    
+
+    if (projectInfo.components) {
+        pipelineValues.elCicdDefs.add('hasComponents')
+    }
+
+    if (projectInfo.artifacts) {
+        pipelineValues.elCicdDefs.add('hasArtifacts')
+    }
+
     getElCicdProjectCommonValues(projectInfo, elCicdDefs)
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
@@ -224,10 +232,10 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     return pipelineValues
 }
 
-def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {    
+def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.EL_CICD_MASTER_NAMESPACE = el.cicd.EL_CICD_MASTER_NAMESPACE
     elCicdDefs.PROJECT_ID = projectInfo.id
-    
+
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
@@ -272,7 +280,7 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
     def elCicdDefs = environmentsValues.elCicdDefs
 
     createElCicdProfiles(environmentsValues)
-    
+
     getElCicdProjectCommonValues(projectInfo, elCicdDefs)
 
     getElCicdNamespaceChartValues(projectInfo, environmentsValues)

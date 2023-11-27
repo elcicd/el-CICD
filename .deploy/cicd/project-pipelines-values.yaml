@@ -35,6 +35,7 @@ elCicdTemplates:
   objName: $<PROJECT_ID>-$<>-build-component
   mustHaveEveryProfile:
   - nonprod
+  - hasComponents
   labels: $<BUILD_COMPONENT_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
@@ -59,6 +60,7 @@ elCicdTemplates:
   objName: $<PROJECT_ID>-$<>-build-artifact
   mustHaveEveryProfile:
   - nonprod
+  - hasArtifacts
   labels: $<BUILD_ARTIFACT_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
