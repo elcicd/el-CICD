@@ -35,9 +35,10 @@ def call(Map args) {
         def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
         teamInfoList.add(teamInfo)
         projectInfoList += projectList.collect { projectId ->
-            def projectInfo = projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
+            return projectInfoUtils.gatherProjectInfoStage(teamInfo, projectId)
         }
     }
+    echo "projectInfoList: ${projectInfoList.size()}"
     
     refreshProjectsUtils.refreshProjectPipelines(projectInfoList, refreshPipelines)
     
