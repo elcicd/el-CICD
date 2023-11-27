@@ -290,13 +290,6 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
 
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
-
-    elCicdDefs.GIT_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
-        if (!module.gitDeployKeyJenkinsId) {
-            projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
-        }
-        return module.gitDeployKeyJenkinsId
-    }
 }
 
 
@@ -407,13 +400,20 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
 def createProjectSshKeyValues(def projectInfo) {
     projectUtils.createModuleSshKeys(projectInfo.modules)
     
-    configValues = [:]
+    configValues = [elCicdDefs: [:]]
     projectInfo.modules.each { module ->
         dir(module.workDir) {
             def sshKey = readFile(file: module.gitDeployKeyJenkinsId)
 
             configValues["elCicdDefs-${module.gitDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]
         }
+    }
+
+    configValues.elCicdDefs.GIT_REPO_SSH_KEY_MODULE_IDS = projectInfo.modules.collect{ module ->
+        if (!module.gitDeployKeyJenkinsId) {
+            projectInfoUtils.setModuleScmDeployKeyJenkinsId(projectInfo, module)
+        }
+        return module.gitDeployKeyJenkinsId
     }
 
     return configValues
