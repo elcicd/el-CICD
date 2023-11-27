@@ -37,6 +37,9 @@ def uninstallSdlcEnvironments(def projectInfo) {
 }
 
 def removeGitDeployKeysFromProject(def projectInfo) {
+    echo '!!!!!!!!!!!!!!!!'
+    echo "projectInfo.modules: ${projectInfo.modules}"
+    
     projectInfoUtils.setRemoteRepoDeployKeyId(projectInfo)
 
     def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', projectInfo.modules) { module ->
@@ -45,7 +48,7 @@ def removeGitDeployKeysFromProject(def projectInfo) {
                 sh """
                     set +x
                     echo
-                    echo "--> REMOVING GIT DEPLOY KEY FOR:${getLongformModuleId(projectInfo, module)}"
+                    echo "--> REMOVING GIT DEPLOY KEY FOR: ${getLongformModuleId(projectInfo, module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -68,9 +71,9 @@ def createNewGitDeployKeysForProject(def projectInfo) {
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
-                    set +x
+                    set -x
                     echo
-                    echo "--> CREATING NEW GIT DEPLOY KEY FOR:${getLongformModuleId(projectInfo, module)}"
+                    echo "--> CREATING NEW GIT DEPLOY KEY FOR: ${getLongformModuleId(projectInfo, module)}"
                     echo
 
                     source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -99,9 +102,9 @@ def removeGitWebhooksFromProject(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
-                        set +x
+                        set -x
                         echo
-                        echo "--> REMOVING GIT WEBOOK FOR:${getLongformModuleId(projectInfo, module)}"
+                        echo "--> REMOVING GIT WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
@@ -127,9 +130,9 @@ def createNewGitWebhooksForProject(def projectInfo) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
                     sh """
-                        set +x
+                        set -x
                         echo
-                        echo "--> CREATING NEW WEBOOK FOR:${getLongformModuleId(projectInfo, module)}"
+                        echo "--> CREATING NEW WEBOOK FOR: ${getLongformModuleId(projectInfo, module)}"
                         echo
 
                         source ${el.cicd.EL_CICD_SCRIPTS_DIR}/github-utilities.sh
