@@ -39,11 +39,11 @@ def call(Map args) {
         }
     }
     
-    refreshProjects(projectInfoList, refreshPipelines, 'pipelines')
+    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshPipelines, 'pipelines')
     
-    refreshProjects(projectInfoList, refreshEnvironments, 'SDLC environments')
+    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshEnvironments, 'SDLC environments')
     
-    refreshProjects(projectInfoList, refreshCredentials, 'credentials')
+    refreshProjectsUtils.runRefreshStages(projectInfoList, refreshCredentials, 'credentials')
 
     if (!refreshTeamServers) {
         echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'

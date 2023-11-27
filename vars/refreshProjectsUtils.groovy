@@ -82,7 +82,7 @@ def confirmProjectsForRefresh(def projectRefreshMap, def args) {
     jenkinsUtils.displayInputWithTimeout(msg, args)
 }
 
-def refreshProjects(def projectInfoList, def shouldRefresh, def titleClause) {
+def runRefreshStages(def projectInfoList, def shouldRefresh, def titleClause) {
     def uppercaseTitle = titleClause.toUpperCase()
     if (!shouldRefresh) {
         echo "--> REFRESH ${uppercaseTitle} NOT REQUESTED; SKIPPING"
