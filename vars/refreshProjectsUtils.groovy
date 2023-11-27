@@ -118,6 +118,8 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
             refreshProjectModuleList.addAll(projectInfo.modules)
         }
     }
+        
+    projectUtils.createModuleSshKeys(refreshProjectModuleList)
     
     loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR EACH PROJECT IN EACH TEAM")
     projectUtils.createNewGitDeployKeysForProject(refreshProjectModuleList)

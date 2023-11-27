@@ -22,6 +22,11 @@ def call(Map args) {
         }
     }
 
+    stage('Configure project SDLC environments') {
+        loggingUtils.echoBanner("SETUP SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
+        onboardProjectUtils.setProjectSdlc(projectInfo)
+    }
+
     stage('Configure project CICD pipelines') {
         loggingUtils.echoBanner("DEPLOY PIPELINES FOR PROJECT ${projectInfo.id}")
         onboardProjectUtils.setupProjectPipelines(projectInfo)
@@ -29,17 +34,17 @@ def call(Map args) {
         loggingUtils.echoBanner("SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION")
         projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
     }
+    
+    stage('Configure project credentials') {
+        loggingUtils.echoBanner("CONFIGURE PROJECT CREDENTIALS")
+        onboardingUtils.setupProjectCredentials(projectInfo)
 
-    stage('Configure project SDLC environments') {
-        loggingUtils.echoBanner("SETUP SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.id}")
-        onboardProjectUtils.setProjectSdlc(projectInfo)
+        loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.createNewGitDeployKeysForProject(projectInfo.modules)
+
+        loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.createNewGitWebhooksForProject(projectInfo.components + projectInfo.artifacts)
     }
-
-    loggingUtils.echoBanner("ADD DEPLOY KEYS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.createNewGitDeployKeysForProject(projectInfo.modules)
-
-    loggingUtils.echoBanner("ADD WEBHOOKS TO EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.createNewGitWebhooksForProject(projectInfo.components + projectInfo.artifacts)
 
     stage('Summary') {
         loggingUtils.echoBanner("Team ${args.teamId} Project ${args.projectId} Onboarding Complete.",

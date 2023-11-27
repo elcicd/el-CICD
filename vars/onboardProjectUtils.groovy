@@ -81,10 +81,6 @@ def setupProjectPipelines(def projectInfo) {
     def pipelinesValuesFile = "${projectInfo.id}-pipelines-config-values.yaml"
     writeYaml(file: pipelinesValuesFile, data: projectDefs)
 
-    def modulesSshKeyDefs = createCompSshKeyValues(projectInfo)
-    def modulesSshValuesFile = "${projectInfo.id}-module-ssh-values.yaml"
-    writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
-
     sh """
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${pipelinesValuesFile}
@@ -94,13 +90,29 @@ def setupProjectPipelines(def projectInfo) {
         ${shCmd.echo ''}
         helm upgrade --install --atomic --history-max=1 \
             -f ${pipelinesValuesFile} \
-            -f ${modulesSshValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-pipeline-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pipelines-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.JENKINS_CHART_DEPLOY_DIR}/elcicd-jenkins-pipeline-template-values.yaml \
-            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
             ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} \
+            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
+    """
+}
+
+def setupProjectCredentials(def projectInfo) {
+    def modulesSshKeyDefs = createProjectSshKeyValues(projectInfo.modules)
+    def modulesSshValuesFile = "${projectInfo.id}-module-ssh-values.yaml"
+    writeYaml(file: modulesSshValuesFile, data: modulesSshKeyDefs)
+
+    sh """
+        ${shCmd.echo '', "UPGRADE/INSTALLING credentials for project ${projectInfo.id}"}
+
+        ${shCmd.echo ''}
+        helm upgrade --install --atomic --history-max=1 \
+            -f ${modulesSshValuesFile} \
+            -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
+            -n ${projectInfo.teamInfo.cicdMasterNamespace} \
+            ${projectInfo.id}-${el.cicd.CREDENTIALS_POSTFIX} \
             ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
     """
 }
@@ -392,15 +404,12 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
     }
 }
 
-def createCompSshKeyValues(def projectInfo) {
+def createProjectSshKeyValues(def projectInfo) {
+    projectInfo.createModuleSshKeys(projectInfo.modules)
+    
     configValues = [:]
-
     projectInfo.modules.each { module ->
         dir(module.workDir) {
-            echo "Creating deploy key for ${module.gitRepoName}"
-
-            sh "ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
-
             def sshKey = readFile(file: module.gitDeployKeyJenkinsId)
 
             configValues["elCicdDefs-${module.gitDeployKeyJenkinsId}"] = ['GIT_REPO_SSH_KEY': sshKey ]

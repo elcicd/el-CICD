@@ -182,6 +182,16 @@ def getDeleteWebhookFunctionCall(def module) {
     """
 }
 
+def createModuleSshKeys(def modules) {
+    modules.each { module ->
+        dir(module.workDir) {
+            echo "Creating deploy key for ${module.gitRepoName}"
+
+            sh "ssh-keygen -b 2048 -t rsa -f '${module.gitDeployKeyJenkinsId}' -q -N '' 2>/dev/null <<< y >/dev/null"
+        }
+    }
+}
+
 def getLongformModuleId(def module) {
     def projectInfo = module.projectInfo
     def teamInfo = projectInfo.teamInfo
