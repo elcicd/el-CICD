@@ -45,7 +45,7 @@ def call(Map args) {
     
     refreshProjectsUtils.refreshCredentials(projectInfoList, refreshCredentials)
     
-    refreshProjectsUtils.runTeamCicdServers(teamInfoList, refreshTeamServers)
+    refreshProjectsUtils.refreshTeamCicdServers(teamInfoList, refreshTeamServers)
     
     loggingUtils.echoBanner('ALL TEAMS AND PROJECTS REFRESHED')
 

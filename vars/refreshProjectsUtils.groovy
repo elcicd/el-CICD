@@ -123,8 +123,8 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
     parallel(refreshStages)
 }
 
-def runTeamCicdServers(def teamInfoList, def shouldRefresh) {
-    if (!refreshTeamServers) {
+def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
+    if (!shouldRefresh) {
         echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
     }
     
