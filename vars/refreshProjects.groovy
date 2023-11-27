@@ -47,6 +47,6 @@ def call(Map args) {
     
     refreshProjectsUtils.refreshTeamCicdServers(teamInfoList, refreshTeamServers)
     
-    loggingUtils.echoBanner('ALL TEAMS AND PROJECTS REFRESHED')
+    loggingUtils.echoBanner('REFRESH COMPLETE')
 
 }
