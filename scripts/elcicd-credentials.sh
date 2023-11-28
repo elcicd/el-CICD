@@ -84,7 +84,7 @@ __create_jenkins_secrets() {
     _OCI_REGISTRY_IDS=$(echo ${_OCI_REGISTRY_IDS@L} | sed -e 's/\s\+/,/g')
     local _GIT_REPO_KEYS="${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID},${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
     set -e
-    hhelm upgrade --install --atomic --create-namespace --history-max=1 \
+    helm upgrade --install --atomic --create-namespace --history-max=1 \
         ${_PROFILE_FLAG}  \
         --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
         --set-string elCicdDefs.OCI_REGISTRY_IDS="{${_OCI_REGISTRY_IDS}}" \
