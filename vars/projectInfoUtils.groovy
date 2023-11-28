@@ -232,10 +232,8 @@ def validateProjectInfo(def projectInfo) {
     }
 
     projectInfo.testModules.each { testModule ->
+        assert testModules.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.gitRepoName}"
         assert testModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${testModule.codeBase}"
-        testModule.componentRepos.each { gitRepoName ->
-            assert projectInfo.components.find { it.gitRepoName == gitRepoName }  : "System test has undefined component repo ${gitRepoName}"
-        }        
     }
 
     projectInfo.enabledTestEnvs.each { env ->

@@ -82,10 +82,9 @@ elCicdTemplates:
   objNames:
   - 1-build-artifacts-and-components
   - 2-promote-components
-  - 3-run-post-deployment-tests
-  - 4-redeploy-components
-  - 5-create-release-candidate
-  - 6-redeploy-release-candidate
+  - 3-redeploy-components
+  - 4-create-release-candidate
+  - 5-redeploy-release-candidate
   objName: $<PROJECT_ID>-$<>
   mustHaveEveryProfile:
   - nonprod
@@ -100,16 +99,14 @@ elCicdTemplates:
     EL_CICD_API_METHOD: buildArtifactsAndComponents
   elCicdDefs-2-promote-components:
     EL_CICD_API_METHOD: promoteComponents
-  elCicdDefs-3-run-post-deployment-tests:
-    EL_CICD_API_METHOD: runSystemTests
-  elCicdDefs-4-redeploy-components:
+  elCicdDefs-3-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
         choiceParam('REDEPLOY_ENVIRONMENT', $<REDEPLOY_ENV_CHOICES>, 'Environment to redeploy')
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
-  elCicdDefs-5-create-release-candidate:
+  elCicdDefs-4-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: |-
       parameters {
