@@ -35,17 +35,17 @@ def call(Map args) {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
         
         sh """
-            if [[ -n "\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX})" ]]
+            CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*'
+            if [[ -z "${tearDownSdlcEnvironments ? 'true' : ''} ]]
             then
-                helm uninstall --wait ${projectInfo.id}-${el.cicd.PIPELINES_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            else
-                ${shCmd.echo "--> PIPELINES FOR PROJECT ${projectInfo.id} NOT FOUND; SKIPPING"}
+                CHARTS_TO_REMOVE=\${CHARTS_TO_REMOVE/${projectInfo.id}-${el.cicd.ENVRIRONMENTS_POSTFIX}/}
             fi
-        """
         
-        if (tearDownSdlcEnvironments) {
-            projectUtils.uninstallSdlcEnvironments(projectInfo)
-        }
+            for CHART_TO_REMOVE in \${CHARTS_TO_REMOVE}
+            do
+                helm uninstall --wait \${CHART_TO_REMOVE} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+            done
+        """
         
         projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
         
