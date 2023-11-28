@@ -114,7 +114,7 @@ _install_sealed_secrets() {
     echo
     echo "Installing Sealed Secrets ${_BOLD}${SEALED_SECRETS_RELEASE_INFO}${_REGULAR}"
     echo
-    helm upgrade --install --atomic sealed-secrets --history-max 2 \
+    helm upgrade --install --atomic --create-namespace --history-max=2 \
                  --set-string fullnameOverride=sealed-secrets-controller \
                  --repo https://bitnami-labs.github.io/sealed-secrets \
                  --version ${SEALED_SECRETS_CHART_VERSION} \

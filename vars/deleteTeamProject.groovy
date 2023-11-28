@@ -29,7 +29,7 @@ def call(Map args) {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
         
         sh """
-            CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*')
+            CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*' | tr '\n' ' ')
             if [[ -z "${tearDownSdlcEnvironments ? 'true' : ''}" ]]
             then
                 CHARTS_TO_REMOVE=\${CHARTS_TO_REMOVE/${projectInfo.id}-${el.cicd.ENVRIRONMENTS_POSTFIX}/}
