@@ -25,18 +25,12 @@ def call(Map args) {
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
 
-    loggingUtils.echoBanner("REMOVE DEPLOY KEYS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.removeGitDeployKeysFromProject(projectInfo.modules)
-
-    loggingUtils.echoBanner("REMOVE WEBHOOKS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
-    projectUtils.removeGitWebhooksFromProject(projectInfo.components + projectInfo.artifacts)
-
     stage('Remove project from cluster') {
         loggingUtils.echoBanner("REMOVING PROJECT ${projectInfo.id} FROM CLUSTER")
         
         sh """
-            CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*'
-            if [[ -z "${tearDownSdlcEnvironments ? 'true' : ''} ]]
+            CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*')
+            if [[ -z "${tearDownSdlcEnvironments ? 'true' : ''}" ]]
             then
                 CHARTS_TO_REMOVE=\${CHARTS_TO_REMOVE/${projectInfo.id}-${el.cicd.ENVRIRONMENTS_POSTFIX}/}
             fi
@@ -48,6 +42,12 @@ def call(Map args) {
         """
         
         projectUtils.syncJenkinsPipelines(projectInfo.teamInfo)
+
+        loggingUtils.echoBanner("REMOVE DEPLOY KEYS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.removeGitDeployKeysFromProject(projectInfo.modules)
+
+        loggingUtils.echoBanner("REMOVE WEBHOOKS FROM EACH GIT REPO FOR PROJECT ${projectInfo.id}")
+        projectUtils.removeGitWebhooksFromProject(projectInfo.components + projectInfo.artifacts)
         
         loggingUtils.echoBanner("PROJECT ${projectInfo.id} REMOVED FROM CLUSTER")
     }
