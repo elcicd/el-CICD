@@ -232,7 +232,7 @@ def validateProjectInfo(def projectInfo) {
     }
 
     projectInfo.testModules.each { testModule ->
-        assert testModules.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.gitRepoName}"
+        assert testModule.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${testModule.gitRepoName}"
         assert testModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${testModule.codeBase}"
     }
 
