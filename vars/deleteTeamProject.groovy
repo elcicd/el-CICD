@@ -32,7 +32,7 @@ def call(Map args) {
             CHARTS_TO_REMOVE=\$(helm list -q -n ${projectInfo.teamInfo.cicdMasterNamespace} --filter '${projectInfo.id}-*' | tr '\n' ' ')
             if [[ -z "${tearDownSdlcEnvironments ? 'true' : ''}" ]]
             then
-                CHARTS_TO_REMOVE=\${CHARTS_TO_REMOVE/${projectInfo.id}-${el.cicd.ENVRIRONMENTS_POSTFIX}/}
+                CHARTS_TO_REMOVE=\${CHARTS_TO_REMOVE/${projectInfo.id}-${el.cicd.ENVIRONMENTS_POSTFIX}/}
             fi
         
             for CHART_TO_REMOVE in \${CHARTS_TO_REMOVE}
