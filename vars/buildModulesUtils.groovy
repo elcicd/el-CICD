@@ -1,28 +1,30 @@
 
 
-def getSelectedModules(def projectInfo, def args) {  
+def getSelectedModules(def projectInfo, def args) {
     def DEPLOY_TO_NAMESPACE = 'Deploy to Namespace'
     def GIT_BRANCH = 'Git branch?'
     def CLEAN_NAMESPACE = 'Clean namespace?'
-    
+
     def cnDesc = 'Uninstall all components currently deployed in selected namespace before deploying new builds'
     List inputs = [choice(name: DEPLOY_TO_NAMESPACE, description: 'The namespace to build and deploy to'),
                    stringParam(name: GIT_BRANCH, defaultValue: projectInfo.gitBranch, description: 'Branch to build?'),
                    booleanParam(name: CLEAN_NAMESPACE, description: cnDesc)]
-    
+
     def BUILD_ALL_ARTIFACTS = 'Build all artifacts'
     def BUILD_ALL_COMPONENTS = 'Build and deploy all components'
     def BUILD_ALL_TEST_MODULES = 'Build and deploy all test modules'
-    
+
     inputs += booleanParam(name: BUILD_ALL_ARTIFACTS)
     inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
     inputs += booleanParam(name: BUILD_ALL_TEST_MODULES)
-    
-    inputs += separator(name: 'ARTIFACTS')
+
+    inputs += separator(name: 'ARTIFACTS', sectionHeader: 'ARTIFACTS')
     createModuleInputs(inputs, projectInfo, projectInfo.artifacts, 'Artifact')
-    inputs += separator(name: 'COMPONENTS')
-    createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')    
-    inputs += separator(name: 'TEST MODULES')
+
+    inputs += separator(name: 'COMPONENTS', sectionHeader: 'COMPONENTS')
+    createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')
+
+    inputs += separator(name: 'TEST MODULES', sectionHeader: 'ARTIFTEST MODULESACTS')
     createModuleInputs(inputs, projectInfo, projectInfo.testModules, 'Test Module')
 
     def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
@@ -30,7 +32,7 @@ def getSelectedModules(def projectInfo, def args) {
     projectInfo.deployToNamespace = cicdInfo[(DEPLOY_TO_NAMESPACE)]
     projectInfo.gitBranch = cicdInfo[(GIT_BRANCH)]
     projectInfo.cleanNamespace = cicdInfo[(CLEAN_NAMESPACE)]
-    
+
     projectInfo.selectedArtifacts = projectInfo.artifacts.collect { cicdInfo[(BUILD_ALL_ARTIFACTS)] || cicdInfo[(it.name)] }
     projectInfo.selectedComponents = projectInfo.components.collect { cicdInfo[(BUILD_ALL_COMPONENTS)] || cicdInfo[(it.name)] }
     projectInfo.selectedTestModules = projectInfo.testModules.collect { cicdInfo[(BUILD_ALL_TEST_MODULES)] || cicdInfo[(it.name)] }
@@ -49,9 +51,9 @@ def buildSelectedModules(def modules, def title) {
 
         echo "--> ${module.name} build complete"
     }
-    
+
     parallel(buildStages)
-    
+
     if (modules) {
         loggingUtils.echoBanner("BUILDING SELECTED ${title.toUpperCase()} COMPLETE")
     }
