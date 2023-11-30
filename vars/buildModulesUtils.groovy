@@ -61,4 +61,6 @@ def createModuleInputs(def inputs, def projectInfo, def modules, def allTitle) {
     modules.each { module ->
         inputs += booleanParam(name: module.name, description: "Build ${module.name}?  Status: ${module.status}")
     }
+    
+    echo "inputs: ${inputs}"
 }
