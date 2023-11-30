@@ -64,7 +64,7 @@ def createModuleInputs(def projectInfo, def modules, def allTitle, def moduleNam
 }
 
 def collectModules(def cicdInfo, def modules, def collectAllKey) {
-    return modules.collect { module ->
-        cicdInfo[(collectAllKey) || (cicdInfo[(module.name)])
+    modules.collect { module ->
+        cicdInfo[(collectAllKey)] || cicdInfo[(module.name)]
     }
 }
