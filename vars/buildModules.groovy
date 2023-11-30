@@ -23,9 +23,9 @@ def call(Map args) {
         }
     }
  
-    buildModulesUtils.buildSelectedModules(projectInfo.selectedArtifacts, 'Artifacts')
+    buildModulesUtils.buildSelectedModules(projectInfo, projectInfo.selectedArtifacts, 'Artifacts')
     
-    buildModulesUtils.buildSelectedModules(projectInfo.selectedComponents, 'Components')
+    buildModulesUtils.buildSelectedModules(projectInfo, projectInfo.selectedComponents, 'Components')
     
-    buildModulesUtils.buildSelectedModules(projectInfo.selectedTestModules, 'Test Modules')
+    buildModulesUtils.buildSelectedModules(projectInfo, projectInfo.selectedTestModules, 'Test Modules')
 }

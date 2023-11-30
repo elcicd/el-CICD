@@ -40,7 +40,7 @@ def getSelectedModules(def projectInfo, def args) {
     projectInfo.selectedTestModules = projectInfo.testModules.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
 }
 
-def buildSelectedModules(def modules, def title) {
+def buildSelectedModules(def projectInfo, def modules, def title) {
     loggingUtils.echoBanner("BUILDING SELECTED ${title.toUpperCase()}")
 
     def buildStages =  concurrentUtils.createParallelStages("Build ${title}", modules) { module ->
