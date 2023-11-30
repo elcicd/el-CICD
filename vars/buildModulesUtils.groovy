@@ -43,7 +43,7 @@ def getSelectedModules(def projectInfo, def args) {
 def buildSelectedModules(def modules, def title) {
     loggingUtils.echoBanner("BUILDING SELECTED ${title.toUpperCase()}")
 
-    def buildStages =  concurrentUtils.createParallelStages("Build ${title}", buildModules) { module ->
+    def buildStages =  concurrentUtils.createParallelStages("Build ${title}", modules) { module ->
         echo "--> Building ${module.name}"
 
         pipelineSuffix = projectInfo.selectedArtifacts.contains(module) ?
