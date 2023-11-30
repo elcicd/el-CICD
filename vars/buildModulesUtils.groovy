@@ -57,7 +57,7 @@ def buildSelectedModules(def modules, def title) {
     }
 }
 
-def createModuleInputs(def projectInfo, def modules, def allTitle, , def moduleName, def inputs) {
+def createModuleInputs(def projectInfo, def modules, def allTitle, def moduleName, def inputs) {
     inputs += modules.collect { module ->
         booleanParam(name: artifact.name, description: "${moduleTitle} status: ${artifact.status}")
     }
