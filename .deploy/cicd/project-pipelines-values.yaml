@@ -80,7 +80,7 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames:
-  - 1-build-artifacts-and-components
+  - 1-build-modules
   - 2-promote-components
   - 3-redeploy-components
   - 4-create-release-candidate
@@ -95,8 +95,8 @@ elCicdTemplates:
       teamId: '$<TEAM_ID>',
       projectId: '$<PROJECT_ID>',
       $<EXTRA_PIPELINE_ARGS>
-  elCicdDefs-1-build-artifacts-and-components:
-    EL_CICD_API_METHOD: buildArtifactsAndComponents
+  elCicdDefs-1-build-modules:
+    EL_CICD_API_METHOD: buildModules
   elCicdDefs-2-promote-components:
     EL_CICD_API_METHOD: promoteComponents
   elCicdDefs-3-redeploy-components:

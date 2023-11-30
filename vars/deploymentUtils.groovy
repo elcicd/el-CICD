@@ -16,21 +16,19 @@ def cleanupFailedInstalls(def projectInfo) {
     """
 }
 
-def removeComponents(def projectInfo, def components) {
-    def componentNames = components.collect { it. name }.join('|')
+def removeComponents(def projectInfo, def modules) {
+    def moduleNames = modules.collect { it. name }.join('|')
     sh """
-        RELEASES=\$(helm list --short --filter '${componentNames}' -n ${projectInfo.deployToNamespace} | tr '\\n' ' ')
+        RELEASES=\$(helm list --short --filter '${moduleNames}' -n ${projectInfo.deployToNamespace} | tr '\\n' ' ')
         if [[ "\${RELEASES}" ]]
         then
-            helm uninstall \${RELEASES} --wait  -n ${projectInfo.deployToNamespace}
+            helm uninstall \${RELEASES} --wait -n ${projectInfo.deployToNamespace}
         else
             ${shCmd.echo 'NOTHING TO CLEAN FROM NAMESPACE; SKIPPING...'}
         fi
     """
 
     sleep 3
-
-    waitForAllTerminatingPodsToFinish(projectInfo)
 }
 
 def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
