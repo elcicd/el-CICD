@@ -28,9 +28,9 @@ def getSelectedModules(def projectInfo) {
     projectInfo.gitBranch = cicdInfo[(GIT_BRANCH)]
     projectInfo.cleanNamespace = cicdInfo[(CLEAN_NAMESPACE)]
     
-    projectInfo.selectedArtifacts = projectInfo.artifacts.collect { cicdInfo[(BUILD_ALL_ARTIFACTS)] || cicdInfo[(it.name)]
-    projectInfo.selectedArtifacts = projectInfo.components.collect { cicdInfo[(BUILD_ALL_COMPONENTS)] || cicdInfo[(it.name)]
-    projectInfo.selectedArtifacts = projectInfo.testModules.collect { cicdInfo[(BUILD_ALL_TEST_MODULES)] || cicdInfo[(it.name)]
+    projectInfo.selectedArtifacts = projectInfo.artifacts.collect { cicdInfo[(BUILD_ALL_ARTIFACTS)] || cicdInfo[(it.name)] }
+    projectInfo.selectedComponents = projectInfo.components.collect { cicdInfo[(BUILD_ALL_COMPONENTS)] || cicdInfo[(it.name)] }
+    projectInfo.selectedTestModules = projectInfo.testModules.collect { cicdInfo[(BUILD_ALL_TEST_MODULES)] || cicdInfo[(it.name)] }
 }
 
 def buildSelectedModules(def modules, def title) {
