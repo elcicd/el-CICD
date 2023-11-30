@@ -24,7 +24,7 @@ def getSelectedModules(def projectInfo, def args) {
     inputs += separator(name: 'COMPONENTS', sectionHeader: 'COMPONENTS')
     createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')
 
-    inputs += separator(name: 'TEST MODULES', sectionHeader: 'ARTIFTEST MODULESACTS')
+    inputs += separator(name: 'TEST MODULES', sectionHeader: 'TEST MODULES')
     createModuleInputs(inputs, projectInfo, projectInfo.testModules, 'Test Module')
 
     def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
