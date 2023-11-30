@@ -6,9 +6,9 @@ def getSelectedModules(def projectInfo, def args) {
     def CLEAN_NAMESPACE = 'Clean namespace?'
 
     def cnDesc = 'Uninstall all components currently deployed in selected namespace before deploying new builds'
-    List inputs = [choice(name: DEPLOY_TO_NAMESPACE
-                          description: 'The namespace to build and deploy to',
-                          choices: projectInfo.buildNamespaces),
+    List inputs = [choiceParam(name: DEPLOY_TO_NAMESPACE,
+                               description: 'The namespace to build and deploy to',
+                               choices: projectInfo.buildNamespaces),
                    stringParam(name: GIT_BRANCH, defaultValue: projectInfo.gitBranch, description: 'Branch to build?'),
                    booleanParam(name: CLEAN_NAMESPACE, description: cnDesc)]
 
