@@ -1,7 +1,7 @@
 
 
 def getSelectedModules(def projectInfo, def args) {
-    def DEPLOY_TO_NAMESPACE = 'Deploy to Namespace'
+    def DEPLOY_TO_NAMESPACE = 'Deploy Foo Namespace'
     def GIT_BRANCH = 'Git branch?'
     def CLEAN_NAMESPACE = 'Clean namespace?'
 
