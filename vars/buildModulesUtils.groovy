@@ -1,18 +1,20 @@
 
 
 def getSelectedModules(def projectInfo, def args) {
-    def DEPLOY_TO_NAMESPACE = 'DEPLOY_TO_NAMESPACE'
-    def GIT_BRANCH = 'GIT_BRANCH'
-    def CLEAN_NAMESPACE = 'CLEAN_NAMESPACE'
+    def DEPLOY_TO_NAMESPACE = 'Deploy to Namespace'
+    def GIT_BRANCH = 'Git branch?'
+    def CLEAN_NAMESPACE = 'Clean namespace?'
 
     def cnDesc = 'Uninstall all components currently deployed in selected namespace before deploying new builds'
-    List inputs = [choice(name: DEPLOY_TO_NAMESPACE, description: 'The namespace to build and deploy to'),
+    List inputs = [choice(name: DEPLOY_TO_NAMESPACE
+                          description: 'The namespace to build and deploy to',
+                          choices: projectInfo.buildNamespaces),
                    stringParam(name: GIT_BRANCH, defaultValue: projectInfo.gitBranch, description: 'Branch to build?'),
                    booleanParam(name: CLEAN_NAMESPACE, description: cnDesc)]
 
-    def BUILD_ALL_ARTIFACTS = 'BUILD_ALL_ARTIFACTS'
-    def BUILD_ALL_COMPONENTS = 'BUILD_ALL_COMPONENTS'
-    def BUILD_ALL_TEST_MODULES = 'BUILD_ALL_TEST_MODULES'
+    def BUILD_ALL_ARTIFACTS = 'Build all artifacts'
+    def BUILD_ALL_COMPONENTS = 'Build and deploy all components'
+    def BUILD_ALL_TEST_MODULES = 'Build and deploy all test modules'
 
     inputs += booleanParam(name: BUILD_ALL_ARTIFACTS)
     inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
