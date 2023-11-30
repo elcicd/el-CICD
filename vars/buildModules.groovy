@@ -8,7 +8,7 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select environment, module(s), and branch") {
-        getSelectedModules(projectInfo)
+        buildModulesUtils.getSelectedModules(projectInfo)
     }
 
     stage("Clean ${projectInfo.deployToNamespace}") {
@@ -23,9 +23,9 @@ def call(Map args) {
         }
     }
  
-    buildSelectedModules(projectInfo.selectedArtifacts, 'Artifacts')
+    buildModulesUtils.buildSelectedModules(projectInfo.selectedArtifacts, 'Artifacts')
     
-    buildSelectedModules(projectInfo.selectedComponents, 'Components')
+    buildModulesUtils.buildSelectedModules(projectInfo.selectedComponents, 'Components')
     
-    buildSelectedModules(projectInfo.selectedTestModules, 'Test Modules')
+    buildModulesUtils.buildSelectedModules(projectInfo.selectedTestModules, 'Test Modules')
 }
