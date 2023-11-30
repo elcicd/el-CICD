@@ -11,12 +11,15 @@ def getSelectedModules(def projectInfo) {
                     booleanParam(name: RECREATE_NAMESPACE, description: cnDesc)]
     
     def BUILD_ALL_ARTIFACTS = 'Build all artifacts'
-    createModuleInputs(projectInfo, projectInfo.artifacts, BUILD_ALL_ARTIFACTS, 'Artifacts', inputs)
-    
     def BUILD_ALL_COMPONENTS = 'Build and deploy all components'
-    createModuleInputs(projectInfo, projectInfo.components, BUILD_ALL_COMPONENTS, 'Components', inputs)
-    
     def BUILD_ALL_TEST_MODULES = 'Build and deploy all test modules'
+    
+    inputs += booleanParam(name: BUILD_ALL_ARTIFACTS)
+    inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
+    inputs += booleanParam(name: BUILD_ALL_TEST_MODULES)
+    
+    createModuleInputs(projectInfo, projectInfo.artifacts, BUILD_ALL_ARTIFACTS, 'Artifacts', inputs)    
+    createModuleInputs(projectInfo, projectInfo.components, BUILD_ALL_COMPONENTS, 'Components', inputs)    
     createModuleInputs(projectInfo, projectInfo.testModules, BUILD_ALL_TEST_MODULES, 'Test Modules', inputs)
 
     def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
@@ -54,7 +57,6 @@ def buildSelectedModules(def modules, def title) {
 }
 
 def createModuleInputs(def projectInfo, def modules, def allTitle, , def moduleName, def inputs) {
-    inputs += booleanParam(name: allTitle)
     inputs += modules.collect { module ->
         booleanParam(name: artifact.name, description: "${moduleTitle} status: ${artifact.status}")
     }
