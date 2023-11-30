@@ -37,13 +37,13 @@ def buildSelectedModules(def modules, def title) {
     loggingUtils.echoBanner("BUILDING SELECTED ${title.toUpperCase()}")
 
     def buildStages =  concurrentUtils.createParallelStages("Build ${title}", buildModules) { module ->
-        echo "--> Building ${module.name}")
+        echo "--> Building ${module.name}"
 
         pipelineSuffix = projectInfo.selectedArtifacts.contains(module) ? 'build-artifact' : 
             projectInfo.selectedComponents.contains(module) ? 'build-component' ? 'build-test-module'
         build(job: "${module.name}-${pipelineSuffix}", wait: true)
 
-        echo "--> ${module.name} build complete")
+        echo "--> ${module.name} build complete"
     }
     
     parallel(buildStages)
