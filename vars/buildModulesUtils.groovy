@@ -18,7 +18,7 @@ def getSelectedModules(def projectInfo, def args) {
     inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
     inputs += booleanParam(name: BUILD_ALL_TEST_MODULES)
     
-    inputs += separator(name: 'ARTIFACTS')
+    inputs += separatorParam(name: 'ARTIFACTS')
     createModuleInputs(inputs, projectInfo, projectInfo.artifacts, 'Artifact')
     createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')    
     createModuleInputs(inputs, projectInfo, projectInfo.testModules, 'Test Module')
