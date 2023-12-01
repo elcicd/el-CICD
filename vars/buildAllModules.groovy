@@ -16,7 +16,7 @@ def call(Map args) {
             def msg = "CLEANING NAMESPACE ${projectInfo.deployToNamespace}: ALL DEPLOYED COMPONENTS AND TEST MODULES WILL BE REMOVED"
             loggingUtils.echoBanner(msg)
 
-            deploymentUtils.removeComponents(projectInfo, projectInfo.components + projectInfo.testComponents)
+            deployComponentUtils.removeComponents(projectInfo, projectInfo.components + projectInfo.testComponents)
         }
         else {
             echo "CLEANING NAMESPACE NOT SELECTED; SKIPPING..."
