@@ -54,7 +54,7 @@ elCicdTemplates:
   mustHaveEveryProfile:
   - nonprod
   - hasComponents
-  labels: $<BUILD_COMPONENT_PIPELINE_LABELS>
+  labels: $<BUILD_MODULE_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
     EL_CICD_API_ARGS: |-
@@ -67,7 +67,7 @@ elCicdTemplates:
   mustHaveEveryProfile:
   - nonprod
   - hasTestComponents
-  labels: $<BUILD_COMPONENT_PIPELINE_LABELS>
+  labels: $<BUILD_MODULE_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
     IS_TEST: true
