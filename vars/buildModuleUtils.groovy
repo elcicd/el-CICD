@@ -34,10 +34,10 @@ def runBuildStep(def projectInfo, def module, def buildStep, def moduleType) {
                 builderModule.test(projectInfo, module)
                 break;
             case el.cicd.ANALYZER:
-                builderModule.scan(projectInfo, module)
+                builderModule.analyze(projectInfo, module)
                 break;
             case el.cicd.ASSEMBLER:
-                builderModule.package(projectInfo, module)
+                builderModule.assemble(projectInfo, module)
                 break;
         }
     }
