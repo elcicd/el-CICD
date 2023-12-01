@@ -1,4 +1,7 @@
-
+/* 
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
+ */
 
 def getSelectedModules(def projectInfo, def args) {
     def DEPLOY_TO_NAMESPACE = 'Deploy to Namespace'
@@ -27,7 +30,7 @@ def getSelectedModules(def projectInfo, def args) {
     createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')
 
     inputs += separator(name: 'TEST MODULES', sectionHeader: 'TEST MODULES')
-    createModuleInputs(inputs, projectInfo, projectInfo.testModules, 'Test Module')
+    createModuleInputs(inputs, projectInfo, projectInfo.testComponents, 'Test Module')
 
     def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
 
@@ -37,7 +40,7 @@ def getSelectedModules(def projectInfo, def args) {
 
     projectInfo.selectedArtifacts = projectInfo.artifacts.findAll { cicdInfo[BUILD_ALL_ARTIFACTS] || cicdInfo[it.name] }
     projectInfo.selectedComponents = projectInfo.components.findAll { cicdInfo[BUILD_ALL_COMPONENTS] || cicdInfo[it.name] }
-    projectInfo.selectedTestModules = projectInfo.testModules.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
+    projectInfo.selectedTestModules = projectInfo.testComponents.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
 }
 
 def buildSelectedModules(def projectInfo, def modules, def title) {

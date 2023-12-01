@@ -288,8 +288,9 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
 
-    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
+    elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
+    elCicdDefs.BUILD_TEST_COMPONENT_PIPELINES = projectInfo.artifacts.collect { it.name }
 }
 
 

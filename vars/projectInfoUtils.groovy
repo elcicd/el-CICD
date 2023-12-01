@@ -104,10 +104,10 @@ def initProjectModuleData(def projectInfo) {
         setModuleData(projectInfo, artifact)
     }
 
-    projectInfo.testModules = projectInfo.testModules ?: []
-    projectInfo.testModules.each { testModule ->
-        testModule.isTestModule = true
-        setModuleData(projectInfo, testModule)
+    projectInfo.testComponents = projectInfo.testComponents ?: []
+    projectInfo.testComponents.each { testComponent ->
+        testComponent.isTestModule = true
+        setModuleData(projectInfo, testComponent)
     }
     
     projectInfo.buildModules = []
@@ -117,7 +117,7 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.modules = []
     projectInfo.modules.addAll(projectInfo.components)
     projectInfo.modules.addAll(projectInfo.artifacts)
-    projectInfo.modules.addAll(projectInfo.testModules)
+    projectInfo.modules.addAll(projectInfo.testComponents)
     
     if (el.cicd.EL_CICD_MASTER_PROD.toBoolean()) {
         createProjectModule(projectInfo)
@@ -224,16 +224,16 @@ def validateProjectInfo(def projectInfo) {
         "bad or missing gitRestApiHost '${projectInfo.gitHost}"
     assert projectInfo.gitOrganization : "missing gitOrganization"
     assert projectInfo.gitBranch : "missing git branch"
-    assert ((projectInfo.modules.size() - projectInfo.testModules.size()) > 0) : "No components or artifacts defined"
+    assert ((projectInfo.modules.size() - projectInfo.testComponents.size()) > 0) : "No components or artifacts defined"
 
     projectInfo.buildModules.each { buildModule ->
         assert buildModule.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${buildModule.gitRepoName}"
         assert buildModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${buildModule.codeBase}"
     }
 
-    projectInfo.testModules.each { testModule ->
-        assert testModule.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${testModule.gitRepoName}"
-        assert testModule.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${testModule.codeBase}"
+    projectInfo.testComponents.each { testComponent ->
+        assert testComponent.gitRepoName ==~ /[\w-.]+/ : "bad git repo name for component, [\\w-.]+: ${testComponent.gitRepoName}"
+        assert testComponent.codeBase ==~ /[a-z][a-z0-9-]+/ : "bad codeBase name, [a-z-][a-z0-9-]+: ${testComponent.codeBase}"
     }
 
     projectInfo.enabledTestEnvs.each { env ->
