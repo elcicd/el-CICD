@@ -13,7 +13,7 @@ elCicdDefs-nonprod:
     agent:  '$<CODE_BASE>',
     teamId: '$<TEAM_ID>',
     projectId: '$<PROJECT_ID>',
-    gitBranch: params.GIT_BRANCH
+    gitBranch: params.GIT_BRANCH,
     moduleName: '$<BASE_OBJ_NAME>',
     deployToNamespace: params.DEPLOY_TO_NAMESPACE,
     recreate: params.REINSTALL
