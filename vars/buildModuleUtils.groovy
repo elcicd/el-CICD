@@ -43,7 +43,7 @@ def runBuildStep(def projectInfo, def module, def buildStep, def moduleType) {
     }
 }
 
-def buildScanAndPushImage(def projectInfo, def module)
+def buildScanAndPushImage(def projectInfo, def module) {
     module.imageTag = projectInfo.deployToNamespace - "${projectInfo.id}-"
     loggingUtils.echoBanner("BUILDING ${module.id}:${module.imageTag} IMAGE")
 
