@@ -249,7 +249,7 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
     projectInfo.modules.each { module ->
-        pipelineValues["elCicdDefs-${artifact.name}"] = ['CODE_BASE' : module.codeBase ]
+        pipelineValues["elCicdDefs-${module.name}"] = ['CODE_BASE' : module.codeBase ]
     }
 
     return pipelineValues
