@@ -232,26 +232,24 @@ def getElCicdChartProjectPipelineValues(def projectInfo) {
 
     createElCicdProfiles(pipelineValues)
 
+    if (projectInfo.artifacts) {
+        pipelineValues.elCicdProfiles += 'hasArtifacts'
+    }
+
     if (projectInfo.components) {
         pipelineValues.elCicdProfiles += 'hasComponents'
     }
 
-    if (projectInfo.artifacts) {
-        pipelineValues.elCicdProfiles += 'hasArtifacts'
+    if (projectInfo.testComponents) {
+        pipelineValues.elCicdProfiles += 'hasTestComponents'
     }
 
     getElCicdProjectCommonValues(projectInfo, elCicdDefs)
 
     getElCicdPipelineChartValues(projectInfo, elCicdDefs)
 
-    projectInfo.components.each { component ->
-        pipelineValues["elCicdDefs-${component.name}"] =
-            ['CODE_BASE' : component.codeBase ]
-    }
-
-    projectInfo.artifacts.each { artifact ->
-        pipelineValues["elCicdDefs-${artifact.name}"] =
-            ['CODE_BASE' : artifact.codeBase ]
+    projectInfo.modules.each { module ->
+        pipelineValues["elCicdDefs-${artifact.name}"] = ['CODE_BASE' : module.codeBase ]
     }
 
     return pipelineValues
