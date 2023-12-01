@@ -16,12 +16,12 @@ def call(Map args) {
 
     stage ("Clean up failed upgrades/installs") {
         loggingUtils.echoBanner("CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS")
-        deployComponentUtils.cleanupFailedInstalls(projectInfo)
+        deployComponentsUtils.cleanupFailedInstalls(projectInfo)
     }
 
     stage("Remove component(s)") {
         if (componentsToRemove) {            
-            deployComponentUtils.removeComponents(projectInfo, componentsToRemove)
+            deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO REMOVE: SKIPPING")
@@ -32,7 +32,7 @@ def call(Map args) {
         if (componentsToDeploy) {
             loggingUtils.echoBanner("SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:", componentsToDeploy.collect { it.name }.join(', '))
 
-            deployComponentUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
+            deployComponentsUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
@@ -43,7 +43,7 @@ def call(Map args) {
         if (componentsToDeploy) {
             loggingUtils.echoBanner("DEPLOY COMPONENT(S):", componentsToDeploy.collect { it.name }.join(', '))
 
-            deployComponentUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+            deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
         }
         else {
             loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
@@ -54,6 +54,6 @@ def call(Map args) {
         componentsToRemove.each { it.flaggedForRemoval = true }
         componentsToDeploy.each { it.flaggedForDeployment = true }
         
-        deployComponentUtils.outputDeploymentSummary(projectInfo)
+        deployComponentsUtils.outputDeploymentSummary(projectInfo)
     }
 }

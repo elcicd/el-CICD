@@ -64,7 +64,7 @@ def checkoutReleaseCandidateRepos(def projectInfo) {
 }
 
 def createReleaseVersionComponentSubCharts(def projectInfo) {
-    deployComponentUtils.setupDeploymentDirs(projectInfo, projectInfo.componentsToPromote)
+    deployComponentsUtils.setupDeploymentDirs(projectInfo, projectInfo.componentsToPromote)
 
     dir (projectInfo.projectModule.workDir) {
         projectInfo.componentsToPromote.each { component ->
