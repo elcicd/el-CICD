@@ -21,7 +21,7 @@ def runBuildStep(def projectInfo, def module, def buildStep, def moduleType) {
     loggingUtils.echoBanner("RUN ${buildStepName.toUpperCase()} FOR ${moduleType}: ${module.name}")
 
     dir(module.workDir) {
-        def pipelineBuildStepFile = getPipelineBuildStepFile(module, el.cicd.SCANNER)
+        def pipelineBuildStepFile = getPipelineBuildStepFile(module, buildStepName)
         def builderModule = load(pipelineBuildStepFile)
         switch(buildStep) {
             case el.cicd.BUILDER:
@@ -68,7 +68,8 @@ def buildScanAndPushImage(def projectInfo, def module) {
 
             loggingUtils.echoBanner("SCAN ${module.id}:${module.imageTag} IMAGE")
 
-            def pipelineBuildStepFile = getPipelineBuildStepFile(module, el.cicd.SCANNER)
+            def buildStepName = module[el.cicd.SCANNER] ?: el.cicd.SCANNER
+            def pipelineBuildStepFile = getPipelineBuildStepFile(module, buildStepName)
             def imageScanner = load(pipelineBuildStepFile)
             imageScanner.scanImage(projectInfo, module.name)
 
