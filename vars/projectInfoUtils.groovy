@@ -89,11 +89,8 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.components = projectInfo.components ?: []
     projectInfo.deploymentDirs = [:]
     projectInfo.components.each { component ->
+        initComponentData(projectInfo, component)
         component.isComponent = true
-        setModuleData(projectInfo, component)
-        
-        component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
-        projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
     }
 
     projectInfo.artifacts = projectInfo.artifacts ?: []
@@ -104,13 +101,8 @@ def initProjectModuleData(def projectInfo) {
 
     projectInfo.testComponents = projectInfo.testComponents ?: []
     projectInfo.testComponents.each { testComponent ->
-        testComponent.isTestComponent = true
-        setModuleData(projectInfo, testComponent)
-        
-        testComponent.deploymentDir = "${testComponent.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
-        projectInfo.deploymentDirs[testComponent.name] = "${projectInfo.workDir}/${testComponent.name}"
-        
-        testComponent.staticPvs = testComponent.staticPvs ?: []
+        initComponentData(projectInfo, testComponent)
+        component.isTestComponent = true
     }
     
     projectInfo.buildModules = []
@@ -126,6 +118,15 @@ def initProjectModuleData(def projectInfo) {
         createProjectModule(projectInfo)
         projectInfo.modules.add(projectInfo.projectModule)
     }
+}
+
+def initComponentData(def projectInfo, def component) {
+    setModuleData(projectInfo, component)
+    
+    component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
+    projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
+    
+    component.staticPvs = component.staticPvs ?: []
 }
 
 def setModuleData(def projectInfo, def module) {
