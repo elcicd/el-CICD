@@ -89,19 +89,19 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.components = projectInfo.components ?: []
     projectInfo.deploymentDirs = [:]
     projectInfo.components.each { component ->
-        initComponentData(projectInfo, component)
+        setComponentData(projectInfo, component)
         component.isComponent = true
     }
 
     projectInfo.artifacts = projectInfo.artifacts ?: []
     projectInfo.artifacts.each { artifact ->
-        artifact.isArtifact = true
         setModuleData(projectInfo, artifact)
+        artifact.isArtifact = true
     }
 
     projectInfo.testComponents = projectInfo.testComponents ?: []
     projectInfo.testComponents.each { testComponent ->
-        initComponentData(projectInfo, testComponent)
+        setComponentData(projectInfo, testComponent)
         testComponent.isTestComponent = true
     }
     
@@ -120,7 +120,7 @@ def initProjectModuleData(def projectInfo) {
     }
 }
 
-def initComponentData(def projectInfo, def component) {
+def setComponentData(def projectInfo, def component) {
     setModuleData(projectInfo, component)
     
     component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
