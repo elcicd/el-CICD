@@ -18,7 +18,7 @@ void call(Map args) {
     
     def moduleType = module.isArtifact ? 'ARTIFACT' : (module.isComponent ? 'COMPONENT' : 'TEST MODULE')
     [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.ANALYZER, el.cicd.ASSEMBLER].each { buildStep ->
-        stage("build step: ${buildStep}") {
+        stage("Build step: ${buildStep.toUpperCase()}") {
             buildModuleUtils.runBuildStep(projectInfo, module, buildStep, moduleType)
         }
     }
