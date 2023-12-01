@@ -102,7 +102,7 @@ def initProjectModuleData(def projectInfo) {
     projectInfo.testComponents = projectInfo.testComponents ?: []
     projectInfo.testComponents.each { testComponent ->
         initComponentData(projectInfo, testComponent)
-        component.isTestComponent = true
+        testComponent.isTestComponent = true
     }
     
     projectInfo.buildModules = []
