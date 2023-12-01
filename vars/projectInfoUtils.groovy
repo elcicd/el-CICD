@@ -107,10 +107,10 @@ def initProjectModuleData(def projectInfo) {
         testComponent.isTestComponent = true
         setModuleData(projectInfo, testComponent)
         
-        component.deploymentDir = "${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
-        projectInfo.deploymentDirs[component.name] = "${projectInfo.workDir}/${component.name}"
+        testComponent.deploymentDir = "${testComponent.workDir}/${el.cicd.CHART_DEPLOY_DIR}"
+        projectInfo.deploymentDirs[testComponent.name] = "${projectInfo.workDir}/${testComponent.name}"
         
-        component.staticPvs = component.staticPvs ?: []
+        testComponent.staticPvs = testComponent.staticPvs ?: []
     }
     
     projectInfo.buildModules = []
