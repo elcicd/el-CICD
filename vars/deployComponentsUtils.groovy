@@ -39,12 +39,10 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def defaultChartValuesYaml = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
 
     componentsToDeploy.each { component ->
-        def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
-
-        def chartYaml =
-        dir("${component.workDir}/${el.cicd.CHART_DEPLOY_DIR}") {
+        dir(component.deploymentDir) {
             def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
             dir(elCicdOverlayDir) {
+                def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
@@ -175,7 +173,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
-                helm upgrade --install --atomic  --history-max=1 \
+                helm upgrade --install --atomic --history-max=1 \
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
