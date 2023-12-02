@@ -53,7 +53,6 @@ __kustomize_project() {
     for KUST_DIR in ${KUSTOMIZE_DIRS}
     do
         let KUST_COUNTER=KUST_COUNTER+1
-        cat ./${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL} >&2
         cat ./${KUST_COUNTER}-${EL_CICD_DEPLOY_FINAL}
         echo '---'
     done

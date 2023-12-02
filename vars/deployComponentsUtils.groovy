@@ -173,7 +173,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
     def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
-                helm upgrade --install --atomic --history-max=1 \
+                helm upgrade --install --atomic --history-max=1 --output yaml \
                     -f values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
