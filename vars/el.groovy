@@ -53,6 +53,7 @@ def initMetaData(Map metaData) {
 
 def node(Map args, Closure body) {
     def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT
+    def agentNamespace = args.agentNamespace ?: null
     
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
@@ -67,6 +68,7 @@ def node(Map args, Closure body) {
         cloud: 'openshift',
         podRetention: onFailure(),
         idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        namespace: agentNamespace,
         yaml: """
           spec:
             imagePullSecrets:
