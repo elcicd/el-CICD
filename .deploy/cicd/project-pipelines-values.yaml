@@ -61,18 +61,18 @@ elCicdTemplates:
       $<BUILD_COMPONENT_BUILD_ARGS>
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-- templateName: configMap
-  objNames: $<BUILD_TEST_COMPONENT_PIPELINES>
-  objName: $<PROJECT_ID>-$<>-test-component
-  mustHaveEveryProfile:
-  - nonprod
-  - hasTestComponents
-  labels: $<BUILD_MODULE_PIPELINE_LABELS>
-  elCicdDefs:
-    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
-    IS_TEST: true
-    AUTH_TOKEN:
-  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+# - templateName: configMap
+#   objNames: $<BUILD_TEST_COMPONENT_PIPELINES>
+#   objName: $<PROJECT_ID>-$<>-test-component
+#   mustHaveEveryProfile:
+#   - nonprod
+#   - hasTestComponents
+#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
+#   elCicdDefs:
+#     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
+#     IS_TEST: true
+#     AUTH_TOKEN:
+#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
   objNames:
