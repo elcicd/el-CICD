@@ -290,7 +290,10 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.TEST_COMPONENT_PIPELINES = projectInfo.testComponents.collect { it.name }
     
-    elCicdDefs.TEST_NAMESPACE_CHOICES = projectInfo.nonProdNamespaces.collect { env, ns -> "'${ns}'"  }.toString()
+    TEST_NAMESPACE_CHOICES = [:].keySet()
+    TEST_NAMESPACE_CHOICES.addAll(projectInfo.nonProdNamespaces.collect { env, ns -> "'${ns}'"  })
+    TEST_NAMESPACE_CHOICES.addAll(projectInfo.sandboxNamespaces.collect { env, ns -> "'${ns}'"  })
+    elCicdDefs.TEST_NAMESPACE_CHOICES = TEST_NAMESPACE_CHOICES.toString()
 }
 
 
