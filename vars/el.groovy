@@ -65,8 +65,9 @@ def node(Map args, Closure body) {
     }
     
     def serviceAccountName = el.cicd.JENKINS_SERVICE_ACCOUNT
+    def fsGroup = "1001"
     if (args.isTest) {
-        echo 'FOO!!'
+        fsGroup = ''
         serviceAccountName = "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}"
     }
 
@@ -96,7 +97,7 @@ def node(Map args, Closure body) {
                   name: ${el.cicd.EL_CICD_META_INFO_NAME}
                 prefix: elcicd_
             securityContext:
-              fsGroup: 1001
+              fsGroup: ${fsGroup}
         """,
         volumes: volumeDefs
     ]) {
