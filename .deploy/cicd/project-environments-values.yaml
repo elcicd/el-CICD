@@ -46,6 +46,15 @@ elCicdTemplates:
   toNamespace: $<PROJECT_ID>-$<BASE_OBJ_NAME>
 
 - templateName: copyResource
+  objNames: $<NONPROD_ENVS>
+  objName: elcicd-jenkins-registry-credentials
+  mustHaveEveryProfile:
+  - nonprod
+  kind: Secret
+  fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
+  toNamespace: $<PROJECT_ID>-$<BASE_OBJ_NAME>
+
+- templateName: copyResource
   objName: elcicd-$<PROD_ENV>-registry-credentials
   namespaces: $<PROD_NAMESPACES>
   mustHaveEveryProfile:
