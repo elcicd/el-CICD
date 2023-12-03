@@ -45,7 +45,7 @@ def buildSelectedModules(def projectInfo, def modules, def title) {
         echo "--> Building ${module.name}"
 
         pipelineSuffix = projectInfo.selectedArtifacts.contains(module) ? 'build-artifact' : 'build-component'
-        build(job: "${module.name}-${pipelineSuffix}", wait: true)
+        build(job: "${projectInfo.id}-${module.name}-${pipelineSuffix}", wait: true)
 
         echo "--> ${module.name} build complete"
     }
