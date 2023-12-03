@@ -245,7 +245,8 @@ __bootstrap_el_cicd_onboarding_server() {
 
     _create_rbac_helpers
 
-    if [[ ${EL_CICD_SKIP_CREDENTIAL_REFRESH} != ${_TRUE} ]]
+    CREDS_INSTALLED=$(helm list -q --filter elcicd-jenkins-secrets)
+    if [[ -z ${CREDS_INSTALLED} || ${EL_CICD_SKIP_CREDENTIAL_REFRESH} != ${_TRUE} ]]
     then
         _refresh_el_cicd_credentials
     else
