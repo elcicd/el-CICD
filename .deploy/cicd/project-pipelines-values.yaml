@@ -1,35 +1,23 @@
 elCicdDefs-nonprod:
-  BUILD_MODULE_PIPELINE_LABELS:
+  MODULE_PIPELINE_LABELS:
     teamId: $<TEAM_ID>
     projectid: $<PROJECT_ID>
     module: $<BASE_OBJ_NAME>
-    build-type: $<BUILD_TYPE>
     jenkins-pipeline: 'true'
-    jenkins-build-pipeline: 'true'
-    is-test: $<IS_TEST>
-  IS_TEST: false
-  EL_CICD_API_METHOD: buildModule
-  EL_CICD_API_ARGS: |-
+  BUILD_MODULE_ARGS: |-
     agent:  '$<CODE_BASE>',
     teamId: '$<TEAM_ID>',
     projectId: '$<PROJECT_ID>',
     gitBranch: params.GIT_BRANCH,
     moduleName: '$<BASE_OBJ_NAME>',
-    deployToNamespace: params.DEPLOY_TO_NAMESPACE,
-    recreate: params.REINSTALL
+    $<EXTRA_BUILD_ARGS>
+  BUILD_PARAMETERS: |-
+      parameters {
+        $<GIT_BRANCH_BUILD_PARAM>
+        $<EXTRA_BUILD_PARAMS>
+      }
   GIT_BRANCH_BUILD_PARAM: |-
     stringParam('GIT_BRANCH', '$<GIT_BRANCH>', 'Git branch/tag/hash to build')
-  REDEPLOY_RELEASE_CANDIDATE_PARAMS: |-
-    parameters {
-      stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
-    }
-  PIPELINE_PARAMS: |-
-    parameters {
-      $<GIT_BRANCH_BUILD_PARAM>
-      choiceParam('DEPLOY_TO_NAMESPACE', $<BUILD_NAMESPACE_CHOICES>, 'Namespace to deploy to')
-      booleanParam('REINSTALL', false, 'Uninstall $<BASE_OBJ_NAME> before deploying build?')
-    }
-  AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
 
 elCicdTemplates:
 - templateName: configMap
@@ -38,14 +26,17 @@ elCicdTemplates:
   mustHaveEveryProfile:
   - nonprod
   - hasArtifacts
-  labels: $<BUILD_MODULE_PIPELINE_LABELS>
+  labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
     PIPELINE_PARAMS: |-
-      parameters {
-        $<GIT_BRANCH_BUILD_PARAM>
+      $<BUILD_PARAMETERS>
+    EXTRA_BUILD_PARAMS: |-
         booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
-      }
+    EL_CICD_API_METHOD: buildModule
+    EL_CICD_API_ARGS: |-
+      $<BUILD_MODULE_ARGS>
+    AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
@@ -54,25 +45,42 @@ elCicdTemplates:
   mustHaveEveryProfile:
   - nonprod
   - hasComponents
-  labels: $<BUILD_MODULE_PIPELINE_LABELS>
+  labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
+    PIPELINE_PARAMS: |-
+      $<BUILD_PARAMETERS>
+    EXTRA_BUILD_PARAMS: |-
+        choiceParam('DEPLOY_TO_NAMESPACE', $<BUILD_NAMESPACE_CHOICES>, 'Namespace to deploy to')
+        booleanParam('REINSTALL', false, 'Uninstall $<BASE_OBJ_NAME> before deploying build?')
+    EL_CICD_API_METHOD: buildModule
     EL_CICD_API_ARGS: |-
-      $<BUILD_COMPONENT_BUILD_ARGS>
+      $<BUILD_MODULE_ARGS>
+    EXTRA_BUILD_ARGS: |-
+      deployToNamespace: params.DEPLOY_TO_NAMESPACE,
+      recreate: params.REINSTALL
+    AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-# - templateName: configMap
-#   objNames: $<BUILD_TEST_COMPONENT_PIPELINES>
-#   objName: $<PROJECT_ID>-$<>-test-component
-#   mustHaveEveryProfile:
-#   - nonprod
-#   - hasTestComponents
-#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
-#   elCicdDefs:
-#     PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
-#     IS_TEST: true
-#     AUTH_TOKEN:
-#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+- templateName: configMap
+  objNames: $<TEST_COMPONENT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-test-component
+  mustHaveEveryProfile:
+  - nonprod
+  - hasTestComponents
+  labels: $<MODULE_PIPELINE_LABELS>
+  elCicdDefs:
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
+    PIPELINE_PARAMS: |-
+      $<BUILD_PARAMETERS>
+    EXTRA_BUILD_PARAMS: |-
+        choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
+    EL_CICD_API_METHOD: runTestModule
+    EL_CICD_API_ARGS: |-
+      $<BUILD_MODULE_ARGS>
+    EXTRA_BUILD_ARGS: |-
+      agentNamespace: params.TEST_NAMESPACE
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
   objNames:
