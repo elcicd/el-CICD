@@ -261,6 +261,9 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
+        elCicdDefs.NONPROD_ENVS.addAll(projectInfo.sandboxEnvs)
+        
+        echo "elCicdDefs.NONPROD_ENVS: ${elCicdDefs.NONPROD_ENVS}"
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
