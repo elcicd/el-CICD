@@ -81,62 +81,62 @@ elCicdTemplates:
 #       }
 #   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-- templateName: configMap
-  objNames:
-  - build-all-modules
-  - promote-modules
-  - redeploy-components
-  - run-all-test-modules
-  - create-release-candidate
-  - redeploy-release-candidate
-  objName: $<PROJECT_ID>-$<>
-  mustHaveEveryProfile:
-  - nonprod
-  labels: $<SHARED_PROJECT_PIPELINE_LABELS>
-  elCicdDefs:
-    SHARED_PROJECT_PIPELINE_LABELS:
-      teamId: $<TEAM_ID>
-      projectid: $<PROJECT_ID>
-      jenkins-pipeline: 'true'
-    EL_CICD_API_ARGS: |-
-      teamId: '$<TEAM_ID>',
-      projectId: '$<PROJECT_ID>',
-      $<EXTRA_PIPELINE_ARGS>
-  elCicdDefs-build-all-modules:
-    PIPELINE_NAME: 1-build-all-modules
-    EL_CICD_API_METHOD: buildAllModules
-  elCicdDefs-promote-components:
-    PIPELINE_NAME: 2-promote-modules
-    EL_CICD_API_METHOD: promoteComponents
-  elCicdDefs-redeploy-components:
-    PIPELINE_NAME: 3-redeploy-components
-    EL_CICD_API_METHOD: redeployComponents
-    PIPELINE_PARAMS: |-
-      parameters {
-        choiceParam('REDEPLOY_ENVIRONMENT', $<REDEPLOY_ENV_CHOICES>, 'Environment to redeploy')
-      }
-    EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
-  elCicdDefs-run-all-test-modules:
-    PIPELINE_NAME: 4-run-all-test-modules
-    EL_CICD_API_METHOD: runAllTestModules
-  elCicdDefs-create-release-candidate:
-    PIPELINE_NAME: 5-create-release-candidate
-    EL_CICD_API_METHOD: createReleaseCandidate
-    PIPELINE_PARAMS: |-
-      parameters {
-        stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
-      }
-    EXTRA_PIPELINE_ARGS: |-
-      releaseVersion: params.RELEASE_VERSION
-    VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
-  elCicdDefs-redeploy-release-candidate:
-    PIPELINE_NAME: 6-redeploy-release-candidate
-    EL_CICD_API_METHOD: redeployReleaseCandidate
-    PIPELINE_PARAMS:  |-
-      parameters {
-        stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
-      }
-    EXTRA_PIPELINE_ARGS: "releaseVersion: params.RELEASE_VERSION"
-    VERSION_TAG_DESCRIPTION: "Release candidate version tag to redeploy to the project pre-prod environment"
-  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+# - templateName: configMap
+#   objNames:
+#   - build-all-modules
+#   - promote-modules
+#   - redeploy-components
+#   - run-all-test-modules
+#   - create-release-candidate
+#   - redeploy-release-candidate
+#   objName: $<PROJECT_ID>-$<>
+#   mustHaveEveryProfile:
+#   - nonprod
+#   labels: $<SHARED_PROJECT_PIPELINE_LABELS>
+#   elCicdDefs:
+#     SHARED_PROJECT_PIPELINE_LABELS:
+#       teamId: $<TEAM_ID>
+#       projectid: $<PROJECT_ID>
+#       jenkins-pipeline: 'true'
+#     EL_CICD_API_ARGS: |-
+#       teamId: '$<TEAM_ID>',
+#       projectId: '$<PROJECT_ID>',
+#       $<EXTRA_PIPELINE_ARGS>
+#   elCicdDefs-build-all-modules:
+#     PIPELINE_NAME: 1-build-all-modules
+#     EL_CICD_API_METHOD: buildAllModules
+#   elCicdDefs-promote-components:
+#     PIPELINE_NAME: 2-promote-modules
+#     EL_CICD_API_METHOD: promoteComponents
+#   elCicdDefs-redeploy-components:
+#     PIPELINE_NAME: 3-redeploy-components
+#     EL_CICD_API_METHOD: redeployComponents
+#     PIPELINE_PARAMS: |-
+#       parameters {
+#         choiceParam('REDEPLOY_ENVIRONMENT', $<REDEPLOY_ENV_CHOICES>, 'Environment to redeploy')
+#       }
+#     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
+#   elCicdDefs-run-all-test-modules:
+#     PIPELINE_NAME: 4-run-all-test-modules
+#     EL_CICD_API_METHOD: runAllTestModules
+#   elCicdDefs-create-release-candidate:
+#     PIPELINE_NAME: 5-create-release-candidate
+#     EL_CICD_API_METHOD: createReleaseCandidate
+#     PIPELINE_PARAMS: |-
+#       parameters {
+#         stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
+#       }
+#     EXTRA_PIPELINE_ARGS: |-
+#       releaseVersion: params.RELEASE_VERSION
+#     VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
+#   elCicdDefs-redeploy-release-candidate:
+#     PIPELINE_NAME: 6-redeploy-release-candidate
+#     EL_CICD_API_METHOD: redeployReleaseCandidate
+#     PIPELINE_PARAMS:  |-
+#       parameters {
+#         stringParam('RELEASE_VERSION', null, "$<VERSION_TAG_DESCRIPTION>")
+#       }
+#     EXTRA_PIPELINE_ARGS: "releaseVersion: params.RELEASE_VERSION"
+#     VERSION_TAG_DESCRIPTION: "Release candidate version tag to redeploy to the project pre-prod environment"
+#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
