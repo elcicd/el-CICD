@@ -139,7 +139,7 @@ def setupProjectEnvironments(def projectInfo) {
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${environmentsValuesFile}
 
-        ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
+        ${shCmd.echo '', "UPGRADE/INSTALLING SDLC environments for project ${projectInfo.id}"}
 
         ${shCmd.echo ''}
         chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh
@@ -290,7 +290,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.TEST_COMPONENT_PIPELINES = projectInfo.testComponents.collect { it.name }
     
-    elCicdDefs.TEST_NAMESPACE_CHOICES = projectInfo.nonProdNamespaces.collect { env, ns -> return ns }
+    elCicdDefs.TEST_NAMESPACE_CHOICES = projectInfo.nonProdNamespaces.collect { env, ns -> "\"${ns}\""  }
 }
 
 
