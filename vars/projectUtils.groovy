@@ -140,7 +140,7 @@ def createNewGitWebhooksForProject(def moduleList) {
                                      ${projectInfo.jenkinsHostUrl} \
                                      ${projectInfo.id} \
                                      ${module.name} \
-                                     ${module.isComponent ? 'build-component' : 'build-artifact'} \
+                                     ${module.isComponent ? el.cicd.BUILD_COMPONENT_PIPELINE_SUFFIX : el.cicd.BUILD_ARTIFACT_PIPELINE_SUFFIX} \
                                      ${module.gitDeployKeyJenkinsId} \
                                      \${GIT_ACCESS_TOKEN}
                         set -x
@@ -176,7 +176,7 @@ def getDeleteWebhookFunctionCall(def module) {
                         ${projectInfo.jenkinsHostUrl} \
                         ${projectInfo.id} \
                         ${module.name} \
-                        ${module.isComponent ? 'build-component' : 'build-artifact'} \
+                        ${module.isComponent ? el.cicd.BUILD_COMPONENT_PIPELINE_SUFFIX : el.cicd.BUILD_ARTIFACT_PIPELINE_SUFFIX} \
                         '${module.gitDeployKeyJenkinsId}' \
                         \${GIT_ACCESS_TOKEN}
     """
