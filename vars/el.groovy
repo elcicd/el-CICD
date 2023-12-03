@@ -66,10 +66,8 @@ def node(Map args, Closure body) {
     def agentNamespace = null
     def serviceAccountName = el.cicd.JENKINS_SERVICE_ACCOUNT
     def fsGroup = "1001"
-    def imagePullSecret = 'elcicd-jenkins-registry-credentials'
     if (args.isTest) {
-        agentNamespace = args.testEnv ? "${args.projectId}-${args.testEnv}" : agentNamespace
-        imagePullSecret = "elcicd-${args.testEnv}-registry-credentials"
+        agentNamespace = "${args.projectId}-${args.testEnv}"
         serviceAccountName = "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}"
         fsGroup = ''
     }
@@ -83,7 +81,7 @@ def node(Map args, Closure body) {
         yaml: """
           spec:
             imagePullSecrets:
-            - ${imagePullSecret}
+            - 'elcicd-jenkins-registry-credentials'
             serviceAccount: "${serviceAccountName}"
             alwaysPullImage: true
             resources:
