@@ -1,5 +1,4 @@
 elCicdDefs-prod:
-  PIPELINE_DISPLAY_NAME: $<BASE_OBJ_NAME>
   EL_CICD_API_ARGS: |-
     agent: el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: '$<USER_GROUP>',
@@ -8,6 +7,7 @@ elCicdDefs-prod:
   PROJECT_ID_PIPELINE_PARAM: stringParam('PROJECT_ID', null, "Name of project")
     
 elCicdDefs-promote-project-to-prod:
+  PIPELINE_DISPLAY_NAME: "Promote project to Prod"
   PIPELINE_DESCRIPTION: 'Promote a release candidate to full release'
   EL_CICD_API_METHOD: promoteProjectToProd
   EXTRA_PIPELINE_ARGS: |-
@@ -19,6 +19,7 @@ elCicdDefs-promote-project-to-prod:
     }
                 
 elCicdDefs-deploy-project-to-prod:
+  PIPELINE_DISPLAY_NAME: "Deploy project to Prod"
   PIPELINE_DESCRIPTION: 'Deploy to production environment'
   EL_CICD_API_METHOD: deployProjectToProd
   EXTRA_PIPELINE_ARGS: |-
