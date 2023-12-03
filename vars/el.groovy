@@ -1,5 +1,6 @@
 /*
  * SPDX-License-Identifier: LGPL-2.1-or-later
+ *
  */
 
 import groovy.transform.Field
@@ -63,6 +64,8 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
 
+    def serviceAccountName = (args.isTest && args.projectId) ?
+        "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX} : el.cicd.JENKINS_SERVICE_ACCOUNT
     podTemplate([
         label: "${jenkinsAgent}",
         cloud: 'openshift',
@@ -73,7 +76,7 @@ def node(Map args, Closure body) {
           spec:
             imagePullSecrets:
             - elcicd-jenkins-registry-credentials
-            serviceAccount: "${args.isTest ? el.cicd.JENKINS_TEST_SERVICE_ACCOUNT : el.cicd.JENKINS_SERVICE_ACCOUNT}"
+            serviceAccount: "${serviceAccountName}"
             alwaysPullImage: true
             resources:
               requests:

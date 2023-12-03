@@ -81,7 +81,8 @@ elCicdTemplates:
     EL_CICD_API_ARGS: |-
       $<BUILD_MODULE_ARGS>
     EXTRA_BUILD_ARGS: |-
-      agentNamespace: params.TEST_NAMESPACE
+      agentNamespace: params.TEST_NAMESPACE,
+      isTest: true
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap

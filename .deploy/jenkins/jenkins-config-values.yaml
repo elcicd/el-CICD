@@ -1,6 +1,5 @@
 elCicdDefs:
   JENKINS_SERVICE_NAME: jenkins
-  JENKINS_TEST_SERVICE_NAME: jenkins-test-runner
   DISABLE_ADMINISTRATIVE_MONITORS: "false"
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"

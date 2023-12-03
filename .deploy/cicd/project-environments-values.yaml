@@ -1,3 +1,6 @@
+elCicdDefs:
+  TEST_RUNNER_SUFFIX: test-runner
+
 elCicdTemplates:
 - templateName: roleBinding
   objName: $<PROJECT_ID>-edit
@@ -14,13 +17,13 @@ elCicdTemplates:
     name: $<$<NAME_SPACE>_GROUP>
     
 - templateName: serviceAccount
-  objName: $<JENKINS_TEST_SERVICE_NAME>
+  objName: $<PROJECT_ID>-$<TEST_RUNNER_SUFFIX>
   namespaces: $<NON_PROD_CICD_NAMESPACES>
   mustHaveEveryProfile:
   - nonprod
   
 - templateName: roleBinding
-  objName: $<JENKINS_TEST_SERVICE_NAME>
+  objName: $<PROJECT_ID>-$<TEST_RUNNER_SUFFIX>
   namespaces: $<NON_PROD_CICD_NAMESPACES>
   mustHaveEveryProfile:
   - nonprod
@@ -30,7 +33,7 @@ elCicdTemplates:
     name: edit
   subjects:
   - kind: ServiceAccount
-    name: jenkins
+    name: $<PROJECT_ID>-$<TEST_RUNNER_SUFFIX>
     namespace: $<NAME_SPACE>
 
 - templateName: copyResource
