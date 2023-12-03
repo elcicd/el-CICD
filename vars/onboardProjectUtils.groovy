@@ -85,7 +85,7 @@ def setupProjectPipelines(def projectInfo) {
         ${shCmd.echo '', "${projectInfo.id} PROJECT VALUES INJECTED INTO el-CICD HELM CHART:"}
         cat ${pipelinesValuesFile}
 
-        ${shCmd.echo '', "UPGRADE/INSTALLING cicd pipeline definitions for project ${projectInfo.id}"}
+        ${shCmd.echo '', "UPGRADE/INSTALLING CICD pipeline definitions for project ${projectInfo.id}"}
 
         ${shCmd.echo ''}
         helm upgrade --install --atomic --history-max=1 \

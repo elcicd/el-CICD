@@ -17,20 +17,15 @@ def getSelectedModules(def projectInfo, def args) {
 
     def BUILD_ALL_ARTIFACTS = 'Build all artifacts'
     def BUILD_ALL_COMPONENTS = 'Build and deploy all components'
-    def BUILD_ALL_TEST_MODULES = 'Build and deploy all test modules'
 
     inputs += booleanParam(name: BUILD_ALL_ARTIFACTS)
     inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
-    inputs += booleanParam(name: BUILD_ALL_TEST_MODULES)
 
     inputs += separator(name: 'ARTIFACTS', sectionHeader: 'ARTIFACTS')
     createModuleInputs(inputs, projectInfo, projectInfo.artifacts, 'Artifact')
 
     inputs += separator(name: 'COMPONENTS', sectionHeader: 'COMPONENTS')
     createModuleInputs(inputs, projectInfo, projectInfo.components, 'Component')
-
-    inputs += separator(name: 'TEST MODULES', sectionHeader: 'TEST MODULES')
-    createModuleInputs(inputs, projectInfo, projectInfo.testComponents, 'Test Module')
 
     def cicdInfo = jenkinsUtils.displayInputWithTimeout("Select artifacts and components to build:", args, inputs)
 
@@ -40,7 +35,6 @@ def getSelectedModules(def projectInfo, def args) {
 
     projectInfo.selectedArtifacts = projectInfo.artifacts.findAll { cicdInfo[BUILD_ALL_ARTIFACTS] || cicdInfo[it.name] }
     projectInfo.selectedComponents = projectInfo.components.findAll { cicdInfo[BUILD_ALL_COMPONENTS] || cicdInfo[it.name] }
-    projectInfo.selectedTestComponents = projectInfo.testComponents.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
 }
 
 def buildSelectedModules(def projectInfo, def modules, def title) {
@@ -49,9 +43,7 @@ def buildSelectedModules(def projectInfo, def modules, def title) {
     def buildStages =  concurrentUtils.createParallelStages("Build ${title}", modules) { module ->
         echo "--> Building ${module.name}"
 
-        pipelineSuffix = projectInfo.selectedArtifacts.contains(module) ?
-            'build-artifact' :
-            (projectInfo.selectedComponents.contains(module) ? 'build-component' : 'build-test-module')
+        pipelineSuffix = projectInfo.selectedArtifacts.contains(module) ? 'build-artifact' : 'build-component'
         build(job: "${module.name}-${pipelineSuffix}", wait: true)
 
         echo "--> ${module.name} build complete"
