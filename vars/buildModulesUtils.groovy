@@ -18,6 +18,7 @@ def getSelectedModules(def projectInfo, def args) {
     def BUILD_ALL_ARTIFACTS = 'Build all artifacts'
     def BUILD_ALL_COMPONENTS = 'Build and deploy all components'
 
+    inputs += separator(name: 'BULK BUILD OPTIONS', sectionHeader: 'BULK BUILD OPTIONS')
     inputs += booleanParam(name: BUILD_ALL_ARTIFACTS)
     inputs += booleanParam(name: BUILD_ALL_COMPONENTS)
 
