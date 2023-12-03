@@ -263,7 +263,7 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
         
         elCicdDefs.SANDBOX_NAMESPACES = []
-        elCicdDefs.SANDBOX_NAMESPACES.addAll(projectInfo.sandboxNamespaces.value())
+        elCicdDefs.SANDBOX_NAMESPACES.addAll(projectInfo.sandboxNamespaces.values())
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
