@@ -54,7 +54,6 @@ def initMetaData(Map metaData) {
 
 def node(Map args, Closure body) {
     def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT
-    def agentNamespace = args.agentNamespace
 
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
@@ -64,11 +63,15 @@ def node(Map args, Closure body) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
     
+    def agentNamespace = null
     def serviceAccountName = el.cicd.JENKINS_SERVICE_ACCOUNT
     def fsGroup = "1001"
+    def imagePullSecret = 'elcicd-jenkins-registry-credentials'
     if (args.isTest) {
-        fsGroup = ''
+        agentNamespace = args.testEnv ? "${args.projectId}-${args.testEnv}" : agentNamespace
+        imagePullSecret = "elcicd-${args.testEnv}-registry-credentials"
         serviceAccountName = "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}"
+        fsGroup = ''
     }
 
     podTemplate([
@@ -80,7 +83,7 @@ def node(Map args, Closure body) {
         yaml: """
           spec:
             imagePullSecrets:
-            - elcicd-jenkins-registry-credentials
+            - ${imagePullSecret}
             serviceAccount: "${serviceAccountName}"
             alwaysPullImage: true
             resources:

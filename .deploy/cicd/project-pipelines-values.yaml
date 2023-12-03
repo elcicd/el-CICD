@@ -18,8 +18,8 @@ elCicdDefs-nonprod:
       }
   GIT_BRANCH_BUILD_PARAM: |-
     stringParam('GIT_BRANCH', '$<GIT_BRANCH>', 'Git branch/tag/hash to build')
-  TEST_NAMESPACES_CHOICE_PARAM: |-
-    choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
+  TEST_ENV_CHOICE_PARAM: |-
+    choiceParam('TEST_ENV', $<TEST_ENV_CHOICES>, 'Namespace to run tests')
 
 elCicdTemplates:
 - templateName: configMap
@@ -76,12 +76,12 @@ elCicdTemplates:
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
-        $<TEST_NAMESPACES_CHOICE_PARAM>
+        $<TEST_ENV_CHOICE_PARAM>
     EL_CICD_API_METHOD: runTestModule
     EL_CICD_API_ARGS: |-
       $<BUILD_MODULE_ARGS>
     EXTRA_BUILD_ARGS: |-
-      agentNamespace: params.TEST_NAMESPACE,
+      testEnv: params.TEST_ENV,
       isTest: true
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
@@ -126,10 +126,10 @@ elCicdTemplates:
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
-        $<TEST_NAMESPACES_CHOICE_PARAM>
+        $<TEST_ENV_CHOICE_PARAM>
       }
     EXTRA_PIPELINE_ARGS: |-
-      agentNamespace: params.TEST_NAMESPACE
+      testEnv: params.TEST_ENV
   elCicdDefs-create-release-candidate:
     PIPELINE_DISPLAY_NAME: "5. Create Release Candidate"
     EL_CICD_API_METHOD: createReleaseCandidate

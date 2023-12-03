@@ -290,10 +290,10 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.TEST_COMPONENT_PIPELINES = projectInfo.testComponents.collect { it.name }
     
-    TEST_NAMESPACE_CHOICES = [:].keySet()
-    TEST_NAMESPACE_CHOICES.addAll(projectInfo.nonProdNamespaces.collect { env, ns -> "'${ns}'"  })
-    TEST_NAMESPACE_CHOICES.addAll(projectInfo.sandboxNamespaces.collect { env, ns -> "'${ns}'"  })
-    elCicdDefs.TEST_NAMESPACE_CHOICES = TEST_NAMESPACE_CHOICES.toString()
+    TEST_ENV_CHOICES = [:].keySet()
+    TEST_ENV_CHOICES.addAll(projectInfo.nonProdEnvs.collect { env -> "'${env}'"  })
+    TEST_ENV_CHOICES.addAll(projectInfo.sandboxEnvs.collect { env -> "'${env}'"  })
+    elCicdDefs.TEST_ENV_CHOICES = TEST_NAMESPACE_CHOICES.toString()
 }
 
 
@@ -309,6 +309,8 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
 
     def cicdEnvs = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
+        elCicdDefs.NON_PROD_CICD_NAMESPACES = []
+        
         elCicdDefs.NON_PROD_CICD_NAMESPACES = []
         elCicdDefs.NON_PROD_CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
         elCicdDefs.NON_PROD_CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
