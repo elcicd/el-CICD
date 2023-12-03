@@ -48,7 +48,7 @@ elCicdDefs:
                       }
 
                       def args = [
-                          pipelineName: '$<PIPELINE_DISPLAY_NAME>',
+                          pipelineName: '$<OBJ_NAME>',
                           $<EL_CICD_API_ARGS>
                       ]
                       el.node(args) {

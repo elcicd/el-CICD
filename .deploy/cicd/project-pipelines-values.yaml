@@ -87,8 +87,8 @@ elCicdTemplates:
 - templateName: configMap
   objNames:
   - build-modules
-  - promote-modules
-  - redeploy-modules
+  - promote-components
+  - redeploy-components
   - run-test-components
   - create-release-candidate
   - redeploy-release-candidate
@@ -127,8 +127,8 @@ elCicdTemplates:
       parameters {
         $<TEST_NAMESPACES_CHOICE_PARAM>
       }
-      EXTRA_PIPELINE_ARGS: |-
-        agentNamespace: params.TEST_NAMESPACE
+    EXTRA_PIPELINE_ARGS: |-
+      agentNamespace: params.TEST_NAMESPACE
   elCicdDefs-create-release-candidate:
     PIPELINE_DISPLAY_NAME: "5. Create Release Candidate"
     EL_CICD_API_METHOD: createReleaseCandidate
