@@ -293,7 +293,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     TEST_ENV_CHOICES = [:].keySet()
     TEST_ENV_CHOICES.addAll(projectInfo.nonProdEnvs.collect { env -> "'${env}'"  })
     TEST_ENV_CHOICES.addAll(projectInfo.sandboxEnvs.collect { env -> "'${env}'"  })
-    elCicdDefs.TEST_ENV_CHOICES = TEST_NAMESPACE_CHOICES.toString()
+    elCicdDefs.TEST_ENV_CHOICES = TEST_ENV_CHOICES.toString()
 }
 
 
