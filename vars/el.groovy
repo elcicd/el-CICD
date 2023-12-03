@@ -65,7 +65,7 @@ def node(Map args, Closure body) {
     }
 
     def serviceAccountName = (args.isTest && args.projectId) ?
-        "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX} : el.cicd.JENKINS_SERVICE_ACCOUNT
+        "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}" : el.cicd.JENKINS_SERVICE_ACCOUNT
     podTemplate([
         label: "${jenkinsAgent}",
         cloud: 'openshift',
