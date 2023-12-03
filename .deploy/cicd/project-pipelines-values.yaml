@@ -3,7 +3,10 @@ elCicdDefs-nonprod:
     teamId: $<TEAM_ID>
     projectid: $<PROJECT_ID>
     module: $<BASE_OBJ_NAME>
+    build-type: $<BUILD_TYPE>
     jenkins-pipeline: 'true'
+    jenkins-build-pipeline: 'true'
+    is-test: $<IS_TEST>
   IS_TEST: false
   EL_CICD_API_METHOD: buildModule
   EL_CICD_API_ARGS: |-
@@ -26,101 +29,85 @@ elCicdDefs-nonprod:
       choiceParam('DEPLOY_TO_NAMESPACE', $<BUILD_NAMESPACE_CHOICES>, 'Namespace to deploy to')
       booleanParam('REINSTALL', false, 'Uninstall $<BASE_OBJ_NAME> before deploying build?')
     }
+  AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
 
 elCicdTemplates:
-# - templateName: configMap
-#   objNames: $<BUILD_ARTIFACT_PIPELINES>
-#   objName: build-artifact-$<PROJECT_ID>-$<>
-#   mustHaveEveryProfile:
-#   - nonprod
-#   - hasArtifacts
-#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
-#   elCicdDefs:
-#     PIPELINE_NAME: build-artifact-$<PROJECT_ID>-$<>
-#     PIPELINE_PARAMS: |-
-#       parameters {
-#         $<GIT_BRANCH_BUILD_PARAM>
-#         booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
-#       }
-#     AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
-#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+- templateName: configMap
+  objNames: $<BUILD_ARTIFACT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-build-artifact
+  mustHaveEveryProfile:
+  - nonprod
+  - hasArtifacts
+  labels: $<BUILD_MODULE_PIPELINE_LABELS>
+  elCicdDefs:
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
+    PIPELINE_PARAMS: |-
+      parameters {
+        $<GIT_BRANCH_BUILD_PARAM>
+        booleanParam('IS_SNAPSHOT', true, 'Is this a snapshot build?')
+      }
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-# - templateName: configMap
-#   objNames: $<BUILD_COMPONENT_PIPELINES>
-#   objName: build-component-$<PROJECT_ID>-$<>
-#   mustHaveEveryProfile:
-#   - nonprod
-#   - hasComponents
-#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
-#   elCicdDefs:
-#     PIPELINE_NAME: build-component-$<PROJECT_ID>-$<>
-#     EL_CICD_API_ARGS: |-
-#       $<BUILD_COMPONENT_BUILD_ARGS>
-#     AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
-#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+- templateName: configMap
+  objNames: $<BUILD_COMPONENT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-build-component
+  mustHaveEveryProfile:
+  - nonprod
+  - hasComponents
+  labels: $<BUILD_MODULE_PIPELINE_LABELS>
+  elCicdDefs:
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
+    EL_CICD_API_ARGS: |-
+      $<BUILD_COMPONENT_BUILD_ARGS>
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-# - templateName: configMap
-#   objNames: $<TEST_COMPONENT_PIPELINES>
-#   objName: run-test-module-$<PROJECT_ID>-$<>
-#   mustHaveEveryProfile:
-#   - nonprod
-#   - hasTestComponents
-#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
-#   elCicdDefs:
-#     PIPELINE_NAME: run-test-module-$<PROJECT_ID>-$<>
-#     EL_CICD_API_ARGS: |-
-#       teamId: '$<TEAM_ID>',
-#       projectId: '$<PROJECT_ID>',
-#       gitBranch: params.GIT_BRANCH,
-#       moduleName: '$<BASE_OBJ_NAME>',
-#       agentNamespace: params.TEST_NAMESPACE
-#     PIPELINE_PARAMS: |-
-#       parameters {
-#         $<GIT_BRANCH_BUILD_PARAM>
-#         choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
-#       }
-#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+- templateName: configMap
+  objNames: $<BUILD_TEST_COMPONENT_PIPELINES>
+  objName: $<PROJECT_ID>-$<>-test-component
+  mustHaveEveryProfile:
+  - nonprod
+  - hasTestComponents
+  labels: $<BUILD_MODULE_PIPELINE_LABELS>
+  elCicdDefs:
+    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
+    IS_TEST: true
+    AUTH_TOKEN:
+  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
   objNames:
-  - build-all-modules
-  - promote-modules
-  - redeploy-components
-  - run-all-test-modules
-  - create-release-candidate
-  - redeploy-release-candidate
+  - 1-build-modules
+  - 2-promote-modules
+  - 3-redeploy-modules
+  - 4-create-release-candidate
+  - 5-redeploy-release-candidate
   objName: $<PROJECT_ID>-$<>
   mustHaveEveryProfile:
   - nonprod
   labels: $<SHARED_PROJECT_PIPELINE_LABELS>
   elCicdDefs:
+    PIPELINE_NAME: $<BASE_OBJ_NAME>
     SHARED_PROJECT_PIPELINE_LABELS:
       teamId: $<TEAM_ID>
       projectid: $<PROJECT_ID>
       jenkins-pipeline: 'true'
+      jenkins-shared-pipeline: 'true'
     EL_CICD_API_ARGS: |-
       teamId: '$<TEAM_ID>',
       projectId: '$<PROJECT_ID>',
       $<EXTRA_PIPELINE_ARGS>
-  elCicdDefs-build-all-modules:
-    PIPELINE_NAME: 1-build-all-modules
-    EL_CICD_API_METHOD: buildAllModules
-  elCicdDefs-promote-components:
-    PIPELINE_NAME: 2-promote-modules
+  elCicdDefs-1-build-modules:
+    EL_CICD_API_METHOD: buildModules
+  elCicdDefs-2-promote-components:
     EL_CICD_API_METHOD: promoteComponents
-  elCicdDefs-redeploy-components:
-    PIPELINE_NAME: 3-redeploy-components
+  elCicdDefs-3-redeploy-components:
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
         choiceParam('REDEPLOY_ENVIRONMENT', $<REDEPLOY_ENV_CHOICES>, 'Environment to redeploy')
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
-  elCicdDefs-run-all-test-modules:
-    PIPELINE_NAME: 4-run-all-test-modules
-    EL_CICD_API_METHOD: runAllTestModules
-  elCicdDefs-create-release-candidate:
-    PIPELINE_NAME: 5-create-release-candidate
+  elCicdDefs-4-create-release-candidate:
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: |-
       parameters {
@@ -129,8 +116,7 @@ elCicdTemplates:
     EXTRA_PIPELINE_ARGS: |-
       releaseVersion: params.RELEASE_VERSION
     VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
-  elCicdDefs-redeploy-release-candidate:
-    PIPELINE_NAME: 6-redeploy-release-candidate
+  elCicdDefs-6-redeploy-release-candidate:
     EL_CICD_API_METHOD: redeployReleaseCandidate
     PIPELINE_PARAMS:  |-
       parameters {
