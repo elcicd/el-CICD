@@ -64,13 +64,13 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames: $<TEST_COMPONENT_PIPELINES>
-  objName: "Run Tests: $<BASE_OBJ_NAME>"
+  objName: $<BASE_OBJ_NAME>-build-test-component
   mustHaveEveryProfile:
   - nonprod
   - hasTestComponents
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-test-component
+    PIPELINE_NAME: "Run Tests: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
