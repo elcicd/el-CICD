@@ -1,5 +1,5 @@
 elCicdDefs-prod:
-  PIPELINE_NAME: $<BASE_OBJ_NAME>
+  PIPELINE_DISPLAY_NAME: $<BASE_OBJ_NAME>
   EL_CICD_API_ARGS: |-
     agent: el.cicd.JENKINS_AGENT_DEFAULT,
     teamId: '$<USER_GROUP>',

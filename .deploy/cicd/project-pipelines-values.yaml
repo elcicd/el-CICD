@@ -18,8 +18,8 @@ elCicdDefs-nonprod:
       }
   GIT_BRANCH_BUILD_PARAM: |-
     stringParam('GIT_BRANCH', '$<GIT_BRANCH>', 'Git branch/tag/hash to build')
-  TEST_NAMESPACE_CHOICES_PARAM: |-
-      choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
+  TEST_NAMESPACES_CHOICE_PARAM: |-
+    choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
 
 elCicdTemplates:
 - templateName: configMap
@@ -30,7 +30,7 @@ elCicdTemplates:
   - hasArtifacts
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Build Artifact: $<BASE_OBJ_NAME>"
+    PIPELINE_DISPLAY_NAME: "Build Artifact: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
@@ -49,7 +49,7 @@ elCicdTemplates:
   - hasComponents
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Build Component: $<BASE_OBJ_NAME>"
+    PIPELINE_DISPLAY_NAME: "Build Component: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
@@ -72,11 +72,11 @@ elCicdTemplates:
   - hasTestComponents
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Run Test Component: $<BASE_OBJ_NAME>"
+    PIPELINE_DISPLAY_NAME: "Run Tests: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
-        $<TEST_NAMESPACE_CHOICES_PARAM>
+        $<TEST_NAMESPACES_CHOICE_PARAM>
     EL_CICD_API_METHOD: runTestModule
     EL_CICD_API_ARGS: |-
       $<BUILD_MODULE_ARGS>
@@ -87,8 +87,8 @@ elCicdTemplates:
 - templateName: configMap
   objNames:
   - build-modules
-  - promote-components
-  - redeploy-components
+  - promote-modules
+  - redeploy-modules
   - run-test-components
   - create-release-candidate
   - redeploy-release-candidate
@@ -107,13 +107,13 @@ elCicdTemplates:
       projectId: '$<PROJECT_ID>',
       $<EXTRA_PIPELINE_ARGS>
   elCicdDefs-build-modules:
-    PIPELINE_NAME: "1. Build Modules"
+    PIPELINE_DISPLAY_NAME: "1. Build Modules"
     EL_CICD_API_METHOD: buildModules
   elCicdDefs-promote-components:
-    PIPELINE_NAME: "2. Promote Components"
+    PIPELINE_DISPLAY_NAME: "2. Promote Components"
     EL_CICD_API_METHOD: promoteComponents
   elCicdDefs-redeploy-components:
-    PIPELINE_NAME: "3. Redeploy Components"
+    PIPELINE_DISPLAY_NAME: "3. Redeploy Components"
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
@@ -121,16 +121,16 @@ elCicdTemplates:
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-run-test-components:
-    PIPELINE_NAME: "4. Run Test Components"
-    EL_CICD_API_METHOD: runTestComponents
+    PIPELINE_DISPLAY_NAME: "4.Run Test Components"
+    EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
-         $<TEST_NAMESPACE_CHOICES_PARAM>
+        $<TEST_NAMESPACES_CHOICE_PARAM>
       }
-    EXTRA_BUILD_ARGS: |-
-      agentNamespace: params.TEST_NAMESPACE
+      EXTRA_PIPELINE_ARGS: |-
+        agentNamespace: params.TEST_NAMESPACE
   elCicdDefs-create-release-candidate:
-    PIPELINE_NAME: "5. Create Release Candidate"
+    PIPELINE_DISPLAY_NAME: "5. Create Release Candidate"
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: |-
       parameters {
@@ -139,8 +139,8 @@ elCicdTemplates:
     EXTRA_PIPELINE_ARGS: |-
       releaseVersion: params.RELEASE_VERSION
     VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
-  elCicdDefs-6-redeploy-release-candidate:
-    PIPELINE_NAME: "5. Redeploy Release Candidate"
+  elCicdDefs-redeploy-release-candidate:
+    PIPELINE_DISPLAY_NAME: "6. Redeploy Release Candidate"
     EL_CICD_API_METHOD: redeployReleaseCandidate
     PIPELINE_PARAMS:  |-
       parameters {
@@ -149,4 +149,3 @@ elCicdTemplates:
     EXTRA_PIPELINE_ARGS: "releaseVersion: params.RELEASE_VERSION"
     VERSION_TAG_DESCRIPTION: "Release candidate version tag to redeploy to the project pre-prod environment"
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
-

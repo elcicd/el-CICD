@@ -18,7 +18,7 @@ elCicdDefs:
     
   JENKINS_PIPELINE_DSL_SCRIPT: |-
     script: |-
-      pipelineJob('$<FOLDER_NAME>/$<PIPELINE_NAME>') {
+      pipelineJob('$<FOLDER_NAME>/$<OBJ_NAME>') {
           authenticationToken('$<AUTH_TOKEN>')
           disabled(false)
           keepDependencies(false)
@@ -28,7 +28,7 @@ elCicdDefs:
           }
           
           description("$<PIPELINE_DESCRIPTION>")
-          displayName('$<PIPELINE_NAME>')
+          displayName('$<PIPELINE_DISPLAY_NAME>')
           $<PIPELINE_PARAMS>
 
           definition {
@@ -48,7 +48,7 @@ elCicdDefs:
                       }
 
                       def args = [
-                          pipelineName: '$<PIPELINE_NAME>',
+                          pipelineName: '$<PIPELINE_DISPLAY_NAME>',
                           $<EL_CICD_API_ARGS>
                       ]
                       el.node(args) {

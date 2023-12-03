@@ -2,7 +2,7 @@ elCicdDefs:
   PIPELINE_NAMES:
   - onboard-project
   - refresh-projects
-  PIPELINE_NAME: $<OBJ_NAME>
+  PIPELINE_DISPLAY_NAME: $<OBJ_NAME>
   JENKINS_PIPELINE_LABEL:
     jenkins-pipeline: 'true'
   TEAM_ID_PIPELINE_PARAM: stringParam('TEAM_ID', null, 'Team ID')
