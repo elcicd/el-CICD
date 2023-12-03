@@ -12,6 +12,26 @@ elCicdTemplates:
     namespace: $<HELM_RELEASE_NAMESPACE>
   - kind: Group
     name: $<$<NAME_SPACE>_GROUP>
+    
+- templateName: serviceAccount
+  objName: $<JENKINS_TEST_SERVICE_NAME>
+  namespaces: $<NON_PROD_CICD_NAMESPACES>
+  mustHaveEveryProfile:
+  - nonprod
+  
+- templateName: roleBinding
+  objName: $<JENKINS_TEST_SERVICE_NAME>
+  namespaces: $<NON_PROD_CICD_NAMESPACES>
+  mustHaveEveryProfile:
+  - nonprod
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: edit
+  subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: $<NAME_SPACE>
 
 - templateName: copyResource
   objNames: $<NONPROD_ENVS>

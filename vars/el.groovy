@@ -73,7 +73,7 @@ def node(Map args, Closure body) {
           spec:
             imagePullSecrets:
             - elcicd-jenkins-registry-credentials
-            serviceAccount: "${el.cicd.JENKINS_SERVICE_ACCOUNT}"
+            serviceAccount: "${args.isTest ? el.cicd.JENKINS_TEST_SERVICE_ACCOUNT ? el.cicd.JENKINS_SERVICE_ACCOUNT}"
             alwaysPullImage: true
             resources:
               requests:
