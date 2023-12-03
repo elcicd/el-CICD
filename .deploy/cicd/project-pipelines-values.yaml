@@ -28,7 +28,7 @@ elCicdTemplates:
   - hasArtifacts
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-artifact
+    PIPELINE_NAME: "Build Artifact: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
@@ -47,7 +47,7 @@ elCicdTemplates:
   - hasComponents
   labels: $<MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: $<BASE_OBJ_NAME>-build-component
+    PIPELINE_NAME: "Build Component: $<BASE_OBJ_NAME>"
     PIPELINE_PARAMS: |-
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
@@ -64,7 +64,7 @@ elCicdTemplates:
 
 - templateName: configMap
   objNames: $<TEST_COMPONENT_PIPELINES>
-  objName: $<PROJECT_ID>-$<>-test-component
+  objName: "Run Tests: $<BASE_OBJ_NAME>"
   mustHaveEveryProfile:
   - nonprod
   - hasTestComponents

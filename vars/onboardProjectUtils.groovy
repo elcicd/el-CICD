@@ -282,8 +282,8 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
 
     elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "'${it}'" }.toString()
 
-    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect { "\"${it}\"" }
-    elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
+    elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect { "'${it}'" }
+    elCicdDefs.REDEPLOY_ENV_CHOICES.add("'${projectInfo.preProdEnv}'")
     elCicdDefs.REDEPLOY_ENV_CHOICES = elCicdDefs.REDEPLOY_ENV_CHOICES.toString()
 
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
