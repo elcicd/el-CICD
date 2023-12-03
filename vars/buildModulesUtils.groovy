@@ -40,7 +40,7 @@ def getSelectedModules(def projectInfo, def args) {
 
     projectInfo.selectedArtifacts = projectInfo.artifacts.findAll { cicdInfo[BUILD_ALL_ARTIFACTS] || cicdInfo[it.name] }
     projectInfo.selectedComponents = projectInfo.components.findAll { cicdInfo[BUILD_ALL_COMPONENTS] || cicdInfo[it.name] }
-    projectInfo.selectedTestModules = projectInfo.testComponents.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
+    projectInfo.selectedTestComponents = projectInfo.testComponents.findAll { cicdInfo[BUILD_ALL_TEST_MODULES] || cicdInfo[it.name] }
 }
 
 def buildSelectedModules(def projectInfo, def modules, def title) {
