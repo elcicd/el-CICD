@@ -72,7 +72,6 @@ def node(Map args, Closure body) {
         imagePullSecret = "elcicd-${args.testEnv}-registry-credentials"
         serviceAccountName = "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}"
         fsGroup = ''
-        echo "imagePullSecret
     }
 
     podTemplate([
