@@ -42,11 +42,11 @@ def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues.elCicdProfiles += ['user-group', 'jenkinsPersistent']
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        elCicdDefs.NONPROD_ENVS = el.cicd.nonProdEnvs
+        elCicdDefs.NONPROD_REGISTRY_ENVS = el.cicd.nonProdEnvs
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
-        elCicdDefs.PROD_ENVS = el.cicd.EL_CICD_MASTER_NONPROD ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
+        elCicdDefs.PROD_REGISTRY_ENVS = el.cicd.EL_CICD_MASTER_NONPROD ? [el.cicd.prodEnv] : [el.cicd.preProdEnv, el.cicd.prodEnv]
     }
 
     elCicdDefs.EL_CICD_GIT_REPOS_READ_ONLY_KEYS = [
@@ -261,7 +261,9 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
-        elCicdDefs.NONPROD_ENVS.addAll(projectInfo.sandboxEnvs)
+        
+        elCicdDefs.SANDBOX_NAMESPACES = []
+        elCicdDefs.SANDBOX_NAMESPACES.addAll(projectInfo.sandboxNamespaces.value())
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {

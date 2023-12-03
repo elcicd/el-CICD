@@ -295,7 +295,7 @@ elCicdTemplates:
   toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objNames: $<PROD_ENVS>
+  objNames: $<PROD_REGISTRY_ENVS>
   objName: elcicd-$<>-registry-credentials
   mustHaveEveryProfile:
   - cicd
@@ -305,7 +305,7 @@ elCicdTemplates:
   toNamespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: copyResource
-  objNames: $<NONPROD_ENVS>
+  objNames: $<NONPROD_REGISTRY_ENVS>
   objName: elcicd-$<>-registry-credentials
   mustHaveEveryProfile:
   - cicd
