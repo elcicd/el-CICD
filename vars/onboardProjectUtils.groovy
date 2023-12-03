@@ -42,7 +42,7 @@ def getJenkinsConfigValues(def teamInfo) {
     jenkinsConfigValues.elCicdProfiles += ['user-group', 'jenkinsPersistent']
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
-        elCicdDefs.NONPROD_ENVS = el.cicd.nonProdEnvs + el.cicd.sandboxEnvs
+        elCicdDefs.NONPROD_ENVS = el.cicd.nonProdEnvs
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
@@ -262,8 +262,6 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.sandboxEnvs)
-        
-        echo "elCicdDefs.NONPROD_ENVS: ${elCicdDefs.NONPROD_ENVS}"
     }
 
     if (el.cicd.EL_CICD_MASTER_PROD) {
