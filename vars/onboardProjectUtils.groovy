@@ -280,7 +280,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.EL_CICD_BUILD_SECRETS_NAME = el.cicd.EL_CICD_BUILD_SECRETS_NAME
     elCicdDefs.DEV_ENV = projectInfo.devEnv
 
-    elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "\"${it}\"" }.toString()
+    elCicdDefs.BUILD_NAMESPACE_CHOICES = projectInfo.buildNamespaces.collect { "'${it}'" }.toString()
 
     elCicdDefs.REDEPLOY_ENV_CHOICES = projectInfo.testEnvs.collect { "\"${it}\"" }
     elCicdDefs.REDEPLOY_ENV_CHOICES.add("\"${projectInfo.preProdEnv}\"")
@@ -290,7 +290,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.TEST_COMPONENT_PIPELINES = projectInfo.testComponents.collect { it.name }
     
-    elCicdDefs.TEST_NAMESPACE_CHOICES = projectInfo.nonProdNamespaces.collect { env, ns -> "\"${ns}\""  }
+    elCicdDefs.TEST_NAMESPACE_CHOICES = projectInfo.nonProdNamespaces.collect { env, ns -> "'${ns}'"  }.toString()
 }
 
 
