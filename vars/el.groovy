@@ -54,8 +54,8 @@ def initMetaData(Map metaData) {
 
 def node(Map args, Closure body) {
     def jenkinsAgent = args.agent ?: el.cicd.JENKINS_AGENT_DEFAULT
-    def agentNamespace = args.agentNamespace ?: null
-    
+    def agentNamespace = args.agentNamespace
+
     def volumeDefs = [
         emptyDirVolume(mountPath: '/home/jenkins/agent', memory: true)
     ]
@@ -63,9 +63,13 @@ def node(Map args, Closure body) {
     if (args.isBuild) {
         volumeDefs += secretVolume(secretName: "${el.cicd.EL_CICD_BUILD_SECRETS_NAME}", mountPath: "${el.cicd.BUILDER_SECRETS_DIR}/")
     }
+    
+    def serviceAccountName = el.cicd.JENKINS_SERVICE_ACCOUNT
+    if (args.isTest) {
+        echo 'FOO!!'
+        serviceAccountName = "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}"
+    }
 
-    def serviceAccountName = (args.isTest && args.projectId) ?
-        "${args.projectId}-${el.cicd.TEST_SERVICE_ACCOUNT_SUFFIX}" : el.cicd.JENKINS_SERVICE_ACCOUNT
     podTemplate([
         label: "${jenkinsAgent}",
         cloud: 'openshift',
