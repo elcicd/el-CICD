@@ -59,34 +59,34 @@ elCicdTemplates:
     AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
-- templateName: configMap
-  objNames: $<TEST_COMPONENT_PIPELINES>
-  objName: run-test-module-$<PROJECT_ID>-$<>
-  mustHaveEveryProfile:
-  - nonprod
-  - hasTestComponents
-  labels: $<BUILD_MODULE_PIPELINE_LABELS>
-  elCicdDefs:
-    PIPELINE_NAME: run-test-module-$<PROJECT_ID>-$<>
-    EL_CICD_API_ARGS: |-
-      teamId: '$<TEAM_ID>',
-      projectId: '$<PROJECT_ID>',
-      gitBranch: params.GIT_BRANCH,
-      moduleName: '$<BASE_OBJ_NAME>',
-      agentNamespace: params.TEST_NAMESPACE
-    PIPELINE_PARAMS: |-
-      parameters {
-        $<GIT_BRANCH_BUILD_PARAM>
-        choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
-      }
-  data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
+# - templateName: configMap
+#   objNames: $<TEST_COMPONENT_PIPELINES>
+#   objName: run-test-module-$<PROJECT_ID>-$<>
+#   mustHaveEveryProfile:
+#   - nonprod
+#   - hasTestComponents
+#   labels: $<BUILD_MODULE_PIPELINE_LABELS>
+#   elCicdDefs:
+#     PIPELINE_NAME: run-test-module-$<PROJECT_ID>-$<>
+#     EL_CICD_API_ARGS: |-
+#       teamId: '$<TEAM_ID>',
+#       projectId: '$<PROJECT_ID>',
+#       gitBranch: params.GIT_BRANCH,
+#       moduleName: '$<BASE_OBJ_NAME>',
+#       agentNamespace: params.TEST_NAMESPACE
+#     PIPELINE_PARAMS: |-
+#       parameters {
+#         $<GIT_BRANCH_BUILD_PARAM>
+#         choiceParam('TEST_NAMESPACE', $<TEST_NAMESPACE_CHOICES>, 'Namespace to run tests')
+#       }
+#   data: $<PROJECT_PIPELINE_CONFIG_MAP_DATA>
 
 - templateName: configMap
   objNames:
   - build-all-modules
   - promote-modules
   - redeploy-components
-  - run-all-tests
+  - run-all-test-modules
   - create-release-candidate
   - redeploy-release-candidate
   objName: $<PROJECT_ID>-$<>
@@ -117,7 +117,7 @@ elCicdTemplates:
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-run-all-test-modules:
-    PIPELINE_NAME: 4-run-all-tests
+    PIPELINE_NAME: 4-run-all-test-modules
     EL_CICD_API_METHOD: runAllTestModules
   elCicdDefs-create-release-candidate:
     PIPELINE_NAME: 5-create-release-candidate
