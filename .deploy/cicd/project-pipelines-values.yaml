@@ -36,7 +36,7 @@ elCicdTemplates:
   - hasArtifacts
   labels: $<BUILD_MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Build Artifact: $<BASE_OBJ_NAME>"
+    PIPELINE_NAME: build-artifact-$<PROJECT_ID>-$<>
     PIPELINE_PARAMS: |-
       parameters {
         $<GIT_BRANCH_BUILD_PARAM>
@@ -53,7 +53,7 @@ elCicdTemplates:
   - hasComponents
   labels: $<BUILD_MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Build Component: $<BASE_OBJ_NAME>"
+    PIPELINE_NAME: build-component-$<PROJECT_ID>-$<>
     EL_CICD_API_ARGS: |-
       $<BUILD_COMPONENT_BUILD_ARGS>
     AUTH_TOKEN: $<PROJECT_ID>-$<BASE_OBJ_NAME>-git-repo-private-contentkey
@@ -67,7 +67,7 @@ elCicdTemplates:
   - hasTestComponents
   labels: $<BUILD_MODULE_PIPELINE_LABELS>
   elCicdDefs:
-    PIPELINE_NAME: "Run Test Module: $<BASE_OBJ_NAME>"
+    PIPELINE_NAME: run-test-module-$<PROJECT_ID>-$<>
     EL_CICD_API_ARGS: |-
       teamId: '$<TEAM_ID>',
       projectId: '$<PROJECT_ID>',
@@ -84,9 +84,9 @@ elCicdTemplates:
 - templateName: configMap
   objNames:
   - build-all-modules
-  - run-all-tests
   - promote-modules
-  - redeploy-modules
+  - redeploy-components
+  - run-all-tests
   - create-release-candidate
   - redeploy-release-candidate
   objName: $<PROJECT_ID>-$<>
@@ -103,13 +103,13 @@ elCicdTemplates:
       projectId: '$<PROJECT_ID>',
       $<EXTRA_PIPELINE_ARGS>
   elCicdDefs-build-all-modules:
-    PIPELINE_NAME: 1. Build All Modules
+    PIPELINE_NAME: 1-build-all-modules
     EL_CICD_API_METHOD: buildAllModules
   elCicdDefs-promote-components:
-    PIPELINE_NAME: 2. Promote Components
+    PIPELINE_NAME: 2-promote-modules
     EL_CICD_API_METHOD: promoteComponents
   elCicdDefs-redeploy-components:
-    PIPELINE_NAME: 3. Redeploy Components
+    PIPELINE_NAME: 3-redeploy-components
     EL_CICD_API_METHOD: redeployComponents
     PIPELINE_PARAMS: |-
       parameters {
@@ -117,10 +117,10 @@ elCicdTemplates:
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-run-all-test-modules:
-    PIPELINE_NAME: 4. Run All Test Modules
+    PIPELINE_NAME: 4-run-all-tests
     EL_CICD_API_METHOD: runAllTestModules
   elCicdDefs-create-release-candidate:
-    PIPELINE_NAME: 5. Create Release Candidate
+    PIPELINE_NAME: 5-create-release-candidate
     EL_CICD_API_METHOD: createReleaseCandidate
     PIPELINE_PARAMS: |-
       parameters {
@@ -130,7 +130,7 @@ elCicdTemplates:
       releaseVersion: params.RELEASE_VERSION
     VERSION_TAG_DESCRIPTION: 'Release Candidate version tag'
   elCicdDefs-redeploy-release-candidate:
-    PIPELINE_NAME: 6. Redeploy Release Candidate
+    PIPELINE_NAME: 6-redeploy-release-candidate
     EL_CICD_API_METHOD: redeployReleaseCandidate
     PIPELINE_PARAMS:  |-
       parameters {
