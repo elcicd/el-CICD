@@ -119,7 +119,7 @@ def setupProjectCredentials(def projectInfo) {
 def setProjectSdlc(def projectInfo) {
     setupProjectEnvironments(projectInfo)
 
-    resetProjectPvResources(projectInfo)
+    // resetProjectPvResources(projectInfo)
     if (projectInfo.staticPvs) {
         echo("--> DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
         setupProjectPvResources(projectInfo)
