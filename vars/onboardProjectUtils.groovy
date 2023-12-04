@@ -183,12 +183,20 @@ def setupProjectPvResources(def projectInfo) {
 }
 
 def getPvCicdConfigValues(def projectInfo) {
-    pvValues = [elCicdDefs: [:]]
+    def pvValues = [elCicdDefs: [:]]
+    def pvNamespaces = [:]
+    if (el.cicd.EL_CICD_MASTER_NONPROD) {
+        pvNamespaces.putAll(projectInfo.nonProdNamespaces)
+    }
+
+    if (el.cicd.EL_CICD_MASTER_PROD) {
+        pvNamespaces.putAll(projectInfo.prodNamespaces)
+    }
 
     pvValues.elCicdDefs.VOLUME_OBJ_NAMES = []
     projectInfo.staticPvs.each { pv ->
         pv.envs.each { env ->
-            def namespace = projectInfo.nonProdNamespaces[env]
+            def namespace = pvNamespaces[env]
             if (namespace) {
                 projectInfo.components.each { component ->
                     if (component.staticPvs.contains(pv.name)) {
