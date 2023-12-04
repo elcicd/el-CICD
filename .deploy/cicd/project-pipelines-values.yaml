@@ -77,7 +77,7 @@ elCicdTemplates:
       $<BUILD_PARAMETERS>
     EXTRA_BUILD_PARAMS: |-
         $<TEST_ENV_CHOICE_PARAM>
-    EL_CICD_API_METHOD: runTestModule
+    EL_CICD_API_METHOD: runTestComponent
     EL_CICD_API_ARGS: |-
       $<BUILD_MODULE_ARGS>
     EXTRA_BUILD_ARGS: |-
@@ -122,8 +122,8 @@ elCicdTemplates:
       }
     EXTRA_PIPELINE_ARGS: "redeployEnv: params.REDEPLOY_ENVIRONMENT"
   elCicdDefs-run-test-components:
-    PIPELINE_DISPLAY_NAME: "4.Run Test Components"
-    EL_CICD_API_METHOD: redeployComponents
+    PIPELINE_DISPLAY_NAME: "4. Run Test Components"
+    EL_CICD_API_METHOD: runTestComponents
     PIPELINE_PARAMS: |-
       parameters {
         $<TEST_ENV_CHOICE_PARAM>
