@@ -157,13 +157,13 @@ def setupProjectEnvironments(def projectInfo) {
 }
 
 def resetProjectPvResources(def projectInfo) {
-    sh """
-        PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
-        if [[ "\${PVS_INSTALLED}" ]]
-        then
-            helm uninstall --wait ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-        fi
-    """
+    // sh """
+    //     PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
+    //     if [[ "\${PVS_INSTALLED}" ]]
+    //     then
+    //         helm uninstall --wait ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
+    //     fi
+    // """
 }
 
 def setupProjectPvResources(def projectInfo) {
