@@ -119,7 +119,6 @@ def setupProjectCredentials(def projectInfo) {
 def setProjectSdlc(def projectInfo) {
     setupProjectEnvironments(projectInfo)
 
-    // resetProjectPvResources(projectInfo)
     if (projectInfo.staticPvs) {
         echo("--> DEPLOY PERSISTENT VOLUMES DEFINITIONS FOR PROJECT ${projectInfo.id}")
         setupProjectPvResources(projectInfo)
@@ -156,17 +155,6 @@ def setupProjectEnvironments(def projectInfo) {
     """
 }
 
-def resetProjectPvResources(def projectInfo) {
-    sh """
-        PVS_INSTALLED=\$(helm list --short --filter ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace})
-        if [[ "\${PVS_INSTALLED}" ]]
-        then
-            helm uninstall  ${projectInfo.id}-${el.cicd.PVS_POSTFIX} -n ${projectInfo.teamInfo.cicdMasterNamespace}
-            sleep 3
-        fi
-    """
-}
-
 def setupProjectPvResources(def projectInfo) {
     if (projectInfo.staticPvs) {
         def pvValues = getPvCicdConfigValues(projectInfo)
@@ -180,14 +168,12 @@ def setupProjectPvResources(def projectInfo) {
                 ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
                 cat ${volumeCicdConfigFile}
                 
-                set +e
                 helm upgrade --install \
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
                     ${projectInfo.id}-${el.cicd.PVS_POSTFIX} \
                     ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-                set -e
             """
         }
         else {
