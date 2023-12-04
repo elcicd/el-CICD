@@ -8,8 +8,8 @@ def call(Map args) {
     projectInfo.deployToEnv = projectInfo.devEnv
 
     stage("Select environment, module(s), and branch") {
-        modulesUtils.getSelectedTestModules(projectInfo, args)
+        moduleUtils.getSelectedTestModules(projectInfo, args)
     }
     
-    runTestModulesUtils.runSelectedModulePipelines(projectInfo, projectInfo.selectedTestComponents, 'Test Modules')
+    moduleUtils.runSelectedModulePipelines(projectInfo, projectInfo.selectedTestComponents, 'Test Modules')
 }
