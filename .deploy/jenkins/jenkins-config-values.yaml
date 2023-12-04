@@ -226,11 +226,11 @@ elCicdTemplates:
     namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: roleBinding
-  objName: $<JENKINS_SERVICE_NAME>-admin
+  objName: $<JENKINS_SERVICE_NAME>-edit
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: admin
+    name: edit
   subjects:
   - kind: ServiceAccount
     name: $<JENKINS_SERVICE_NAME>
