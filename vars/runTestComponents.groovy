@@ -5,13 +5,12 @@
 
 def call(Map args) {
     def projectInfo = args.projectInfo
-    projectInfo.gitBranch = args.gitBranch
     projectInfo.deployToEnv = args.testEnv
 
     stage("Select environment, module(s), and branch") {
         moduleUtils.getSelectedTestModules(projectInfo, args)
     }
     
-    def params = [TEST_ENV: projectInfo.deployToEnv, GIT_BRANCH: projectInfo.gitBranch]
+    def params = [choiceParam(TEST_ENV: projectInfo.deployToEnv), stringParam(GIT_BRANCH: projectInfo.gitBranch)]
     moduleUtils.runSelectedModulePipelines(projectInfo, projectInfo.selectedTestComponents, 'Test Modules', params)
 }
