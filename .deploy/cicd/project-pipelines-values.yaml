@@ -109,7 +109,7 @@ elCicdTemplates:
       $<EXTRA_PIPELINE_ARGS>
   elCicdDefs-build-modules:
     PIPELINE_DISPLAY_NAME: "1. Build Modules"
-    EL_CICD_API_METHOD: buildModules
+    EL_CICD_API_METHOD: buildAllModules
   elCicdDefs-promote-components:
     PIPELINE_DISPLAY_NAME: "2. Promote Components"
     EL_CICD_API_METHOD: promoteComponents
