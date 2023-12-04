@@ -7,7 +7,7 @@ elCicdTemplates-elcicd-kust:
       elcicd.io/component: $<COMPONENT_NAME>
     labels:
       - pairs:
-          elcicd.io/deploy-time: "$<EL_CICD_DEPLOYMENT_TIME>"
+          elcicd.io/deploy-time: "\"$<EL_CICD_DEPLOYMENT_TIME>\""
         includeTemplates: true
     
     configMapGenerator:
