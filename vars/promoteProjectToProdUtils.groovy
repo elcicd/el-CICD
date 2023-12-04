@@ -79,13 +79,8 @@ def createReleaseVersionComponentSubCharts(def projectInfo) {
 def createReleaseVersionUmbrellaChart(def projectInfo) {
     dir (projectInfo.projectModule.workDir) {
         sh """
-            cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR} \
-                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
-                  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
-
-            helm template --set-string elCicdDefs.EL_CICD_MASTER_NAMESPACE=${projectInfo.teamInfo.cicdMasterNamespace} \
-                          -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/project-values.yaml \
-                          render-values-yaml ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > values.yaml
+            cp  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore \
+                ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
 
             helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion} \
                           --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \

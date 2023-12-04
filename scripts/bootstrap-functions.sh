@@ -345,7 +345,7 @@ __create_onboarding_automation_server() {
 __remove_failed_jenkins_server() {
     local _JENKINS_DEPLOYMENT_NAME=${1}
 
-    if [[ ! -z $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${_JENKINS_DEPLOYMENT_NAME}$) && \
+    if [[ $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${_JENKINS_DEPLOYMENT_NAME}$) && \
           $(oc get pods -l name=${_JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
     then
         echo
