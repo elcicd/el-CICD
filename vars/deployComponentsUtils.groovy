@@ -64,13 +64,18 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 cat  ${tmpValuesFile}
 
+                ${shCmd.echo('')}
                 rm -f \${VALUES_FILES}
                 mv ${tmpValuesFile} values.yaml
 
+                ${shCmd.echo('')}
                 helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
                               -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
                               ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
-
+                ${shCmd.echo('')}
+                cat ${elCicdOverlayDir}/kustomization.yaml
+                
+                ${shCmd.echo('')}
                 UPDATE_DEPENDENCIES='update-dependencies'
                 if [[ ! -f Chart.yaml ]]
                 then
