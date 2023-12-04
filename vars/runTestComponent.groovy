@@ -9,8 +9,8 @@ void call(Map args) {
 
     module.gitBranch = args.gitBranch
 
-    projectInfo.deployToEnv = projectInfo.devEnv
-    projectInfo.deployToNamespace = args.deployToNamespace
+    projectInfo.deployToEnv = projectInfo.testEnv
+    projectInfo.deployToNamespace = projectInfo.nonProdNamespaces(projectInfo.testEnv) ?: projectInfo.sandboxNamespaces(projectInfo.testEnv)
 
     stage('Checkout code from repository') {
         moduleUtils.cloneModule(module)
