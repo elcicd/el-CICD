@@ -55,7 +55,7 @@ def getSelectedTestModules(def projectInfo, def args) {
 
     projectInfo.gitBranch = cicdInfo[GIT_BRANCH]
 
-    projectInfo.selectedTestComponents = projectInfo.components.findAll { cicdInfo[RUN_ALL_TEST_COMPONENTS] || cicdInfo[it.name] }
+    projectInfo.selectedTestComponents = projectInfo.testComponents.findAll { cicdInfo[RUN_ALL_TEST_COMPONENTS] || cicdInfo[it.name] }
 }
  
  def cloneModule(def module) {
