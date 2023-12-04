@@ -42,7 +42,7 @@ def getUserPromotionRemovalSelections(def projectInfo, def args) {
         component.promote = answer == el.cicd.PROMOTE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.PROMOTE)
         component.remove = answer == el.cicd.REMOVE || (answer == el.cicd.IGNORE && cicdInfo.defaultAction == el.cicd.REMOVE)
 
-        promoteOrRemove = promoteOrRemove || component.promote != null
+        promoteOrRemove = promoteOrRemove || component.promote
     }
 
     if (!promoteOrRemove) {
