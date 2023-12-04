@@ -3,12 +3,12 @@ elCicdDefs:
 
 elCicdTemplates:
 - templateName: roleBinding
-  objName: $<PROJECT_ID>-edit
+  objName: $<PROJECT_ID>-admin
   namespaces: $<CICD_NAMESPACES>
   roleRef:
     apiGroup: rbac.authorization.k8s.io
     kind: ClusterRole
-    name: edit
+    name: admin
   subjects:
   - kind: ServiceAccount
     name: jenkins
