@@ -309,7 +309,6 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
 
     getElCicdNamespaceChartValues(projectInfo, environmentsValues)
 
-    def cicdEnvs = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NON_PROD_CICD_NAMESPACES = []
         

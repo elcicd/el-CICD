@@ -34,9 +34,11 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     projectInfo.teamInfo = teamInfo
     projectInfo.id = projectId
     
-    projectInfo.jenkinsHostUrl = "https://${projectInfo.teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
+    projectInfo.jenkinsHostUrl =
+        "https://${projectInfo.teamInfo.cicdMasterNamespace}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
 
-    setRemoteRepoDeployKeyId(projectInfo)
+    projectInfo.repoDeployKeyId =
+        "${projectInfo.teamInfo.cicdMasterNamespace}|${projectInfo.id}|${el.cicd.EL_CICD_CLUSTER_UID}"
 
     initProjectModuleData(projectInfo)
 
@@ -52,17 +54,6 @@ def gatherProjectInfo(def teamInfo, def projectId) {
     validateProjectInfo(projectInfo)
 
     return projectInfo
-}
-
-def setRemoteRepoDeployKeyId(def projectInfo) {
-    if (!projectInfo.teamInfo.serviceAccountUid) {
-        saUidScript = "oc get sa ${el.cicd.JENKINS_SERVICE_ACCOUNT} --ignore-not-found -n ${projectInfo.teamInfo.cicdMasterNamespace} -o jsonpath='{.metadata.uid}'"
-        projectInfo.teamInfo.serviceAccountUid = sh(returnStdout: true, script: saUidScript)
-    }
-    
-    if (projectInfo.teamInfo.serviceAccountUid) {
-        projectInfo.repoDeployKeyId = "${projectInfo.teamInfo.cicdMasterNamespace}|${projectInfo.id}"
-    }
 }
 
 def readProjectYaml(def teamInfo, def projectId) {
