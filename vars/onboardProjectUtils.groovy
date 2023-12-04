@@ -181,7 +181,7 @@ def setupProjectPvResources(def projectInfo) {
                 cat ${volumeCicdConfigFile}
                 
                 set +e
-                helm install \
+                helm upgrade --install \
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
                     -n ${projectInfo.teamInfo.cicdMasterNamespace} \
