@@ -18,7 +18,7 @@ void call(Map args) {
     
     [el.cicd.BUILDER, el.cicd.TESTER].each { buildStep ->
         stage("Test step: ${buildStep.toUpperCase()}") {
-            moduleUtils.runBuildStep(projectInfo, module, buildStep, moduleType)
+            moduleUtils.runBuildStep(projectInfo, module, buildStep, 'TEST MODULE')
         }
     }
 }
