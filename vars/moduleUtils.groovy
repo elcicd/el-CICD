@@ -143,7 +143,7 @@ def getPipelineBuildStepFile(def module, def buildStepName) {
         pipelineBuildStepFile :  "${el.cicd.BUILDER_STEPS_DIR}/${buildStepName}.groovy"
 }
 
-def runSelectedModulePipelines(def projectInfo, def modules, def title) {
+def runSelectedModulePipelines(def projectInfo, def modules, def title, def params = []) {
     loggingUtils.echoBanner("RUNNING SELECTED ${title.toUpperCase()} PIPELINES")
 
     def runPipelineStages =  concurrentUtils.createParallelStages("Run ${title} pipelines", modules) { module ->
@@ -151,7 +151,7 @@ def runSelectedModulePipelines(def projectInfo, def modules, def title) {
 
         pipelineSuffix = module.isArtifact ? el.cicd.BUILD_ARTIFACT_PIPELINE_SUFFIX : 
             (module.isComponent ? el.cicd.BUILD_COMPONENT_PIPELINE_SUFFIX : el.cicd.RUN_TEST_COMPONENT_PIPELINE_SUFFIX)
-        build(job: "${projectInfo.id}-${module.name}-${pipelineSuffix}", wait: true)
+        build(job: "${projectInfo.id}-${module.name}-${pipelineSuffix}", wait: true, parameters: params)
 
         echo "--> ${module.name} ${module.isTestComponent ? 'test(s)' : 'build'} complete"
     }
