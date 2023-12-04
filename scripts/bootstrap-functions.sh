@@ -246,7 +246,7 @@ __bootstrap_el_cicd_onboarding_server() {
 
     _create_rbac_helpers
 
-    CREDS_INSTALLED=$(helm list -q --filter elcicd-jenkins-secrets)
+    local CREDS_INSTALLED=$(helm list -q --filter elcicd-jenkins-secrets -n ${EL_CICD_MASTER_NAMESPACE})
     if [[ -z ${CREDS_INSTALLED} || ${EL_CICD_SKIP_CREDENTIAL_REFRESH} != ${_TRUE} ]]
     then
         _refresh_el_cicd_credentials
@@ -345,8 +345,7 @@ __create_onboarding_automation_server() {
 __remove_failed_jenkins_server() {
     local _JENKINS_DEPLOYMENT_NAME=${1}
 
-    if [[ $(helm list -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${_JENKINS_DEPLOYMENT_NAME}$) && \
-          $(oc get pods -l name=${_JENKINS_DEPLOYMENT_NAME} -o jsonpath='{.items[*].status.containerStatuses[0].ready}') != 'true' ]]
+    if [[ $(helm list --failed -q -n ${EL_CICD_MASTER_NAMESPACE} | grep -E ^${_JENKINS_DEPLOYMENT_NAME}$) ]]
     then
         echo
         echo 'Removing failed/incomplete Jenkins deployment'
