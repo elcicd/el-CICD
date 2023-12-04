@@ -5,6 +5,8 @@ elCicdTemplates-elcicd-kust:
       elcicd.io/teamid: $<TEAM_ID>
       elcicd.io/projectid: $<PROJECT_ID>
       elcicd.io/component: $<COMPONENT_NAME>
+    labels:
+      deploy-time: "$<EL_CICD_DEPLOYMENT_TIME>"
     
     configMapGenerator:
     - name: $<PROJECT_ID>-$<COMPONENT_NAME>-$<META_INFO_POSTFIX>
