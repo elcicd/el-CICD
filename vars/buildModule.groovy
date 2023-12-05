@@ -16,7 +16,7 @@ void call(Map args) {
         moduleUtils.cloneModule(module)
     }
     
-    def moduleType = module.isArtifact ? 'ARTIFACT' : (module.isComponent ? 'COMPONENT' : 'TEST MODULE')
+    def moduleType = module.isArtifact ? 'ARTIFACT' : 'COMPONENT' 
     [el.cicd.BUILDER, el.cicd.TESTER, el.cicd.ANALYZER, el.cicd.ASSEMBLER].each { buildStep ->
         stage("Build step: ${buildStep.toUpperCase()}") {
             moduleUtils.runBuildStep(projectInfo, module, buildStep, moduleType)

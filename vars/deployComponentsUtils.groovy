@@ -48,7 +48,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
             sh """
                 rm -f ${tmpValuesFile}
-                DIR_ARRAY=(.  ${projectInfo.elCicdProfiles.join(' ')})
+                DIR_ARRAY=(. ${projectInfo.elCicdProfiles.join(' ')})
 
                 set +e
                 VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
@@ -146,6 +146,8 @@ def getProjectCommonHelmValues(def projectInfo) {
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}"
     ]
 
+    elCicdDefaults = [:]
+    elCicdDefaults.putAll(projectInfo.elCicdDefaults)
     elCicdDefaults = [
         imagePullSecret: imagePullSecret,
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
