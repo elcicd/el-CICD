@@ -50,7 +50,19 @@ def call(Map args) {
         }
     }
     
-    stage(
+    stage('Run test components') {
+        componentsToTest = []
+        componentsToDeploy.each { component ->
+            testCompNames = components.tests?.get(projectInfo.deployToEnv)
+            testCompNames?.each { testCompName ->
+                componentsToTest.add(projectInfo.testComponents.find { it.name == testCompName })
+            }
+        }
+        
+        if (componentsToTest) {
+            echo "Need to test ${componentsToTest}"
+        }
+    }
     
     stage('Summary') {
         componentsToRemove.each { it.flaggedForRemoval = true }
