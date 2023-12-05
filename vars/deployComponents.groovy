@@ -10,47 +10,49 @@ def call(Map args) {
     def componentsToRemove = args.componentsToRemove ?: []
 
     if (!componentsToDeploy && !componentsToRemove) {
-        loggingUtils.errorBanner("NO COMPONENTS TO DEPLOY OR REMOVE")
+        loggingUtils.errorBanner('NO COMPONENTS TO DEPLOY OR REMOVE')
     }
 
 
-    stage ("Clean up failed upgrades/installs") {
-        loggingUtils.echoBanner("CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS")
+    stage ('Clean up failed upgrades/installs') {
+        loggingUtils.echoBanner('CLEAN UP ANY PREVIOUSLY FAILED UPGRADES/INSTALLS')
         deployComponentsUtils.cleanupFailedInstalls(projectInfo)
     }
 
-    stage("Remove component(s)") {
+    stage('Remove component(s)') {
         if (componentsToRemove) {            
             deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
         }
         else {
-            loggingUtils.echoBanner("NO COMPONENTS TO REMOVE: SKIPPING")
+            loggingUtils.echoBanner('NO COMPONENTS TO REMOVE: SKIPPING')
         }
     }
 
-    stage("Setup component directories") {
+    stage('Setup component directories') {
         if (componentsToDeploy) {
-            loggingUtils.echoBanner("SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:", componentsToDeploy.collect { it.name }.join(', '))
+            loggingUtils.echoBanner('SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:', componentsToDeploy.collect { it.name }.join(', '))
 
             deployComponentsUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
         }
         else {
-            loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
+            loggingUtils.echoBanner('NO COMPONENTS TO DEPLOY: SKIPPING')
         }
     }
 
-    stage("Deploy component(s)") {
+    stage('Deploy component(s)') {
         if (componentsToDeploy) {
-            loggingUtils.echoBanner("DEPLOY COMPONENT(S):", componentsToDeploy.collect { it.name }.join(', '))
+            loggingUtils.echoBanner('DEPLOY COMPONENT(S):', componentsToDeploy.collect { it.name }.join(', '))
 
             deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
         }
         else {
-            loggingUtils.echoBanner("NO COMPONENTS TO DEPLOY: SKIPPING")
+            loggingUtils.echoBanner('NO COMPONENTS TO DEPLOY: SKIPPING')
         }
     }
     
-    stage("Summary") {
+    stage(
+    
+    stage('Summary') {
         componentsToRemove.each { it.flaggedForRemoval = true }
         componentsToDeploy.each { it.flaggedForDeployment = true }
         

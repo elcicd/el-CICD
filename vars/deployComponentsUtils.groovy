@@ -147,7 +147,11 @@ def getProjectCommonHelmValues(def projectInfo) {
     ]
 
     elCicdDefaults = [:]
-    elCicdDefaults.putAll(projectInfo.elCicdDefaults)
+    echo "projectInfo.elCicdDefaults: ${projectInfo.elCicdDefaults}"
+    if (projectInfo.elCicdDefaults) {
+        elCicdDefaults.putAll(projectInfo.elCicdDefaults)
+    }
+    
     elCicdDefaults = [
         imagePullSecret: imagePullSecret,
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
