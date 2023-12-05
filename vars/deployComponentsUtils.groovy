@@ -56,7 +56,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                                 -exec echo -n ' {}' \\; 2>/dev/null)
                 set -e
 
-                helm template \${VALUES_FILES/ / -f } -f ${elCicdOverlayDir}/${componentConfigFile} \
+                helm template \${VALUES_FILES/ / -f } \
+                    -f ${elCicdOverlayDir}/${componentConfigFile} \
+                    -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
                      --set outputMergedValuesYaml=true \
                      render-values-yaml ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
 
@@ -185,8 +187,6 @@ def runComponentDeploymentStages(def projectInfo, def components) {
         dir(component.deploymentDir) {
             sh """
                 helm upgrade --install --atomic --history-max=1 --output yaml \
-                    -f values.yaml \
-                    -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
                     -n ${projectInfo.deployToNamespace} \
                     ${component.name} \
                     . \
