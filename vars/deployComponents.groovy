@@ -53,7 +53,7 @@ def call(Map args) {
     stage('Run test components') {
         componentsToTest = []
         componentsToDeploy.each { component ->
-            testCompNames = components.tests?.get(projectInfo.deployToEnv)
+            testCompNames = component.tests?.get(projectInfo.deployToEnv)
             testCompNames?.each { testCompName ->
                 componentsToTest.add(projectInfo.testComponents.find { it.name == testCompName })
             }

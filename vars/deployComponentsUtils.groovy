@@ -147,18 +147,17 @@ def getProjectCommonHelmValues(def projectInfo) {
     ]
 
     elCicdDefaults = [:]
-    echo "projectInfo.elCicdDefaults: ${projectInfo.elCicdDefaults}"
     if (projectInfo.elCicdDefaults) {
         elCicdDefaults.putAll(projectInfo.elCicdDefaults)
     }
     
-    elCicdDefaults = [
+    elCicdDefaults.putAll([
         imagePullSecret: imagePullSecret,
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
         SDLC_ENV: projectInfo.deployToEnv,
         TEAM_ID: projectInfo.teamInfo.id,
         PROJECT_ID: projectInfo.id
-    ]
+    ])
 
     def elCicdProfiles = projectInfo.elCicdProfiles.clone()
     return [global: [elCicdProfiles: elCicdProfiles], elCicdDefs: elCicdDefs, elCicdDefaults: elCicdDefaults]
