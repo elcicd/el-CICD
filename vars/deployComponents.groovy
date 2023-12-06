@@ -56,6 +56,8 @@ def call(Map args) {
     stage('Summary') {
         componentsToRemove.each { it.flaggedForRemoval = true }
         componentsToDeploy.each { it.flaggedForDeployment = true }
+        testComponents.each { it.flaggedForTest
+        
         
         deployComponentsUtils.outputDeploymentSummary(projectInfo)
     }

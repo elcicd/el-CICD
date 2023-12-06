@@ -78,7 +78,7 @@ def node(Map args, Closure body) {
         label: "${jenkinsAgent}",
         cloud: 'openshift',
         podRetention: onFailure(),
-        idleMinutes: "${el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
+        idleMinutes: "${args.isTest ? '0' : el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         namespace: agentNamespace,
         yaml: """
           spec:

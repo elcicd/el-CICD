@@ -263,7 +263,7 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
 }
 
 def getTestComponents(def projectInfo, def componentsToDeploy) {
-    componentsToTest = []
+    componentsToTest = [:].keySet()
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
         testCompsList?.each { testCompMap ->
@@ -289,24 +289,37 @@ def runTestComponents(def projectInfo, def componentsToTest) {
 
 def outputDeploymentSummary(def projectInfo) {
     def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
-    projectInfo.components.each { component ->
-        if (component.flaggedForDeployment || component.flaggedForRemoval) {
+    projectInfo.modules.each { module ->
+        if (module.flaggedForDeployment || module.flaggedForRemoval || module.flaggedForTest) {
             resultsMsgs += "**********"
             resultsMsgs += ''
-            def checkoutBranch = component.deploymentBranch ?: component.gitBranch
-            resultsMsgs += component.flaggedForDeployment ? "${component.name} DEPLOYED FROM GIT:" : "${component.name} REMOVED FROM NAMESPACE"
-            if (component.flaggedForDeployment) {
-                def refs = component.gitBranch.startsWith(component.srcCommitHash) ?
-                    "    Git image source ref: ${component.srcCommitHash}" :
-                    "    Git image source refs: ${component.gitBranch} / ${component.srcCommitHash}"
-
-                resultsMsgs += "    Git deployment ref: ${checkoutBranch}"
+            def checkoutBranch = module.deploymentBranch ?: module.gitBranch
+            resultsMsgs +=  getResultMsg(module)
+            
+            if (module.flaggedForDeployment) {
+                resultsMsgs += "    Git image source refs: ${module.srcCommitHash}"
+            }
+            
+            if (!module.flaggedForRemoval)
                 resultsMsgs += "    git checkout ${checkoutBranch}"
             }
+            
             resultsMsgs += ''
         }
     }
     resultsMsgs += "**********"
 
     loggingUtils.echoBanner(resultsMsgs)
+}
+
+def getResultMsg(def module) {
+    if (module.flaggedForDeployment) {
+        return "${module.name} DEPLOYED FROM GIT:"
+    }
+    else if (module.flaggedForDeployment) {
+        return "${module.name} REMOVED FROM NAMESPACE"
+    }
+    else {
+        return "${module.name} RAN FOR TESTS"
+    }
 }
