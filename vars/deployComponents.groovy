@@ -36,15 +36,12 @@ def call(Map args) {
         echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
     }
 
-    stage('Deploy component(s)') {
-        if (componentsToDeploy) {
-            loggingUtils.echoBanner('DEPLOY COMPONENT(S):', componentsToDeploy.collect { it.name }.join(', '))
+    loggingUtils.echoBanner('DEPLOY COMPONENT(S):', componentsToDeploy.collect { it.name }.join(', '))
 
-            deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
-        }
-        else {
-            loggingUtils.echoBanner('NO COMPONENTS TO DEPLOY: SKIPPING')
-        }
+    deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+    
+    if (!componentsToDeploy) {
+        echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
     }
     
     def testComponents = deployComponentsUtils.getTestComponents(projectInfo, componentsToDeploy)

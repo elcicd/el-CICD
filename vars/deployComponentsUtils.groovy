@@ -231,7 +231,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
-    concurrentUtils.runParallelStages("Deploying", components) { component ->
+    concurrentUtils.runParallelStages("Deploy components", components) { component ->
         dir(component.deploymentDir) {
             sh """
                 helm upgrade --install --atomic --history-max=1 --output yaml \
@@ -263,16 +263,18 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
 }
 
 def getTestComponents(def projectInfo, def componentsToDeploy) {
-    componentsToTest = [:].keySet()
+    componentsToTestSet = [:].keySet()
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
         testCompsList?.each { testCompMap ->
             if (testCompMap.enabled) {
-                componentsToTest.add(projectInfo.testComponents.find { testCompMap.name == it.name })
+                componentsToTestSet.add(projectInfo.testComponents.find { testCompMap.name == it.name })
             }
         }
     }
 
+    componentsToTest = []
+    componentsToTest.addAll(componentsToTestSet)
     return componentsToTest
 }
 
