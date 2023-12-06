@@ -73,7 +73,7 @@ def runVerifyImagesExistStages(def projectInfo) {
                                       usernameVariable: 'REGISTRY_USERNAME',
                                       passwordVariable: 'REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
-        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
+        concurrentUtils.runParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_TO,
                                                    'REGISTRY_USERNAME',
                                                    'REGISTRY_PWD',
@@ -88,8 +88,6 @@ def runVerifyImagesExistStages(def projectInfo) {
                 verifedMsgs << "   VERIFIED: ${image} IN ${imageRepo}"
             }
         }
-
-        parallel(verifyImageStages)
 
         if (verifedMsgs.size() > 1) {
             loggingUtils.echoBanner(verifedMsgs)
@@ -108,7 +106,7 @@ def runTagImagesStages(def projectInfo) {
     {
         def imageRepoUserNamePwd = el.cicd["${projectInfo.ENV_TO}${el.cicd.REGISTRY_USERNAME_POSTFIX}"] + ":\${REGISTRY_PULL_TOKEN}"
         def stageTitle = "Tag Images"
-        def tagImagesStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
+        concurrentUtils.runParallelStages(stageTitle, projectInfo.componentsToRedeploy) { component ->
             def tagImageCmd =
                 shCmd.tagImage(projectInfo.ENV_TO,
                                'REGISTRY_USERNAME',
@@ -122,7 +120,5 @@ def runTagImagesStages(def projectInfo) {
                 ${tagImageCmd}
             """
         }
-
-        parallel(tagImagesStages)
     }
 }

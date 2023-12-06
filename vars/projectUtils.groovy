@@ -37,7 +37,7 @@ def uninstallSdlcEnvironments(def projectInfo) {
 }
 
 def removeGitDeployKeysFromProject(def moduleList) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
+    concurrentUtils.runParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             dir(module.workDir) {
                 sh """
@@ -55,12 +55,10 @@ def removeGitDeployKeysFromProject(def moduleList) {
             }
         }
     }
-
-    parallel(buildStages)
 }
 
 def createNewGitDeployKeysForProject(def moduleList) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT deploy keys', moduleList) { module ->
+    concurrentUtils.runParallelStages('Setup GIT deploy keys', moduleList) { module ->
         withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
             def projectInfo = module.projectInfo
             dir(module.workDir) {
@@ -86,12 +84,10 @@ def createNewGitDeployKeysForProject(def moduleList) {
             }
         }
     }
-
-    parallel(buildStages)
 }
 
 def removeGitWebhooksFromProject(def moduleList) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', moduleList) { module ->
+    concurrentUtils.runParallelStages('Setup GIT webhooks', moduleList) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 dir(module.workDir) {
@@ -114,12 +110,10 @@ def removeGitWebhooksFromProject(def moduleList) {
             echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED: SKIPPING"
         }
     }
-
-    parallel(buildStages)
 }
 
 def createNewGitWebhooksForProject(def moduleList) {
-    def buildStages =  concurrentUtils.createParallelStages('Setup GIT webhooks', moduleList) { module ->
+    concurrentUtils.runParallelStages('Setup GIT webhooks', moduleList) { module ->
         if (!module.disableWebhook) {
             withCredentials([string(credentialsId: el.cicd.EL_CICD_GIT_ADMIN_ACCESS_TOKEN_ID, variable: 'GIT_ACCESS_TOKEN')]) {
                 def projectInfo = module.projectInfo
@@ -152,8 +146,6 @@ def createNewGitWebhooksForProject(def moduleList) {
             echo "-->  WARNING: WEBHOOK FOR ${module.name} MARKED AS DISABLED: SKIPPING"
         }
     }
-
-    parallel(buildStages)
 }
 
 def getDeleteDeployKeyFunctionCall(def module) {

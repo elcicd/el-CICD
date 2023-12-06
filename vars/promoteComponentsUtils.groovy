@@ -61,7 +61,7 @@ def runVerifyImagesExistStages(def projectInfo) {
                                       usernameVariable: 'REGISTRY_USERNAME',
                                       passwordVariable: 'REGISTRY_PWD')]) {
         def stageTitle = "Verify Image(s) Exist In Registry"
-        def verifyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+        concurrentUtils.runParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             def verifyImageCmd = shCmd.verifyImage(projectInfo.ENV_FROM,
                                                    'REGISTRY_USERNAME',
                                                    'REGISTRY_PWD',
@@ -77,8 +77,6 @@ def runVerifyImagesExistStages(def projectInfo) {
                 verifedMsgs << "   VERIFIED: ${component.id}:${projectInfo.deployFromEnv} IN ${imageRepo}"
             }
         }
-
-        parallel(verifyImageStages)
 
         if (verifedMsgs.size() > 1) {
             loggingUtils.echoBanner(verifedMsgs)
@@ -170,7 +168,7 @@ def runPromoteImagesStages(def projectInfo) {
                                       passwordVariable: 'TO_OCI_REGISTRY_PWD')])
     {
         def stageTitle = "Promote images"
-        def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+        concurrentUtils.runParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.deployFromEnv} TO ${projectInfo.deployToEnv}")
                                     
             def promoteTag = "${projectInfo.deployToEnv}-${component.srcCommitHash}"
@@ -205,7 +203,5 @@ def runPromoteImagesStages(def projectInfo) {
                 ${shCmd.echo msg}
             """
         }
-
-        parallel(copyImageStages)
     }
 }

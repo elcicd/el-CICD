@@ -19,7 +19,7 @@ def call(Map args) {
             deployComponentsUtils.removeComponents(projectInfo, projectInfo.components)
         }
         else {
-            echo "CLEANING NAMESPACE NOT SELECTED; SKIPPING..."
+            echo "CLEANING NAMESPACE NOT SELECTED: SKIPPING..."
         }
     }
  

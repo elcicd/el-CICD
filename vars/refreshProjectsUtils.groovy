@@ -76,52 +76,46 @@ def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def pr
 
 def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESHING PIPELINES NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING PIPELINES NOT REQUESTED: SKIPPING"
     }
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh pipelines", refreshProjectInfoList) { projectInfo ->
+    concurrentUtils.runParallelStages("Refresh pipelines", refreshProjectInfoList) { projectInfo ->
         echo "--> REFRESHING PIPELINES FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectPipelines(projectInfo)
     }
-
-    parallel(refreshStages)
 }
 
 def refreshProjectSdlcEnvironments(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESHING SDLC ENVIRONMENTS NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING SDLC ENVIRONMENTS NOT REQUESTED: SKIPPING"
     }
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh SDLC environments", refreshProjectInfoList) { projectInfo ->
+    concurrentUtils.runParallelStages("Refresh SDLC environments", refreshProjectInfoList) { projectInfo ->
         echo "--> REFRESHING SDLC ENVIRONMENTS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setProjectSdlc(projectInfo)
     }
-
-    parallel(refreshStages)
 }
 
 def refreshProjectCredentials(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED: SKIPPING"
     }
 
     def refreshProjectInfoList = shouldRefresh ? projectInfoList : []
-    def refreshStages = concurrentUtils.createParallelStages("Refresh project credentials", refreshProjectInfoList) { projectInfo ->
+    concurrentUtils.runParallelStages("Refresh project credentials", refreshProjectInfoList) { projectInfo ->
         echo "--> REFRESHING PROJECT CREDENTIALS FOR PROJECT ${projectInfo.teamInfo.id}:${projectInfo.id}"
 
         onboardProjectUtils.setupProjectCredentials(projectInfo)
     }
-
-    parallel(refreshStages)
 }
 
 def refreshCredentials(def projectInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED; SKIPPING"
+        echo "--> REFRESHING PROJECT CREDENTIALS NOT REQUESTED: SKIPPING"
     }
 
     def refreshProjectModuleList = []
@@ -143,19 +137,17 @@ def refreshCredentials(def projectInfoList, def shouldRefresh) {
 
 def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
     if (!shouldRefresh) {
-        echo '--> REFRESH TEAM SERVERS NOT REQUESTED; SKIPPING'
+        echo '--> REFRESH TEAM SERVERS NOT REQUESTED: SKIPPING'
     }
     
     def refreshTeamServerList = shouldRefresh ? teamInfoList : []
-    def refreshTeamServerStages = concurrentUtils.createParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
+    concurrentUtils.runParallelStages('Refresh team servers', refreshTeamServerList) { teamInfo -> 
         echo "--> REFRESH TEAM ${teamInfo.id} SERVER"
         onboardProjectUtils.setupTeamCicdServer(teamInfo)
 
         echo "--> SYNCHRONIZE JENKINS WITH PROJECT PIPELINE CONFIGURATION FOR ALL TEAM ${teamInfo.id} PROJECTS"
         projectUtils.syncJenkinsPipelines(teamInfo)
     }
-
-    parallel(refreshTeamServerStages)
 }
 
 def removeUndeployedTeams(def projectRefreshMap) {

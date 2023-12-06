@@ -24,7 +24,7 @@ def call(Map args) {
             refreshProjectsUtils.confirmProjectsForRefresh(projectRefreshMap, args)
         }
         else {
-            echo '--> USER CONFIRMATION NOT REQUESTED; SKIPPING'
+            echo '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'
         }
     }
     

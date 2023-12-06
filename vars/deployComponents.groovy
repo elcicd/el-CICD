@@ -28,15 +28,12 @@ def call(Map args) {
         }
     }
 
-    stage('Setup component directories') {
-        if (componentsToDeploy) {
-            loggingUtils.echoBanner('SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:', componentsToDeploy.collect { it.name }.join(', '))
+    loggingUtils.echoBanner('SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:', componentsToDeploy.collect { it.name }.join(', '))
 
-            deployComponentsUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
-        }
-        else {
-            loggingUtils.echoBanner('NO COMPONENTS TO DEPLOY: SKIPPING')
-        }
+    deployComponentsUtils.setupDeploymentDirs(projectInfo, componentsToDeploy)
+            
+    if (!componentsToDeploy) {
+        echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
     }
 
     stage('Deploy component(s)') {
@@ -59,7 +56,7 @@ def call(Map args) {
             runTestComponents(projectInfo, testComponents)
         }
         else {
-            echo '->> NO TEST COMPONENTS TO RUN; SKIPPING'
+            echo '->> NO TEST COMPONENTS TO RUN: SKIPPING'
         }
         
     }

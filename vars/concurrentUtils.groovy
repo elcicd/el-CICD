@@ -4,7 +4,7 @@
  * Utilities for creating and running parallel stages.
  */
 
-def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
+def runParallelStages(def stageTitle, def listItems, Closure stageSteps) {
     listItems = listItems.collect()
 
     def parallelStages = [failFast: true]
@@ -26,7 +26,7 @@ def createParallelStages(def stageTitle, def listItems, Closure stageSteps) {
         }
     }
     
-    return parallelStages
+    parallel(parallelStages)
 }
 
 def synchronized synchronizedRemoveListItem(def listItems) {
@@ -37,9 +37,7 @@ def synchronized synchronizedRemoveListItem(def listItems) {
 
 def runCloneGitReposStages(def projectInfo, def modules, Closure postProcessing = null) {
     loggingUtils.echoBanner("CLONING MODULES FROM GIT:", modules.collect { "${it.gitRepoName}:${projectInfo.gitBranch}" })
-    def cloneStages = createParallelStages("Clone Git Repo(s)", modules) { module ->
+    def cloneStages = runParallelStages("Clone Git Repo(s)", modules) { module ->
         projectInfoUtils.cloneGitRepo(module, projectInfo.gitBranch, postProcessing)
     }
-
-    parallel(cloneStages)
 }

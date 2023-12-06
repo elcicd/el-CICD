@@ -146,7 +146,7 @@ def getPipelineBuildStepFile(def module, def buildStepName) {
 def runSelectedModulePipelines(def projectInfo, def modules, def title, def params = []) {
     loggingUtils.echoBanner("RUNNING SELECTED ${title.toUpperCase()} PIPELINES")
 
-    def runPipelineStages =  concurrentUtils.createParallelStages("Run ${title} pipelines", modules) { module ->
+    concurrentUtils.runParallelStages("Run ${title} pipelines", modules) { module ->
         echo "--> Running ${module.isTestComponent ? 'test' : 'build'} ${module.name}"
 
         pipelineSuffix = module.isArtifact ? el.cicd.BUILD_ARTIFACT_PIPELINE_SUFFIX : 
@@ -156,13 +156,11 @@ def runSelectedModulePipelines(def projectInfo, def modules, def title, def para
         echo "--> ${module.name} ${module.isTestComponent ? 'test(s)' : 'build'} complete"
     }
 
-    parallel(runPipelineStages)
-
     if (modules) {
         loggingUtils.echoBanner("SELECTED ${title.toUpperCase()} PIPELINES COMPLETE")
     }
     else {
-        loggingUtils.echoBanner("NO ${title.toUpperCase()} PIPELINES SELECTED; SKIPPING")
+        loggingUtils.echoBanner("NO ${title.toUpperCase()} PIPELINES SELECTED: SKIPPING")
     }
 }
 

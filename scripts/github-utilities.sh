@@ -55,7 +55,7 @@ _delete_git_repo_deploy_key() {
             echo "DELETED DEPLOY KEY ${KEY_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
         done
     else
-        echo "NO DEPLOY KEYS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}; SKIPPING"
+        echo "NO DEPLOY KEYS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}: SKIPPING"
     fi
 }
 
@@ -130,7 +130,7 @@ _delete_webhook() {
             echo "--> DELETED GITHUB WEBHOOK ${HOOK_ID} FROM ${_GITHUB_ORG}/${_REPO_NAME}"
         done
     else
-        echo "--> NO GITHUB WEBHOOKS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}; SKIPPING"
+        echo "--> NO GITHUB WEBHOOKS FOUND FOR ${_GITHUB_ORG}/${_REPO_NAME}: SKIPPING"
     fi
 }
 

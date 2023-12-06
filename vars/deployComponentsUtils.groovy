@@ -24,7 +24,7 @@ def removeComponents(def projectInfo, def modules) {
         then
             helm uninstall \${RELEASES} --wait -n ${projectInfo.deployToNamespace}
         else
-            ${shCmd.echo 'NOTHING TO CLEAN FROM NAMESPACE; SKIPPING...'}
+            ${shCmd.echo 'NOTHING TO CLEAN FROM NAMESPACE: SKIPPING...'}
         fi
     """
 
@@ -36,7 +36,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
 
-    componentsToDeploy.each { component ->
+    concurrentUtils.runParallelStages("Setup component deployment directories ", components) { component ->
         dir(component.deploymentDir) {
             dir(elCicdOverlayDir) {
                 def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
@@ -55,9 +55,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
             """
 
-            componentsToDeploy.each { component ->
-                moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
-            }
+            moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
         }
     }
 }
@@ -221,7 +219,7 @@ def getComponentConfigValues(def projectInfo, def component, def imageRegistry, 
 }
 
 def runComponentDeploymentStages(def projectInfo, def components) {
-    def helmStages = concurrentUtils.createParallelStages("Deploying", components) { component ->
+    concurrentUtils.runParallelStages("Deploying", components) { component ->
         dir(component.deploymentDir) {
             sh """
                 helm upgrade --install --atomic --history-max=1 --output yaml \
@@ -233,8 +231,6 @@ def runComponentDeploymentStages(def projectInfo, def components) {
             """
         }
     }
-
-    parallel(helmStages)
 
     waitForAllTerminatingPodsToFinish(projectInfo)
 }

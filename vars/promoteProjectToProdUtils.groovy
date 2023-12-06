@@ -153,7 +153,7 @@ def promoteReleaseCandidateImages(def projectInfo) {
                                       passwordVariable: 'TO_OCI_REGISTRY_PWD')])
     {
         def stageTitle = "Promoting to Prod"
-        def copyImageStages = concurrentUtils.createParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
+        concurrentUtils.runParallelStages(stageTitle, projectInfo.componentsToPromote) { component ->
             loggingUtils.echoBanner("PROMOTING AND TAGGING ${component.name} IMAGE FROM ${projectInfo.preProdEnv} TO ${projectInfo.prodEnv}")
                                     
             def copyImage =
@@ -177,7 +177,5 @@ def promoteReleaseCandidateImages(def projectInfo) {
                 ${shCmd.echo msg}
             """
         }
-
-        parallel(copyImageStages)
     }
 }
