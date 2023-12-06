@@ -19,13 +19,10 @@ def call(Map args) {
         deployComponentsUtils.cleanupFailedInstalls(projectInfo)
     }
 
-    stage('Remove component(s)') {
-        if (componentsToRemove) {            
-            deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
-        }
-        else {
-            loggingUtils.echoBanner('NO COMPONENTS TO REMOVE: SKIPPING')
-        }
+    deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
+            
+    if (!componentsToRemove) {     
+        echo '--> NO COMPONENTS TO REMOVE: SKIPPING'
     }
 
     loggingUtils.echoBanner('SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:', componentsToDeploy.collect { it.name }.join(', '))
@@ -44,16 +41,16 @@ def call(Map args) {
         echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
     }
     
-    def testComponents = deployComponentsUtils.getTestComponents(projectInfo, componentsToDeploy)
+    def componentsToTest = deployComponentsUtils.getTestComponents(projectInfo, componentsToDeploy)
     
-    loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', testComponents.collect { it.name }.join(', '))
+    loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', componentsToTest.collect { it.name }.join(', '))
     
-    deployComponentsUtils.runTestComponents(projectInfo, testComponents)
+    deployComponentsUtils.runTestComponents(projectInfo, componentsToTest)
     
     stage('Summary') {
         componentsToRemove.each { it.flaggedForRemoval = true }
         componentsToDeploy.each { it.flaggedForDeployment = true }
-        testComponents.each { it.flaggedForTest }
+        componentsToTest.each { it.flaggedForTest }
         
         
         deployComponentsUtils.outputDeploymentSummary(projectInfo)

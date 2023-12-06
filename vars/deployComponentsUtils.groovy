@@ -263,6 +263,8 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
 }
 
 def getTestComponents(def projectInfo, def componentsToDeploy) {
+    echo 'howdy'
+    sleep 1
     componentsToTestSet = [:].keySet()
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
@@ -272,9 +274,14 @@ def getTestComponents(def projectInfo, def componentsToDeploy) {
             }
         }
     }
+    echo 'howdy 1'
+    sleep 1
 
     componentsToTest = []
     componentsToTest.addAll(componentsToTestSet)
+    
+    echo 'componentsToTest: ${componentsToTest}'
+    sleep 1
     return componentsToTest
 }
 
