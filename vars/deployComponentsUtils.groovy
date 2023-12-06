@@ -44,9 +44,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
             }
 
             sh """
-                ${getMergedValuesScript(projectInfo, component, def componentConfigFile)}
+                ${getMergedValuesScript(projectInfo, component, componentConfigFile)}
 
-                ${getKustomizationYamlCreationScript(projectInfo, component, def componentConfigFile)}
+                ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile)}
 
                 ${getChartYamlCreationScript(projectInfo, component)}
 
@@ -260,7 +260,7 @@ def getTestComponents(def projectInfo) {
             }
         }
     }
-    
+
     return componentsToTest
 }
 
