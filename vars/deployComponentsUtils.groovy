@@ -37,7 +37,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
 
-    concurrentUtils.runParallelStages("Setup component deployment directories ", componentsToDeploy) { component ->
+    concurrentUtils.runParallelStages("Configure component deployments", componentsToDeploy) { component ->
         dir(component.deploymentDir) {
             dir(elCicdOverlayDir) {
                 def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
@@ -54,6 +54,8 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
                 ${getUpdateHelmDependenciesScript(projectInfo, component)}
 
                 ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
+                
+                ls -al
             """
 
             moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
