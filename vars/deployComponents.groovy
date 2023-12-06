@@ -47,19 +47,11 @@ def call(Map args) {
         }
     }
     
-    stage('Run test components') {
-        def testComponents = deployComponentsUtils.getTestComponents(projectInfo)
-        
-        if (testComponents) {
-            loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', testComponents.collect { it.name }.join(', '))
-            
-            runTestComponents(projectInfo, testComponents)
-        }
-        else {
-            echo '->> NO TEST COMPONENTS TO RUN: SKIPPING'
-        }
-        
-    }
+    def testComponents = deployComponentsUtils.getTestComponents(projectInfo, componentsToDeploy)
+    
+    loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', testComponents.collect { it.name }.join(', '))
+    
+    deployComponentsUtils.runTestComponents(projectInfo, testComponents)
     
     stage('Summary') {
         componentsToRemove.each { it.flaggedForRemoval = true }

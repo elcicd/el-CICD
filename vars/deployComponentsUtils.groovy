@@ -55,6 +55,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
                 ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
                 
+                ${shCmd.echo "--> ${component.name} FINAL CHART CONFIGURED FOR RENDERING:"}}
                 ls -al
             """
 
@@ -251,7 +252,7 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
     """
 }
 
-def getTestComponents(def projectInfo) {
+def getTestComponents(def projectInfo, def componentsToDeploy) {
     componentsToTest = []
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
