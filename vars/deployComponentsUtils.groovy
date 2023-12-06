@@ -35,96 +35,134 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
-    def tmpValuesFile = 'values.yaml.tmp'
-    def defaultChartValuesYaml = projectInfo.releaseVersion ? 'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
 
     componentsToDeploy.each { component ->
         dir(component.deploymentDir) {
-            def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
             dir(elCicdOverlayDir) {
                 def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
 
             sh """
-                rm -f ${tmpValuesFile}
-                DIR_ARRAY=(. ${projectInfo.elCicdProfiles.join(' ')})
+                ${getMergedValuesScript(projectInfo, component, def componentConfigFile)}
 
-                set +e
-                VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
-                                '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
-                                -exec echo -n ' {}' \\; 2>/dev/null)
-                set -e
+                ${getKustomizationYamlCreationScript(projectInfo, component, def componentConfigFile)}
 
-                helm template \${VALUES_FILES/ / -f } \
-                    -f ${elCicdOverlayDir}/${componentConfigFile} \
-                    -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
-                     --set outputMergedValuesYaml=true \
-                     render-values-yaml ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+                ${getChartYamlCreationScript(projectInfo, component)}
 
-                ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
+                ${getUpdateHelmDependenciesScript(projectInfo, component)}
 
-                cat  ${tmpValuesFile}
-
-                ${shCmd.echo('')}
-                rm -f \${VALUES_FILES}
-                mv ${tmpValuesFile} values.yaml
-
-                ${shCmd.echo('')}
-                helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
-                              -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
-                              ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
-                ${shCmd.echo('')}
-                cat ${elCicdOverlayDir}/kustomization.yaml
-                
-                ${shCmd.echo('')}
-                UPDATE_DEPENDENCIES='update-dependencies'
-                if [[ ! -f Chart.yaml ]]
-                then
-                    helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
-                                  --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \
-                                  -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
-                                  ${component.name} \
-                                  ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
-
-                    ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elcicd-chart:")}
-
-                    cat Chart.yaml
-
-                    ${shCmd.echo('')}
-                    if [[ '${projectInfo.deployToEnv}' == '${projectInfo.prodEnv}' ]]
-                    then
-                        unset UPDATE_DEPENDENCIES
-                    fi
-                fi
-
-                if [[ "\${UPDATE_DEPENDENCIES}" ]]
-                then
-                    ${shCmd.echo('', "--> ${component.name} is using a custom Helm chart and/or is being prepared for a non-prod deployment:")}
-                    helm dependency update
-                    ${shCmd.echo('')}
-                fi
-
-                cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
-
-                if [[ '${projectInfo.deployToEnv}' != '${projectInfo.prodEnv}' ]]
-                then
-                    ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}; use post-renderer:")}
-
-                    cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
-                    chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
-
-                    ${shCmd.echo('')}
-                else
-                    ${shCmd.echo('',
-                                 "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:",
-                                 '    NO POST-RENDERER REQUIRED',
-                                 ''
-                    )}
-                fi
+                ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
             """
+
+            componentsToDeploy.each { component ->
+                moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
+            }
         }
     }
+}
+
+def getMergedValuesScript(def projectInfo, def component, def componentConfigFile) {
+    def tmpValuesFile = 'values.yaml.tmp'
+
+    return """
+        rm -f ${tmpValuesFile}
+        DIR_ARRAY=(. ${projectInfo.elCicdProfiles.join(' ')})
+
+        set +e
+        VALUES_FILES=\$(find \${DIR_ARRAY[@]} -maxdepth 1 -type f \
+                        '(' -name '*values*.yaml' -o -name '*values*.yml' ')' \
+                        -exec echo -n ' {}' \\; 2>/dev/null)
+        set -e
+
+        helm template \${VALUES_FILES/ / -f } \
+            -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-component-values.yaml \
+            -f ${elCicdOverlayDir}/${componentConfigFile} \
+                --set outputMergedValuesYaml=true \
+                render-values-yaml ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${tmpValuesFile}
+
+        ${loggingUtils.shellEchoBanner("Merged ${component.name} Helm values.yaml")}
+
+        cat  ${tmpValuesFile}
+
+        ${shCmd.echo('')}
+        rm -f \${VALUES_FILES}
+        mv ${tmpValuesFile} values.yaml
+    """
+}
+
+def getKustomizationYamlCreationScript(def projectInfo, def component, def componentConfigFile) {
+    def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
+
+    return """
+        ${shCmd.echo('')}
+        helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
+                        -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/kust-chart-values.yaml \
+                        ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > ${elCicdOverlayDir}/kustomization.yaml
+        ${shCmd.echo('')}
+        cat ${elCicdOverlayDir}/kustomization.yaml
+    """
+}
+
+def getChartYamlCreationScript(def projectInfo, def component) {
+    def defaultChartValuesYaml = projectInfo.releaseVersion ?
+        'helm-subchart-yaml-values.yaml' : 'helm-chart-yaml-values.yaml'
+
+    return """
+        ${shCmd.echo('')}
+        UPDATE_DEPENDENCIES='update-dependencies'
+        if [[ ! -f Chart.yaml ]]
+        then
+            helm template --set-string elCicdDefs.VERSION=${projectInfo.releaseVersion ?: '0.1.0'} \
+                            --set-string elCicdDefs.HELM_REPOSITORY_URL=${el.cicd.EL_CICD_HELM_OCI_REGISTRY} \
+                            -f ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${defaultChartValuesYaml} \
+                            ${component.name} \
+                            ${el.cicd.EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart | sed -E '/^#|^---/d' > Chart.yaml
+
+            ${shCmd.echo('', "--> No Chart.yaml found for ${component.name}; generating default Chart.yaml elcicd-chart:")}
+
+            cat Chart.yaml
+
+            cp -R ${el.cicd.EL_CICD_CHARTS_TEMPLATE_DIR}  ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/.helmignore .
+        fi
+    """
+}
+
+def getUpdateHelmDependenciesScript(def projectInfo, def component) {
+    return """
+        ${shCmd.echo('')}
+        if [[ '${projectInfo.deployToEnv}' == '${projectInfo.prodEnv}' ]]
+        then
+            unset UPDATE_DEPENDENCIES
+        fi
+
+        if [[ "\${UPDATE_DEPENDENCIES}" ]]
+        then
+            ${shCmd.echo('', "--> ${component.name} is using a custom Helm chart and/or is being prepared for a non-prod deployment:")}
+            helm dependency update
+            ${shCmd.echo('')}
+        fi
+    """
+}
+
+def getCopyElCicdPostRendererScriptScript(def projectInfo, def component) {
+    return """
+        if [[ '${projectInfo.deployToEnv}' != '${projectInfo.prodEnv}' ]]
+        then
+            ${shCmd.echo('', "--> Deploying ${component.name} to ${projectInfo.deployToEnv}; use post-renderer:")}
+
+            cp ${el.cicd.EL_CICD_TEMPLATE_CHART_DIR}/${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} .
+            chmod +x ${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE}
+
+            ${shCmd.echo('')}
+        else
+            ${shCmd.echo('',
+                            "--> ${component.name} is a subchart of ${projectInfo.id} and deploying to ${projectInfo.deployToEnv}:",
+                            '    NO POST-RENDERER REQUIRED',
+                            ''
+            )}
+        fi
+    """
 }
 
 def getProjectCommonHelmValues(def projectInfo) {
@@ -153,7 +191,7 @@ def getProjectCommonHelmValues(def projectInfo) {
     if (projectInfo.elCicdDefaults) {
         elCicdDefaults.putAll(projectInfo.elCicdDefaults)
     }
-    
+
     elCicdDefaults.putAll([
         imagePullSecret: imagePullSecret,
         ingressHostDomain: "${ingressHostDomain}.${el.cicd.CLUSTER_WILDCARD_DOMAIN}",
@@ -214,6 +252,31 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
             ${shCmd.echo '', '--> NO TERMINATING PODS REMAINING', ''}
         fi
     """
+}
+
+def getTestComponents(def projectInfo) {
+    componentsToTest = []
+    componentsToDeploy.each { component ->
+        testCompsList = component.tests?.get(projectInfo.deployToEnv)
+        testCompsList?.each { testCompMap ->
+            if (testCompMap.enabled) {
+                componentsToTest.add(projectInfo.testComponents.find { testCompMap.name == it.name })
+            }
+        }
+    }
+    
+    return componentsToTest
+}
+
+def runTestComponents(def projectInfo, def componentsToTest) {
+    if (componentsToTest) {
+        def params = [
+            string(name: 'TEST_ENV', value: projectInfo.deployToEnv),
+            string(name: 'GIT_BRANCH', value: projectInfo.gitBranch)
+        ]
+
+        moduleUtils.runSelectedModulePipelines(projectInfo, componentsToTest, 'Test Modules', params)
+    }
 }
 
 def outputDeploymentSummary(def projectInfo) {

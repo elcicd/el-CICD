@@ -51,17 +51,17 @@ def call(Map args) {
     }
     
     stage('Run test components') {
-        componentsToTest = []
-        componentsToDeploy.each { component ->
-            testCompNames = component.tests?.get(projectInfo.deployToEnv)
-            testCompNames?.each { testCompName ->
-                componentsToTest.add(projectInfo.testComponents.find { it.name == testCompName })
-            }
+        def testComponents = deployComponentsUtils.getTestComponents(projectInfo)
+        
+        if (testComponents) {
+            loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', testComponents.collect { it.name }.join(', '))
+            
+            runTestComponents(projectInfo, testComponents)
+        }
+        else {
+            echo '->> NO TEST COMPONENTS TO RUN; SKIPPING'
         }
         
-        if (componentsToTest) {
-            echo "Need to test ${componentsToTest}"
-        }
     }
     
     stage('Summary') {

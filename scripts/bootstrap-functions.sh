@@ -354,7 +354,7 @@ __remove_failed_jenkins_server() {
 }
 
 _run_custom_config_script() {
-    CUSTOM_CONFIG_SCRIPT=${1}
+    local CUSTOM_CONFIG_SCRIPT=${1}
 
     echo
     echo "LOOKING FOR CUSTOM CONFIGURATION SCRIPT '${CUSTOM_CONFIG_SCRIPT}' in ${EL_CICD_CONFIG_BOOTSTRAP_DIR}..."
