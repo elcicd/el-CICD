@@ -57,7 +57,7 @@ def gatherComponentScripts(def projectInfo, def componentsToDeploy) {
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
             
-            componentsToDeployMap[component.name] = """
+            componentScriptMap[component.name] = """
                     ${getMergedValuesScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
                     ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
