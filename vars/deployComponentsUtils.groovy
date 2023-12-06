@@ -267,19 +267,13 @@ def getTestComponents(def projectInfo, def componentsToDeploy) {
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
         testCompsList?.each { testCompMap ->
-            echo "testCompMap: ${testCompMap}"
             if (testCompMap.enabled) {
-                testComponent = projectInfo.testComponents.find { testComp ->
-                    testCompMap.name == testComp.name
-                }
-                componentsToTestSet.add(testComponent)
+                componentsToTestSet.add(testCompMap.name)
             }
         }
     }
 
-    componentsToTest = []
-    componentsToTest.addAll(componentsToTestSet)
-    return componentsToTest
+    return projectInfo.testComponents.findAll { componentsToTestSet.contains(it.name) }
 }
 
 def runTestComponents(def projectInfo, def componentsToTest) {
