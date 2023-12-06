@@ -32,6 +32,7 @@ def removeComponents(def projectInfo, def modules) {
 }
 
 def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
+    def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
@@ -44,9 +45,9 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
             }
 
             sh """
-                ${getMergedValuesScript(projectInfo, component, componentConfigFile)}
+                ${getMergedValuesScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
-                ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile)}
+                ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
                 ${getChartYamlCreationScript(projectInfo, component)}
 
@@ -60,7 +61,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
     }
 }
 
-def getMergedValuesScript(def projectInfo, def component, def componentConfigFile) {
+def getMergedValuesScript(def projectInfo, def component, def componentConfigFile, def elCicdOverlayDir) {
     def tmpValuesFile = 'values.yaml.tmp'
 
     return """
@@ -89,9 +90,7 @@ def getMergedValuesScript(def projectInfo, def component, def componentConfigFil
     """
 }
 
-def getKustomizationYamlCreationScript(def projectInfo, def component, def componentConfigFile) {
-    def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
-
+def getKustomizationYamlCreationScript(def projectInfo, def component, def componentConfigFile, def elCicdOverlayDir) {
     return """
         ${shCmd.echo('')}
         helm template -f ${elCicdOverlayDir}/${componentConfigFile} \
