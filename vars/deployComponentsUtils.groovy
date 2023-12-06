@@ -36,7 +36,7 @@ def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
 
     concurrentUtils.runParallelStages("Configure component deployments", componentsToDeploy) { component ->
         dir(component.deploymentDir) {
-            sh (script: componentScriptMap[component.name]
+            sh (script: componentScriptMap[component.name])
 
             moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
         }
