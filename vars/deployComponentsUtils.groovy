@@ -289,7 +289,9 @@ def runTestComponents(def projectInfo, def componentsToTest) {
 
 def outputDeploymentSummary(def projectInfo) {
     def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
-    projectInfo.modules.each { module ->
+    
+    def summaryComponents = projectInfo.components + projectInfo.testComponents 
+    summaryComponents.each { module ->
         if (module.flaggedForDeployment || module.flaggedForRemoval || module.flaggedForTest) {
             resultsMsgs += "**********"
             resultsMsgs += ''
