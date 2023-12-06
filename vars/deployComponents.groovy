@@ -41,7 +41,11 @@ def call(Map args) {
         echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
     }
     
+    echo 'whatever'
+    sleep 5
     def componentsToTest = deployComponentsUtils.getTestComponents(projectInfo, componentsToDeploy)
+    echo 'back'
+    sleep 5
     
     loggingUtils.echoBanner('RUNNING TEST COMPONENT(S):', componentsToTest.collect { it.name }.join(', '))
     
