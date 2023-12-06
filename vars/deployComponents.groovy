@@ -19,10 +19,13 @@ def call(Map args) {
         deployComponentsUtils.cleanupFailedInstalls(projectInfo)
     }
 
-    deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
-            
-    if (!componentsToRemove) {     
-        echo '--> NO COMPONENTS TO REMOVE: SKIPPING'
+    stage('Remove component(s)') {
+        if (componentsToRemove) {            
+            deployComponentsUtils.removeComponents(projectInfo, componentsToRemove)
+        }
+        else {
+            loggingUtils.echoBanner('NO COMPONENTS TO REMOVE: SKIPPING')
+        }
     }
 
     loggingUtils.echoBanner('SETUP COMPONENT(S) DEPLOYMENT DIRECTORY:', componentsToDeploy.collect { it.name }.join(', '))
