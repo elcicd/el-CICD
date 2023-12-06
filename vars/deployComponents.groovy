@@ -35,7 +35,7 @@ def call(Map args) {
 
     loggingUtils.echoBanner('DEPLOY COMPONENT(S):', componentsToDeploy.collect { it.name }.join(', '))
 
-    deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
+    // deployComponentsUtils.runComponentDeploymentStages(projectInfo, componentsToDeploy)
     
     if (!componentsToDeploy) {
         echo '--> NO COMPONENTS TO DEPLOY: SKIPPING'
