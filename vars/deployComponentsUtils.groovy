@@ -32,36 +32,46 @@ def removeComponents(def projectInfo, def modules) {
 }
 
 def setupDeploymentDirs(def projectInfo, def componentsToDeploy) {
+    componentScriptMap = gatherComponentScripts(projectInfo, componentsToDeploy)
+
+    concurrentUtils.runParallelStages("Configure component deployments", componentsToDeploy) { component ->
+        dir(component.deploymentDir) {
+            sh (script: componentScriptMap[component.name]
+
+            moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
+        }
+    }
+}
+
+def gatherComponentScripts(def projectInfo, def componentsToDeploy) {
     def elCicdOverlayDir = "${el.cicd.KUSTOMIZE_DIR}/${el.cicd.EL_CICD_OVERLAY_DIR}"
     def commonConfigValues = getProjectCommonHelmValues(projectInfo)
     def imageRegistry = el.cicd["${projectInfo.deployToEnv.toUpperCase()}${el.cicd.OCI_REGISTRY_POSTFIX}"]
     def componentConfigFile = 'elCicdValues.yaml'
 
-    concurrentUtils.runParallelStages("Configure component deployments", componentsToDeploy) { component ->
+    componentScriptMap = [:]
+    componentsToDeploy.each { component ->
         dir(component.deploymentDir) {
             dir(elCicdOverlayDir) {
                 def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
+            
+            componentsToDeployMap[component.name] = """
+                    ${getMergedValuesScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
-            sh """
-                ${getMergedValuesScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
+                    ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
-                ${getKustomizationYamlCreationScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
+                    ${getChartYamlCreationScript(projectInfo, component)}
 
-                ${getChartYamlCreationScript(projectInfo, component)}
+                    ${getUpdateHelmDependenciesScript(projectInfo, component)}
 
-                ${getUpdateHelmDependenciesScript(projectInfo, component)}
-
-                ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
-                
-                ${shCmd.echo "--> ${component.name} FINAL CHART CONFIGURED FOR RENDERING:"}}
-                ls -al
+                    ${getCopyElCicdPostRendererScriptScript(projectInfo, component)}
             """
-
-            moduleUtils.runBuildStep(projectInfo, component, el.cicd.LINTER, 'COMPONENT')
         }
     }
+
+    return componentScriptMap
 }
 
 def getMergedValuesScript(def projectInfo, def component, def componentConfigFile, def elCicdOverlayDir) {
