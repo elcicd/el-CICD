@@ -270,9 +270,9 @@ def getTestComponents(def projectInfo, def componentsToDeploy) {
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
         testCompsList?.each { testCompMap ->
             echo "testCompMap: ${testCompMap}"
-            // if (testCompMap.enabled) {
-            //     componentsToTestSet.add(projectInfo.testComponents.find { testCompMap.name == it.name })
-            // }
+            if (testCompMap.enabled) {
+                componentsToTestSet.add(projectInfo.testComponents.find { testCompMap.name == it.name })
+            }
         }
     }
     echo 'howdy 1'
