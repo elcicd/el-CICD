@@ -300,7 +300,7 @@ def outputDeploymentSummary(def projectInfo) {
                 resultsMsgs += "    Git image source refs: ${module.srcCommitHash}"
             }
             
-            if (!module.flaggedForRemoval)
+            if (!module.flaggedForRemoval) {
                 resultsMsgs += "    git checkout ${checkoutBranch}"
             }
             
