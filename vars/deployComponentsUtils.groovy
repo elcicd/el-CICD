@@ -263,26 +263,22 @@ def waitForAllTerminatingPodsToFinish(def projectInfo) {
 }
 
 def getTestComponents(def projectInfo, def componentsToDeploy) {
-    echo 'howdy'
-    sleep 5
     componentsToTestSet = [:].keySet()
     componentsToDeploy.each { component ->
         testCompsList = component.tests?.get(projectInfo.deployToEnv)
         testCompsList?.each { testCompMap ->
             echo "testCompMap: ${testCompMap}"
             if (testCompMap.enabled) {
-                componentsToTestSet.add(projectInfo.testComponents.find { testCompMap.name == it.name })
+                testComponent = projectInfo.testComponents.find { testComp ->
+                    testCompMap.name == testComp.name
+                }
+                componentsToTestSet.add(testComponent)
             }
         }
     }
-    echo 'howdy 1'
-    sleep 5
 
     componentsToTest = []
     componentsToTest.addAll(componentsToTestSet)
-    
-    echo 'componentsToTest: ${componentsToTest}'
-    sleep 1
     return componentsToTest
 }
 
