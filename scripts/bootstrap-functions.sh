@@ -215,17 +215,21 @@ _create_rbac_helpers() {
     local _HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
     if [[ ${INSTALL_SEALED_SECRETS} != ${_YES} || "${_HAS_SEALED_SECRETS}" ]]
     then
-        local _SET_PROFILES='--set-string elCicdProfiles={sealed-secrets}'
+        local _SET_PROFILES='sealed-secrets'
     fi
-
-    local _OKD_RBAC_VALUES_FILE=${OKD_VERSION:+"-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"}
+    
+    if [[ ${OKD_VERSION} ]]
+    then
+        local _OKD_RBAC_VALUES_FILE="-f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"
+        _SET_PROFILES+="${_SET_PROFILES:+,}okd"
+    fi
 
     echo
     echo 'Installing el-CICD RBAC helpers.'
     echo
     set -ex
     helm upgrade --install --atomic --history-max=1 \
-        ${_SET_PROFILES} ${_OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
+        --set-string elCicdProfiles={${_SET_PROFILES}} ${_OKD_RBAC_VALUES_FILE} -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
         -n kube-system \
         elcicd-cluster-rbac-resources \
         ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart

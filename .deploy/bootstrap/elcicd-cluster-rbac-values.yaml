@@ -8,7 +8,6 @@ elCicdTemplates:
 - templateName: clusterRole
   objName: elcicd-user
   mustHaveEveryProfile:
-  - cicd
   - okd
   labels:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
