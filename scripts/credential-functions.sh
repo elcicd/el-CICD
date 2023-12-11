@@ -78,7 +78,7 @@ _check_upgrade_install_sealed_secrets() {
 _collect_sealed_secret_info() {
     echo
     HAS_SEALED_SECRETS=$(helm list --short --filter 'sealed-secrets' -n kube-system)
-    if [[ "${HAS_SEALED_SECRETS}" ]]
+    if [[ ${HAS_SEALED_SECRETS} ]]
     then
         echo "CURRENTLY INSTALLED SEALED SECRETS VERSION INFO:"
         helm list --filter 'sealed-secrets' --time-format "2006-01-02" -n kube-system
@@ -114,12 +114,11 @@ _install_sealed_secrets() {
     echo
     echo "Installing Sealed Secrets ${_BOLD}${SEALED_SECRETS_RELEASE_INFO}${_REGULAR}"
     echo
-    helm upgrade --install --atomic --create-namespace --history-max=2 \
-                 --set-string fullnameOverride=sealed-secrets-controller \
+    helm upgrade --install --atomic --history-max=2 \
                  --repo https://bitnami-labs.github.io/sealed-secrets \
                  --version ${SEALED_SECRETS_CHART_VERSION} \
                  -n kube-system \
-                 sealed-secrets
+                 sealed-secrets sealed-secrets
     echo
     echo '================= SEALED SECRETS ================='
 

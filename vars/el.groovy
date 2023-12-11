@@ -77,9 +77,10 @@ def node(Map args, Closure body) {
     podTemplate([
         label: "${jenkinsAgent}",
         cloud: 'openshift',
-        podRetention: onFailure(),
         idleMinutes: "${args.isTest ? '0' : el.cicd.JENKINS_AGENT_MEMORY_IDLE_MINUTES}",
         namespace: agentNamespace,
+        nodeSelector: "${el.cicd.JENKINS_AGENT_NODE_SELECETOR}",
+        showRawYaml: true,
         yaml: """
           spec:
             imagePullSecrets:

@@ -53,7 +53,7 @@ __gather_bootstrap_info() {
     _collect_sealed_secret_info
 
     EL_CICD_MASTER_NAMESPACE_EXISTS=$(oc get project ${EL_CICD_MASTER_NAMESPACE} -o name --no-headers --ignore-not-found)
-    if [[ -z ${EL_CICD_MASTER_NAMESPACE_EXISTS} && -z ${_HAS_SEALED_SECRETS} ]]
+    if [[ -z ${EL_CICD_MASTER_NAMESPACE_EXISTS} && -z ${HAS_SEALED_SECRETS} ]]
     then
         _confirm_upgrade_install_sealed_secrets
     fi

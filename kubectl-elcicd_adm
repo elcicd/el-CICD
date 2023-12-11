@@ -49,17 +49,13 @@ __parse_cli_flags() {
                 EL_CICD_ADM_COMMANDS+=('_oci_jenkins_registry_login' '_build_el_cicd_jenkins_agent_images')
 
                 unset JENKINS_SKIP_AGENT_BUILDS
-                if [[ ${2} =~ ^--?[a-zA-Z0-9-]+$ ]]
-                then
-                    ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS AGENT IMAGES"
-                else
-                    while [[ ${3} && ${2} && ${2} =~ ^[a-zA-Z0-9][a-zA-Z0-9-]+$ ]]
-                    do
-                        shift
-                        BUILD_AGENT_NAMES+="${1} "
-                    done
-                    ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS AGENT IMAGE(S) [$(echo ${BUILD_AGENT_NAMES} | xargs)]"
-                fi
+                while [[ ${3} && ${2} && ${2} =~ ^[a-zA-Z0-9][a-zA-Z0-9-]+$ ]]
+                do
+                    shift
+                    BUILD_AGENT_NAMES+="${1} "
+                done
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }BUILD JENKINS AGENT IMAGE(S) "
+                ELCICD_ADM_MSG+="${BUILD_AGENT_NAMES:+[}$(echo ${BUILD_AGENT_NAMES} | xargs)${BUILD_AGENT_NAMES:+]}"
             ;;
 
             '--assumeyes' | '-y')
@@ -130,17 +126,18 @@ __parse_cli_flags() {
             ;;
 
             -?-[\w-]+)
-                echo
-                echo "ERROR: Unknown command option '${1}'"
-                echo
-                echo "${EL_CICD_CLI_HELP_MSG}"
-                exit 1
+                _unknown_cmd_opt_msg_and_exit ${1}
             ;;
 
             [a-zA-Z0-9][a-zA-Z0-9-./]*)
-                if [[ ${ROOT_CONFIG_FILE} || ! -f ${EL_CICD_CONFIG_DIR}/${1} ]]
+                if [[ ${ROOT_CONFIG_FILE} ]]
                 then
-                    _unknown_cmd_opt_msg_and_exit
+                    _unknown_cmd_opt_msg_and_exit ${1}
+                elif [[ ! -f ${EL_CICD_CONFIG_DIR}/${1} ]]
+                then
+                    echo
+                    echo "ERROR: File ${1} NOT FOUND"
+                    exit 1
                 fi
 
                 ROOT_CONFIG_FILE=${EL_CICD_CONFIG_DIR}/${1}
@@ -149,9 +146,7 @@ __parse_cli_flags() {
             *)
                 if [[ -z ${ROOT_CONFIG_FILE} ]]
                 then
-                    echo
-                    echo 'ERROR: ROOT CONFIGURATION FILE MUST BE SPECIFIED'
-                    exit 1
+                    _unknown_cmd_opt_msg_and_exit ${1}
                 fi
             ;;
         esac
