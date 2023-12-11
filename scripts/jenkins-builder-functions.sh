@@ -45,6 +45,8 @@ _build_el_cicd_jenkins_agent_images() {
         __init_jenkins_build
 
         BUILD_AGENT_NAMES=${BUILD_AGENT_NAMES:-"${JENKINS_AGENT_DEFAULT} $(echo ${JENKINS_BUILD_AGENT_NAMES} | tr ':' ' ')"}
+        
+        __verify_all_agent_dockerfiles_exist "${BUILD_AGENT_NAMES}"
 
         for AGENT_NAME in ${BUILD_AGENT_NAMES}
         do
@@ -72,6 +74,21 @@ _build_el_cicd_jenkins_agent_images() {
         echo
         echo "JENKINS_SKIP_AGENT_BUILDS is set to 'true'.  Jenkins agent builds skipped."
     fi
+}
+
+__verify_all_agent_dockerfiles_exist() {
+    BUILD_AGENT_NAMES=${1}
+    
+    for AGENT_NAME in ${BUILD_AGENT_NAMES}
+    do
+        if [[ ! -f ${TARGET_JENKINS_BUILD_DIR}/Dockerfile.${AGENT_NAME} ]]
+        then
+            echo
+            echo "ERROR: Dockerfile FOR AGENT ${AGENT_NAME} DOES NOT EXIST [${EL_CICD_CONFIG_JENKINS_DIR}/Dockerfile.${AGENT_NAME}]"
+            echo
+            exit 1
+        fi
+    done
 }
 
 _base_jenkins_agent_exists() {

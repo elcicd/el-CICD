@@ -275,7 +275,7 @@ __create_onboarding_automation_server() {
     fi
 
     echo
-    echo 'Installing el-CICD Master server'
+    echo 'Upgrading/Installing el-CICD Master Server'
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
