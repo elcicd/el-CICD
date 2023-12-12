@@ -37,11 +37,16 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
 }
 
 def confirmTeamServersRefresh(def projectRefreshMap, def args) {
+    def teamList = []
+    projectRefreshMap.each { team, projectList ->
+        teamList.add("${team}: ${projectList}")
+    }
+    
     def msg = loggingUtils.createBanner(
-        projectRefreshMap.keySet(),
+        teamList,
         loggingUtils.BANNER_SEPARATOR,
         '',
-        'PLEASE REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS AND THE FOLLOWING CAREFULLY:',
+        'THE ABOVE LIST OF TEAMS WILL HAVE THE FOLLOWING DONE FOR EACH MATCHING PROJECT DEPLOYED:',
         '',
         "Team Servers ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         "Project pipelines ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
@@ -144,7 +149,7 @@ def removeUndeployedTeams(def projectRefreshMap) {
     teamNamespaceList = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }.join(' ')
     def namespaceScript = "oc get namespaces --ignore-not-found --no-headers ${teamNamespaceList} -o custom-columns=:metadata.name"
     projectNames = sh(returnStdout: true, script: namespaceScript).split("\n").collect { it - "-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
-    return projectRefreshMap.findAll { k, v ->
+    projectRefreshMap = projectRefreshMap.findAll { team, projectList ->
         projectNames.contains(k)
     }
 }
