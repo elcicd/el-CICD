@@ -54,15 +54,13 @@ def confirmTeamServersRefresh(def projectRefreshMap, def args) {
         "Project SDLC environments ${args.refreshEnvironments ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         "Project credentials ${args.refreshCredentials ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         '',
-        "Do you wish to continue?"
+        args.confirmBeforeRefreshing ? "Do you wish to continue?" : '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'
     )
 
     if (args.confirmBeforeRefreshing) {
         jenkinsUtils.displayInputWithTimeout(msg, args)
     }
     else {
-        echo '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'
-        echo ''
         echo msg
     }
 }
