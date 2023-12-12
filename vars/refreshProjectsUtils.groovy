@@ -31,8 +31,10 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
                 }
             }
         }
-
+        
+        echo "projectNames: ${projectNames}"
         removeUndeployedTeams(projectRefreshMap)
+        echo "projectNames: ${projectNames}"
     }
 
     return projectRefreshMap
@@ -146,6 +148,5 @@ def removeUndeployedTeams(def projectRefreshMap) {
     teamNamespaceList = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }.join(' ')
     def namespaceScript = "oc get namespaces --ignore-not-found --no-headers ${teamNamespaceList} -o custom-columns=:metadata.name"
     projectNames = sh(returnStdout: true, script: namespaceScript).split("\n").collect { it - "-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
-    echo "projectNames: ${projectNames}"
     projectRefreshMap.keySet().retainAll(projectNames)    
 }
