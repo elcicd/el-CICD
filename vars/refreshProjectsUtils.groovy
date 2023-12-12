@@ -44,9 +44,10 @@ def confirmTeamServersRefresh(def projectRefreshMap, def args) {
     
     def msg = loggingUtils.createBanner(
         teamList,
+        '',
         loggingUtils.BANNER_SEPARATOR,
         '',
-        'THE ABOVE LIST OF TEAMS WILL HAVE THE FOLLOWING DONE FOR EACH MATCHING PROJECT DEPLOYED:',
+        'THE ABOVE LIST OF TEAMS WILL HAVE THE FOLLOWING DONE FOR EACH DEPLOYED PROJECT:',
         '',
         "Team Servers ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         "Project pipelines ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
@@ -145,11 +146,20 @@ def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
     }
 }
 
-def removeUndeployedTeams(def projectRefreshMap) {
+def removeUndeployedTeamsAndProjects(def projectRefreshMap) {
     teamNamespaceList = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }.join(' ')
     def namespaceScript = "oc get namespaces --ignore-not-found --no-headers ${teamNamespaceList} -o custom-columns=:metadata.name"
     projectNames = sh(returnStdout: true, script: namespaceScript).split("\n").collect { it - "-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
     projectRefreshMap = projectRefreshMap.findAll { team, projectList ->
         projectNames.contains(team) && projectList
     }
+    
+    projectRefreshMap.collectEntries { team, projectList ->
+        def chartNameList = projectList.collect{ "${it}-${el.cicd.CREDENTIALS_POSTFIX}" }.join('|')
+        def helmScript = "helm list -q -n ${team}-${el.cicd.EL_CICD_MASTER_NAMESPACE} --filter '${chartNameList}'"
+        projectNames = sh(returnStdout: true, script: helmScript).split("\n").collect { it - "-${el.cicd.CREDENTIALS_POSTFIX}" }
+        return [team: projectNames]
+    }
+    
+    return projectRefreshMap.collectEntries { k,v -> v }
 }
