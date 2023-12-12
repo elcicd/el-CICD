@@ -32,9 +32,9 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
             }
         }
         
-        echo "projectNames: ${projectNames}"
+        echo "projectNames: ${projectRefreshMap}"
         removeUndeployedTeams(projectRefreshMap)
-        echo "projectNames: ${projectNames}"
+        echo "projectNames: ${projectRefreshMap}"
     }
 
     return projectRefreshMap
