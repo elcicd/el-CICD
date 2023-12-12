@@ -74,7 +74,7 @@ def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def pr
         }
     }
     
-    echo "teamInfoList: ${teamInfoList} / projectInfoList: ${projectInfoList}"
+    echo "teamInfoList: ${teamInfoList} / projectInfoList: ${projectInfoList.size()}"
 }
 
 def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
