@@ -5,12 +5,12 @@ elCicdDefs:
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
   JENKINS_INSTALL_DIR: /var/lib/jenkins
-  
+
   JENKINS_CASC: jenkins-casc
   JENKINS_CASC_YAML: jenkins-casc.yaml
   JENKINS_CASC_PATH: $<JENKINS_INSTALL_DIR>/$<JENKINS_CASC>
   CASC_RELOAD_TOKEN: elcicd
-  
+
   JENKINS_PLUGINS: jenkins-plugins
   JENKINS_PLUGINS_TXT: jenkins-plugins.txt
   JENKINS_PLUGINS_PATH: $<JENKINS_INSTALL_DIR>/$<JENKINS_PLUGINS>
@@ -43,7 +43,7 @@ elCicdTemplates:
     else
         echo "Jenkins plugins file not found $JENKINS_CICD_PLUGINS_FILE";
     fi;
-    
+
     cp $<JENKINS_CASC_PATH>/$<JENKINS_CASC_YAML> $<JENKINS_CONFIG_FILE_PATH>;
     chmod 777 $<JENKINS_CONFIG_FILE_PATH>/$<JENKINS_CASC_YAML>;
     java -Djenkins.install.runSetupWizard=false
@@ -55,7 +55,7 @@ elCicdTemplates:
   serviceAccountName: $<JENKINS_SERVICE_NAME>
   env:
   - name: JENKINS_JAVA_OVERRIDES
-    value: -D-XX:+UseParallelGC 
+    value: -D-XX:+UseParallelGC
            -D-XX:MinHeapFreeRatio=5
            -D-XX:MaxHeapFreeRatio=10
            -D-XX:GCTimeRatio=4
@@ -195,14 +195,14 @@ elCicdTemplates:
   - kind: ServiceAccount
     name: $<JENKINS_SERVICE_NAME>
     namespace: $<HELM_RELEASE_NAMESPACE>
-  
+
 - templateName: serviceAccount
   objName: $<JENKINS_REMOTE_SERVICE_NAME>
   mustHaveAnyProfile:
   - onboarding
   mustNotHaveAnyProfile:
   - cicd
-  
+
 - templateName: clusterRoleBinding
   objName: $<JENKINS_REMOTE_SERVICE_NAME>
   mustHaveAnyProfile:
@@ -278,7 +278,7 @@ elCicdTemplates:
   kind: ConfigMap
   fromNamespace: $<EL_CICD_MASTER_NAMESPACE>
   toNamespace: $<HELM_RELEASE_NAMESPACE>
-  
+
 - templateName: copyResource
   objNames: $<EL_CICD_GIT_REPOS_READ_ONLY_KEYS>
   mustHaveAnyProfile:

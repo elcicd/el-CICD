@@ -32,7 +32,9 @@ __main() {
         __configure_for_bootstrapping_server
     fi
 
-    _create_and_source_meta_info_files
+    _create_and_source_meta_info_files    
+    
+    EL_CICD_JENKINS_SECRETS_CHART=$(helm list -q --filter elcicd-jenkins-secrets -n ${EL_CICD_MASTER_NAMESPACE})
 
     sleep 2
 
@@ -85,19 +87,19 @@ __parse_cli_flags() {
             '--refresh-creds')
                 ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_create_rbac_helpers' '_refresh_el_cicd_credentials')
+                EL_CICD_ADM_COMMANDS+=('_create_rbac_helpers' '_refresh_el_cicd_credentials')
             ;;
 
             '--refresh-team-creds')
                 ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH ALL CICD SERVERS CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_refresh_team_credentials')
+                EL_CICD_ADM_COMMANDS+=('_refresh_team_credentials')
             ;;
 
             '--refresh-team-servers')
                 ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH ALL CICD SERVERS CREDENTIALS"
 
-                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_refresh_team_servers')
+                EL_CICD_ADM_COMMANDS+=('_refresh_team_servers')
             ;;
 
             '--sealed-secrets')
