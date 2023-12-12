@@ -32,6 +32,8 @@ def call(Map args) {
         refreshProjectsUtils.gatherAllProjectsInformation(projectRefreshMap, teamInfoList, projectInfoList)
     }
     
+    echo "OUTSIDE teamInfoList: ${teamInfoList} / projectInfoList: ${projectInfoList}"
+    
     refreshProjectsUtils.refreshProjectPipelines(projectInfoList, refreshPipelines)
     
     refreshProjectsUtils.refreshProjectSdlcEnvironments(projectInfoList, refreshEnvironments)

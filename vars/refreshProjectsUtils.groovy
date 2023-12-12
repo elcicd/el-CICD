@@ -73,6 +73,8 @@ def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def pr
             return projectInfoUtils.gatherProjectInfo(teamInfo, projectId)
         }
     }
+    
+    echo "teamInfoList: ${teamInfoList} / projectInfoList: ${projectInfoList}"
 }
 
 def refreshProjectPipelines(def projectInfoList, def shouldRefresh) {
