@@ -163,7 +163,7 @@ def removeUndeployedTeamsAndProjects(def projectRefreshMap) {
     
     echo "projectRefreshMap: ${projectRefreshMap}"
     
-    projectRefreshMap = projectRefreshMap.collectEntries { k,v -> v }
+    projectRefreshMap = projectRefreshMap.findAll { team, projectList -> projectList }
     
     echo "projectRefreshMap: ${projectRefreshMap}"
     
