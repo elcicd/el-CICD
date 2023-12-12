@@ -31,6 +31,8 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
                 }
             }
         }
+        
+        echo "projectRefreshMap: ${projectRefreshMap}"
 
         removeUndeployedTeams(projectRefreshMap)
     }

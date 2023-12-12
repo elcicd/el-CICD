@@ -50,30 +50,6 @@ _refresh_el_cicd_credentials() {
     set +e
 }
 
-_refresh_team_credentials() {
-    __trigger_refresh_projects \
-        "REFRESH_TEAM_SERVERS=false&REFRESH_PIPELINES=false&REFRESH_SDLC_ENVIRONMENTS=false&REFRESH_CREDENTIALS=true&CONFIRM_BEFORE_REFRESHING=false"
-}
-
-_refresh_team_servers() {
-    __trigger_refresh_projects \
-        "REFRESH_TEAM_SERVERS=true&REFRESH_PIPELINES=true&REFRESH_SDLC_ENVIRONMENTS=true&REFRESH_CREDENTIALS=true&CONFIRM_BEFORE_REFRESHING=false"
-}
-
-__trigger_refresh_projects() {
-    BUILD_PARAMETERS=${1}
-    set -ex
-    
-    local TOKEN_NAME=$(oc get secret -l elcicd.io/service-account.name=${JENKINS_REMOTE_SERVICE_ACCOUNT} -o name -n ${EL_CICD_MASTER_NAMESPACE})
-    local TOKEN=$(oc get ${TOKEN_NAME} -n ${EL_CICD_MASTER_NAMESPACE} -o jsonpath='{.data.token}' | base64 --decode)
-    
-    local AUTH_BEARER="Authorization:Bearer ${TOKEN}"
-    local REFRESH_URL="https://jenkins-${EL_CICD_MASTER_NAMESPACE}.${CLUSTER_WILDCARD_DOMAIN}/job/refresh-projects/buildWithParameters"
-    
-    curl -ksSL -X POST --fail-with-body -w '%{http_code}\n' -o /dev/null -H "${TOKEN}" ${REFRESH_URL}?${BUILD_PARAMETERS}
-    set +ex
-}
-
 __create_el_cicd_git_readonly_deploy_keys() {
     mkdir -p ${SECRET_FILE_DIR}
 
@@ -112,7 +88,7 @@ __create_jenkins_secrets() {
     echo
     _OCI_REGISTRY_IDS=$(echo ${_OCI_REGISTRY_IDS@L} | sed -e 's/\s\+/,/g')
     local _GIT_REPO_KEYS="${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID},${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
-    set -ex
+    set -e
     helm upgrade --install --atomic --create-namespace --history-max=1 \
         ${_PROFILE_FLAG}  \
         --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
@@ -127,7 +103,7 @@ __create_jenkins_secrets() {
         -n ${EL_CICD_MASTER_NAMESPACE} \
         elcicd-jenkins-secrets \
         ${EL_CICD_HELM_OCI_REGISTRY}/elcicd-chart
-    set +ex
+    set +e
 }
 
 __create_image_registry_values_flags() {

@@ -186,6 +186,32 @@ _oci_helm_registry_login() {
     fi
 }
 
+_refresh_team_credentials() {
+    __trigger_refresh_projects false false false true
+}
+
+_refresh_team_servers() {
+    __trigger_refresh_projects true true true true
+}
+
+__trigger_refresh_projects() {
+    BUILD_PARAMETERS="REFRESH_TEAM_SERVERS=${1}"
+    BUILD_PARAMETERS+="&REFRESH_PIPELINES=${2}"
+    BUILD_PARAMETERS+="&REFRESH_SDLC_ENVIRONMENTS=${3}"
+    BUILD_PARAMETERS+="&REFRESH_CREDENTIALS=${4}"
+    BUILD_PARAMETERS+="&CONFIRM_BEFORE_REFRESHING=false"
+    set -e
+    
+    local TOKEN_NAME=$(oc get secret ${JENKINS_REMOTE_SERVICE_ACCOUNT} -o name -n ${EL_CICD_MASTER_NAMESPACE})
+    local TOKEN=$(oc get ${TOKEN_NAME} -n ${EL_CICD_MASTER_NAMESPACE} -o jsonpath='{.data.token}' | base64 --decode)
+    
+    local AUTH_BEARER="Authorization:Bearer ${TOKEN}"
+    local REFRESH_URL="https://jenkins-${EL_CICD_MASTER_NAMESPACE}.${CLUSTER_WILDCARD_DOMAIN}/job/refresh-projects/buildWithParameters"
+    
+    curl -ksSL -X POST --fail-with-body -w '%{http_code}\n' -o /dev/null -H "${AUTH_BEARER}" ${REFRESH_URL}?${BUILD_PARAMETERS}
+    set +e
+}
+
 _oci_jenkins_registry_login() {
     _oci_registry_login ${JENKINS}
 }
