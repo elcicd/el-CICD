@@ -150,6 +150,6 @@ def removeUndeployedTeams(def projectRefreshMap) {
     def namespaceScript = "oc get namespaces --ignore-not-found --no-headers ${teamNamespaceList} -o custom-columns=:metadata.name"
     projectNames = sh(returnStdout: true, script: namespaceScript).split("\n").collect { it - "-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
     projectRefreshMap = projectRefreshMap.findAll { team, projectList ->
-        projectNames.contains(k)
+        projectNames.contains(team) && projectList
     }
 }
