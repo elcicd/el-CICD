@@ -21,7 +21,7 @@ def call(Map args) {
     
     stage('Confirm projects to be refreshed') {
         if (confirmBeforeRefreshing) {
-            refreshProjectsUtils.confirmProjectsForRefresh(projectRefreshMap, args)
+            refreshProjectsUtils.confirmTeamServersRefresh(projectRefreshMap, args)
         }
         else {
             echo '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'

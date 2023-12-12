@@ -31,28 +31,16 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
                 }
             }
         }
-        
-        echo "projectRefreshMap: ${projectRefreshMap}"
 
         removeUndeployedTeams(projectRefreshMap)
-        
-        echo "projectRefreshMap: ${projectRefreshMap}"
     }
 
     return projectRefreshMap
 }
 
-def confirmProjectsForRefresh(def projectRefreshMap, def args) {
-    def msgList = []
-    projectRefreshMap.each { teamName, projectList ->
-        msgList += [
-            "${teamName}: ${projectList}",
-            '',
-        ]
-    }
-
+def confirmTeamServersRefresh(def projectRefreshMap, def args) {
     def msg = loggingUtils.createBanner(
-        msgList,
+        projectRefreshMap.keySet(),
         loggingUtils.BANNER_SEPARATOR,
         '',
         'PLEASE REVIEW THE ABOVE LIST OF TEAMS AND PROJECTS AND THE FOLLOWING CAREFULLY:',
@@ -155,12 +143,8 @@ def refreshTeamCicdServers(def teamInfoList, def shouldRefresh) {
 }
 
 def removeUndeployedTeams(def projectRefreshMap) {
-    teamMasterNamespaces = projectRefreshMap.keySet().collect { "${it}-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
-
-    teamMasterNamespaces = sh(returnStdout: true, script: """
-            oc get namespaces --ignore-not-found --no-headers -o name ${teamMasterNamespaces.join(' ')} | \
-                sed -e 's|namespace/||g' -e 's|-${el.cicd.EL_CICD_MASTER_NAMESPACE}||g'
-        """).split('\n')
-
-    projectRefreshMap = projectRefreshMap.findAll { teamMasterNamespaces.contains(it.key) }
+    teamNamespaceList = projectRefreshMap.keySet().join("-${el.cicd.EL_CICD_MASTER_NAMESPACE} ")
+    def namespaceScript = "oc get namespaces --ignore-not-found --no-headers ${teamNamespaceList} -o custom-columns=:metadata.name"
+    projectNames = sh(returnStdout: true, script: namespaceScript).split("\n").collect { it - "-${el.cicd.EL_CICD_MASTER_NAMESPACE}" }
+    projectRefreshMap.keySet().retainAll(teamServers)    
 }
