@@ -8,6 +8,15 @@ import groovy.transform.Field
 @Field
 static def cicd = [:]
 
+def printParams(def params) {
+    if (params) {
+        paramsList = params.collect { param ->
+            return "${param.key} = ${param.value}"
+        }.reverse()
+        loggingUtils.echoBanner('PIPELINE PARAMETERS:', '', paramsList)
+    }
+}
+
 def initMetaData(Map metaData) {
     stage('Init Metadata') {
         loggingUtils.echoBanner("INITIALIZING METADATA...")

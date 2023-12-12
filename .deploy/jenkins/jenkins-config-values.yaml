@@ -1,5 +1,6 @@
 elCicdDefs:
   JENKINS_SERVICE_NAME: jenkins
+  JENKINS_REMOTE_SERVICE_NAME: jenkins-remote
   DISABLE_ADMINISTRATIVE_MONITORS: "false"
   KUBERNETES_MASTER: https://kubernetes.default:443
   ENABLE_FATAL_ERROR_LOG_FILE: "false"
@@ -163,27 +164,13 @@ elCicdTemplates:
 - templateName: configMap
   objName: openshift-jenkins-login-plugin-config
   mustHaveEveryProfile:
-  - cicd
   - okd
-  mustNotHaveAnyProfile:
-  - onboarding
   data:
     Overall-Administer: admin,edit
-    Overall-Read: elcicd-user
+    Overall-Read: admin,edit,elcicd-user
     Job-Build: elcicd-user
     Job-Cancel: elcicd-user
     Job-Read: elcicd-user
-
-- templateName: configMap
-  objName: openshift-jenkins-login-plugin-config
-  mustHaveEveryProfile:
-  - okd
-  - onboarding
-  mustNotHaveAnyProfile:
-  - cicd
-  data:
-    Overall-Administer: admin
-    Overall-Read: admin
 
 - templateName: ingress
   objName: $<JENKINS_SERVICE_NAME>
@@ -207,6 +194,28 @@ elCicdTemplates:
   subjects:
   - kind: ServiceAccount
     name: $<JENKINS_SERVICE_NAME>
+    namespace: $<HELM_RELEASE_NAMESPACE>
+  
+- templateName: serviceAccount
+  objName: $<JENKINS_REMOTE_SERVICE_NAME>
+  mustHaveAnyProfile:
+  - onboarding
+  mustNotHaveAnyProfile:
+  - cicd
+  
+- templateName: clusterRoleBinding
+  objName: $<JENKINS_REMOTE_SERVICE_NAME>
+  mustHaveAnyProfile:
+  - onboarding
+  mustNotHaveAnyProfile:
+  - cicd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: elcicd-user
+  subjects:
+  - kind: ServiceAccount
+    name: $<JENKINS_REMOTE_SERVICE_NAME>
     namespace: $<HELM_RELEASE_NAMESPACE>
 
 - templateName: roleBinding

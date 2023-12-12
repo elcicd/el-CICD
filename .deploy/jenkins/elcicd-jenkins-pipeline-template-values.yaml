@@ -1,21 +1,21 @@
-elCicdDefs:  
+elCicdDefs:
   TEAM_PIPELINE_CONFIG_MAP_DATA:
     contentKey: $<OBJ_NAME>
     $<OBJ_NAME>: $<EL_CICD_TEAM_PIPELINE_TEMPLATE>
     path: $<OBJ_NAME>.yaml
-  
+
   PROJECT_PIPELINE_CONFIG_MAP_DATA:
     contentKey: $<OBJ_NAME>
     $<OBJ_NAME>: $<EL_CICD_PROJECT_PIPELINE_TEMPLATE>
     path: $<OBJ_NAME>.yaml
-    
+
   JENKINS_PROJECT_FOLDER_DSL_SCRIPT: |-
     script: |-
       folder('$<FOLDER_NAME>') {
           displayName('$<FOLDER_NAME>')
           description('el-CICD generated pipelines for $<FOLDER_NAME>')
       }
-    
+
   JENKINS_PIPELINE_DSL_SCRIPT: |-
     script: |-
       pipelineJob('$<FOLDER_NAME>/$<OBJ_NAME>') {
@@ -26,7 +26,7 @@ elCicdDefs:
               maxPerNode(1)
               maxTotal(1)
           }
-          
+
           description("$<PIPELINE_DESCRIPTION>")
           displayName('$<PIPELINE_DISPLAY_NAME>')
           $<PIPELINE_PARAMS>
@@ -43,12 +43,15 @@ elCicdDefs:
                                         remote: elCicdData.EL_CICD_GIT_REPO,
                                         credentialsId: elCicdData.EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID]
                           library(identifier: "el-CICD@$elCicdData.EL_CICD_GIT_REPO_BRANCH_NAME", retriever: modernSCM(gitMap))
+                          
+                          el.printParams(params)
 
                           el.initMetaData(elCicdData)
                       }
 
                       def args = [
                           pipelineName: '$<OBJ_NAME>',
+                          params: params
                           $<EL_CICD_API_ARGS>
                       ]
                       el.node(args) {

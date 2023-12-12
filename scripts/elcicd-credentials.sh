@@ -50,6 +50,27 @@ _refresh_el_cicd_credentials() {
     set +e
 }
 
+_refresh_team_credentials() {
+    __trigger_refresh_projects \
+        "REFRESH_TEAM_SERVERS=false&REFRESH_PIPELINES=false&REFRESH_SDLC_ENVIRONMENTS=false&REFRESH_CREDENTIALS=true&CONFIRM_BEFORE_REFRESHING=false"
+}
+
+_refresh_team_servers() {
+    __trigger_refresh_projects \
+        "REFRESH_TEAM_SERVERS=true&REFRESH_PIPELINES=true&REFRESH_SDLC_ENVIRONMENTS=true&REFRESH_CREDENTIALS=true&CONFIRM_BEFORE_REFRESHING=false"
+}
+
+__trigger_refresh_projects() {
+    BUILD_PARAMETERS=${1}
+    
+    local TOKEN_NAME=$(oc -n ${EL_CICD_MASTER_NAMESPACE} get serviceaccount/${JENKINS_REMOTE_SERVICE_ACCOUNT} -o jsonpath='{.secrets[0].name}')
+    local TOKEN=$(oc -n ${EL_CICD_MASTER_NAMESPACE} get secret ${TOKEN_NAME} -o jsonpath='{.data.token}' | base64 --decode)
+    
+    local AUTH_BEARER="Authorization:Bearer ${TOKEN}"
+    local REFRESH_URL="https://jenkins-${EL_CICD_MASTER_NAMESPACE}.${CLUSTER_WILDCARD_DOMAIN}/job/refresh-projects/buildWithParameters"
+    curl -kssL -X POST -H "${TOKEN}" ${REFRESH_URL}?${BUILD_PARAMETERS}
+}
+
 __create_el_cicd_git_readonly_deploy_keys() {
     mkdir -p ${SECRET_FILE_DIR}
 

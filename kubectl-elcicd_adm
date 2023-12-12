@@ -88,10 +88,16 @@ __parse_cli_flags() {
                 EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_create_rbac_helpers' '_refresh_el_cicd_credentials')
             ;;
 
-            '--refresh-cicd-creds')
+            '--refresh-team-creds')
                 ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH ALL CICD SERVERS CREDENTIALS"
 
-                echo 'WARNING: NEED TO IMPLEMENT REFRESH ALL CICD SERVERS CREDENTIALS'
+                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_refresh_team_credentials')
+            ;;
+
+            '--refresh-team-servers')
+                ELCICD_ADM_MSG+="${ELCICD_ADM_MSG:+ / }REFRESH ALL CICD SERVERS CREDENTIALS"
+
+                EL_CICD_ADM_COMMANDS+=('_load_env_from_configmap' '_refresh_team_servers')
             ;;
 
             '--sealed-secrets')
