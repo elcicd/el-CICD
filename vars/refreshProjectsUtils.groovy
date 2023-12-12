@@ -47,7 +47,7 @@ def confirmTeamServersRefresh(def projectRefreshMap, def args) {
         '',
         loggingUtils.BANNER_SEPARATOR,
         '',
-        'THE ABOVE LIST OF TEAMS WILL HAVE THE FOLLOWING DONE FOR EACH DEPLOYED PROJECT:',
+        'THE ABOVE LIST OF TEAMS AND PROJECTS WILL HAVE THE FOLLOWING DONE:',
         '',
         "Team Servers ${args.refreshTeamServers ? 'WILL' : 'WILL NOT'} BE REFRESHED",
         "Project pipelines ${args.refreshPipelines ? 'WILL' : 'WILL NOT'} BE REFRESHED",
@@ -161,11 +161,7 @@ def removeUndeployedTeamsAndProjects(def projectRefreshMap) {
         return [team: projectNames]
     }
     
-    echo "projectRefreshMap: ${projectRefreshMap}"
-    
     projectRefreshMap = projectRefreshMap.findAll { team, projectList -> projectList }
-    
-    echo "projectRefreshMap: ${projectRefreshMap}"
     
     return projectRefreshMap
 }
