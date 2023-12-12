@@ -69,9 +69,9 @@ def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def pr
     projectRefreshMap.each { teamId, projectList ->
         def teamInfo = projectInfoUtils.gatherTeamInfo(teamId)
         teamInfoList.add(teamInfo)
-        projectInfoList += projectList.collect { projectId ->
+        projectInfoList.addAll(projectList.collect { projectId ->
             return projectInfoUtils.gatherProjectInfo(teamInfo, projectId)
-        }
+        })
     }
     
     echo "teamInfoList: ${teamInfoList} / projectInfoList: ${projectInfoList.size()}"
