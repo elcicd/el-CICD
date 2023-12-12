@@ -20,12 +20,7 @@ def call(Map args) {
     }
     
     stage('Confirm projects to be refreshed') {
-        if (confirmBeforeRefreshing) {
-            refreshProjectsUtils.confirmTeamServersRefresh(projectRefreshMap, args)
-        }
-        else {
-            echo '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'
-        }
+        refreshProjectsUtils.confirmTeamServersRefresh(projectRefreshMap, args)
     }
     
     teamInfoList = []

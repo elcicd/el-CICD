@@ -57,7 +57,14 @@ def confirmTeamServersRefresh(def projectRefreshMap, def args) {
         "Do you wish to continue?"
     )
 
-    jenkinsUtils.displayInputWithTimeout(msg, args)
+    if (args.confirmBeforeRefreshing) {
+        jenkinsUtils.displayInputWithTimeout(msg, args)
+    }
+    else {
+        echo '--> USER CONFIRMATION NOT REQUESTED: SKIPPING'
+        echo ''
+        echo msg
+    }
 }
 
 def gatherAllProjectsInformation(def projectRefreshMap, def teamInfoList, def projectInfoList) {
