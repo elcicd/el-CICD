@@ -32,7 +32,7 @@ def getProjectRefreshMap(def includeTeams, def includeProjects) {
             }
         }
         
-        return removeUndeployedTeams(projectRefreshMap)
+        return removeUndeployedTeamsAndProjects(projectRefreshMap)
     }
 }
 
