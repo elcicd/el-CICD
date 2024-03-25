@@ -22,7 +22,7 @@ __main() {
     _load_kubectl_msgs
 
     _echo_sudo_cluster_admin_warning
-    
+
     set +e
 
     __parse_cli_flags "${@}"
@@ -32,9 +32,9 @@ __main() {
         __configure_for_bootstrapping_server
     fi
 
-    _create_and_source_meta_info_files    
-    
-    EL_CICD_JENKINS_SECRETS_CHART=$(helm list -q --filter elcicd-jenkins-secrets -n ${EL_CICD_MASTER_NAMESPACE})
+    _create_and_source_meta_info_files
+
+    EL_CICD_JENKINS_SECRETS_CHART=$(helm list -q --filter elcicd-jenkins-secrets -n ${EL_CICD_MASTER_NAMESPACE} 2>/dev/null)
 
     sleep 2
 
@@ -114,7 +114,7 @@ __parse_cli_flags() {
 
                 EL_CICD_ADM_COMMANDS+=('_oci_helm_registry_login' '_bootstrap_lab_environment')
             ;;
-            
+
             '--skip-creds-refresh')
                 EL_CICD_SKIP_CREDENTIAL_REFRESH=${_TRUE}
             ;;

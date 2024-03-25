@@ -31,20 +31,20 @@ _get_oci_registry_ids() {
     then
         _OCI_REGISTRY_IDS+="${DEV_ENV} ${HOTFIX_ENV} ${TEST_ENVS/:/ } "
     fi
-    
+
     _OCI_REGISTRY_IDS+="${PRE_PROD_ENV} "
-    
+
     if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
         _OCI_REGISTRY_IDS+="${PROD_ENV} "
     fi
-    
+
     echo ${_OCI_REGISTRY_IDS}
 }
 
 _verify_oci_registry_secrets() {
     local _OCI_REGISTRY_IDS=$(_get_oci_registry_ids)
-    
+
     for OCI_REGISTRY_ID in ${_OCI_REGISTRY_IDS@L}
     do
         _oci_registry_login ${OCI_REGISTRY_ID}
@@ -127,7 +127,7 @@ _install_sealed_secrets() {
     local _SEALED_SECRETS_DIR=/tmp/sealedsecrets
     mkdir -p ${_SEALED_SECRETS_DIR}
     local _KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download"
-    _KUBESEAL_URL="${_KUBESEAL_URL}/${SEALED_SECRETS_RELEASE_VERSION}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:1}-linux-amd64.tar.gz"
+    _KUBESEAL_URL="${_KUBESEAL_URL}/v${SEALED_SECRETS_RELEASE_VERSION:?}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:?}-linux-amd64.tar.gz"
     sudo rm -f ${_SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
     wget -qc --show-progress ${_KUBESEAL_URL} -O ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${_SEALED_SECRETS_DIR}
@@ -138,18 +138,18 @@ _install_sealed_secrets() {
 
 _oci_registry_login() {
     OCI_REGISTRY_ID=${1}
-    
+
     local _OCI_USERNAME=$(_get_oci_username ${OCI_REGISTRY_ID})
     local _OCI_PASSWORD=$(_get_oci_password ${OCI_REGISTRY_ID})
     local _OCI_REGISTRY=${OCI_REGISTRY_ID@U}${OCI_REGISTRY_POSTFIX}
     local _ENABLE_TLS=${OCI_REGISTRY_ID@U}${OCI_ENABLE_TLS_POSTFIX}
-    
+
     if [[ "${_OCI_USERNAME}" && "${_OCI_PASSWORD}" && "${!_ENABLE_TLS}" && "${!_OCI_REGISTRY}" ]]
     then
         set -e
         echo
         echo -n "LOGIN TO ${OCI_REGISTRY_ID@U} OCI REGISTRY [${!_OCI_REGISTRY}]: "
-        echo ${_OCI_PASSWORD} | podman login ${!_OCI_REGISTRY} --tls-verify=${!_ENABLE_TLS} -u ${_OCI_USERNAME} --password-stdin 
+        echo ${_OCI_PASSWORD} | podman login ${!_OCI_REGISTRY} --tls-verify=${!_ENABLE_TLS} -u ${_OCI_USERNAME} --password-stdin
         set +e
     else
         PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))
@@ -160,22 +160,22 @@ _oci_registry_login() {
     fi
 }
 
-_oci_helm_registry_login() {    
+_oci_helm_registry_login() {
     local _HELM_REGISTRY_USERNAME=$(_get_oci_username ${HELM})
     local _HELM_REGISTRY_PASSWORD=$(_get_oci_password ${HELM})
-    
+
     if [[ EL_CICD_HELM_OCI_REGISTRY_ENABLE_TLS == ${_FALSE} ]]
-    then 
+    then
         local _TLS_INSECURE='--insecure'
     fi
-    
+
     if [[ "${_HELM_REGISTRY_USERNAME}" && "${_HELM_REGISTRY_PASSWORD}" ]]
     then
         set -e
         echo
         echo -n "LOGIN TO HELM OCI REGISTRY [${EL_CICD_HELM_OCI_REGISTRY_DOMAIN}]: "
         echo ${_HELM_REGISTRY_PASSWORD} | \
-            helm registry login ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN} ${_TLS_INSECURE} -u ${_HELM_REGISTRY_USERNAME} --password-stdin 
+            helm registry login ${EL_CICD_HELM_OCI_REGISTRY_DOMAIN} ${_TLS_INSECURE} -u ${_HELM_REGISTRY_USERNAME} --password-stdin
         set +e
     else
         PARENT_DIR=$(basename $(dirname ${EL_CICD_OCI_SECRETS_FILE}))
@@ -201,13 +201,13 @@ __trigger_refresh_projects() {
     BUILD_PARAMETERS+="&REFRESH_CREDENTIALS=${4}"
     BUILD_PARAMETERS+="&CONFIRM_BEFORE_REFRESHING=false"
     set -e
-    
+
     local TOKEN_NAME=$(oc get secret ${JENKINS_REMOTE_SERVICE_ACCOUNT} -o name -n ${EL_CICD_MASTER_NAMESPACE})
     local TOKEN=$(oc get ${TOKEN_NAME} -n ${EL_CICD_MASTER_NAMESPACE} -o jsonpath='{.data.token}' | base64 --decode)
-    
+
     local AUTH_BEARER="Authorization:Bearer ${TOKEN}"
     local REFRESH_URL="https://jenkins-${EL_CICD_MASTER_NAMESPACE}.${CLUSTER_WILDCARD_DOMAIN}/job/refresh-projects/buildWithParameters"
-    
+
     curl -ksSL -X POST --fail-with-body -w '%{http_code}\n' -o /dev/null -H "${AUTH_BEARER}" ${REFRESH_URL}?${BUILD_PARAMETERS}
     set +e
 }
