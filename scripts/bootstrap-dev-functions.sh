@@ -13,6 +13,11 @@ _bootstrap_lab_environment() {
 
     __set_config_value CLUSTER_WILDCARD_DOMAIN ${CLUSTER_WILDCARD_DOMAIN} "${ROOT_CONFIG_FILE}"
 
+    if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
+    then
+        __create_image_registry_nfs_share
+    fi
+
     if [[ ${SETUP_CRC} == ${_YES} ]]
     then
         __bootstrap_clean_crc
@@ -75,13 +80,6 @@ __gather_lab_setup_info() {
     if [[ ${INSTALL_REGISTRY} == ${_YES} ]]
     then
         SETUP_REGISTRY_NFS=$(_get_yes_no_answer 'Do you wish to setup an NFS share for your image registry (only needed for developers)? [Y/n] ')
-
-        if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
-        then
-            read -s -p "Sudo credentials required: " SUDO_PWD
-
-            printf "%s\n" "${SUDO_PWD}" | sudo -p '' -S echo 'verified'
-        fi
     else
         echo 'IF NOT ALREADY DONE, proper values for your chosen image registry must be set in the el-CICD configuration files.'
         echo 'See el-CICD operational documentation for information on how to configure the image registry values per CICD environment.'
@@ -253,18 +251,18 @@ __create_image_registry_nfs_share() {
         echo "Creating NFS share on host for developer image registries, if necessary: ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}"
         if [[ -z $(cat /etc/exports | grep ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}) ]]
         then
-            printf "%s\n" "${SUDO_PWD}" | sudo -E --stdin bash -c "echo '${DEMO_OCI_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)' | sudo tee -a /etc/exports"
+            sudo -E bash -c "echo '${DEMO_OCI_REGISTRY_DATA_NFS_DIR} *(rw,sync,all_squash,insecure)' | sudo tee -a /etc/exports"
         fi
 
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin mkdir -p ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chown -R nobody:nobody ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin chmod 777 ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
-        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=nfs --zone=libvirt
-        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=mountd --zone=libvirt
-        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --permanent --add-service=rpc-bind --zone=libvirt
-        printf "%s\n" "${SUDO_PWD}" | sudo firewall-cmd --reload
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin exportfs -a
-        printf "%s\n" "${SUDO_PWD}" | sudo --stdin systemctl restart nfs-server.service
+        sudo mkdir -p ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        sudo chown -R nobody:nobody ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        sudo chmod 777 ${DEMO_OCI_REGISTRY_DATA_NFS_DIR}
+        sudo firewall-cmd --permanent --add-service=nfs --zone=libvirt
+        sudo firewall-cmd --permanent --add-service=mountd --zone=libvirt
+        sudo firewall-cmd --permanent --add-service=rpc-bind --zone=libvirt
+        sudo firewall-cmd --reload
+        sudo exportfs -a
+        sudo systemctl restart nfs-server.service
     else
         echo "Developer image registries' NFS Share found.  Skipping..."
     fi
@@ -284,7 +282,6 @@ __setup_image_registries() {
     local _PROFILES='HTPASSWD'
     if [[ ${SETUP_REGISTRY_NFS} == ${_YES} ]]
     then
-        __create_image_registry_nfs_share
         _PROFILES+=",NFS"
     fi
 

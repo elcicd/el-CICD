@@ -9,7 +9,7 @@ _bootstrap_el_cicd() {
         echo "Exiting."
         exit 1
     fi
-    
+
     _cluster_info
 
     __gather_bootstrap_info
@@ -149,7 +149,7 @@ _create_and_source_meta_info_files() {
     do
         echo "- ${FILE}"
     done
-    
+
     set -e -o allexport
 
     echo
@@ -199,12 +199,8 @@ __create_meta_info_file() {
 
     echo "EL_CICD_MASTER_NONPROD=${EL_CICD_MASTER_NONPROD}" >> ${_META_INFO_FILE_TMP}
     echo "EL_CICD_MASTER_PROD=${EL_CICD_MASTER_PROD}" >> ${_META_INFO_FILE_TMP}
-    
-    if [[ $(oc cluster-info > /dev/null 2>&1) ]]
-    then
-        echo "EL_CICD_CLUSTER_UID=$(oc get namespace kube-system -o jsonpath='{.metadata.uid}')" >> ${_META_INFO_FILE_TMP}
-    fi
 
+    echo "EL_CICD_CLUSTER_UID=$(oc get --request-timeout=3s namespace kube-system -o jsonpath='{.metadata.uid}' 2>/dev/null)" >> ${_META_INFO_FILE_TMP}
     sort -o ${_META_INFO_FILE_TMP} ${_META_INFO_FILE_TMP}
 
     source ${_META_INFO_FILE_TMP}
@@ -227,7 +223,7 @@ _create_rbac_helpers() {
     then
         local _SET_PROFILES='SEALED_SECRETS'
     fi
-    
+
     if [[ ${OKD_VERSION} ]]
     then
         local _OKD_RBAC_VALUES_FILE="${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-okd-scc-nonroot-builder-values.yaml"

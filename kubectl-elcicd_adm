@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 # SPDX-License-Identifier: LGPL-2.1-or-later
 cd "$(dirname ${0})"
 
@@ -34,7 +34,7 @@ __main() {
 
     _create_and_source_meta_info_files
 
-    if [[ $(oc cluster-info > /dev/null 2>&1) ]]
+    if [[ $(oc status --request-timeout=3s 2>/dev/null) ]]
     then
         EL_CICD_JENKINS_SECRETS_CHART=$(helm list -q --filter elcicd-jenkins-secrets -n ${EL_CICD_MASTER_NAMESPACE} 2>/dev/null)
     fi
