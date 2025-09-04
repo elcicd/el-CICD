@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
 _bootstrap_lab_environment() {
-    set -eE
+    set -E
 
     echo
     echo "${DEV_SETUP_WELCOME_MSG}"
@@ -203,7 +203,10 @@ __bootstrap_clean_crc() {
     CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
 
     echo
+    set -x
+    ${CRC_EXEC} config set network-mode system
     ${CRC_EXEC} setup <<< 'y'
+    set +x
 
    _start_crc
 }
@@ -217,12 +220,14 @@ _start_crc() {
         echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
         echo "kubeadmin password is '${_CICD_PASSWORD}'"
         echo
+        set -x
         ${CRC_EXEC} config set kubeadmin-password ${_CICD_PASSWORD}
         ${CRC_EXEC} config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
         ${CRC_EXEC} config set cpus ${CRC_V_CPU}
         ${CRC_EXEC} config set memory ${CRC_MEMORY}
         ${CRC_EXEC} config set disk-size ${CRC_DISK}
         ${CRC_EXEC} start -p ${EL_CICD_HOME}/pull-secret.txt
+        set +x
 
         eval $(${CRC_EXEC} oc-env)
         source <(oc completion ${CRC_SHELL})
