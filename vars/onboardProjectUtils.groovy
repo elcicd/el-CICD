@@ -141,7 +141,7 @@ def setupProjectEnvironments(def projectInfo) {
 
         ${shCmd.echo ''}
         chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin/onboarding-post-renderer.sh
-        if [[ -z "$(helm plugin list | grep onboarding-plugin)" ]]
+        if [[ -z "\$(helm plugin list | grep onboarding-plugin)" ]]
         then
             helm plugin install ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin
         fi
