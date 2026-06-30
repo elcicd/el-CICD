@@ -3,7 +3,7 @@
 
 _tear_down_lab_environment() {
     set -eE
-    
+
     echo
     echo "${DEV_TEAR_DOWN_WELCOME_MSG}"
 
@@ -14,6 +14,7 @@ _tear_down_lab_environment() {
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
         _remove_existing_crc
+        rm -rf ~/.crc
     fi
 
     if [[ ${REMOVE_OCI_REGISTRY} == ${_YES} ]]
@@ -46,7 +47,7 @@ __gather_lab_tear_down_info() {
     if [[ ${REMOVE_CRC} != ${_YES} ]]
     then
         _confirm_logged_into_cluster
-        
+
         if [[ ! -z $(oc get namespace --ignore-not-found --no-headers ${DEMO_OCI_REGISTRY}) ]]
         then
             echo
@@ -80,12 +81,12 @@ __gather_lab_tear_down_info() {
 __summarize_and_confirm_lab_tear_down() {
     echo
     echo "${_BOLD}===================== ${_BOLD}SUMMARY${_REGULAR} =====================${_REGULAR}"
-    echo 
+    echo
 
     if [[ ${REMOVE_CRC} == ${_YES} ]]
     then
         echo "OpenShift Local ${_BOLD}WILL${_REGULAR} be torn down.  The image registry ${_BOLD}WILL${_REGULAR} also be torn down as a result."
-    else 
+    else
         echo "OpenShift Local will ${_BOLD}NOT${_REGULAR} be torn down."
 
         if [[ ${REMOVE_OCI_REGISTRY} == ${_YES} ]]
@@ -116,7 +117,7 @@ __summarize_and_confirm_lab_tear_down() {
         echo -n "will ${_BOLD}NOT${_REGULAR}"
     fi
     echo " be removed from ${EL_CICD_ORGANIZATION} on the Git host."
-    
+
     echo
     echo "${_BOLD}=================== ${_BOLD}END SUMMARY${_REGULAR} ===================${_REGULAR}"
 
@@ -124,25 +125,21 @@ __summarize_and_confirm_lab_tear_down() {
 }
 
 _remove_existing_crc() {
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-
     set +e
-    if [[ "${CRC_EXEC}" ]]
+    if which crc &>/dev/null
     then
         echo
         echo 'Stopping the OpenShift Local cluster'
-        ${CRC_EXEC} stop
-        ${CRC_EXEC} delete
+        crc stop
+        crc delete
         echo 'Cleaning up the OpenShift Local install'
-        ${CRC_EXEC} cleanup
-        unset CRC_EXEC
+        crc cleanup
+        echo 'Removing crc binary'
+        rm $(which crc)
+    else
+        echo "WARNING: UNABLE TO STOP CRC. crc command not found."
     fi
     set -e
-
-    echo
-    echo 'Removing old OpenShift Local installation directories'
-    rm -rfv ${EL_CICD_HOME}/crc*/
-    rm -rfv ${HOME}/.crc
 }
 
 _remove_image_registry() {

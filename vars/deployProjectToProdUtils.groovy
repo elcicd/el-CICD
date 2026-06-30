@@ -85,9 +85,9 @@ def selectReleaseVersion(def projectInfo, def args) {
         sh """
             ${shCmd.echo ''}
             helm dependency update
-            
+
             ${shCmd.echo ''}
-            helm upgrade --install --atomic --cleanup-on-fail --history-max=2 \
+            helm upgrade --install --rollback-on-failure --cleanup-on-fail --history-max=2 \
                     --set-string elCicdProfiles="{${postRendererArgs}}" \
                     --set-string elCicdDefs.PROD_ENV=${projectInfo.prodEnv} \
                     --post-renderer ./${el.cicd.EL_CICD_POST_RENDER_KUSTOMIZE} \

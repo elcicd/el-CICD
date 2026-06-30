@@ -202,6 +202,15 @@ elCicdTemplates:
   mustNotHaveAnyProfile:
   - CICD
 
+- templateName: secret
+  objName: $<JENKINS_REMOTE_SERVICE_NAME>
+  type: service-account-token
+  serviceAccount: $<JENKINS_REMOTE_SERVICE_NAME>
+  mustHaveAnyProfile:
+  - ONBOARDING
+  mustNotHaveAnyProfile:
+  - CICD
+
 - templateName: clusterRoleBinding
   objName: $<JENKINS_REMOTE_SERVICE_NAME>
   mustHaveAnyProfile:

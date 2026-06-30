@@ -86,7 +86,7 @@ _collect_sealed_secret_info() {
         echo 'NO CURRENTLY INSTALLED SEALED SECRETS VERSION FOUND: Use the --sealed-secrets flag to install.'
     fi
 
-    local _SS_URL='https://bitnami-labs.github.io/sealed-secrets'
+    local _SS_URL='https://bitnami.github.io/sealed-secrets'
     if [[ -z ${SEALED_SECRETS_CHART_VERSION} ]]
     then
         SEALED_SECRETS_CHART_VERSION=$(helm show chart sealed-secrets --repo ${_SS_URL} | grep version | tr -d 'version: ')
@@ -112,21 +112,23 @@ _install_sealed_secrets() {
     echo '================= SEALED SECRETS ================='
 
     echo
-    echo 'Downloading and copying kubeseal to /usr/local/bin for generating Sealed Secrets.'
     local _SEALED_SECRETS_DIR=/tmp/sealedsecrets
     mkdir -p ${_SEALED_SECRETS_DIR}
     local _KUBESEAL_URL="https://github.com/bitnami-labs/sealed-secrets/releases/download"
     _KUBESEAL_URL="${_KUBESEAL_URL}/v${SEALED_SECRETS_RELEASE_VERSION:?}/kubeseal-${SEALED_SECRETS_RELEASE_VERSION:?}-linux-amd64.tar.gz"
     sudo rm -f ${_SEALED_SECRETS_DIR}/kubeseal* /usr/local/bin/kubeseal
-    wget -qc --show-progress ${_KUBESEAL_URL} -O ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz
+    echo 'Downloading kubeseal to /usr/local/bin for generating Sealed Secrets.'
+    echo ${_KUBESEAL_URL}
+    set -x
+    curl -L --progress-bar "${_KUBESEAL_URL}" -o ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz
     tar -xvzf ${_SEALED_SECRETS_DIR}/kubeseal.tar.gz -C ${_SEALED_SECRETS_DIR}
     sudo install -m 755 ${_SEALED_SECRETS_DIR}/kubeseal /usr/local/bin/kubeseal
-    
+
     echo
     echo "Installing Sealed Secrets ${_BOLD}${SEALED_SECRETS_RELEASE_INFO}${_REGULAR}"
     echo
-    helm upgrade --install --atomic --history-max=2 \
-                 --repo https://bitnami-labs.github.io/sealed-secrets \
+    helm upgrade --install --rollback-on-failure --history-max=2 \
+                 --repo https://bitnami.github.io/sealed-secrets \
                  --version ${SEALED_SECRETS_CHART_VERSION} \
                  -n kube-system \
                  sealed-secrets sealed-secrets

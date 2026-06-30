@@ -25,14 +25,14 @@ _bootstrap_lab_environment() {
         __additional_cluster_config
     fi
 
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
-    if [[ "${CRC_EXEC}" ]]
+    CRC_EXEC=$(find ~/.crc/bin -name crc)
+    if [[ "crc" ]]
     then
-        if [[ $(${CRC_EXEC} status -o json | jq -r .crcStatus) != "Running" ]]
+        if [[ $(crc status -o json | jq -r .crcStatus) != "Running" ]]
         then
-            _start_crc
+            _start_crc crc
         fi
-        eval $(${CRC_EXEC} oc-env)
+        eval $(crc oc-env)
     fi
 
     if [[ ${INSTALL_REGISTRY} == ${_YES} ]]
@@ -197,39 +197,42 @@ __bootstrap_clean_crc() {
     _remove_existing_crc
 
     echo
-    echo "Extracting OpenShift Local tar.xz to ${EL_CICD_HOME}"
-    tar -xf ${EL_CICD_HOME}/crc-linux-amd64.tar.xz -C ${EL_CICD_HOME}
+    echo "Extracting OpenShift Local tar.xz to temp directory"
+    CRC_INSTALL_DIR=/tmp/crc-install
+    mkdir -p ${CRC_INSTALL_DIR}
+    tar -xf ${EL_CICD_HOME}/crc-linux-amd64.tar.xz -C ${CRC_INSTALL_DIR}
 
-    CRC_EXEC=$(find ${EL_CICD_HOME} -name crc)
+    mkdir -p ~/.local/bin
+    mv $(find ${CRC_INSTALL_DIR} -name crc) ~/.local/bin
 
     echo
-    set -x
-    ${CRC_EXEC} config set network-mode system
-    ${CRC_EXEC} setup <<< 'y'
-    set +x
+    crc config set network-mode system # user
+    crc config set enable-bundle-quay-fallback true
+    crc setup <<< 'y'
 
    _start_crc
+   rm -rf ${CRC_INSTALL_DIR}
 }
 
 _start_crc() {
-    CRC_EXEC=${CRC_EXEC:-$(find ${EL_CICD_HOME} -name crc)}
     local _CICD_PASSWORD=elcicd
-    if [[ -z $(${CRC_EXEC} status | grep Started) ]]
+    if [[ -z $(crc status | grep Started) ]]
     then
         echo
         echo "Starting OpenShift Local with ${CRC_V_CPU} vCPUs, ${CRC_MEMORY}Mi memory, ${CRC_DISK}Gi disk, cluster monitoring ${CRC_CLUSTER_MONITORING:-false}"
-        echo "kubeadmin password is '${_CICD_PASSWORD}'"
         echo
-        set -x
-        ${CRC_EXEC} config set kubeadmin-password ${_CICD_PASSWORD}
-        ${CRC_EXEC} config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
-        ${CRC_EXEC} config set cpus ${CRC_V_CPU}
-        ${CRC_EXEC} config set memory ${CRC_MEMORY}
-        ${CRC_EXEC} config set disk-size ${CRC_DISK}
-        ${CRC_EXEC} start -p ${EL_CICD_HOME}/pull-secret.txt
-        set +x
 
-        eval $(${CRC_EXEC} oc-env)
+        eval $(crc oc-env)
+        crc config set kubeadmin-password ${_CICD_PASSWORD}
+        crc config set enable-cluster-monitoring ${CRC_CLUSTER_MONITORING:-false}
+        crc config set cpus ${CRC_V_CPU}
+        crc config set memory ${CRC_MEMORY}
+        crc config set disk-size ${CRC_DISK}
+        crc config set disable-update-check true
+        crc config view
+        set -x
+        crc start -p ${EL_CICD_HOME}/pull-secret.txt --nameserver 8.8.8.8
+        set +x
         source <(oc completion ${CRC_SHELL})
     else
         echo 'crc exec not found; exiting'
@@ -293,7 +296,7 @@ __setup_image_registries() {
     DEMO_OCI_REGISTRY_HOST_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
     echo
     set -x
-    helm upgrade --install --atomic --create-namespace --history-max=1 \
+    helm upgrade --install --rollback-on-failure --create-namespace --history-max=1 \
         --set-string elCicdProfiles="{${_PROFILES}}" \
         --set-string elCicdDefs.OBJ_NAMES="{${_OBJ_NAMES}}" \
         --set-string elCicdDefs.HOST_IP=${DEMO_OCI_REGISTRY_HOST_IP} \

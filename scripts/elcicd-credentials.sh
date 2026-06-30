@@ -3,7 +3,7 @@
 
 _refresh_el_cicd_credentials() {
     set -e
-    
+
     __create_el_cicd_git_readonly_deploy_keys
 
     GIT_ACCESS_TOKEN=$(cat ${EL_CICD_GIT_ADMIN_ACCESS_TOKEN_FILE})
@@ -12,7 +12,7 @@ _refresh_el_cicd_credentials() {
                                 ${EL_CICD_REPO} \
                                 ${GIT_ACCESS_TOKEN} \
                                 ${EL_CICD_MASTER_NAMESPACE}
-    
+
     _add_git_repo_deploy_key ${EL_CICD_GIT_API_URL} \
                              ${EL_CICD_ORGANIZATION} \
                              ${EL_CICD_REPO} \
@@ -32,20 +32,20 @@ _refresh_el_cicd_credentials() {
                              ${GIT_ACCESS_TOKEN} \
                              ${EL_CICD_MASTER_NAMESPACE} \
                              ${EL_CICD_CONFIG_SSH_READ_ONLY_DEPLOY_KEY_FILE}
-    
+
     __create_jenkins_secrets
-   
+
     if [[ ${EL_CICD_MASTER_NONPROD} == ${_TRUE} ]]
-    then        
+    then
         _run_custom_config_script credentials-non-prod.sh
     fi
-    
+
     if [[ ${EL_CICD_MASTER_PROD} == ${_TRUE} ]]
     then
         _run_custom_config_script credentials-prod.sh
     fi
 
-    echo 
+    echo
     echo '--> el-CICD Master credentials refresh complete'
     set +e
 }
@@ -71,13 +71,13 @@ __create_jenkins_secrets() {
     _OCI_REGISTRY_IDS+="  ${HELM} "
 
     local _SET_FLAGS=$(__create_image_registry_values_flags "${_OCI_REGISTRY_IDS}")
-    
+
 	if [[ "${EL_CICD_MASTER_NONPROD}" && "$(ls -A ${BUILD_SECRETS_FILE_DIR})" ]]
     then
         local _BUILDER_SECRETS_PROFILE='BUILDER_SECRETS'
         _SET_FLAGS+="${_SET_FLAGS:+ }$(__create_builder_secret_flags)"
     fi
-    
+
     if [[ ${EL_CICD_JENKINS_SECRETS_CHART} ]]
     then
         helm uninstall --wait ${EL_CICD_JENKINS_SECRETS_CHART} -n ${EL_CICD_MASTER_NAMESPACE}
@@ -89,7 +89,7 @@ __create_jenkins_secrets() {
     _OCI_REGISTRY_IDS=$(echo ${_OCI_REGISTRY_IDS@L} | sed -e 's/\s\+/,/g')
     local _GIT_REPO_KEYS="${EL_CICD_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID},${EL_CICD_CONFIG_GIT_REPO_READ_ONLY_GITHUB_PRIVATE_KEY_ID}"
     set -e
-    helm upgrade --install --atomic --create-namespace --history-max=1 \
+    helm upgrade --install --rollback-on-failure --create-namespace --history-max=1 \
         --set elCicdProfiles="{${_BUILDER_SECRETS_PROFILE}}"  \
         --set-string elCicdDefs.BUILD_SECRETS_NAME=${EL_CICD_BUILD_SECRETS_NAME} \
         --set-string elCicdDefs.OCI_REGISTRY_IDS="{${_OCI_REGISTRY_IDS}}" \
@@ -108,15 +108,15 @@ __create_jenkins_secrets() {
 
 __create_image_registry_values_flags() {
     local _OCI_REGISTRY_IDS=${1}
-    
+
     for OCI_REGISTRY_ID in ${_OCI_REGISTRY_IDS@L}
     do
         local _OCI_USERNAME=$(_get_oci_username ${OCI_REGISTRY_ID})
         local _OCI_PASSWORD=$(_get_oci_password ${OCI_REGISTRY_ID})
-        
+
         local _SET_FLAGS+="${_SET_FLAGS:+ }--set-string elCicdDefs-${OCI_REGISTRY_ID}.REGISTRY_USERNAME=${_OCI_USERNAME}"
         _SET_FLAGS+="${_SET_FLAGS:+ }--set-string elCicdDefs-${OCI_REGISTRY_ID}.REGISTRY_PASSWORD=${_OCI_PASSWORD}"
-        
+
         local _REGISTRY_URL=${OCI_REGISTRY_ID@U}${OCI_REGISTRY_POSTFIX}
         _SET_FLAGS+="${_SET_FLAGS:+ }--set-string elCicdDefs-${OCI_REGISTRY_ID}.REGISTRY_URL=${!_REGISTRY_URL}"
     done

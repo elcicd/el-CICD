@@ -234,7 +234,7 @@ _create_rbac_helpers() {
     echo 'Installing el-CICD RBAC helpers.'
     echo
     set -ex
-    helm upgrade --install --atomic --create-namespace --history-max=1 \
+    helm upgrade --install --rollback-on-failure --create-namespace --history-max=1 \
         --set-string elCicdProfiles={${_SET_PROFILES}} \
         -f ${_OKD_RBAC_VALUES_FILE} \
         -f ${EL_CICD_DIR}/${BOOTSTRAP_CHART_DEPLOY_DIR}/elcicd-cluster-rbac-values.yaml \
@@ -290,7 +290,7 @@ __create_onboarding_automation_server() {
     echo
     JENKINS_OPENSHIFT_ENABLE_OAUTH=${OKD_VERSION:+'true'}${OKD_VERSION:-'false'}
     set -ex
-    helm upgrade --install --atomic --create-namespace --timeout 10m0s --history-max=1 \
+    helm upgrade --install --rollback-on-failure --create-namespace --timeout 10m0s --history-max=1 \
         --set-string elCicdProfiles="{${_PROFILES}}" \
         --set-string elCicdDefs.JENKINS_IMAGE=${JENKINS_OCI_REGISTRY}/${JENKINS_IMAGE_NAME}@${JENKINS_MASTER_IMAGE_SHA} \
         --set-string elCicdDefs.JENKINS_URL=${JENKINS_MASTER_URL} \
@@ -343,7 +343,7 @@ __create_onboarding_automation_server() {
     echo 'Running Jenkins pipeline sync job for el-CICD Master.'
     echo
     set -ex
-    helm install --atomic --wait-for-jobs \
+    helm install --rollback-on-failure --wait-for-jobs \
         --set-string elCicdDefs.JENKINS_SYNC_JOB_IMAGE=${JENKINS_OCI_REGISTRY}/${JENKINS_AGENT_IMAGE_PREFIX}-${JENKINS_AGENT_DEFAULT} \
         --set-string elCicdDefs.JENKINS_CONFIG_FILE_PATH=${JENKINS_CONFIG_FILE_PATH}/ \
         -n ${EL_CICD_MASTER_NAMESPACE} \

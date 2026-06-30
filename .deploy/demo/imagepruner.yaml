@@ -1,0 +1,17 @@
+apiVersion: imageregistry.operator.openshift.io/v1
+kind: ImagePruner
+metadata:
+  name: cluster
+spec:
+  affinity: {}
+  failedJobsHistoryLimit: 3
+  keepTagRevisions: 3
+  keepYoungerThan: 3600000000000
+  keepYoungerThanDuration: 60m
+  logLevel: Normal
+  nodeSelector: {}
+  resources: {}
+  schedule: 0 0 * * *
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  tolerations: []

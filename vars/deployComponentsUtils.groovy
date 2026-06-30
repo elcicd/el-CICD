@@ -68,7 +68,7 @@ def gatherComponentScripts(def projectInfo, def componentsToDeploy) {
                 def compConfigValues = getComponentConfigValues(projectInfo, component, imageRegistry, commonConfigValues)
                 writeYaml(file: componentConfigFile, data: compConfigValues)
             }
-            
+
             componentScriptMap[component.name] = """
                     ${getMergedValuesScript(projectInfo, component, componentConfigFile, elCicdOverlayDir)}
 
@@ -265,7 +265,7 @@ def runComponentDeploymentStages(def projectInfo, def components) {
 
 def runHelmUpgradeInstall(def projectInfo, def component) {
     sh """
-        helm upgrade --install --atomic --history-max=1 --output yaml \
+        helm upgrade --install --rollback-on-failure --history-max=1 --output yaml \
             -n ${projectInfo.deployToNamespace} \
             ${component.name} \
             . \
@@ -323,23 +323,23 @@ def runTestComponents(def projectInfo, def componentsToTest) {
 
 def outputDeploymentSummary(def projectInfo) {
     def resultsMsgs = ["DEPLOYMENT CHANGE SUMMARY FOR ${projectInfo.deployToNamespace}:", '']
-    
-    def summaryComponents = projectInfo.components + projectInfo.testComponents 
+
+    def summaryComponents = projectInfo.components + projectInfo.testComponents
     summaryComponents.each { module ->
         if (module.flaggedForDeployment || module.flaggedForRemoval || module.flaggedForTest) {
             resultsMsgs += "**********"
             resultsMsgs += ''
             def checkoutBranch = module.deploymentBranch ?: module.gitBranch
             resultsMsgs +=  getResultMsg(module)
-            
+
             if (module.flaggedForDeployment) {
                 resultsMsgs += "    Git image source refs: ${module.srcCommitHash}"
             }
-            
+
             if (!module.flaggedForRemoval) {
                 resultsMsgs += "    git checkout ${checkoutBranch}"
             }
-            
+
             resultsMsgs += ''
         }
     }

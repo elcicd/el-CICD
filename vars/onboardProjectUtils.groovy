@@ -16,7 +16,7 @@ def setupTeamCicdServer(def teamInfo) {
         cat ${jenkinsConfigFile}
 
         ${shCmd.echo ''}
-        helm upgrade --install --atomic --create-namespace --history-max=1 --timeout 10m0s \
+        helm upgrade --install --rollback-on-failure --create-namespace --history-max=1 --timeout 10m0s \
             -f ${jenkinsConfigFile} \
             --set-file elCicdDefs.JENKINS_CASC_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_CASC_FILE} \
             --set-file elCicdDefs.JENKINS_PLUGINS_FILE=${el.cicd.CONFIG_JENKINS_DIR}/${el.cicd.JENKINS_CICD_PLUGINS_FILE} \
@@ -87,7 +87,7 @@ def setupProjectPipelines(def projectInfo) {
         ${shCmd.echo '', "UPGRADE/INSTALLING CICD pipeline definitions for project ${projectInfo.id}"}
 
         ${shCmd.echo ''}
-        helm upgrade --install --atomic --history-max=1 \
+        helm upgrade --install --rollback-on-failure --history-max=1 \
             -f ${pipelinesValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-pipeline-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-pipelines-values.yaml \
@@ -107,7 +107,7 @@ def setupProjectCredentials(def projectInfo) {
         ${shCmd.echo '', "UPGRADE/INSTALLING credentials for project ${projectInfo.id}"}
 
         ${shCmd.echo ''}
-        helm upgrade --install --atomic --history-max=1 \
+        helm upgrade --install --rollback-on-failure --history-max=1 \
             -f ${modulesSshValuesFile} \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/git-secret-values.yaml \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
@@ -140,13 +140,14 @@ def setupProjectEnvironments(def projectInfo) {
         ${shCmd.echo '', "UPGRADE/INSTALLING SDLC environments for project ${projectInfo.id}"}
 
         ${shCmd.echo ''}
-        chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh
+        chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin/onboarding-post-renderer.sh
+        helm plugin install ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/default-project-environments-values.yaml \
             -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-environments-values.yaml \
-            --post-renderer ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-post-renderer.sh \
+            --post-renderer onboarding-plugin \
             --post-renderer-args ${projectInfo.teamInfo.id} \
             --post-renderer-args ${projectInfo.id} \
             -n ${projectInfo.teamInfo.cicdMasterNamespace} \
@@ -167,7 +168,7 @@ def setupProjectPvResources(def projectInfo) {
             sh """
                 ${shCmd.echo '', "${projectInfo.id} PROJECT VOLUME VALUES:"}
                 cat ${volumeCicdConfigFile}
-                
+
                 helm upgrade --install \
                     -f ${volumeCicdConfigFile} \
                     -f ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/project-persistent-volume-values.yaml \
@@ -258,7 +259,7 @@ def getElCicdProjectCommonValues(def projectInfo, def elCicdDefs) {
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NONPROD_ENVS = []
         elCicdDefs.NONPROD_ENVS.addAll(projectInfo.nonProdEnvs)
-        
+
         elCicdDefs.SANDBOX_NAMESPACES = []
         elCicdDefs.SANDBOX_NAMESPACES.addAll(projectInfo.sandboxNamespaces.values())
     }
@@ -288,7 +289,7 @@ def getElCicdPipelineChartValues(def projectInfo, def elCicdDefs) {
     elCicdDefs.BUILD_ARTIFACT_PIPELINES = projectInfo.artifacts.collect { it.name }
     elCicdDefs.BUILD_COMPONENT_PIPELINES = projectInfo.components.collect { it.name }
     elCicdDefs.TEST_COMPONENT_PIPELINES = projectInfo.testComponents.collect { it.name }
-    
+
     TEST_ENV_CHOICES = [:].keySet()
     TEST_ENV_CHOICES.addAll(projectInfo.nonProdEnvs.collect { env -> "'${env}'"  })
     TEST_ENV_CHOICES.addAll(projectInfo.sandboxEnvs.collect { env -> "'${env}'"  })
@@ -308,12 +309,12 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
 
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         elCicdDefs.NON_PROD_CICD_NAMESPACES = []
-        
+
         elCicdDefs.NON_PROD_CICD_NAMESPACES = []
         elCicdDefs.NON_PROD_CICD_NAMESPACES += projectInfo.nonProdNamespaces.values()
         elCicdDefs.NON_PROD_CICD_NAMESPACES += projectInfo.sandboxNamespaces.values()
     }
-    
+
     def rqProfiles = [:]
     elCicdDefs.CICD_NAMESPACES = []
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
@@ -341,7 +342,7 @@ def getElCicdChartProjectEnvironmentsValues(def projectInfo) {
 def getElCicdNamespaceChartValues(def projectInfo, def configValues) {
     def templateList = "elCicdTemplates-namespaces-cicd"
     configValues[templateList] = []
-    
+
     if (el.cicd.EL_CICD_MASTER_NONPROD) {
         def nsElCicdTemplate = [templateName: 'namespace', objNames: []]
         nsElCicdTemplate.objNames.addAll(projectInfo.nonProdNamespaces.values())
@@ -349,7 +350,7 @@ def getElCicdNamespaceChartValues(def projectInfo, def configValues) {
             nsElCicdTemplate.objNames.addAll(projectInfo.sandboxNamespaces.values())
         }
         nsElCicdTemplate.annotations = ['elcicd.io/cicd-type': 'nonprod']
-        
+
         configValues[templateList].add(nsElCicdTemplate)
     }
 
@@ -357,7 +358,7 @@ def getElCicdNamespaceChartValues(def projectInfo, def configValues) {
         def nsElCicdTemplate = [templateName: 'namespace', objNames: []]
         nsElCicdTemplate.objNames.addAll(projectInfo.prodNamespaces.values())
         nsElCicdTemplate.annotations = ['elcicd.io/cicd-type': 'prod']
-        
+
         configValues[templateList].add(nsElCicdTemplate)
     }
 }
@@ -418,7 +419,7 @@ def getElCicdRbacProdGroupsValues(def projectInfo, def elCicdDefs) {
 
 def createProjectSshKeyValues(def projectInfo) {
     projectUtils.createModuleSshKeys(projectInfo.modules)
-    
+
     configValues = [elCicdDefs: [:]]
     projectInfo.modules.each { module ->
         dir(module.workDir) {
