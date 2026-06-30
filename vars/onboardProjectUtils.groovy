@@ -141,7 +141,10 @@ def setupProjectEnvironments(def projectInfo) {
 
         ${shCmd.echo ''}
         chmod +x ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin/onboarding-post-renderer.sh
-        helm plugin install ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin
+        if [[ -z "$(helm plugin list | grep onboarding-plugin)" ]]
+        then
+            helm plugin install ${el.cicd.EL_CICD_DIR}/${el.cicd.CICD_CHART_DEPLOY_DIR}/onboarding-plugin
+        fi
         helm upgrade --wait --wait-for-jobs --install --history-max=1 \
             -f ${environmentsValuesFile} \
             -f ${el.cicd.CONFIG_CHART_DEPLOY_DIR}/resource-quotas-values.yaml \
